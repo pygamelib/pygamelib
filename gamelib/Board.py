@@ -29,19 +29,35 @@ class Board():
     
     def check_sanity(self):
         sanity_check=0
+        if type(self.size) is list:
+            sanity_check += 1
+        else:
+            raise BoardException('SANITY_CHECK_KO',"The 'size' parameter must be a list.")
         if len(self.size) == 2:
             sanity_check += 1
+        else:
+            raise BoardException('SANITY_CHECK_KO',"The 'size' parameter must be a list of 2 elements.")
         if type(self.size[0]) is int:
             sanity_check += 1
+        else:
+            raise BoardException('SANITY_CHECK_KO',"The first element of the 'size' list must be an integer.")
         if type(self.size[1]) is int:
             sanity_check += 1
+        else:
+            raise BoardException('SANITY_CHECK_KO',"The second element of the 'size' list must be an integer.")
         if type(self.name) is str:
             sanity_check += 1
+        else:
+            raise BoardException('SANITY_CHECK_KO',"The 'name' parameter must be a string.")
         if type(self.ui_board_contour) is str:
             sanity_check += 1
+        else:
+            raise BoardException('SANITY_CHECK_KO',"The 'ui_board_contour' parameter must be a string.")
         if type(self.ui_board_void_cell) is str:
             sanity_check += 1
-        if sanity_check == 6:
+        else:
+            raise BoardException('SANITY_CHECK_KO',"The 'ui_board_contour' parameter must be a string.")
+        if sanity_check == 7:
             return True
         else:
             raise BoardException('SANITY_CHECK_KO',"The board data are not valid.")
