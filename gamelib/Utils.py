@@ -10,4 +10,4 @@ def info(message):
     print(Fore.WHITE + Back.BLUE + 'INFO' + Style.RESET_ALL + ': '+message)
 
 def debug(message):
-    print(Fore.WHITE + Back.GREEN + Style.BRIGHT + 'DEBUG' + Style.RESET_ALL + ': '+message)
+    print(Fore.BLUE + Back.GREEN + Style.BRIGHT + 'DEBUG' + Style.RESET_ALL + ': '+message)
