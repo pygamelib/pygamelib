@@ -11,3 +11,6 @@ def info(message):
 
 def debug(message):
     print(Fore.BLUE + Back.GREEN + Style.BRIGHT + 'DEBUG' + Style.RESET_ALL + ': '+message)
+
+def print_white_on_red(message):
+    print(Fore.WHITE + Back.RED + message + Style.RESET_ALL)
