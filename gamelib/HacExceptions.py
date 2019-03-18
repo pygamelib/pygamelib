@@ -19,3 +19,17 @@ class HacOutOfBoardBoundException(Exception):
     """
     def __init__(self,message):
         self.message = message
+
+class HacObjectIsNotMovableException(Exception):
+    """
+    Exception raised if the object that is being moved is not a subclass of Movable.
+    """
+    def __init__(self,message):
+        self.message = message
+
+class HacInvalidLevelException(Exception):
+    """
+    Exception raised if a level is not associated to a board in Game().
+    """
+    def __init__(self,message):
+        self.message = message
