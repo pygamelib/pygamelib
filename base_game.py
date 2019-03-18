@@ -6,7 +6,7 @@ import gamelib.Constants as cst
 import gamelib.Utils as Utils
 import gamelib.Sprites as Sprites
 
-from gamelib.Structures import Wall,Treasure
+from gamelib.Structures import Wall,Treasure, GenericStructure
 
 def refresh_screen(mygame,player):
     mygame.clear_screen()
@@ -27,6 +27,9 @@ w = Wall(model=Utils.GREEN_SQUARE)
 portal = Wall(model=Sprites.CYCLONE)
 t = Treasure(model=Sprites.GEM_STONE,name='Cool treasure')
 p = Player(model=Sprites.SHEEP,name='Nazbrok')
+tree = GenericStructure(model=Sprites.TREE_PINE)
+tree.set_overlappable(False)
+tree.set_pickable(False)
 
 game.player = p
 
@@ -50,6 +53,13 @@ lvl1.place_item(Wall(model=Sprites.WALL),10,3)
 lvl1.place_item(Wall(model=Sprites.WALL),10,2)
 lvl1.place_item(Wall(model=Sprites.WALL),10,1)
 lvl1.place_item(Wall(model=Sprites.WALL),10,0)
+
+for i in range(4,40,1):
+    lvl1.place_item(tree,6,i)
+    if i%4 != 0:
+        lvl1.place_item(tree,8,i)
+        for j in range(9,15,1):
+            lvl1.place_item(tree,j,i)
 
 lvl1.place_item(t,3,2)
 lvl1.place_item(portal,19,39)
