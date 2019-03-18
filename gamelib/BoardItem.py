@@ -56,6 +56,34 @@ class BoardItem():
         """
         pass
 
+    def pickable(self):
+        """
+        This is a virtual method that must be implemented in deriving class.
+        This method has to return True or False.
+        This represent the capacity for a BoardItem to be pick-up by player or NPC.
+        """
+        pass
+
+    def overlappable(self):
+        """
+        This is a virtual method that must be implemented in deriving class.
+        This method has to return True or False.
+        This represent the capacity for a BoardItem to be overlapped by another BoardItem.
+        """
+        pass
 
 
+class BoardItemVoid(BoardItem):
+    """
+    A class that represent a void cell.
+    """
+    def __init__(self,**kwargs):
+        BoardItem.__init__(self,**kwargs)
+        self.name = 'void_cell'
+
+    def pickable(self):
+        return False
+    
+    def overlappable(self):
+        return True
     
