@@ -4,7 +4,7 @@ class Immovable(BoardItem):
     """
     This class derive BoardItem and describe an object that cannot move or be moved (like a wall).
     Thus this class implements BoardItem.can_move().
-    However it does not impement BoardItem.pickable()
+    However it does not impement BoardItem.pickable() or BoardItem.overlappable()
     """
     def __init__(self,**kwargs):
         BoardItem.__init__(self,**kwargs)

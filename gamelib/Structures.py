@@ -5,6 +5,12 @@ class Wall(Immovable):
         if 'model' not in kwargs.keys():
             kwargs['model'] = '#'
         Immovable.__init__(self,**kwargs)
+    
+    def pickable(self):
+        return False
+    
+    def overlappable(self):
+        return False
 
 
 class Treasure(Immovable):
@@ -12,3 +18,9 @@ class Treasure(Immovable):
         if 'model' not in kwargs.keys():
             kwargs['model'] = '¤'
         Immovable.__init__(self,**kwargs)
+
+    def pickable(self):
+        return True
+    
+    def overlappable(self):
+        return False

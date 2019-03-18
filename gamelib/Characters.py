@@ -7,9 +7,21 @@ class Player(Movable):
     def __init__(self,**kwargs):
         Movable.__init__(self,**kwargs)
 
+    def pickable(self):
+        return False
+    
+    def overlappable(self):
+        return False
+
 class NPC(Movable):
     """
     A class that represent a non playable character controlled by the computer.
     """
     def __init__(self,**kwargs):
         Movable.__init__(self,**kwargs)
+    
+    def pickable(self):
+        return False
+    
+    def overlappable(self):
+        return False

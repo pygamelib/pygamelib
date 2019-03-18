@@ -1,6 +1,6 @@
 from gamelib.Utils import warn, debug
 from gamelib.HacExceptions import HacException, HacOutOfBoardBoundException, HacInvalidTypeException, HacObjectIsNotMovableException
-from gamelib.BoardItem import BoardItem
+from gamelib.BoardItem import BoardItem, BoardItemVoid
 from gamelib.Movable import Movable
 from gamelib.Immovable import Immovable
 import gamelib.Constants as Constants
@@ -57,7 +57,7 @@ class Board():
           BoardItem(model=self.ui_board_void_cell)
         """
 
-        self._matrix = [ [ BoardItem(model=self.ui_board_void_cell) for i in range(0,self.size[0],1) ] for j in range(0,self.size[1],1) ]
+        self._matrix = [ [ BoardItemVoid(model=self.ui_board_void_cell) for i in range(0,self.size[0],1) ] for j in range(0,self.size[1],1) ]
     
     def check_sanity(self):
         sanity_check=0
@@ -191,9 +191,8 @@ class Board():
             elif direction == Constants.RIGHT:
                 new_x = item.pos[0]
                 new_y = item.pos[1] + step
-
-            if new_x != None and new_y != None:
-                self.place_item( BoardItem(model=self.ui_board_void_cell, name='void_cell'), item.pos[0], item.pos[1] )
+            if new_x != None and new_y != None and new_x>=0 and new_y>=0 and new_x < self.size[1] and new_y < self.size[0] and self._matrix[new_x][new_y].overlappable():
+                self.place_item( BoardItemVoid(model=self.ui_board_void_cell), item.pos[0], item.pos[1] )
                 self.place_item( item, new_x, new_y )
         else:
             raise HacObjectIsNotMovableException(f"Item '{item.name}' at position [{item.pos[0]},{item.pos[1]}] is not a subclass of Movable, therefor it cannot be moved.")
