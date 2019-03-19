@@ -1,4 +1,7 @@
 from colorama import Fore, Back, Style
+import sys
+import termios
+import tty
 
 WHITE_RECT = Back.WHITE+' '+Style.RESET_ALL
 BLUE_RECT = Back.BLUE+' '+Style.RESET_ALL
@@ -20,6 +23,16 @@ CYAN_SQUARE = Back.CYAN+'  '+Style.RESET_ALL
 
 RED_BLUE_SQUARE = Back.RED+' '+Back.BLUE+' '+Style.RESET_ALL
 YELLOW_CYAN_SQUARE = Back.YELLOW+' '+Back.CYAN+' '+Style.RESET_ALL
+
+# This function comes from: http://code.activestate.com/recipes/577728-simpletron3xpy-game-to-demo-xy-drawing-using-the-k/?in=user-4177147 
+# it is name inkey() in this game.
+def get_key():
+    fd=sys.stdin.fileno()
+    remember_attributes=termios.tcgetattr(fd)
+    tty.setraw(sys.stdin.fileno())
+    character=sys.stdin.read(1)
+    termios.tcsetattr(fd, termios.TCSADRAIN, remember_attributes)
+    return character
 
 ## the warn() function print a message prefixed by a yellow WARNING.
 def warn(message):

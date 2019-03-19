@@ -11,3 +11,11 @@ class Movable(BoardItem):
     
     def can_move(self):
         return True
+    
+    def has_inventory(self):
+        """
+        This is a virtual method that must be implemented in deriving class.
+        This method has to return True or False.
+        This represent the capacity for a Movable to have an inventory.
+        """
+        pass

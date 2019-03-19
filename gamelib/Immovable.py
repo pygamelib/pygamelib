@@ -11,3 +11,15 @@ class Immovable(BoardItem):
 
     def can_move(self):
         return False
+
+class Actionnable(Immovable):
+    def __init__(self,**kwargs):
+        if 'action' not in kwargs.keys():
+            kwargs['action'] = None
+        else:
+            self.action = kwargs['action']
+        Immovable.__init__(self,**kwargs)
+    
+    def activate(self):
+        if self.action != None:
+            self.action()

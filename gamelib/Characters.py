@@ -9,7 +9,10 @@ class Player(Movable):
 
     def pickable(self):
         return False
-    
+
+    def has_inventory(self):
+        return True
+
     def overlappable(self):
         return False
 
@@ -24,4 +27,7 @@ class NPC(Movable):
         return False
     
     def overlappable(self):
+        return False
+    
+    def has_inventory(self):
         return False

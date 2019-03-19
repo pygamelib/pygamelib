@@ -1,4 +1,4 @@
-from gamelib.Immovable import Immovable
+from gamelib.Immovable import Immovable, Actionnable
 
 class Wall(Immovable):
     def __init__(self,**kwargs):
@@ -37,6 +37,11 @@ class GenericStructure(Immovable):
     def set_overlappable(self,val):
         if type(val) is bool:
             self.__is_overlappable = val
+
+class GenericActionnableStructure(GenericStructure,Actionnable):
+    def __init__(self,**kwargs):
+        GenericStructure.__init__(self,**kwargs)
+        Actionnable.__init__(self,**kwargs)
 
 
 class Treasure(Immovable):
