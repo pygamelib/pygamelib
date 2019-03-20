@@ -14,6 +14,7 @@ class Board():
      - name: str
      - size: array [x,y]
      - player_starting_position: array [x,y]
+     - ui_borders : str - to set all the borders to the same value
      - ui_border_left: str
      - ui_border_right: str
      - ui_border_top: str
@@ -33,6 +34,10 @@ class Board():
         # Setting class parameters
         for item in ['name','size','ui_border_bottom','ui_border_top','ui_border_left','ui_border_right','ui_board_void_cell','player_starting_position']:
             if item in kwargs:
+                setattr(self,item,kwargs[item])
+        # if ui_borders is set then set all borders to that value
+        if 'ui_borders' in kwargs.keys():
+            for item in ['ui_border_bottom','ui_border_top','ui_border_left','ui_border_right']:
                 setattr(self,item,kwargs[item])
         # Now checking for board's data sanity
         try:
