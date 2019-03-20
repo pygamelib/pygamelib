@@ -11,7 +11,7 @@ import sys
 
 sprite_mode = 'nosprite'
 
-sprite_player = None
+sprite_player = {'left':Utils.red_bright('-|'),'right':Utils.red_bright('|-')}
 sprite_portal = None
 sprite_treasure = None
 sprite_treasure2 = None
@@ -31,14 +31,14 @@ else:
         sprite_mode = 'nosprite'
 
 if sprite_mode == 'sprite':
-    sprite_player = Sprites.SHEEP
+    # sprite_player = Sprites.SHEEP
     sprite_portal = Sprites.CYCLONE
     sprite_treasure = Sprites.GEM_STONE
     sprite_treasure2 = Sprites.MONEY_BAG
     sprite_tree = Sprites.TREE_PINE
     sprite_wall = Sprites.WALL
 else:
-    sprite_player = Utils.RED_BLUE_SQUARE
+    # sprite_player = Utils.RED_BLUE_SQUARE
     sprite_portal = Utils.CYAN_SQUARE
     sprite_treasure = Utils.YELLOW_RECT+Utils.RED_RECT
     sprite_treasure2 = sprite_treasure
@@ -47,7 +47,7 @@ else:
 
 
 game = Game(name='HAC Game')
-p = Player(model=sprite_player,name='Nazbrok')
+p = Player(model=sprite_player['right'],name='Nazbrok')
 
 def refresh_screen(mygame,player):
     mygame.clear_screen()
@@ -142,8 +142,10 @@ while direction != 'q':
     elif direction == 's':
         game.current_board().move(p,cst.DOWN,1)
     elif direction == 'a':
+        p.model = sprite_player['left']
         game.current_board().move(p,cst.LEFT,1)
     elif direction == 'd':
+        p.model = sprite_player['right']
         game.current_board().move(p,cst.RIGHT,1)
     elif direction == 'q':
         game.clear_screen()
