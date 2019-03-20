@@ -1,6 +1,5 @@
 
-import sys, os
-sys.path.append(os.path.abspath(os.path.join('..', 'hac-game-lib')))
+import examples_includes
 # Board is our base object  to display so we need that
 from gamelib.Board import Board
 # Then we need to get the Wall object from Structures.py
@@ -8,7 +7,7 @@ from gamelib.Structures import Wall
 # Finally we import Utils as it contains a lot of useful things
 import gamelib.Utils as Utils
 
-# First let's create a Board that uses sqaures as delimiters
+# First let's create a Board that uses squares as delimiters
 myboard = Board(
                 name='A demo board',
                 size=[40,20],
