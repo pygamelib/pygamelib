@@ -3,6 +3,7 @@ from gamelib.HacExceptions import HacException, HacOutOfBoardBoundException, Hac
 from gamelib.BoardItem import BoardItem, BoardItemVoid
 from gamelib.Movable import Movable
 from gamelib.Immovable import Immovable,Actionnable
+from gamelib.Characters import Player,NPC
 import gamelib.Constants as Constants
 
 class Board():
@@ -38,7 +39,7 @@ class Board():
         # if ui_borders is set then set all borders to that value
         if 'ui_borders' in kwargs.keys():
             for item in ['ui_border_bottom','ui_border_top','ui_border_left','ui_border_right']:
-                setattr(self,item,kwargs[item])
+                setattr(self,item,kwargs['ui_borders'])
         # Now checking for board's data sanity
         try:
             self.check_sanity()
@@ -181,6 +182,7 @@ class Board():
 
         Important: if the move is successfull, an empty BoardItemVoid will be put at the departure position.
         """
+        # TODO: check all types!
         if isinstance(item, Movable) and item.can_move():
             new_x = None
             new_y = None
@@ -198,7 +200,9 @@ class Board():
                 new_y = item.pos[1] + step
             if new_x != None and new_y != None and new_x>=0 and new_y>=0 and new_x < self.size[1] and new_y < self.size[0] and self._matrix[new_x][new_y].overlappable():
                 if isinstance(self._matrix[new_x][new_y],Actionnable):
-                    self._matrix[new_x][new_y].activate()
+                    
+                    if (isinstance(item, Player) and (self._matrix[new_x][new_y].perm == Constants.PLAYER_AUTHORIZED or self._matrix[new_x][new_y].perm == Constants.ALL_PLAYABLE_AUTHORIZED)) or (isinstance(item, NPC) and (self._matrix[new_x][new_y].perm == Constants.NPC_AUTHORIZED or self._matrix[new_x][new_y].perm == Constants.ALL_PLAYABLE_AUTHORIZED)):
+                        self._matrix[new_x][new_y].activate()
                 else:
                     self.place_item( BoardItemVoid(model=self.ui_board_void_cell), item.pos[0], item.pos[1] )
                     self.place_item( item, new_x, new_y )
