@@ -49,9 +49,20 @@ class Treasure(Immovable):
         if 'model' not in kwargs.keys():
             kwargs['model'] = '¤'
         Immovable.__init__(self,**kwargs)
+        if 'value' not in kwargs.keys():
+            self.value = 10
+        else:
+            self.value = kwargs['value']
+        if 'size' not in kwargs.keys():
+            self._size = 1
+        else:
+            self._size = kwargs['value']
 
     def pickable(self):
         return True
     
     def overlappable(self):
         return False
+    
+    def size(self):
+        return self._size

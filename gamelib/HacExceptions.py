@@ -33,3 +33,12 @@ class HacInvalidLevelException(Exception):
     """
     def __init__(self,message):
         self.message = message
+
+class HacInventoryException(Exception):
+    """
+    Exception raised for issue related to the inventory.
+    The error is an explicit string, and the message explains the error.
+    """
+    def __init__(self,error,message):
+        self.error = error 
+        self.message = message

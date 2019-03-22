@@ -1,11 +1,31 @@
 from gamelib.Movable import Movable
+from gamelib.Inventory import Inventory
 
-class Player(Movable):
+class Character():
+    def __init__(self, **kwargs):
+        for a in ['max_hp','hp','max_mp','mp','remaining_lives','attack_power','defense_power','strength','intelligence','agility']:
+            if a not in kwargs.keys():
+                setattr(self,a,None)
+            else:
+                setattr(self,a,kwargs[a])
+
+class Player(Movable,Character):
     """
     A class that represent a player controlled by a human.
     """
     def __init__(self,**kwargs):
+        if 'max_hp' not in kwargs.keys():
+            kwargs['max_hp'] = 100
+        if 'remaining_lives' not in kwargs.keys():
+            kwargs['remaining_lives'] = 3
+        if 'attack_power' not in kwargs.keys():
+            kwargs['attack_power'] = 10
         Movable.__init__(self,**kwargs)
+        Character.__init__(self,**kwargs)
+        if 'inventory' in kwargs.keys():
+            self.inventory = kwargs['inventory']
+        else:
+            self.inventory = Inventory()
 
     def pickable(self):
         return False
@@ -16,14 +36,21 @@ class Player(Movable):
     def overlappable(self):
         return False
 
-class NPC(Movable):
+class NPC(Movable,Character):
     """
     A class that represent a non playable character controlled by the computer.
     For the NPC to be successfully managed by the Game, you need to set an actuator.
     Ex: mynpc.actuator = RandomActuator()
     """
     def __init__(self,**kwargs):
+        if 'max_hp' not in kwargs.keys():
+            kwargs['max_hp'] = 10
+        if 'remaining_lives' not in kwargs.keys():
+            kwargs['remaining_lives'] = 1
+        if 'attack_power' not in kwargs.keys():
+            kwargs['attack_power'] = 5
         Movable.__init__(self,**kwargs)
+        Character.__init__(self,**kwargs)
         if 'actuator' not in kwargs.keys():
             self.actuator= None
         else:

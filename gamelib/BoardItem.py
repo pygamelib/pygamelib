@@ -54,7 +54,7 @@ class BoardItem():
         This method has to return True or False.
         This represent the capacity for a BoardItem to be moved by the Board.
         """
-        pass
+        raise NotImplementedError()
 
     def pickable(self):
         """
@@ -62,7 +62,7 @@ class BoardItem():
         This method has to return True or False.
         This represent the capacity for a BoardItem to be pick-up by player or NPC.
         """
-        pass
+        raise NotImplementedError()
 
     def overlappable(self):
         """
@@ -70,7 +70,15 @@ class BoardItem():
         This method has to return True or False.
         This represent the capacity for a BoardItem to be overlapped by another BoardItem.
         """
-        pass
+        raise NotImplementedError()
+    
+    def size(self):
+        """
+        This is a virtual method that must be implemented in deriving class.
+        This method has to return an integer.
+        This represent the size of the BoardItem. It is used for example to evaluate the space taken in the inventory.
+        """
+        raise NotImplementedError()
 
 
 class BoardItemVoid(BoardItem):

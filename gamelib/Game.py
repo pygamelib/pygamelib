@@ -5,6 +5,7 @@ from gamelib.BoardItem import BoardItemVoid
 from gamelib.Characters import NPC
 from gamelib.Actuators.SimpleActuators import RandomActuator
 import gamelib.Constants as C
+import gamelib.Utils as U
 import random
 
 class Game():
@@ -139,3 +140,27 @@ class Game():
         # TODO: Check data type and availability
         for npc in self._boards[level_number]['npcs']:
             self._boards[level_number]['board'].move(npc, npc.actuator.next_move(), npc.step)
+
+    def print_player_stats(self,position=C.POS_TOP):
+        if self.player == None:
+            return ''
+        info = ''
+        left_border = self.current_board().ui_border_left
+        right_border = self.current_board().ui_border_right
+        horizontal_border = self.current_board().ui_border_top
+        U.debug('Board BL size:'+str(len(self.current_board().ui_border_left)))
+        U.debug('Board BL size:'+self.current_board().ui_border_left)
+        hb_size = self.current_board().size[0]+len(left_border)+len(right_border)
+        U.debug('PPS: Horizontal border is going to be '+horizontal_border+'x'+str(hb_size))
+        if position == C.POS_BOTTOM:
+            horizontal_border = self.current_board().ui_border_bottom
+        else:
+            info += horizontal_border * hb_size
+            info += '\n'
+        player_stats = f' {self.player.name}'
+        stats_line = left_border + player_stats
+        info += stats_line + U.BLACK_RECT * (hb_size - len(stats_line) - len(right_border)) + right_border + '\n'
+        if position == C.POS_BOTTOM:
+            info += horizontal_border * hb_size
+        
+        print(info,end='')

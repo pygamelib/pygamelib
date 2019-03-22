@@ -57,8 +57,9 @@ else:
 # Here are some functions to manage the game
 # This one clear the screen, print the game title, display the current board and print the menu.
 def refresh_screen(mygame,player,menu):
-    mygame.clear_screen()
+    # mygame.clear_screen()
     print(Utils.magenta_bright(f"\t\t~+~ Welcome to {mygame.name} ~+~"))
+    mygame.print_player_stats()
     mygame.current_board().display()
     print( Utils.yellow_dim( 'Where should ' )+Utils.cyan_bright(player.name)+Utils.yellow_dim(' go?') )
     mygame.print_menu(menu)
@@ -73,9 +74,9 @@ lvl2 = Board(name='Level_2',size=[40,20],ui_border_left=Utils.WHITE_SQUARE,ui_bo
 
 game = Game(name='HAC Game')
 p = Player(model=sprite_player['right'],name='Nazbrok')
-npc1 = NPC(model=sprite_npc,name='Bad guy')
+npc1 = NPC(model=sprite_npc,name='Bad guy 1')
 # Test of the PathActuator
-npc1.actuator = PathActuator(path=[cst.RIGHT,cst.UP,cst.RIGHT,cst.DOWN,cst.LEFT,cst.DOWN,cst.LEFT,cst.UP])
+npc1.actuator = PathActuator(path=[cst.UP,cst.UP,cst.UP,cst.UP,cst.UP,cst.UP,cst.UP,cst.UP,cst.RIGHT,cst.RIGHT,cst.RIGHT,cst.RIGHT,cst.DOWN,cst.DOWN,cst.DOWN,cst.DOWN,cst.DOWN,cst.DOWN,cst.DOWN,cst.DOWN,cst.LEFT,cst.LEFT,cst.LEFT,cst.LEFT])
 
 game.add_board(1,lvl1)
 game.add_board(2,lvl2)
@@ -129,8 +130,13 @@ for i in range(4,40,1):
 
 lvl1.place_item(t,3,2)
 lvl1.place_item(portal2,19,39)
-# Now we add the NPC at a random location
-game.add_npc(1,npc1)
+# Now we add NPCs
+game.add_npc(1,npc1,15,4)
+# Now creating the movement path of the second NPC of lvl 1 (named Bad Guy 2)
+bg2_actuator = PathActuator( path=[cst.RIGHT for k in range(0,30,1)])
+for k in range(0,30,1):
+    bg2_actuator.path.append(cst.LEFT)
+game.add_npc(1,NPC(model=sprite_npc,name='Bad guy 2',actuator=bg2_actuator),7,9)
 
 lvl2.place_item(money_bag,10,35)
 lvl2.place_item(portal1,11,35)
@@ -166,6 +172,7 @@ npc_movements = [cst.UP,cst.DOWN,cst.LEFT,cst.RIGHT]
 while key != 'q':
     refresh_screen(game,p,current_menu)
     Utils.debug(f"Current game speed: {game_speed}")
+    print(p.inventory)
     # direction = str(input("What direction do you want to take: "))
     key = Utils.get_key()
     if key == 'w':
