@@ -141,27 +141,11 @@ class Game():
         for npc in self._boards[level_number]['npcs']:
             self._boards[level_number]['board'].move(npc, npc.actuator.next_move(), npc.step)
 
-    def print_player_stats(self,position=C.POS_TOP):
+    def print_player_stats(self):
         if self.player == None:
             return ''
         info = ''
-        left_border = self.current_board().ui_border_left
-        right_border = self.current_board().ui_border_right
-        horizontal_border = self.current_board().ui_border_top
-        U.debug('Board BL size:'+str(len(self.current_board().ui_border_left)))
-        U.debug('Board BL size:'+self.current_board().ui_border_left)
-        hb_size = self.current_board().size[0]+2
-        U.debug('PPS: Horizontal border is going to be '+horizontal_border+'x'+str(hb_size))
-        if position == C.POS_BOTTOM:
-            horizontal_border = self.current_board().ui_border_bottom
-        else:
-            info += horizontal_border * hb_size
-            info += '\n'
-        player_stats = f' {self.player.name}'
-        stats_line = player_stats + ' [' + U.RED_RECT * 20 + ']'
-        U.debug('Board BL black block * :' + str((hb_size - len(player_stats) + 1)))
-        info += left_border + stats_line + U.BLACK_RECT * ((hb_size - len(player_stats) + 2)*2) + right_border + '\n'
-        if position == C.POS_BOTTOM:
-            info += horizontal_border * hb_size
-        
-        print(info,end='')
+        info += f' {self.player.name}'
+        info += ' [' + U.RED_RECT * 20 + ']'
+        info += '     Score: '+str(self.player.inventory.value())
+        print(info)

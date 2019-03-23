@@ -11,8 +11,14 @@ class Inventory():
         s =  '=============\n'
         s += '= inventory =\n'
         s += '============='
+        types = {}
         for k in self.__items.keys():
-            s += f"\n{k} : {self.__items[k].size()}"
+            if self.__items[k].type in types.keys():
+                types[self.__items[k].type]['size'] += self.__items[k].size()
+            else:
+                types[self.__items[k].type] = {'size':self.__items[k].size(),'model':self.__items[k].model}
+        for k in types.keys():
+            s += f"\n{types[k]['model']} : {types[k]['size']}"
         return s
     
     def add_item(self, item):

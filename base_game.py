@@ -57,7 +57,7 @@ else:
 # Here are some functions to manage the game
 # This one clear the screen, print the game title, display the current board and print the menu.
 def refresh_screen(mygame,player,menu):
-    # mygame.clear_screen()
+    mygame.clear_screen()
     print(Utils.magenta_bright(f"\t\t~+~ Welcome to {mygame.name} ~+~"))
     mygame.print_player_stats()
     mygame.current_board().display()
@@ -81,8 +81,8 @@ npc1.actuator = PathActuator(path=[cst.UP,cst.UP,cst.UP,cst.UP,cst.UP,cst.UP,cst
 game.add_board(1,lvl1)
 game.add_board(2,lvl2)
 
-t = Treasure(model=sprite_treasure,name='Cool treasure')
-money_bag = Treasure(model=sprite_treasure2,name='money')
+t = Treasure(model=sprite_treasure,name='Cool treasure',type='gem')
+money_bag = Treasure(model=sprite_treasure2,name='money',value=20)
 
 tree = GenericStructure(model=sprite_tree)
 tree.set_overlappable(False)
@@ -129,6 +129,7 @@ for i in range(4,40,1):
             lvl1.place_item(tree,j,i)
 
 lvl1.place_item(t,3,2)
+lvl1.place_item(Treasure(model=sprite_treasure,name='Cool treasure',type='gem'),9,0)
 lvl1.place_item(portal2,19,39)
 # Now we add NPCs
 game.add_npc(1,npc1,15,4)
