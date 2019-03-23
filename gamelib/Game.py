@@ -150,7 +150,7 @@ class Game():
         horizontal_border = self.current_board().ui_border_top
         U.debug('Board BL size:'+str(len(self.current_board().ui_border_left)))
         U.debug('Board BL size:'+self.current_board().ui_border_left)
-        hb_size = self.current_board().size[0]+len(left_border)+len(right_border)
+        hb_size = self.current_board().size[0]+2
         U.debug('PPS: Horizontal border is going to be '+horizontal_border+'x'+str(hb_size))
         if position == C.POS_BOTTOM:
             horizontal_border = self.current_board().ui_border_bottom
@@ -158,8 +158,9 @@ class Game():
             info += horizontal_border * hb_size
             info += '\n'
         player_stats = f' {self.player.name}'
-        stats_line = left_border + player_stats
-        info += stats_line + U.BLACK_RECT * (hb_size - len(stats_line) - len(right_border)) + right_border + '\n'
+        stats_line = player_stats + ' [' + U.RED_RECT * 20 + ']'
+        U.debug('Board BL black block * :' + str((hb_size - len(player_stats) + 1)))
+        info += left_border + stats_line + U.BLACK_RECT * ((hb_size - len(player_stats) + 2)*2) + right_border + '\n'
         if position == C.POS_BOTTOM:
             info += horizontal_border * hb_size
         

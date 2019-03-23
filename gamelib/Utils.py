@@ -25,7 +25,7 @@ RED_BLUE_SQUARE = Back.RED+' '+Back.BLUE+' '+Style.RESET_ALL
 YELLOW_CYAN_SQUARE = Back.YELLOW+' '+Back.CYAN+' '+Style.RESET_ALL
 
 # This function comes from: http://code.activestate.com/recipes/577728-simpletron3xpy-game-to-demo-xy-drawing-using-the-k/?in=user-4177147 
-# it is name inkey() in this game.
+# it is named inkey() in this game.
 def get_key():
     fd=sys.stdin.fileno()
     remember_attributes=termios.tcgetattr(fd)
