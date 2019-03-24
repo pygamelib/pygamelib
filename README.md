@@ -1,3 +1,8 @@
+![Tested OS: Linux](https://img.shields.io/badge/Tested%20OS-Linux-blue.svg "Tested OS: Linux")
+![Untested OS: Windows, Mac OS](https://img.shields.io/badge/Untested%20OS-Windows,Mac%20OS-important.svg "Untested OS: Windows, Mac OS")
+
+
+
 # hac-game-lib
 Hyrule Astronomy Club - Kids coding class - base library for a game development
 
