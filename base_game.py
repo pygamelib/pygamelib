@@ -224,7 +224,7 @@ while key != 'q':
     # This is not really an efficient strategy...
     # Also the NPC move whatever our input, even when we navigates in menus.
     # Finally, we only move the NPCs of the current level. Nothing moves in the other levels.
-    game.move_npcs(game.current_level)
+    game.actuate_npcs(game.current_level)
     time.sleep(game_speed)
 
 

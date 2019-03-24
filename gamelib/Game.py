@@ -135,7 +135,7 @@ class Game():
         else:
             raise HacInvalidTypeException("The level number must be an int.")
         
-    def move_npcs(self,level_number):
+    def actuate_npcs(self,level_number):
         # TODO: Documentation
         # TODO: Check data type and availability
         for npc in self._boards[level_number]['npcs']:
