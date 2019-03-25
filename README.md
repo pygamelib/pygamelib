@@ -1,6 +1,7 @@
-![Tested OS: Linux](https://img.shields.io/badge/Tested%20OS-Linux-blue.svg "Tested OS: Linux")
+![Tested OS: Linux](https://img.shields.io/badge/Tested%20OS-Linux-green.svg "Tested OS: Linux")
 ![Untested OS: Windows, Mac OS](https://img.shields.io/badge/Untested%20OS-Windows,Mac%20OS-important.svg "Untested OS: Windows, Mac OS")
-
+[![GPLv3 license](https://img.shields.io/badge/License-GPLv3-blue.svg)](http://perso.crans.org/besson/LICENSE.html)
+[![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg?style=flat-square)](http://makeapullrequest.com)
 
 
 # hac-game-lib
@@ -14,6 +15,8 @@ It aims at giving an envireonment to kids that let them focus on the algorithm i
 This is **obviously** extremely simple and does not aim at being anythting serious for game developpers.
 
 If this library is useful for other teachers, I'll make tutorials.
+
+![base_game.py screenshot](images/base_game_lvl1.jpg?raw=true "base_game.py")
 
 ## Requirements
 
