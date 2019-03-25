@@ -16,7 +16,7 @@ This is **obviously** extremely simple and does not aim at being anythting serio
 
 If this library is useful for other teachers, I'll make tutorials.
 
-![base_game.py screenshot](images/base_game_lvl1.jpg?raw=true "base_game.py")
+![base_game.py screenshot](https://raw.githubusercontent.com/arnauddupuis/hac-game-lib/master/images/base_game_lvl1.png "base_game.py")
 
 ## Requirements
 
