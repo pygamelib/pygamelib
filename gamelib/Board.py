@@ -66,6 +66,10 @@ class Board():
         self._matrix = [ [ BoardItemVoid(model=self.ui_board_void_cell) for i in range(0,self.size[0],1) ] for j in range(0,self.size[1],1) ]
     
     def check_sanity(self):
+        """Check the board sanity.
+        
+        This is essentially an internal method called by the constructor.
+        """
         sanity_check=0
         if type(self.size) is list:
             sanity_check += 1
@@ -122,6 +126,12 @@ class Board():
             raise HacException('SANITY_CHECK_KO',"The board data are not valid.")
 
     def display(self):
+        """Display the board.
+
+        This method display the Board (as in print()), taking care of displaying the boarders, and everything inside.
+
+        It uses the __str__ method of the item, which by default is BoardItem.model. If you want to override this behavior you have to subclass BoardItem.
+        """
         border_top = ''
         border_bottom = ''
         for x in self._matrix[0]:
@@ -198,11 +208,24 @@ class Board():
             elif direction == Constants.RIGHT:
                 new_x = item.pos[0]
                 new_y = item.pos[1] + step
+            elif direction == Constants.DRUP:
+                new_x = item.pos[0] - step
+                new_y = item.pos[1] + step
+            elif direction == Constants.DRDOWN:
+                new_x = item.pos[0] + step
+                new_y = item.pos[1] + step
+            elif direction == Constants.DLUP:
+                new_x = item.pos[0] - step
+                new_y = item.pos[1] - step
+            elif direction == Constants.DLDOWN:
+                new_x = item.pos[0] + step
+                new_y = item.pos[1] - step
             if new_x != None and new_y != None and new_x>=0 and new_y>=0 and new_x < self.size[1] and new_y < self.size[0] and self._matrix[new_x][new_y].overlappable():
                 if isinstance(self._matrix[new_x][new_y],Actionnable):
-                    
                     if (isinstance(item, Player) and (self._matrix[new_x][new_y].perm == Constants.PLAYER_AUTHORIZED or self._matrix[new_x][new_y].perm == Constants.ALL_PLAYABLE_AUTHORIZED)) or (isinstance(item, NPC) and (self._matrix[new_x][new_y].perm == Constants.NPC_AUTHORIZED or self._matrix[new_x][new_y].perm == Constants.ALL_PLAYABLE_AUTHORIZED)):
                         self._matrix[new_x][new_y].activate()
+                        self.place_item( BoardItemVoid(model=self.ui_board_void_cell), item.pos[0], item.pos[1] )
+                        self.place_item( item, new_x, new_y )
                 else:
                     self.place_item( BoardItemVoid(model=self.ui_board_void_cell), item.pos[0], item.pos[1] )
                     self.place_item( item, new_x, new_y )
@@ -211,16 +234,19 @@ class Board():
                     item.inventory.add_item(self._matrix[new_x][new_y])
                     self.place_item( BoardItemVoid(model=self.ui_board_void_cell), item.pos[0], item.pos[1] )
                     self.place_item( item, new_x, new_y )
+            elif new_x != None and new_y != None and new_x>=0 and new_y>=0 and new_x < self.size[1] and new_y < self.size[0] and isinstance(self._matrix[new_x][new_y],Actionnable):
+                if (isinstance(item, Player) and (self._matrix[new_x][new_y].perm == Constants.PLAYER_AUTHORIZED or self._matrix[new_x][new_y].perm == Constants.ALL_PLAYABLE_AUTHORIZED)) or (isinstance(item, NPC) and (self._matrix[new_x][new_y].perm == Constants.NPC_AUTHORIZED or self._matrix[new_x][new_y].perm == Constants.ALL_PLAYABLE_AUTHORIZED)):
+                    self._matrix[new_x][new_y].activate()
         else:
             raise HacObjectIsNotMovableException(f"Item '{item.name}' at position [{item.pos[0]},{item.pos[1]}] is not a subclass of Movable, therefor it cannot be moved.")
     
     def clear_cell(self,x,y):
-        """
+        """Clear cell (x,y)
         This method clears a cell, meaning it position a void_cell BoardItemVoid at these coordinates.
         Ex: myboard.clear_cell(3,4)
         Parameters:
-         - x : int
-         - y : int
+         :param x: int
+         :param y: int
         
         WARNING: This method does not check the content before, it *will* overwrite the content.
         """
