@@ -3,10 +3,18 @@ from gamelib.Inventory import Inventory
 
 class Character():
     def __init__(self, **kwargs):
+        self.max_hp = None
+        self.hp = None
+        self.max_mp = None
+        self.mp = None
+        self.remaining_lives = None
+        self.attack_power = None
+        self.defense_power = None
+        self.strength = None
+        self.intelligence = None
+        self.agility = None
         for a in ['max_hp','hp','max_mp','mp','remaining_lives','attack_power','defense_power','strength','intelligence','agility']:
-            if a not in kwargs.keys():
-                setattr(self,a,None)
-            else:
+            if a in kwargs.keys():
                 setattr(self,a,kwargs[a])
 
 class Player(Movable,Character):
@@ -16,6 +24,8 @@ class Player(Movable,Character):
     def __init__(self,**kwargs):
         if 'max_hp' not in kwargs.keys():
             kwargs['max_hp'] = 100
+        if 'hp' not in kwargs.keys():
+            kwargs['hp'] = 100
         if 'remaining_lives' not in kwargs.keys():
             kwargs['remaining_lives'] = 3
         if 'attack_power' not in kwargs.keys():
