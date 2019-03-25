@@ -7,6 +7,7 @@ from gamelib.Actuators.SimpleActuators import RandomActuator
 import gamelib.Constants as C
 import gamelib.Utils as U
 import random
+from configparser import ConfigParser
 
 class Game():
     def __init__(self,name='Game',boards = {}, menu = {}, current_level = None):
@@ -15,6 +16,8 @@ class Game():
         self._menu = menu
         self.current_level = current_level
         self.player = None
+        self._config_parsers = None
+        self._configuration = None
 
     
     def add_menu_entry(self,category,shortcut,message):
@@ -33,7 +36,28 @@ class Game():
                 print( f"{k['shortcut']} - {k['message']}" )
     
     def clear_screen(self):
+        """
+        Clear the whole screen (i.e: remove everything written in terminal)
+        """
         os.system('clear')
+    
+    def load_config(self,filename,section='main',defaults={}):
+        """
+        Load a configuration file from the disk.
+        The configuration file must respect the INI syntax.
+        Valid arguments are:
+         - filename : a string, the filename to load. does not check for existence.
+         - section : a string, the section to put the read config file into. This allow for multiple files for multiple purpose.
+         defaults : a dictionnary, the default value for each variable in the config file (or not). If your config file uses sections, your defaults needs to represent that.
+         See https://docs.python.org/3/library/configparser.html for more information on that.
+         Ex:
+            mygame.load_config('game_controls.ini')
+        """
+        if self._config_parsers == None:
+            self._config_parsers = {}
+        if section not in self._config_parsers.keys():
+            self._config_parsers[section] = ConfigParser()
+        self._config_parsers[section].read(filename)
     
     def add_board(self,level_number,board):
         """
@@ -76,6 +100,8 @@ class Game():
         If parameter is not an int, a HacInvalidTypeException is raised.
         """
         if type(level_number) is int:
+            if self.player == None:
+                raise HacException('undefined_player','Game.player is undefined. We cannot change level without a player. Please set player in your Game object: mygame.player = Player()')
             if  level_number in self._boards.keys():
                 if self.player.pos[0] != None or self.player.pos[1] != None:
                     self._boards[self.current_level]['board'].clear_cell(self.player.pos[0],self.player.pos[1]) 
@@ -141,11 +167,20 @@ class Game():
         for npc in self._boards[level_number]['npcs']:
             self._boards[level_number]['board'].move(npc, npc.actuator.next_move(), npc.step)
 
-    def print_player_stats(self):
+    def print_player_stats(self,life_model=U.RED_RECT, void_model=U.BLACK_RECT):
         if self.player == None:
             return ''
         info = ''
         info += f' {self.player.name}'
-        info += ' [' + U.RED_RECT * 20 + ']'
+        nb_blocks = int( (self.player.hp / self.player.max_hp) * 20 )
+        info += ' [' + life_model * nb_blocks + void_model * (20-nb_blocks) +']'
         info += '     Score: '+str(self.player.inventory.value())
         print(info)
+
+    def move_player(self, direction, step):
+        """
+        Easy wrapper for Board.move().
+        Ex:
+        mygame.move_player(Constants.RIGHT,1)
+        """
+        self._boards[self.current_level].move(self.player,direction,step)
