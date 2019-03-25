@@ -21,7 +21,11 @@ sprite_treasure = None
 sprite_treasure2 = None
 sprite_tree = None
 sprite_wall = None
+sprite_heart = None
+sprite_heart_minor = None
 
+# The following code is used to switch rendering between emojis enabled terminal and the others.
+# Use 'nosprite' if you see unicode codes displayed in your terminal.
 if 'nosprite' in sys.argv:
     sprite_mode = 'nosprite'
 elif 'sprite' in sys.argv:
@@ -43,31 +47,61 @@ if sprite_mode == 'sprite':
     sprite_wall = Sprites.WALL
     sprite_npc = Sprites.SKULL
     sprite_npc2 = Sprites.POO
+    sprite_heart = Sprites.HEART_SPARKLING
+    sprite_heart_minor = Sprites.HEART_BLUE
 else:
     # sprite_player = Utils.RED_BLUE_SQUARE
     sprite_portal = Utils.CYAN_SQUARE
     sprite_treasure = Utils.YELLOW_RECT+Utils.RED_RECT
-    sprite_treasure2 = sprite_treasure
+    sprite_treasure2 = Utils.yellow_bright('$$')
     sprite_tree = Utils.GREEN_SQUARE
     sprite_wall = Utils.WHITE_SQUARE
     sprite_npc = Utils.magenta_bright("oO")
     sprite_npc2 = Utils.magenta_bright("'&")
+    sprite_heart = Utils.red_bright('<3')
+    sprite_heart_minor = Utils.blue_bright('<3')
 
 
 # Here are some functions to manage the game
-# This one clear the screen, print the game title, display the current board and print the menu.
+# This one clear the screen, print the game title, print the player stats, display the current board, print the inventory and print the menu.
 def refresh_screen(mygame,player,menu):
     mygame.clear_screen()
-    print(Utils.magenta_bright(f"\t\t~+~ Welcome to {mygame.name} ~+~"))
+    # print(Utils.magenta_bright(f"\t\t~+~ Welcome to {mygame.name} ~+~"))
     mygame.print_player_stats()
     mygame.current_board().display()
-    print( Utils.yellow_dim( 'Where should ' )+Utils.cyan_bright(player.name)+Utils.yellow_dim(' go?') )
+    if player.inventory.size() > 0:
+        # If inventory is not empty print it
+        items_by_type = {}
+        for item_name in player.inventory.items_name():
+            item = player.inventory.get_item(item_name)
+            if item.type in items_by_type.keys():
+                items_by_type[item.type]['cumulated_size'] += item.size()
+            else:
+                items_by_type[item.type] = {'cumulated_size':item.size(),'model':item.model,'name':item.name}
+        count = 1
+        for k in items_by_type.keys():
+            print(f" {items_by_type[k]['model']} : {items_by_type[k]['cumulated_size']} ",end='')
+            count += 1
+            if count == 5:
+                count = 0
+                print("\n",end='')
+        print("\n",end='')
+    print( Utils.yellow_dim( '\nWhere should ' )+Utils.cyan_bright(player.name)+Utils.yellow_dim(' go?') )
     mygame.print_menu(menu)
     Utils.debug(f"Player stored position is ({player.pos[0]},{player.pos[1]})")
 
 # This one is called a "callback", it's automatically called by the game engine when the player tries to go through a portal.
 def change_current_level(params):
     params[0].change_level(params[1])
+
+def add_hp(params):
+    game = params[0]
+    nb_hp = params[1]
+    if game.player != None:
+        if (game.player.hp + nb_hp) >= game.player.max_hp:
+            game.player.hp = game.player.max_hp
+        else:
+            game.player.hp += nb_hp
 
 lvl1 = Board(name='Level_1',size=[40,20],ui_border_left=Utils.WHITE_SQUARE,ui_border_right=Utils.WHITE_SQUARE,ui_border_top=Utils.WHITE_SQUARE,ui_border_bottom=Utils.WHITE_SQUARE,ui_board_void_cell=Utils.BLACK_SQUARE,player_starting_position=[10,20])
 lvl2 = Board(name='Level_2',size=[40,20],ui_border_left=Utils.WHITE_SQUARE,ui_border_right=Utils.WHITE_SQUARE,ui_border_top=Utils.WHITE_SQUARE,ui_border_bottom=Utils.WHITE_SQUARE,ui_board_void_cell=Utils.BLACK_SQUARE, player_starting_position=[0,0])
@@ -89,14 +123,24 @@ tree.set_overlappable(False)
 tree.set_pickable(False)
 
 portal2 = GenericActionnableStructure(model=sprite_portal)
-portal2.set_overlappable(True)
+portal2.set_overlappable(False)
 portal2.action = change_current_level
 portal2.action_parameters = [game,2]
 
 portal1 = GenericActionnableStructure(model=sprite_portal)
-portal1.set_overlappable(True)
+portal1.set_overlappable(False)
 portal1.action = change_current_level
 portal1.action_parameters = [game,1]
+
+life_heart = GenericActionnableStructure(model=sprite_heart)
+life_heart.set_overlappable(True)
+life_heart.action = add_hp
+life_heart.action_parameters = [game,100]
+
+life_heart_minor = GenericActionnableStructure(model=sprite_heart_minor)
+life_heart_minor.set_overlappable(True)
+life_heart_minor.action = add_hp
+life_heart_minor.action_parameters = [game,25]
 
 game.player = p
 
@@ -131,6 +175,8 @@ for i in range(4,40,1):
 lvl1.place_item(t,3,2)
 lvl1.place_item(Treasure(model=sprite_treasure,name='Cool treasure',type='gem'),9,0)
 lvl1.place_item(portal2,19,39)
+lvl1.place_item(life_heart,15,10)
+lvl1.place_item(life_heart_minor,15,22)
 # Now we add NPCs
 game.add_npc(1,npc1,15,4)
 # Now creating the movement path of the second NPC of lvl 1 (named Bad Guy 2)
@@ -150,10 +196,8 @@ game.add_menu_entry('main_menu','s','Go down')
 game.add_menu_entry('main_menu','a','Go left')
 game.add_menu_entry('main_menu','d','Go right')
 game.add_menu_entry('main_menu',None,'-'*17)
-game.add_menu_entry('main_menu','1','Go to level 1')
-game.add_menu_entry('main_menu','2','Go to level 2')
-game.add_menu_entry('main_menu',None,'-'*17)
 game.add_menu_entry('main_menu','v','Change game speed')
+game.add_menu_entry('main_menu','k','Damage player (5 HP)')
 game.add_menu_entry('main_menu','q','Quit game')
 
 game.add_menu_entry('speed_menu','1','Slow')
@@ -173,26 +217,40 @@ npc_movements = [cst.UP,cst.DOWN,cst.LEFT,cst.RIGHT]
 while key != 'q':
     refresh_screen(game,p,current_menu)
     Utils.debug(f"Current game speed: {game_speed}")
-    print(p.inventory)
-    # direction = str(input("What direction do you want to take: "))
     key = Utils.get_key()
-    if key == 'w':
-        game.current_board().move(p,cst.UP,1)
-    elif key == 's':
-        game.current_board().move(p,cst.DOWN,1)
-    elif key == 'a':
-        p.model = sprite_player['left']
-        game.current_board().move(p,cst.LEFT,1)
-    elif key == 'd':
-        p.model = sprite_player['right']
-        game.current_board().move(p,cst.RIGHT,1)
-    elif key == 'q':
-        game.clear_screen()
-        print( Utils.cyan_bright(f'Thanks for playing {game.name}') )
-        print(Utils.yellow_bright('Good bye!'))
-        break
-    elif current_menu == 'main_menu' and (key == '1' or key == '2'):
-        game.change_level(int(key))
+    
+    if current_menu == 'main_menu':
+        if key == 'w' or key == '8':
+            game.move_player(cst.UP,1)
+        elif key == 's' or key == '2':
+            game.move_player(cst.DOWN,1)
+        elif key == 'a' or key == '4':
+            p.model = sprite_player['left']
+            game.move_player(cst.LEFT,1)
+        elif key == 'd' or key == '6':
+            p.model = sprite_player['right']
+            game.move_player(cst.RIGHT,1)
+        elif key == '9':
+            p.model = sprite_player['right']
+            game.move_player(cst.DRUP,1)
+        elif key == '7':
+            p.model = sprite_player['left']
+            game.move_player(cst.DLUP,1)
+        elif key == '1':
+            p.model = sprite_player['left']
+            game.move_player(cst.DLDOWN,1)
+        elif key == '3':
+            p.model = sprite_player['right']
+            game.move_player(cst.DRDOWN,1)
+        elif key == 'q':
+            game.clear_screen()
+            print( Utils.cyan_bright(f'Thanks for playing {game.name}') )
+            print(Utils.yellow_bright('Good bye!'))
+            break
+        elif key == 'v':
+            current_menu = 'speed_menu'
+        elif key == 'k':
+            game.player.hp -= 5
     # Here we change the speed of the game and then go back to main menu.
     elif current_menu == 'speed_menu':
         if key == '1':
@@ -212,10 +270,6 @@ while key != 'q':
             current_menu = 'main_menu'
         elif key == 'b':
             current_menu = 'main_menu'
-    elif key == 'v':
-        current_menu = 'speed_menu'
-    elif key == 'c':
-        game.current_board().clear_cell(4,3)
     else:
         Utils.fatal("Invalid direction: "+str(ord(key)))
     
