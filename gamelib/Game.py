@@ -183,4 +183,4 @@ class Game():
         Ex:
         mygame.move_player(Constants.RIGHT,1)
         """
-        self._boards[self.current_level].move(self.player,direction,step)
+        self._boards[self.current_level]['board'].move(self.player,direction,step)
