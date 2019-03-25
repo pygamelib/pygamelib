@@ -6,6 +6,17 @@ Hyrule Astronomy Club - hac-game-lib - documentation
    :caption: Contents:
 
    board
+   boarditem
+   characters
+   constants
+   game
+   exceptions
+   immovable
+   inventory
+   movable
+   sprites
+   structures
+   utils
 
 Introduction
 ^^^^^^^^^^^^

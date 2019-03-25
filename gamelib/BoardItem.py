@@ -35,6 +35,8 @@ class BoardItem():
     def debug_info(self):
         """
         Return a string with the list of the attributes and their current value.
+
+        :rtype: str
         """
         string = "attrs: \n"
         for key in vars(self):
@@ -90,8 +92,18 @@ class BoardItemVoid(BoardItem):
         self.name = 'void_cell'
 
     def pickable(self):
+        """
+        A BoardItemVoid is not pickable, therefor this method return false.
+
+        :return: False
+        """
         return False
     
     def overlappable(self):
+        """
+        A BoardItemVoid is obviously overlappable (so player and NPC can walk over). 
+
+        :return: True
+        """
         return True
     

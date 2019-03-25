@@ -12,15 +12,15 @@ class Board():
     The board is being represented by a square matrix.
     For the moment a board only support one player.
     Board can have the following parameters:
-     - name: str
-     - size: array [x,y]
-     - player_starting_position: array [x,y]
-     - ui_borders : str - to set all the borders to the same value
-     - ui_border_left: str
-     - ui_border_right: str
-     - ui_border_top: str
-     - ui_border_bottom: str
-     - ui_board_void_cell: str
+    - name: str
+    - size: array [x,y]
+    - player_starting_position: array [x,y]
+    - ui_borders : str - to set all the borders to the same value
+    - ui_border_left: str
+    - ui_border_right: str
+    - ui_border_top: str
+    - ui_border_bottom: str
+    - ui_board_void_cell: str
     """
     
     def __init__(self,**kwargs):
@@ -60,7 +60,7 @@ class Board():
         """
         Initialize the board with BoardItem that uses ui_board_void_cell as model.
         I.e:
-          BoardItem(model=self.ui_board_void_cell)
+            BoardItem(model=self.ui_board_void_cell)
         """
 
         self._matrix = [ [ BoardItemVoid(model=self.ui_board_void_cell) for i in range(0,self.size[0],1) ] for j in range(0,self.size[1],1) ]
@@ -245,8 +245,8 @@ class Board():
         This method clears a cell, meaning it position a void_cell BoardItemVoid at these coordinates.
         Ex: myboard.clear_cell(3,4)
         Parameters:
-         :param x: int
-         :param y: int
+        :param x: int
+        :param y: int
         
         WARNING: This method does not check the content before, it *will* overwrite the content.
         """
