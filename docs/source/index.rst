@@ -17,6 +17,7 @@ Hyrule Astronomy Club - hac-game-lib - documentation
    sprites
    structures
    utils
+   simpleactuators
 
 Introduction
 ^^^^^^^^^^^^
