@@ -1,3 +1,5 @@
+.. _movable-module:
+
 Movable
 =======
 

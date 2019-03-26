@@ -1,3 +1,5 @@
+.. _board-module:
+
 Board
 =====
 

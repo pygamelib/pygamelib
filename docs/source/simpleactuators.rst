@@ -1,3 +1,5 @@
+.. _simpleactuators-module:
+
 SimpleActuators
 ===============
 

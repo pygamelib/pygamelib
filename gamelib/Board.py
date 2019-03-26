@@ -7,20 +7,30 @@ from gamelib.Characters import Player,NPC
 import gamelib.Constants as Constants
 
 class Board():
-    """
-    A class that represent a game board.
+    """A class that represent a game board.
+
     The board is being represented by a square matrix.
     For the moment a board only support one player.
+
     Board can have the following parameters:
-    - name: str
-    - size: array [x,y]
-    - player_starting_position: array [x,y]
-    - ui_borders : str - to set all the borders to the same value
-    - ui_border_left: str
-    - ui_border_right: str
-    - ui_border_top: str
-    - ui_border_bottom: str
-    - ui_board_void_cell: str
+        :name: the name of the Board
+        :type: str
+        :size: array [x,y] with x and y being int. The size of the board.
+        :type: list
+        :player_starting_position: array [x,y] with x and y being int. The coordinates at wich Game will place the player on change_level().
+        :type: list
+        :ui_borders: To set all the borders to the same value
+        :type: str
+        :ui_border_left: A string that represents the left border.
+        :type: str
+        :ui_border_right: A string that represents the right border.
+        :type: str
+        :ui_border_top: A string that represents the top border.
+        :type: str
+        :ui_border_bottom: A string that represents the bottom border.
+        :type: str
+        :ui_board_void_cell: A string that represents an empty cell. This option is going to be the model of the BoardItemVoid (see :class:`gamelib.BoardItem.BoardItemVoid`)
+        :type: str    
     """
     
     def __init__(self,**kwargs):
@@ -59,7 +69,9 @@ class Board():
     def init_board(self):
         """
         Initialize the board with BoardItem that uses ui_board_void_cell as model.
-        I.e:
+
+        :Example:
+
             BoardItem(model=self.ui_board_void_cell)
         """
 
@@ -150,6 +162,7 @@ class Board():
     def item(self,x,y):
         """
         Return the item at the x,y position if within board's bounds.
+
         Else raise an HacOutOfBoardBoundException
         """
         if x < self.size[0] and y < self.size[0]:
@@ -160,7 +173,9 @@ class Board():
     def place_item(self,item,x,y):
         """
         Place an item at coordinates x and y.
+
         If x or y are our of the board boundaries, an HacOutOfBoardBoundException is raised.
+
         If the item is not a subclass of BoardItem, an HacInvalidTypeException
         """
         if x < self.size[0] and y < self.size[0]:
@@ -179,20 +194,23 @@ class Board():
     def move(self,item,direction,step):
         """
         Move an item in the specified direction for a number of steps.
-        Ex: board.move(player,Constants.UP,1)
+
+        Example:
+            board.move(player,Constants.UP,1)
 
         Parameters are:
-         - item : an item to move (it has to be a subclass of Movable)
-         - direction : a direction from Constants
-         - step : the number of steps to move the item.
+            :item: an item to move (it has to be a subclass of Movable)
+            :direction: a direction from :ref:`constants-module`
+            :step: the number of steps to move the item.
 
         If the number of steps is greater than the Board, the item will be move to the maximum possible position.
 
-        If the item is not a subclass of Movable, an HacObjectIsNotMovableException exception.
+        If the item is not a subclass of Movable, an HacObjectIsNotMovableException exception (see :class:`gamelib.HacExceptions.HacObjectIsNotMovableException`).
 
-        Important: if the move is successfull, an empty BoardItemVoid will be put at the departure position.
+        .. Important:: if the move is successfull, an empty BoardItemVoid (see :class:`gamelib.BoardItem.BoardItemVoid`) will be put at the departure position.
+
+        .. todo:: check all types!
         """
-        # TODO: check all types!
         if isinstance(item, Movable) and item.can_move():
             new_x = None
             new_y = None
@@ -242,13 +260,17 @@ class Board():
     
     def clear_cell(self,x,y):
         """Clear cell (x,y)
+
         This method clears a cell, meaning it position a void_cell BoardItemVoid at these coordinates.
-        Ex: myboard.clear_cell(3,4)
+
+        Example:
+            myboard.clear_cell(3,4)
+
         Parameters:
-        :param x: int
-        :param y: int
+            :x: int
+            :y: int
         
-        WARNING: This method does not check the content before, it *will* overwrite the content.
+        .. WARNING:: This method does not check the content before, it *will* overwrite the content.
         """
         self.place_item( BoardItemVoid(model=self.ui_board_void_cell, name='void_cell'), x, y )
 

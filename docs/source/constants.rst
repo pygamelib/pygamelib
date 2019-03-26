@@ -1,3 +1,5 @@
+.. _constants-module:
+
 Constants
 =========
 

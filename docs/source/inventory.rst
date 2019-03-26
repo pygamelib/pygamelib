@@ -1,3 +1,5 @@
+.. _inventory-module:
+
 Inventory
 =========
 
