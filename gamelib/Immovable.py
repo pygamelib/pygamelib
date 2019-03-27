@@ -14,6 +14,9 @@ class Immovable(BoardItem):
         return False
 
 class Actionnable(Immovable):
+    """
+    .. TODO:: Documentation
+    """
     def __init__(self,**kwargs):
         if 'action' not in kwargs.keys():
             self.action = None

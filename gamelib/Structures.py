@@ -1,6 +1,9 @@
 from gamelib.Immovable import Immovable, Actionnable
 
 class Wall(Immovable):
+    """
+    .. TODO:: Documentation
+    """
     def __init__(self,**kwargs):
         if 'model' not in kwargs.keys():
             kwargs['model'] = '#'
@@ -15,6 +18,9 @@ class Wall(Immovable):
         return False
 
 class GenericStructure(Immovable):
+    """
+    .. TODO:: Documentation
+    """
     def __init__(self,**kwargs):
         if 'model' not in kwargs.keys():
             kwargs['model'] = '#'
@@ -39,12 +45,18 @@ class GenericStructure(Immovable):
             self.__is_overlappable = val
 
 class GenericActionnableStructure(GenericStructure,Actionnable):
+    """
+    .. TODO:: Documentation
+    """
     def __init__(self,**kwargs):
         GenericStructure.__init__(self,**kwargs)
         Actionnable.__init__(self,**kwargs)
 
 
 class Treasure(Immovable):
+    """
+    .. TODO:: Documentation
+    """
     def __init__(self,**kwargs):
         if 'model' not in kwargs.keys():
             kwargs['model'] = '¤'

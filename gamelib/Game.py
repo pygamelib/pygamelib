@@ -10,6 +10,9 @@ import random
 from configparser import ConfigParser
 
 class Game():
+    """
+    .. TODO:: Documentation
+    """
     def __init__(self,name='Game',boards = {}, menu = {}, current_level = None):
         self.name = name
         self._boards = boards
@@ -21,12 +24,18 @@ class Game():
 
     
     def add_menu_entry(self,category,shortcut,message):
+        """
+        .. TODO:: Documentation
+        """
         if category in self._menu.keys():
             self._menu[category].append({'shortcut' : shortcut,'message':message})
         else:
             self._menu[category] = [{'shortcut' : shortcut,'message':message}]
     
     def print_menu(self,category):
+        """
+        .. TODO:: Documentation
+        """
         if category not in self._menu:
             raise HacException('invalid_menu_category',f"The '{category}' category is not registered in the menu. Did you add any menu entry in that category with Game.add_menu_entry('{category}','some shortcut','some message') ? If yes, then you should check for typos." )
         for k in self._menu[category]:
@@ -45,13 +54,19 @@ class Game():
         """
         Load a configuration file from the disk.
         The configuration file must respect the INI syntax.
-        Valid arguments are:
-         - filename : a string, the filename to load. does not check for existence.
-         - section : a string, the section to put the read config file into. This allow for multiple files for multiple purpose.
-         defaults : a dictionnary, the default value for each variable in the config file (or not). If your config file uses sections, your defaults needs to represent that.
-         See https://docs.python.org/3/library/configparser.html for more information on that.
-         Ex:
+        
+        :param filename: The filename to load. does not check for existence.
+        :type filename: str
+        :param section: The section to put the read config file into. This allow for multiple files for multiple purpose.
+        :type section: str
+        :param defaults: The default value for each variable in the config file (or not). If your config file uses sections, your defaults needs to represent that.
+        :type defaults: dict
+        
+        See https://docs.python.org/3/library/configparser.html for more information on that.
+        
+        Example:
             mygame.load_config('game_controls.ini')
+        
         """
         if self._config_parsers == None:
             self._config_parsers = {}
@@ -80,9 +95,11 @@ class Game():
     def current_board(self):
         """
         This method return the board object corresponding to the current_level.
-        Ex: game.current_board().display()
+        
+        Example: 
+            game.current_board().display()
 
-        If current_level is set to a value with no corresponding board a HacException excpetion is raised with an invalid_level error.
+        If current_level is set to a value with no corresponding board a HacException excepetion is raised with an invalid_level error.
         """
         if  self.current_level in self._boards.keys():
             return self._boards[self.current_level]['board']
@@ -117,16 +134,21 @@ class Game():
         """
         Add a NPC to the game. It will be placed on the board corresponding to the level_number.
         If x and y are not None, the NPC is placed at these coordinates. Else, it's randomly placed in an empy cell.
-        Ex: game.add_board(1,myboard)
+        :Example: 
+        game.add_board(1,myboard)
 
-         - level_number : the level number of the board. Must be an int.
-         - npc : the NPC to place. Must be a gamelib.Characters.NPC (or a subclass of it)
-         - x and y: the coordinates to place the NPC. Must be an int.
+        :param level_number: the level number of the board.
+        :type level_number: int
+        :param npc: the NPC to place.
+        :type npc: gamelib.Characters.NPC
+        :param x: the x coordinate to place the NPC at.
+        :type x: int
+        :param y: the y coordinate to place the NPC at.
+        :type y: int
 
-         If either of these parameters are not of the correct type, a HacInvalidTypeException exception is raised.
+        If either of these parameters are not of the correct type, a HacInvalidTypeException exception is raised.
 
-         IMPORTANT: If the NPC does not have an actuator, this method is going to affect a gamelib.Actuators.SimpleActuators.RandomActuator() to npc.actuator.
-                    And if npc.step == None, this method sets it to 1
+        .. Important:: If the NPC does not have an actuator, this method is going to affect a gamelib.Actuators.SimpleActuators.RandomActuator() to npc.actuator. And if npc.step == None, this method sets it to 1
         """
         if type(level_number) is int:
             if isinstance(npc, NPC):
@@ -162,12 +184,18 @@ class Game():
             raise HacInvalidTypeException("The level number must be an int.")
         
     def actuate_npcs(self,level_number):
-        # TODO: Documentation
-        # TODO: Check data type and availability
+        """
+        .. TODO:: Documentation
+        .. TODO:: Check data type and availability
+        """
+        
         for npc in self._boards[level_number]['npcs']:
             self._boards[level_number]['board'].move(npc, npc.actuator.next_move(), npc.step)
 
     def print_player_stats(self,life_model=U.RED_RECT, void_model=U.BLACK_RECT):
+        """
+        .. TODO:: Documentation
+        """
         if self.player == None:
             return ''
         info = ''
@@ -180,7 +208,15 @@ class Game():
     def move_player(self, direction, step):
         """
         Easy wrapper for Board.move().
-        Ex:
-        mygame.move_player(Constants.RIGHT,1)
+
+        Example:
+            mygame.move_player(Constants.RIGHT,1)
         """
         self._boards[self.current_level]['board'].move(self.player,direction,step)
+    
+    def display_board(self):
+        """Display the current board.
+
+        This is an alias for Board.current_board().display()
+        """
+        self.current_board().display()
