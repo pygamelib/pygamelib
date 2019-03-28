@@ -12,6 +12,8 @@ class Board():
     The board is being represented by a square matrix.
     For the moment a board only support one player.
 
+    The Board object is the base object to build a level : you create a Board and then you add BoardItems and its subclasses.
+
     Board can have the following parameters:
         :name: the name of the Board
         :type: str
@@ -30,7 +32,7 @@ class Board():
         :ui_border_bottom: A string that represents the bottom border.
         :type: str
         :ui_board_void_cell: A string that represents an empty cell. This option is going to be the model of the BoardItemVoid (see :class:`gamelib.BoardItem.BoardItemVoid`)
-        :type: str    
+        :type: str 
     """
     
     def __init__(self,**kwargs):
