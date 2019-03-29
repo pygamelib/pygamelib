@@ -184,15 +184,26 @@ class Game():
             raise HacInvalidTypeException("The level number must be an int.")
         
     def actuate_npcs(self,level_number):
-        """
-        .. TODO:: Documentation
-        .. TODO:: Check data type and availability
-        """
-        
-        for npc in self._boards[level_number]['npcs']:
-            self._boards[level_number]['board'].move(npc, npc.actuator.next_move(), npc.step)
+        """Actuate all NPCs on a given level
 
-    def print_player_stats(self,life_model=U.RED_RECT, void_model=U.BLACK_RECT):
+        This method actuate all NPCs on a board associated with a level. At the moment it means moving the NPCs but as the Actuators become more capable this method will evolve to allow mpre choice (like attack use objects, etc.)
+
+        :param level_number: The number of the level to actuate NPCs in.
+        :type int:
+
+        Example:
+            mygame.actuate_npcs(1)
+        """
+        if type(level_number) is int:
+            if  level_number in self._boards.keys():
+                for npc in self._boards[level_number]['npcs']:
+                    self._boards[level_number]['board'].move(npc, npc.actuator.next_move(), npc.step)
+            else:
+                raise HacInvalidLevelException(f"Impossible to actuate NPCs for this level (level number {level_number} is not associated with any board).")
+        else:
+            raise HacInvalidTypeException('In actuate_npcs(level_number) the level_number must be an int.')
+
+    def display_player_stats(self,life_model=U.RED_RECT, void_model=U.BLACK_RECT):
         """
         .. TODO:: Documentation
         """
