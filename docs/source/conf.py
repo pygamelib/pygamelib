@@ -28,7 +28,7 @@ author = 'Arnaud Dupuis'
 # The short X.Y version
 version = ''
 # The full version, including alpha/beta/rc tags
-release = '0.0.1'
+release = '2019.3a1'
 
 
 # -- General configuration ---------------------------------------------------
