@@ -10,8 +10,18 @@ import random
 from configparser import ConfigParser
 
 class Game():
-    """
-    .. TODO:: Documentation
+    """A class that serve as a game engine.
+
+    This object is the central system that allow the management of a game. It holds boards (see :class:`gamelib.Board.Board`), associate it to level, takes care of level changing, etc.
+
+    :param name: The Game name.
+    :type name: str
+    :param boards: A dictionnary of boards with the level number as key and a board reference as value.
+    :type boards: dict
+    :param menu: A dictionnary of menus with a category (str) as key and another dictionnary (key: a shortcut, value: a description) as value.
+    :type menu: dict
+    :param current_level: The current level.
+    :type current_level: int
     """
     def __init__(self,name='Game',boards = {}, menu = {}, current_level = None):
         self.name = name
@@ -24,8 +34,26 @@ class Game():
 
     
     def add_menu_entry(self,category,shortcut,message):
-        """
-        .. TODO:: Documentation
+        """Add a new entry to the menu.
+
+        Add another shortcut and message to the specified category.
+
+        Categories help organize the different sections of a menu or dialogues.
+        
+        :param category: The category to wich the entry should be added.
+        :type category: str
+        :param shortcut: A shortcut (usually one key) to display.
+        :type shortcut: str
+        :param message: a message that explains what the shortcut does.
+        :type message: str
+
+        The shortcut is optional.
+
+        Example:
+            game.add_menu_entry('main_menu','d','Go right')
+            game.add_menu_entry('main_menu',None,'-'\*17)
+            game.add_menu_entry('main_menu','v','Change game speed')
+
         """
         if category in self._menu.keys():
             self._menu[category].append({'shortcut' : shortcut,'message':message})
@@ -65,7 +93,7 @@ class Game():
         See https://docs.python.org/3/library/configparser.html for more information on that.
         
         Example:
-            mygame.load_config('game_controls.ini')
+            mygame.load_config('game_controls.ini','game_control')
         
         """
         if self._config_parsers == None:
@@ -75,14 +103,19 @@ class Game():
         self._config_parsers[section].read(filename)
     
     def add_board(self,level_number,board):
-        """
-        Add a board for the level number.
-        Ex: game.add_board(1,myboard)
+        """Add a board for the level number.
 
-         - level_number : the level number of the board. Must be an int.
-         - board : a Board object corresponding to the level number.
+        This method associate a Board (:class:`gamelib.Board.Board`) to a level number.
 
-         If either of these parameters are not of the correct type, a HacInvalidTypeException exception is raised.
+        Example:
+            game.add_board(1,myboard)
+
+        :param level_number: the level number to associate the board to.
+        :type level_number: int
+        :param board: a Board object corresponding to the level number.
+        :type board: gamelib.Board.Board
+
+        :raises HacInvalidTypeException: If either of these parameters are not of the correct type.
         """
         if type(level_number) is int:
             if isinstance(board, Board):
@@ -109,12 +142,14 @@ class Game():
     def change_level(self,level_number):
         """
         Change the current level, load the board and place the player to the right place.
-        Ex: game.change_level(1)
 
-        Parameter:
-         - level_number: int
-        
-        If parameter is not an int, a HacInvalidTypeException is raised.
+        Example: 
+            game.change_level(1)
+
+        :param level_number: the level number to change to.
+        :type level_number: int
+
+        :raises HacInvalidTypeException: If parameter is not an int.
         """
         if type(level_number) is int:
             if self.player == None:
@@ -134,8 +169,9 @@ class Game():
         """
         Add a NPC to the game. It will be placed on the board corresponding to the level_number.
         If x and y are not None, the NPC is placed at these coordinates. Else, it's randomly placed in an empy cell.
-        :Example: 
-        game.add_board(1,myboard)
+
+        Example: 
+            game.add_board(1,myboard)
 
         :param level_number: the level number of the board.
         :type level_number: int
@@ -204,8 +240,18 @@ class Game():
             raise HacInvalidTypeException('In actuate_npcs(level_number) the level_number must be an int.')
 
     def display_player_stats(self,life_model=U.RED_RECT, void_model=U.BLACK_RECT):
-        """
-        .. TODO:: Documentation
+        """Display the player name and health.
+        
+        This method print the Player name, a health bar (20 blocks of life_model). When life is missing the complement (20-life missing) is printed using void_model.
+        It also display the inventory value as "Score".
+
+        :param life_model: The character(s) that should be used to represent the *remaining* life.
+        :type life_model: str
+        :param void_model: The character(s) that should be used to represent the *lost* life.
+        :type void_model: str
+
+        .. note:: This method might change in the futur. Particularly it could take a template of what to display.
+
         """
         if self.player == None:
             return ''
