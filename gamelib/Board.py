@@ -14,25 +14,24 @@ class Board():
 
     The Board object is the base object to build a level : you create a Board and then you add BoardItems and its subclasses.
 
-    Board can have the following parameters:
-        :name: the name of the Board
-        :type: str
-        :size: array [x,y] with x and y being int. The size of the board.
-        :type: list
-        :player_starting_position: array [x,y] with x and y being int. The coordinates at wich Game will place the player on change_level().
-        :type: list
-        :ui_borders: To set all the borders to the same value
-        :type: str
-        :ui_border_left: A string that represents the left border.
-        :type: str
-        :ui_border_right: A string that represents the right border.
-        :type: str
-        :ui_border_top: A string that represents the top border.
-        :type: str
-        :ui_border_bottom: A string that represents the bottom border.
-        :type: str
-        :ui_board_void_cell: A string that represents an empty cell. This option is going to be the model of the BoardItemVoid (see :class:`gamelib.BoardItem.BoardItemVoid`)
-        :type: str 
+    :param name: the name of the Board
+    :type name: str
+    :param size: array [x,y] with x and y being int. The size of the board.
+    :type size: list
+    :param player_starting_position: array [x,y] with x and y being int. The coordinates at wich Game will place the player on change_level().
+    :type player_starting_position: list
+    :param ui_borders: To set all the borders to the same value
+    :type ui_borders: str
+    :param ui_border_left: A string that represents the left border.
+    :type ui_border_left: str
+    :param ui_border_right: A string that represents the right border.
+    :type ui_border_right: str
+    :param ui_border_top: A string that represents the top border.
+    :type ui_border_top: str
+    :param ui_border_bottom: A string that represents the bottom border.
+    :type ui_border_bottom: str
+    :param ui_board_void_cell: A string that represents an empty cell. This option is going to be the model of the BoardItemVoid (see :class:`gamelib.BoardItem.BoardItemVoid`)
+    :type ui_board_void_cell: str 
     """
     
     def __init__(self,**kwargs):
