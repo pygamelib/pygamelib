@@ -67,7 +67,7 @@ else:
 def refresh_screen(mygame,player,menu):
     mygame.clear_screen()
     # print(Utils.magenta_bright(f"\t\t~+~ Welcome to {mygame.name} ~+~"))
-    mygame.print_player_stats()
+    mygame.display_player_stats()
     mygame.current_board().display()
     if player.inventory.size() > 0:
         # If inventory is not empty print it

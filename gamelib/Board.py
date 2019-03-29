@@ -179,6 +179,8 @@ class Board():
         If x or y are our of the board boundaries, an HacOutOfBoardBoundException is raised.
 
         If the item is not a subclass of BoardItem, an HacInvalidTypeException
+
+        .. warning:: Nothing prevents you from placing an object on top of another. Be sure to check that.
         """
         if x < self.size[0] and y < self.size[0]:
             if isinstance(item, BoardItem):
