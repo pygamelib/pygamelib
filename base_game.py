@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+
 from gamelib.Board import Board
 from gamelib.BoardItem import BoardItem
 from gamelib.Characters import Player, NPC
