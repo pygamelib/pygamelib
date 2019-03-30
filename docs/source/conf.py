@@ -17,7 +17,7 @@ import sys
 sys.path.insert(0, os.path.abspath('.'))
 sys.path.insert(1, os.path.abspath('..'))
 sys.path.insert(2, os.path.abspath('../..'))
-
+import gamelib.Constants as CST
 
 # -- Project information -----------------------------------------------------
 
@@ -28,8 +28,8 @@ author = 'Arnaud Dupuis'
 # The short X.Y version
 version = ''
 # The full version, including alpha/beta/rc tags
-release = '2019.3a1'
-
+# release = '2019.3a1'
+release = CST.HAC_GAME_LIB_VERSION
 
 # -- General configuration ---------------------------------------------------
 

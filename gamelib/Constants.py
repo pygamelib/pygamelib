@@ -1,6 +1,7 @@
+# Main version
+HAC_GAME_LIB_VERSION = '2019.3a2'
 # Directions
 UP     = 10000001
-"""Constant for direction up."""
 DOWN   = 10000010
 LEFT   = 10000011
 RIGHT  = 10000100
