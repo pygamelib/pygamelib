@@ -71,7 +71,8 @@ class Board():
         """
         Initialize the board with BoardItem that uses ui_board_void_cell as model.
 
-        Example:
+        Example::
+
             BoardItem(model=self.ui_board_void_cell)
         """
 
@@ -197,7 +198,8 @@ class Board():
         """
         Move an item in the specified direction for a number of steps.
 
-        Example:
+        Example::
+
             board.move(player,Constants.UP,1)
 
         Parameters are:
@@ -265,7 +267,8 @@ class Board():
 
         This method clears a cell, meaning it position a void_cell BoardItemVoid at these coordinates.
 
-        Example:
+        Example::
+
             myboard.clear_cell(3,4)
 
         Parameters:
@@ -273,8 +276,39 @@ class Board():
             :y: int
         
         .. WARNING:: This method does not check the content before, it *will* overwrite the content.
+
         """
+        if self._matrix[x][y] in self._movables:
+            index = self._movables.index(self._matrix[x][y])
+            del( self._movables[index] )
+        elif self._matrix[x][y] in self._immovables:
+            index = self._immovables.index(self._matrix[x][y])
+            del( self._immovables[index] )
         self.place_item( BoardItemVoid(model=self.ui_board_void_cell, name='void_cell'), x, y )
+
+    def get_movables(self):
+        """Return a list of all the Movable objects in the Board.
+
+        See :class:`gamelib.Movable.Movable` for more on a Movable object.
+
+        Example::
+
+            for m in myboard.get_movables():
+                print(m.name)
+        """
+        return self._movables
+
+    def get_immovables(self):
+        """Return a list of all the Imovable objects in the Board.
+
+        See :class:`gamelib.Immovable.Immovable` for more on an Immovable object.
+        
+        Example::
+
+            for m in myboard.get_immovables() :
+                print(m.name)
+        """
+        return self._movables
 
 
 
