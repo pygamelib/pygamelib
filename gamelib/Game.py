@@ -4,9 +4,11 @@ from gamelib.Board import Board
 from gamelib.BoardItem import BoardItemVoid
 from gamelib.Characters import NPC
 from gamelib.Actuators.SimpleActuators import RandomActuator
+import gamelib.Structures as Structures
 import gamelib.Constants as C
 import gamelib.Utils as U
 import random
+import json
 from configparser import ConfigParser
 
 class Game():
@@ -51,7 +53,7 @@ class Game():
 
         Example:
             game.add_menu_entry('main_menu','d','Go right')
-            game.add_menu_entry('main_menu',None,'-'\*17)
+            game.add_menu_entry('main_menu',None,'-----------------')
             game.add_menu_entry('main_menu','v','Change game speed')
 
         """
@@ -277,3 +279,113 @@ class Game():
         This is an alias for Board.current_board().display()
         """
         self.current_board().display()
+
+    def load_board(self,filename):
+        """Load a saved board
+
+        Load a Board saved on the disk as a JSON file. This method creates a new Board object, populate it with all the elements (except a Player) and then return it.
+
+        If the filename argument is not an existing file, the open 
+
+        :param filename: The file to load
+        :type filename: str
+        :returns: a newly created board (see :class:`gamelib.Board.Board`)
+        
+        Example:
+            mynewboard = game.load_board( 'awesome_level.json' )
+            game.add_board( 1, mynewboard )
+        """
+        with open(filename,'r') as f:
+            data = json.load(f)
+        local_board = Board()
+        data_keys = data.keys()
+        if "name" in data_keys:
+            local_board.name = data["name"]
+        if 'size' in data_keys:
+            local_board.size = data['size']
+        if 'player_starting_position' in data_keys:
+            local_board.player_starting_position = data['player_starting_position']
+        if 'ui_border_top' in data_keys:
+            local_board.ui_border_top = data['ui_border_top']
+        if 'ui_border_bottom' in data_keys:
+            local_board.ui_border_bottom = data['ui_border_bottom']
+        if 'ui_border_left' in data_keys:
+            local_board.ui_border_left = data['ui_border_left']
+        if 'ui_border_right' in data_keys:
+            local_board.ui_border_right = data['ui_border_right']
+        if 'ui_board_void_cell' in data_keys:
+            local_board.ui_board_void_cell = data['ui_board_void_cell']
+        # Now we need to recheck for board sanity
+        local_board.check_sanity()
+        # and re-initialize the board (mainly to attribute a new model to the void cells as it's not dynamic). 
+        local_board.init_board()
+
+        # Now let's place the good stuff on the board
+        if 'map_data' in data_keys:
+            for pos_x in data['map_data'].keys():
+                x = int(pos_x)
+                for pos_y in data['map_data'][pos_x].keys():
+                    y = int(pos_y)
+                    ref = data['map_data'][pos_x][pos_y]
+                    obj_keys = ref.keys()
+                    if 'object' in obj_keys:
+                        if ref['object'].endswith('Wall'):
+                            o = Structures.Wall()
+                            if 'name' in obj_keys:
+                                o.name = ref['name']
+                            if 'model' in obj_keys:
+                                o.model = ref['model']
+                            if 'type' in obj_keys:
+                                o.type = ref['type']
+                            local_board.place_item(o,x,y)
+                        elif ref['object'].endswith('Treasure'):
+                            o = Structures.Treasure()
+                            if 'name' in obj_keys:
+                                o.name = ref['name']
+                            if 'model' in obj_keys:
+                                o.model = ref['model']
+                            if 'type' in obj_keys:
+                                o.type = ref['type']
+                            if 'value' in obj_keys:
+                                o.value = ref['value']
+                            if 'size' in obj_keys:
+                                o._size = ref['type']
+                            local_board.place_item(o,x,y)
+                        elif ref['object'].endswith('GenericStructure'):
+                            o = Structures.GenericStructure()
+                            if 'name' in obj_keys:
+                                o.name = ref['name']
+                            if 'model' in obj_keys:
+                                o.model = ref['model']
+                            if 'type' in obj_keys:
+                                o.type = ref['type']
+                            if 'value' in obj_keys:
+                                o.value = ref['value']
+                            if 'size' in obj_keys:
+                                o._size = ref['type']
+                            if 'pickable' in obj_keys:
+                                o.set_pickable(ref['pickable'])
+                            if 'overlappable' in obj_keys:
+                                o.set_overlappable(ref['overlappable'])
+                            local_board.place_item(o,x,y)
+                        elif ref['object'].endswith('GenericActionnableStructure'):
+                            o = Structures.GenericActionnableStructure()
+                            if 'name' in obj_keys:
+                                o.name = ref['name']
+                            if 'model' in obj_keys:
+                                o.model = ref['model']
+                            if 'type' in obj_keys:
+                                o.type = ref['type']
+                            if 'value' in obj_keys:
+                                o.value = ref['value']
+                            if 'size' in obj_keys:
+                                o._size = ref['type']
+                            if 'pickable' in obj_keys:
+                                o.set_pickable(ref['pickable'])
+                            if 'overlappable' in obj_keys:
+                                o.set_overlappable(ref['overlappable'])
+                            local_board.place_item(o,x,y)
+
+                    else:
+                        U.warn(f'while loading the board in {filename}, at coordinates [{pos_x},{pos_y}] there is an entry without "object" attribute. NOT LOADED.')
+        return local_board

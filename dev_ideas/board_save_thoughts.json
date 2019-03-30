@@ -1,16 +1,29 @@
 {
     "name": "board name",
-    "size": [10,10],
-    "ui_border_top": "str",
-    "ui_border_bottom": "str",
-    "ui_border_left": "str",
-    "ui_border_right": "str",
-    "ui_board_void_cell" : "str",
+    "size": [15,15],
+    "ui_border_top": "🧱",
+    "ui_border_bottom": "🧱",
+    "ui_border_left": "🧱",
+    "ui_border_right": "🧱",
+    "ui_board_void_cell" : "  ",
     "player_starting_position": [5,5],
     "map_data" : {
         "0" : {
             "0" : { "object":"Player", "name":"Nazbork", "can_move" : true, "has_inventory" : true, "overlappable" : false, "pickable" : false, "size" : 1, "model" : "str", "type" : "player" },
-            "5" : { "object":"Wall", "name":"wall", "can_move" : true, "has_inventory" : true, "overlappable" : false, "pickable" : false, "size" : 1,"type":"wall" }
+            "5" : { "object":"Wall", "name":"wall", "can_move" : true, "has_inventory" : true, "overlappable" : false, "pickable" : false, "size" : 1, "model":"🧱", "type":"wall" }
+        },
+        "1" : {
+            "5" : { "object":"Wall", "name":"wall", "size" : 1, "model":"🧱", "type":"wall" }
+        },
+        "2" : {
+            "5" : { "object":"Wall", "name":"wall", "model":"🚪", "type":"wall" },
+            "13" : { "object":"Treasure", "name":"treasure", "size" : 1, "model":"💶", "type":"money" }
+        },
+        "10" : {
+            "12" : { "object":"GenericStructure", "name":"crown", "size" : 1, "model":"👑", "type":"crown" }
+        },
+        "12" : {
+            "2" : { "object":"GenericActionnableStructure", "name":"candle", "size" : 1, "model":"🕯 ", "type":"candle" }
         }
     }
 }

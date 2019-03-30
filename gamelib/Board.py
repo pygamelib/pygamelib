@@ -65,14 +65,13 @@ class Board():
         
 
     def __str__(self):
-        return f"----------------\nBoard name: {self.name}\nBoard size: {self.size}\nBorders: '{self.ui_border_left}','{self.ui_border_right}','{self.ui_border_top}','{self.ui_border_bottom}',\nBoard void cell: '{self.ui_board_void_cell}'\n----------------"
+        return f"----------------\nBoard name: {self.name}\nBoard size: {self.size}\nBorders: '{self.ui_border_left}','{self.ui_border_right}','{self.ui_border_top}','{self.ui_border_bottom}',\nBoard void cell: '{self.ui_board_void_cell}'\nPlayer starting position: {self.player_starting_position}\n----------------"
     
     def init_board(self):
         """
         Initialize the board with BoardItem that uses ui_board_void_cell as model.
 
-        :Example:
-
+        Example:
             BoardItem(model=self.ui_board_void_cell)
         """
 
