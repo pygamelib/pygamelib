@@ -16,6 +16,9 @@ class Wall(Immovable):
     
     def overlappable(self):
         return False
+    
+    def size(self):
+        return 1
 
 class GenericStructure(Immovable):
     """
