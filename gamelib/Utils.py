@@ -24,9 +24,52 @@ CYAN_SQUARE = Back.CYAN+'  '+Style.RESET_ALL
 RED_BLUE_SQUARE = Back.RED+' '+Back.BLUE+' '+Style.RESET_ALL
 YELLOW_CYAN_SQUARE = Back.YELLOW+' '+Back.CYAN+' '+Style.RESET_ALL
 
+"""
+Utils define a couple of constants and functions for styling the Board and terminal.
+
+Some colored rectangles:
+ * WHITE_RECT 
+ * BLUE_RECT 
+ * RED_RECT
+ * MAGENTA_RECT 
+ * GREEN_RECT 
+ * YELLOW_RECT
+ * BLACK_RECT
+ * CYAN_RECT
+
+Then some colored squares:
+ * WHITE_SQUARE
+ * MAGENTA_SQUARE
+ * GREEN_SQUARE
+ * RED_SQUARE
+ * BLUE_SQUARE
+ * YELLOW_SQUARE
+ * BLACK_SQUARE
+ * CYAN_SQUARE
+
+And finally an example of composition of rectangles to make different colored squares:
+ * RED_BLUE_SQUARE = RED_RECT+BLUE_RECT
+ * YELLOW_CYAN_SQUARE = YELLOW_RECT+CYAN_RECT
+
+"""
+
 # This function comes from: http://code.activestate.com/recipes/577728-simpletron3xpy-game-to-demo-xy-drawing-using-the-k/?in=user-4177147 
 # it is named inkey() in this game.
 def get_key():
+    """Get a key from the keyboard.
+
+    This function capture one unique key from the keyboard **without** waiting for a carriage return.
+
+    Example::
+
+        key = Utils.get_key()
+        if key == "q"
+            exit()
+    
+    .. note:: Anything that return more than one key code is not going to be correctly captured (like the arrow keys)
+
+    .. todo:: Make it possible to use the arrow keys.
+    """
     fd=sys.stdin.fileno()
     remember_attributes=termios.tcgetattr(fd)
     tty.setraw(sys.stdin.fileno())
