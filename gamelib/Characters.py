@@ -55,6 +55,8 @@ class NPC(Movable,Character):
     def __init__(self,**kwargs):
         if 'max_hp' not in kwargs.keys():
             kwargs['max_hp'] = 10
+        if 'hp' not in kwargs.keys():
+            kwargs['hp'] = 10
         if 'remaining_lives' not in kwargs.keys():
             kwargs['remaining_lives'] = 1
         if 'attack_power' not in kwargs.keys():
