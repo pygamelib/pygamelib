@@ -9,6 +9,8 @@ class Wall(Immovable):
             kwargs['model'] = '#'
         if 'name' not in kwargs.keys():
             kwargs['name'] = 'wall'
+        if 'size' not in kwargs.keys():
+            kwargs['size'] = 1
         Immovable.__init__(self,**kwargs)
     
     def pickable(self):
@@ -16,9 +18,6 @@ class Wall(Immovable):
     
     def overlappable(self):
         return False
-    
-    def size(self):
-        return 1
 
 class GenericStructure(Immovable):
     """
@@ -28,8 +27,12 @@ class GenericStructure(Immovable):
         if 'model' not in kwargs.keys():
             kwargs['model'] = '#'
         if 'name' not in kwargs.keys():
-            kwargs['name'] = 'wall'
+            kwargs['name'] = 'structure'
         Immovable.__init__(self,**kwargs)
+        if 'value' not in kwargs.keys():
+            self.value = 0
+        else:
+            self.value = kwargs['value']
         self.__is_pickable = False
         self.__is_overlappable = False
     
@@ -79,5 +82,3 @@ class Treasure(Immovable):
     def overlappable(self):
         return False
     
-    def size(self):
-        return self._size

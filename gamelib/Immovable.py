@@ -9,9 +9,16 @@ class Immovable(BoardItem):
     """
     def __init__(self,**kwargs):
         BoardItem.__init__(self,**kwargs)
+        if 'size' not in kwargs.keys():
+            self._size = 0
+        else:
+            self._size = kwargs['size']
 
     def can_move(self):
         return False
+    
+    def size(self):
+        return self._size
 
 class Actionnable(Immovable):
     """

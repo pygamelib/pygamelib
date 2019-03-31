@@ -2,11 +2,11 @@ import os
 from gamelib.HacExceptions import HacInvalidTypeException, HacInvalidLevelException, HacException
 from gamelib.Board import Board
 from gamelib.BoardItem import BoardItemVoid
-from gamelib.Characters import NPC
-from gamelib.Actuators.SimpleActuators import RandomActuator
+from gamelib.Characters import NPC,Player
+from gamelib.Actuators.SimpleActuators import RandomActuator, PathActuator
 import gamelib.Structures as Structures
-import gamelib.Constants as C
-import gamelib.Utils as U
+import gamelib.Constants as Constants
+import gamelib.Utils as Utils
 import random
 import json
 from configparser import ConfigParser
@@ -51,7 +51,8 @@ class Game():
 
         The shortcut is optional.
 
-        Example:
+        Example::
+
             game.add_menu_entry('main_menu','d','Go right')
             game.add_menu_entry('main_menu',None,'-----------------')
             game.add_menu_entry('main_menu','v','Change game speed')
@@ -94,7 +95,8 @@ class Game():
         
         See https://docs.python.org/3/library/configparser.html for more information on that.
         
-        Example:
+        Example::
+
             mygame.load_config('game_controls.ini','game_control')
         
         """
@@ -109,7 +111,8 @@ class Game():
 
         This method associate a Board (:class:`gamelib.Board.Board`) to a level number.
 
-        Example:
+        Example::
+
             game.add_board(1,myboard)
 
         :param level_number: the level number to associate the board to.
@@ -131,7 +134,8 @@ class Game():
         """
         This method return the board object corresponding to the current_level.
         
-        Example: 
+        Example::
+
             game.current_board().display()
 
         If current_level is set to a value with no corresponding board a HacException excepetion is raised with an invalid_level error.
@@ -145,7 +149,8 @@ class Game():
         """
         Change the current level, load the board and place the player to the right place.
 
-        Example: 
+        Example::
+
             game.change_level(1)
 
         :param level_number: the level number to change to.
@@ -172,7 +177,8 @@ class Game():
         Add a NPC to the game. It will be placed on the board corresponding to the level_number.
         If x and y are not None, the NPC is placed at these coordinates. Else, it's randomly placed in an empy cell.
 
-        Example: 
+        Example::
+ 
             game.add_board(1,myboard)
 
         :param level_number: the level number of the board.
@@ -207,7 +213,7 @@ class Game():
                 if type(x) is int:
                     if type(y) is int:
                         if npc.actuator == None:
-                            npc.actuator = RandomActuator(moveset=[C.UP,C.DOWN,C.LEFT,C.RIGHT])
+                            npc.actuator = RandomActuator(moveset=[Constants.UP,Constants.DOWN,Constants.LEFT,Constants.RIGHT])
                         if npc.step == None:
                             npc.step = 1
                         self._boards[level_number]['board'].place_item(npc,x,y)
@@ -229,7 +235,8 @@ class Game():
         :param level_number: The number of the level to actuate NPCs in.
         :type int:
 
-        Example:
+        Example::
+
             mygame.actuate_npcs(1)
         """
         if type(level_number) is int:
@@ -241,7 +248,7 @@ class Game():
         else:
             raise HacInvalidTypeException('In actuate_npcs(level_number) the level_number must be an int.')
 
-    def display_player_stats(self,life_model=U.RED_RECT, void_model=U.BLACK_RECT):
+    def display_player_stats(self,life_model=Utils.RED_RECT, void_model=Utils.BLACK_RECT):
         """Display the player name and health.
         
         This method print the Player name, a health bar (20 blocks of life_model). When life is missing the complement (20-life missing) is printed using void_model.
@@ -268,7 +275,8 @@ class Game():
         """
         Easy wrapper for Board.move().
 
-        Example:
+        Example::
+
             mygame.move_player(Constants.RIGHT,1)
         """
         self._boards[self.current_level]['board'].move(self.player,direction,step)
@@ -280,20 +288,26 @@ class Game():
         """
         self.current_board().display()
 
-    def load_board(self,filename):
+    def load_board(self,filename,lvl_number=0):
         """Load a saved board
 
         Load a Board saved on the disk as a JSON file. This method creates a new Board object, populate it with all the elements (except a Player) and then return it.
 
-        If the filename argument is not an existing file, the open 
+        If the filename argument is not an existing file, the open function is going to raise an exception.
+
+        This method, laod the board from the JSON file, populate it with all BoardItem incluided, check for sanity, init the board with BoardItemVoid and then associate the freshly created board to a lvl_number.
+        It then create the NPCs and add them to the board.
 
         :param filename: The file to load
         :type filename: str
+        :param lvl_number: The level number to associate the board to. Default is 0.
+        :type lvl_number: int
         :returns: a newly created board (see :class:`gamelib.Board.Board`)
         
-        Example:
-            mynewboard = game.load_board( 'awesome_level.json' )
-            game.add_board( 1, mynewboard )
+        Example::
+
+            mynewboard = game.load_board( 'awesome_level.json', 1 )
+            game.change_level( 1 )
         """
         with open(filename,'r') as f:
             data = json.load(f)
@@ -319,6 +333,29 @@ class Game():
         local_board.check_sanity()
         # and re-initialize the board (mainly to attribute a new model to the void cells as it's not dynamic). 
         local_board.init_board()
+        # Then add board to the game
+        self.add_board(lvl_number,local_board)
+
+        # Define an internal function to transform directions string into constants
+        def _string_to_constant(s):
+            if type(s) is int:
+                return s
+            elif s == "UP":
+                return Constants.UP
+            elif s == "DOWN":
+                return Constants.DOWN
+            elif s == "RIGHT":
+                return Constants.RIGHT
+            elif s == "LEFT":
+                return Constants.LEFT
+            elif s == "DRUP":
+                return Constants.DRUP
+            elif s == "DRDOWN":
+                return Constants.DRDOWN
+            elif s == "DLDOWN":
+                return Constants.DLDOWN
+            elif s == "DLUP":
+                return Constants.DLUP
 
         # Now let's place the good stuff on the board
         if 'map_data' in data_keys:
@@ -329,63 +366,147 @@ class Game():
                     ref = data['map_data'][pos_x][pos_y]
                     obj_keys = ref.keys()
                     if 'object' in obj_keys:
-                        if ref['object'].endswith('Wall'):
+                        o = BoardItemVoid()
+                        if 'Wall' in ref['object']:
                             o = Structures.Wall()
-                            if 'name' in obj_keys:
-                                o.name = ref['name']
-                            if 'model' in obj_keys:
-                                o.model = ref['model']
-                            if 'type' in obj_keys:
-                                o.type = ref['type']
-                            local_board.place_item(o,x,y)
-                        elif ref['object'].endswith('Treasure'):
+                        elif 'Treasure' in ref['object']:
                             o = Structures.Treasure()
-                            if 'name' in obj_keys:
-                                o.name = ref['name']
-                            if 'model' in obj_keys:
-                                o.model = ref['model']
-                            if 'type' in obj_keys:
-                                o.type = ref['type']
                             if 'value' in obj_keys:
                                 o.value = ref['value']
                             if 'size' in obj_keys:
-                                o._size = ref['type']
-                            local_board.place_item(o,x,y)
-                        elif ref['object'].endswith('GenericStructure'):
+                                o._size = ref['size']
+                        elif 'GenericStructure' in ref['object']:
                             o = Structures.GenericStructure()
-                            if 'name' in obj_keys:
-                                o.name = ref['name']
-                            if 'model' in obj_keys:
-                                o.model = ref['model']
-                            if 'type' in obj_keys:
-                                o.type = ref['type']
                             if 'value' in obj_keys:
                                 o.value = ref['value']
                             if 'size' in obj_keys:
-                                o._size = ref['type']
+                                o._size = ref['size']
                             if 'pickable' in obj_keys:
                                 o.set_pickable(ref['pickable'])
                             if 'overlappable' in obj_keys:
                                 o.set_overlappable(ref['overlappable'])
-                            local_board.place_item(o,x,y)
-                        elif ref['object'].endswith('GenericActionnableStructure'):
+                        elif 'GenericActionnableStructure' in ref['object']:
                             o = Structures.GenericActionnableStructure()
-                            if 'name' in obj_keys:
-                                o.name = ref['name']
-                            if 'model' in obj_keys:
-                                o.model = ref['model']
-                            if 'type' in obj_keys:
-                                o.type = ref['type']
                             if 'value' in obj_keys:
                                 o.value = ref['value']
                             if 'size' in obj_keys:
-                                o._size = ref['type']
+                                o._size = ref['size']
                             if 'pickable' in obj_keys:
                                 o.set_pickable(ref['pickable'])
                             if 'overlappable' in obj_keys:
                                 o.set_overlappable(ref['overlappable'])
-                            local_board.place_item(o,x,y)
+                        elif 'NPC' in ref['object']:
+                            o = NPC()
+                            if 'value' in obj_keys:
+                                o.value = ref['value']
+                            if 'size' in obj_keys:
+                                o._size = ref['size']
+                            if 'hp' in obj_keys:
+                                o.hp = ref['hp']
+                            if 'max_hp' in obj_keys:
+                                o.max_hp = ref['max_hp']
+                            if 'step' in obj_keys:
+                                o.step = ref['step']
+                            if 'remaining_lives' in obj_keys:
+                                o.remaining_lives = ref['remaining_lives']
+                            if 'attack_power' in obj_keys:
+                                o.attack_power = ref['attack_power']
+                            if 'actuator' in obj_keys:
+                                if 'RandomActuator' in ref['actuator']['type']:
+                                    o.actuator = RandomActuator()
+                                    if 'moveset' in ref['actuator'].keys():
+                                        for m in ref['actuator']['moveset']:
+                                            o.actuator.moveset.append( _string_to_constant(m) )
+                                elif 'PathActuator' in ref['actuator']['type']:
+                                    o.actuator = PathActuator()
+                                    if 'path' in ref['actuator'].keys():
+                                        for m in ref['actuator']['path']:
+                                            o.actuator.path.append( _string_to_constant(m) )
+                            self.add_npc(lvl_number,o,x,y)
+                        # Now what remains is what is common to all BoardItem
+                        if not isinstance(o,BoardItemVoid):
+                            if 'name' in obj_keys:
+                                    o.name = ref['name']
+                            if 'model' in obj_keys:
+                                o.model = ref['model']
+                            if 'type' in obj_keys:
+                                o.type = ref['type']
+                            # And finally we have to place the item on the board.
+                            if not isinstance(o,NPC):
+                                local_board.place_item(o,x,y)
 
                     else:
-                        U.warn(f'while loading the board in {filename}, at coordinates [{pos_x},{pos_y}] there is an entry without "object" attribute. NOT LOADED.')
+                        Utils.warn(f'while loading the board in {filename}, at coordinates [{pos_x},{pos_y}] there is an entry without "object" attribute. NOT LOADED.')
         return local_board
+
+    def save_board(self,lvl_number,filename):
+        """Save a baord to a JSON file
+
+        This method saves a Board and everything in it but the BoardItemVoid.
+
+        Not check are done on the filename, if anything happen you get the exceptions from open().
+
+        :param lvl_number: The level number to get the board from.
+        :type lvl_number: int
+        :param filename: The path to the file to save the data to.
+        :type filename: str
+
+        :raises HacInvalidTypeException: If any parameter is not of the right type
+        :raises HacInvalidLevelException: If the level is not associated with a Board.
+        
+        Example::
+        
+            game.save_board( 1, 'hac-maps/level1.json')
+        """
+        if type(lvl_number) is not int:
+            raise HacInvalidTypeException("lvl_number must be an int in Game.save_board()")
+        if type(filename) is not str:
+            raise HacInvalidTypeException("filename must be a str in Game.save_board()")
+        if lvl_number not in self._boards:
+            raise HacInvalidLevelException('lvl_number '+lvl_number+' does not correspond to any level associated with a board in Game.save_board()')
+        
+        data = {}
+        local_board = self._boards[lvl_number]['board']
+        data['name'] = local_board.name
+        data['player_starting_position'] = local_board.player_starting_position
+        data['ui_border_left'] = local_board.ui_border_left
+        data['ui_border_right'] = local_board.ui_border_right
+        data['ui_border_top'] = local_board.ui_border_top
+        data['ui_border_bottom'] = local_board.ui_border_bottom
+        data['ui_board_void_cell'] = local_board.ui_board_void_cell
+        data['size'] = local_board.size
+        data['map_data'] = {}
+        # Now we need to run through all the cells to store anything that is not a BoardItemVoid
+        for x in self.current_board()._matrix:
+            for y in x:
+                if not isinstance(y,BoardItemVoid) and not isinstance(y,Player):
+                    print(f"Item: name={y.name} pos={y.pos} type={y.type}")
+                    if str(y.pos[0]) not in data['map_data'].keys():
+                         data['map_data'][str(y.pos[0])] = {}
+                    data['map_data'][str(y.pos[0])][str(y.pos[1])] = {"object":str(  y.__class__ ),"name":y.name,"pos":y.pos,"model":y.model,"type":y.type }
+
+                    if isinstance(y,Structures.Wall):
+                        data['map_data'][str(y.pos[0])][str(y.pos[1])]['size'] = y.size()
+                    elif isinstance(y,Structures.Treasure):
+                        data['map_data'][str(y.pos[0])][str(y.pos[1])]['value'] = y.value
+                        data['map_data'][str(y.pos[0])][str(y.pos[1])]['size'] = y.size()
+                    elif isinstance(y,Structures.GenericActionnableStructure) or isinstance(y,Structures.GenericStructure):
+                        data['map_data'][str(y.pos[0])][str(y.pos[1])]['value'] = y.value
+                        data['map_data'][str(y.pos[0])][str(y.pos[1])]['size'] = y.size()
+                        data['map_data'][str(y.pos[0])][str(y.pos[1])]['overlappable'] = y.overlappable()
+                        data['map_data'][str(y.pos[0])][str(y.pos[1])]['pickable'] = y.pickable()
+                    elif isinstance(y,NPC):
+                        data['map_data'][str(y.pos[0])][str(y.pos[1])]['hp'] = y.hp
+                        data['map_data'][str(y.pos[0])][str(y.pos[1])]['max_hp'] = y.max_hp
+                        data['map_data'][str(y.pos[0])][str(y.pos[1])]['step'] = y.step
+                        data['map_data'][str(y.pos[0])][str(y.pos[1])]['remaining_lives'] = y.remaining_lives
+                        data['map_data'][str(y.pos[0])][str(y.pos[1])]['attack_power'] = y.attack_power
+                        if y.actuator != None:
+                            if isinstance(y.actuator,RandomActuator):
+                                data['map_data'][str(y.pos[0])][str(y.pos[1])]['actuator'] = {'type':'RandomActuator','moveset':y.actuator.moveset}
+                            elif isinstance(y.actuator,PathActuator):
+                                data['map_data'][str(y.pos[0])][str(y.pos[1])]['actuator'] = {'type':'PathActuator','path':y.actuator.path}
+
+
+        with open(filename, 'w') as f:  
+            json.dump(data, f)
