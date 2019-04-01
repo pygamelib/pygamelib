@@ -89,7 +89,7 @@ def refresh_screen(mygame,player,menu):
                 print("\n",end='')
         print("\n",end='')
     print( Utils.yellow_dim( '\nWhere should ' )+Utils.cyan_bright(player.name)+Utils.yellow_dim(' go?') )
-    mygame.print_menu(menu)
+    mygame.display_menu(menu)
     Utils.debug(f"Player stored position is ({player.pos[0]},{player.pos[1]})")
 
 # This one is called a "callback", it's automatically called by the game engine when the player tries to go through a portal.
