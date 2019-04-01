@@ -69,14 +69,29 @@ class Board():
     
     def init_board(self):
         """
-        Initialize the board with BoardItem that uses ui_board_void_cell as model.
+        Initialize the board with BoardItemVoid that uses ui_board_void_cell as model.
 
         Example::
 
-            BoardItem(model=self.ui_board_void_cell)
+            myboard.init_board()
         """
 
         self._matrix = [ [ BoardItemVoid(model=self.ui_board_void_cell) for i in range(0,self.size[0],1) ] for j in range(0,self.size[1],1) ]
+    
+    def init_cell(self,x,y):
+        """
+        Initialize a specific cell of the board with BoardItemVoid that uses ui_board_void_cell as model.
+
+        :param x: the x coordinate.
+        :type x: int
+        :param y: the y coordinate.
+        :type y: int
+
+        Example::
+
+            myboard.init_cell(2,3)
+        """
+        self._matrix[x][y] = BoardItemVoid(model=self.ui_board_void_cell)
     
     def check_sanity(self):
         """Check the board sanity.
@@ -156,6 +171,8 @@ class Board():
         for x in self._matrix:
             print(self.ui_border_left,end='')
             for y in x:
+                if isinstance(y,BoardItemVoid) and y.model != self.ui_board_void_cell:
+                    y.model = self.ui_board_void_cell
                 print(y,end='')
             print(self.ui_border_right)
         print(border_bottom)
