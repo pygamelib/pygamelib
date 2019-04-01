@@ -35,7 +35,7 @@ class Game():
         self._configuration = None
 
     
-    def add_menu_entry(self,category,shortcut,message):
+    def add_menu_entry(self,category,shortcut,message,data=None):
         """Add a new entry to the menu.
 
         Add another shortcut and message to the specified category.
@@ -48,22 +48,24 @@ class Game():
         :type shortcut: str
         :param message: a message that explains what the shortcut does.
         :type message: str
+        :param data: a data that you can get from the menu object.
+        :type message: various
 
-        The shortcut is optional.
+        The shortcut and data is optional.
 
         Example::
 
-            game.add_menu_entry('main_menu','d','Go right')
+            game.add_menu_entry('main_menu','d','Go right',Constants.RIGHT)
             game.add_menu_entry('main_menu',None,'-----------------')
             game.add_menu_entry('main_menu','v','Change game speed')
 
         """
         if category in self._menu.keys():
-            self._menu[category].append({'shortcut' : shortcut,'message':message})
+            self._menu[category].append({'shortcut' : shortcut,'message':message,'data':data})
         else:
-            self._menu[category] = [{'shortcut' : shortcut,'message':message}]
+            self._menu[category] = [{'shortcut' : shortcut,'message':message,'data':data}]
     
-    def update_menu_entry(self,category,shortcut,message):
+    def update_menu_entry(self,category,shortcut,message,data=None):
         """Update an entry of the menu.
 
         Update the message associated to a category and a shortcut.
@@ -74,18 +76,46 @@ class Game():
         :type shortcut: str
         :param message: a message that explains what the shortcut does.
         :type message: str
+        :param data: a data that you can get from the menu object.
+        :type message: various
 
         .. important:: If the entry have no shortcut it's advised not to try to update unless you have only one NoneType as a shortcut.
 
         Example::
 
             game.add_menu_entry('main_menu','d','Go right')
-            game.update_menu_entry('main_menu','d','Go LEFT')
+            game.update_menu_entry('main_menu','d','Go LEFT',Constants.LEFT)
 
         """
         for e in self._menu[category]:
             if e['shortcut'] == shortcut:
                 e['message'] = message
+                if data != None:
+                    e['data'] = data
+    def get_menu_entry(self,category,shortcut):
+        """Get an entry of the menu.
+
+        This method return a dictionnary with 3 entries :
+            * shortcut
+            * message
+            * data
+        
+        :param category: The category in wich the entry is located.
+        :type category: str
+        :param shortcut: The shortcut of the entry you want to get.
+        :type shortcut: str
+        :return: The menu entry
+        :rtype: dict
+
+        Example::
+
+            ent = game.get_menu_entry('main_menu','d')
+            game.move_player(int(ent['data']),1)
+
+        """
+        for e in self._menu[category]:
+            if e['shortcut'] == shortcut:
+                return e
 
     def display_menu(self,category,orientation=Constants.ORIENTATION_VERTICAL,paginate=10):
         """
@@ -512,7 +542,7 @@ class Game():
         for x in self.current_board()._matrix:
             for y in x:
                 if not isinstance(y,BoardItemVoid) and not isinstance(y,Player):
-                    print(f"Item: name={y.name} pos={y.pos} type={y.type}")
+                    # print(f"Item: name={y.name} pos={y.pos} type={y.type}")
                     if str(y.pos[0]) not in data['map_data'].keys():
                          data['map_data'][str(y.pos[0])] = {}
                     data['map_data'][str(y.pos[0])][str(y.pos[1])] = {"object":str(  y.__class__ ),"name":y.name,"pos":y.pos,"model":y.model,"type":y.type }
