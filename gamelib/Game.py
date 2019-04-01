@@ -63,17 +63,49 @@ class Game():
         else:
             self._menu[category] = [{'shortcut' : shortcut,'message':message}]
     
-    def print_menu(self,category):
+    def update_menu_entry(self,category,shortcut,message):
+        """Update an entry of the menu.
+
+        Update the message associated to a category and a shortcut.
+        
+        :param category: The category in wich the entry is located.
+        :type category: str
+        :param shortcut: The shortcut of the entry you want to update.
+        :type shortcut: str
+        :param message: a message that explains what the shortcut does.
+        :type message: str
+
+        .. important:: If the entry have no shortcut it's advised not to try to update unless you have only one NoneType as a shortcut.
+
+        Example::
+
+            game.add_menu_entry('main_menu','d','Go right')
+            game.update_menu_entry('main_menu','d','Go LEFT')
+
+        """
+        for e in self._menu[category]:
+            if e['shortcut'] == shortcut:
+                e['message'] = message
+
+    def display_menu(self,category,orientation=Constants.ORIENTATION_VERTICAL,paginate=10):
         """
         .. TODO:: Documentation
         """
+        line_end = '\n'
+        if orientation == Constants.ORIENTATION_HORIZONTAL:
+            line_end = ' | '
         if category not in self._menu:
             raise HacException('invalid_menu_category',f"The '{category}' category is not registered in the menu. Did you add any menu entry in that category with Game.add_menu_entry('{category}','some shortcut','some message') ? If yes, then you should check for typos." )
+        pagination_counter = 1
         for k in self._menu[category]:
             if k['shortcut'] == None:
-                print(k['message'])
+                print(k['message'],end=line_end)
             else:
-                print( f"{k['shortcut']} - {k['message']}" )
+                print( f"{k['shortcut']} - {k['message']}",end=line_end )
+                pagination_counter += 1
+                if pagination_counter > paginate:
+                    print('')
+                    pagination_counter=1
     
     def clear_screen(self):
         """
