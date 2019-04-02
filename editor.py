@@ -48,9 +48,9 @@ def switch_edit_mode():
     global edit_mode
     edit_mode = not edit_mode
     if edit_mode:
-        game.update_menu_entry('main','j/i/k/l',Utils.green_bright('Place')+' the current object and then move cursor Left/Up/Down/Right')
+        game.update_menu_entry('main',Utils.white_bright('j/i/k/l'),Utils.green_bright('Place')+' the current object and then move cursor Left/Up/Down/Right')
     else:
-        game.update_menu_entry('main','j/i/k/l','Move cursor Left/Up/Down/Right and '+Utils.red_bright('Delete')+' anything that was at destination.')
+        game.update_menu_entry('main',Utils.white_bright('j/i/k/l'),'Move cursor Left/Up/Down/Right and '+Utils.red_bright('Delete')+' anything that was at destination.')
 
 
 def color_picker():
@@ -155,6 +155,17 @@ def create_wizzard():
     #Placeholder
     return BoardItemVoid()
 
+
+def save_current_board():
+    global game
+    global object_history
+    global is_modified
+    if not os.path.exists('hac-maps') or not os.path.isdir('hac-maps'):
+        os.makedirs('hac-maps')
+    game.object_library = object_history
+    game.save_board(1,'hac-maps/'+game.current_board().name.replace(' ','_')+'.json')
+    is_modified=False
+
 # Main program
 game = Game()
 game.player = Player(model='[]')
@@ -215,13 +226,15 @@ for sp in dir(Sprites):
         i += 1
 
 game.add_menu_entry('main',None,'\n=== Menu ===')
-game.add_menu_entry('main','Space','Switch between edit/delete mode')
-game.add_menu_entry('main','a/w/s/d','Move cursor Left/Up/Down/Right')
-game.add_menu_entry('main','j/i/k/l',Utils.green_bright('Place')+' the current object and then move cursor Left/Up/Down/Right')
-game.add_menu_entry('main','c','Create a new object (becomes the current object, previous object is placed in history)')
-game.add_menu_entry('main','p','Modify board parameters')
-game.add_menu_entry('main','P','Set player starting position')
-game.add_menu_entry('main','Q','Quit the editor')
+game.add_menu_entry('main',Utils.white_bright('Space'),'Switch between edit/delete mode')
+game.add_menu_entry('main',Utils.white_bright('0 to 9'),'Select an item in history to be the current item')
+game.add_menu_entry('main',Utils.white_bright('a/w/s/d'),'Move cursor Left/Up/Down/Right')
+game.add_menu_entry('main',Utils.white_bright('j/i/k/l'),Utils.green_bright('Place')+' the current item and then move cursor Left/Up/Down/Right')
+game.add_menu_entry('main',Utils.white_bright('c'),'Create a new board item (becomes the current item, previous one is placed in history)')
+game.add_menu_entry('main',Utils.white_bright('p'),'Modify board parameters')
+game.add_menu_entry('main',Utils.white_bright('P'),'Set player starting position')
+game.add_menu_entry('main',Utils.white_bright('S'),'Save the current Board to hac-maps/'+game.current_board().name.replace(' ','_')+'.json')
+game.add_menu_entry('main',Utils.white_bright('Q'),'Quit the editor')
 
 game.add_menu_entry('board',None,'=== Board ===')
 game.add_menu_entry('board','1','Change '+Utils.white_bright('width')+' (only sizing up)')
@@ -247,6 +260,9 @@ while True:
                 game.object_library = object_history
                 game.save_board(1,'hac-maps/'+game.current_board().name.replace(' ','_')+'.json')
         break
+    elif key == 'S':
+        save_current_board()
+        dbg_messages.append("Board saved")
     elif current_menu == 'main':
         if key == 'w':
             game.move_player(Constants.UP,1)
@@ -287,6 +303,7 @@ while True:
         elif key == 'c':
             to_history(current_object)
             current_object = create_wizzard()
+            to_history(current_object)
     elif current_menu == 'board':
         if key == "0":
             current_menu = 'main'
@@ -350,13 +367,13 @@ while True:
     if len(object_history) > 10:
         del(object_history[0])
     if current_menu == 'main':
-        print('History:')
+        print('Item history:')
         cnt = 0
         for o in object_history:
             print(f"{cnt}: {o.model}", end='  ')
             cnt += 1
         print('')
-        print(f'Current object: {current_object.model}')
+        print(f'Current item: {current_object.model}')
     game.display_menu(current_menu)
     for m in dbg_messages:
         Utils.debug(m)
