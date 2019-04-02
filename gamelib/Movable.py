@@ -5,12 +5,19 @@ class Movable(BoardItem):
 
     Movable subclasses :class:`BoardItem`.
 
+    :param step: the amount of cell a movable can cross in one turn.
+    :type step: int
+
     This class derive BoardItem and describe an object that can move or be moved (like a player or NPC).
     Thus this class implements BoardItem.can_move().
     However it does not impement BoardItem.pickable() or BoardItem.overlappable()
     """
     def __init__(self,**kwargs):
         BoardItem.__init__(self,**kwargs)
+        if 'step' not in kwargs.keys():
+            self.step = 1
+        else:
+            self.step = kwargs['step']
     
     def can_move(self):
         """
