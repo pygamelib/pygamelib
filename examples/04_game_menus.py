@@ -40,7 +40,7 @@ while True:
         message = None
 
     # Now let's display the main_menu
-    mygame.print_menu(current_menu)
+    mygame.display_menu(current_menu)
 
     # Take user input 
     key = input("> ")
