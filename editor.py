@@ -5,7 +5,7 @@ import gamelib.Constants as Constants
 import gamelib.Structures as Structures
 import gamelib.Sprites as Sprites
 from gamelib.Game import Game
-from gamelib.Characters import Player
+from gamelib.Characters import Player,NPC
 from gamelib.Board import Board
 from gamelib.BoardItem import BoardItemVoid
 import os
@@ -71,13 +71,89 @@ def model_picker():
     global game
     game.clear_screen()
     print("What kind of model do you want (you can edit that later)?\n1 - Colored squares and rectangles\n2 - Sprites\n3 - Set your own string of character(s)")
-    choice = str( input('> ') )
+    choice = str( Utils.get_key() )
     if choice == '1':
         return game.get_menu_entry('graphics_utils',color_picker())['data']
     if choice == '2':
         return game.get_menu_entry('graphics_sprites',sprite_picker())['data']
     if choice == '3':
         return str( input('Enter your string now: ') )
+
+def to_history(object):
+    global object_history
+    if len(object_history) <= 10 and object not in object_history and not isinstance(object,BoardItemVoid):
+        object_history.append(object)
+    elif len(object_history) > 10 and object not in object_history and not isinstance(object,BoardItemVoid):
+        del(object_history[0])
+        object_history.append(object)
+
+def create_wizzard():
+    global game
+    game.clear_screen()
+    # 1 - Choose object type between structures or characters
+    # 2 - pick one
+    # 3 - Structure: customize name, type, size, etc.
+    print(Utils.green_bright("\t\tObject creation wizzard"))
+    print('What do you want to create: a NPC or a structure?')
+    print('1 - NPC (Non Playable Character)')
+    print('2 - Structure (Wall, Treasure, Portal, Trees, etc.)')
+    key = Utils.get_key()
+    if key == '1':
+        game.clear_screen()
+        print(Utils.green_bright("\t\tObject creation wizzard: ")+Utils.cyan_bright("NPC") )
+        new_object = NPC()
+        print("First give a name to your NPC. Default value: "+new_object.name)
+        r = str( input('(Enter name)> ') )
+        if len(r) > 0:
+            new_object.name = r
+        print("Then give it a type. A type is important as it allows grouping.\nType is a string. Default value: "+new_object.type)
+        r = str( input('(Enter type)> ') )
+        if len(r) > 0:
+            new_object.type = r
+        print("Now we need a model. Default value: "+new_object.model)
+        input('Hit "Enter" when you are ready to choose a model.')
+        new_object.model = model_picker()
+        game.clear_screen()
+        print(Utils.green_bright("\t\tObject creation wizzard: ")+Utils.cyan_bright("NPC")+f' - {new_object.model}' )
+        print('We now needs to go through some basic statistics. You can decide to go with default by simply hitting the "Enter" key.')
+        r = input(f'Number of cell crossed in one turn. Default: {new_object.step}(type: int) > ')
+        if len(r)> 0:
+            new_object.step = int(r)
+        r = input(f'Max HP (Health Points). Default: {new_object.max_hp}(type: int) > ')
+        if len(r)> 0:
+            new_object.max_hp = int(r)
+        new_object.hp = new_object.max_hp
+        r = input(f'Max MP (Mana Points). Default: {new_object.max_mp}(type: int) > ')
+        if len(r)> 0:
+            new_object.max_mp = int(r)
+        new_object.mp = new_object.max_mp
+        r = input(f'Remaining lives (it is advised to set that to 1 for a standard NPC). Default: {new_object.remaining_lives}(type: int) > ')
+        if len(r)> 0:
+            new_object.remaining_lives = int(r)
+        r = input(f'AP (Attack Power). Default: {new_object.attack_power}(type: int) > ')
+        if len(r)> 0:
+            new_object.attack_power = int(r)
+        r = input(f'DP (Defense Power). Default: {new_object.defense_power}(type: int) > ')
+        if len(r)> 0:
+            new_object.defense_power = int(r)
+        r = input(f'Strength. Default: {new_object.strength}(type: int) > ')
+        if len(r)> 0:
+            new_object.strength = int(r)
+        r = input(f'Intelligence. Default: {new_object.intelligence}(type: int) > ')
+        if len(r)> 0:
+            new_object.intelligence = int(r)
+        r = input(f'Agility. Default: {new_object.agility}(type: int) > ')
+        if len(r)> 0:
+            new_object.agility = int(r)
+        # Now we need to take care of the actuators
+        return new_object
+    elif key == '2':
+        game.clear_screen()
+        print(Utils.green_bright("\t\tObject creation wizzard: ")+Utils.magenta_bright("Structure") )
+        key = Utils.get_key()
+
+    #Placeholder
+    return BoardItemVoid()
 
 # Main program
 game = Game()
@@ -122,6 +198,8 @@ elif int(choice) < len(hmaps):
     game.load_board('hac-maps/'+hmaps[int(choice)],1)
 
 game.change_level(1)
+if len(game.object_library)>0:
+    object_history += game.object_library
 
 # Build the menus
 i = 0
@@ -156,11 +234,6 @@ game.add_menu_entry('board','7','Change '+Utils.white_bright('right')+' border')
 game.add_menu_entry('board','8','Change '+Utils.white_bright('void cell'))
 game.add_menu_entry('board','0','Go back to the main menu')
 
-
-# TEST DATA
-object_history.append(Structures.Wall(model=Sprites.WALL))
-object_history.append( Structures.Treasure(model=Sprites.CROWN) )
-
 while True:
     dbg_messages = []    
 
@@ -171,6 +244,7 @@ while True:
             if answer.startswith('y'):
                 if not os.path.exists('hac-maps') or not os.path.isdir('hac-maps'):
                     os.makedirs('hac-maps')
+                game.object_library = object_history
                 game.save_board(1,'hac-maps/'+game.current_board().name.replace(' ','_')+'.json')
         break
     elif current_menu == 'main':
@@ -201,7 +275,9 @@ while True:
         elif key == ' ':
             switch_edit_mode()
         elif key in '1234567890' and current_menu == 'main':
-            current_object = object_history[int(key)]
+            o = object_history[int(key)]
+            to_history(current_object)
+            current_object = o
         elif key == 'P':
             game.current_board().player_starting_position = game.player.pos
             is_modified = True
@@ -209,8 +285,8 @@ while True:
         elif key == 'p':
             current_menu = 'board'
         elif key == 'c':
-            if len(object_history) <= 10 and current_object not in object_history and not isinstance(current_object,BoardItemVoid):
-                object_history.append(current_object)
+            to_history(current_object)
+            current_object = create_wizzard()
     elif current_menu == 'board':
         if key == "0":
             current_menu = 'main'

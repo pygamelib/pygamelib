@@ -24,6 +24,8 @@ class Game():
     :type menu: dict
     :param current_level: The current level.
     :type current_level: int
+
+    The game object has an object_library member that is always an empty array that is always empty except just after loading a board. In this case, if the board have a "library" field, it is going to be used to populate object_library
     """
     def __init__(self,name='Game',boards = {}, menu = {}, current_level = None):
         self.name = name
@@ -33,6 +35,7 @@ class Game():
         self.player = None
         self._config_parsers = None
         self._configuration = None
+        self.object_library = []
 
     
     def add_menu_entry(self,category,shortcut,message,data=None):
@@ -357,7 +360,7 @@ class Game():
 
         If the filename argument is not an existing file, the open function is going to raise an exception.
 
-        This method, laod the board from the JSON file, populate it with all BoardItem incluided, check for sanity, init the board with BoardItemVoid and then associate the freshly created board to a lvl_number.
+        This method, laod the board from the JSON file, populate it with all BoardItem included, check for sanity, init the board with BoardItemVoid and then associate the freshly created board to a lvl_number.
         It then create the NPCs and add them to the board.
 
         :param filename: The file to load
@@ -419,6 +422,78 @@ class Game():
             elif s == "DLUP":
                 return Constants.DLUP
 
+        def _ref2obj(ref):
+            obj_keys = ref.keys()
+            o = BoardItemVoid()
+            if 'Wall' in ref['object']:
+                o = Structures.Wall()
+            elif 'Treasure' in ref['object']:
+                o = Structures.Treasure()
+                if 'value' in obj_keys:
+                    o.value = ref['value']
+                if 'size' in obj_keys:
+                    o._size = ref['size']
+            elif 'GenericStructure' in ref['object']:
+                o = Structures.GenericStructure()
+                if 'value' in obj_keys:
+                    o.value = ref['value']
+                if 'size' in obj_keys:
+                    o._size = ref['size']
+                if 'pickable' in obj_keys:
+                    o.set_pickable(ref['pickable'])
+                if 'overlappable' in obj_keys:
+                    o.set_overlappable(ref['overlappable'])
+            elif 'GenericActionnableStructure' in ref['object']:
+                o = Structures.GenericActionnableStructure()
+                if 'value' in obj_keys:
+                    o.value = ref['value']
+                if 'size' in obj_keys:
+                    o._size = ref['size']
+                if 'pickable' in obj_keys:
+                    o.set_pickable(ref['pickable'])
+                if 'overlappable' in obj_keys:
+                    o.set_overlappable(ref['overlappable'])
+            elif 'NPC' in ref['object']:
+                o = NPC()
+                if 'value' in obj_keys:
+                    o.value = ref['value']
+                if 'size' in obj_keys:
+                    o._size = ref['size']
+                if 'hp' in obj_keys:
+                    o.hp = ref['hp']
+                if 'max_hp' in obj_keys:
+                    o.max_hp = ref['max_hp']
+                if 'step' in obj_keys:
+                    o.step = ref['step']
+                if 'remaining_lives' in obj_keys:
+                    o.remaining_lives = ref['remaining_lives']
+                if 'attack_power' in obj_keys:
+                    o.attack_power = ref['attack_power']
+                if 'actuator' in obj_keys:
+                    if 'RandomActuator' in ref['actuator']['type']:
+                        o.actuator = RandomActuator()
+                        if 'moveset' in ref['actuator'].keys():
+                            for m in ref['actuator']['moveset']:
+                                o.actuator.moveset.append( _string_to_constant(m) )
+                    elif 'PathActuator' in ref['actuator']['type']:
+                        o.actuator = PathActuator()
+                        if 'path' in ref['actuator'].keys():
+                            for m in ref['actuator']['path']:
+                                o.actuator.path.append( _string_to_constant(m) )
+            # Now what remains is what is common to all BoardItem
+            if not isinstance(o,BoardItemVoid):
+                if 'name' in obj_keys:
+                        o.name = ref['name']
+                if 'model' in obj_keys:
+                    o.model = ref['model']
+                if 'type' in obj_keys:
+                    o.type = ref['type']
+            return o
+        # Now load the library if any
+        if 'library' in data_keys:
+            self.object_library = []
+            for e in data['library']:
+                self.object_library.append( _ref2obj(e) )
         # Now let's place the good stuff on the board
         if 'map_data' in data_keys:
             for pos_x in data['map_data'].keys():
@@ -428,74 +503,77 @@ class Game():
                     ref = data['map_data'][pos_x][pos_y]
                     obj_keys = ref.keys()
                     if 'object' in obj_keys:
-                        o = BoardItemVoid()
-                        if 'Wall' in ref['object']:
-                            o = Structures.Wall()
-                        elif 'Treasure' in ref['object']:
-                            o = Structures.Treasure()
-                            if 'value' in obj_keys:
-                                o.value = ref['value']
-                            if 'size' in obj_keys:
-                                o._size = ref['size']
-                        elif 'GenericStructure' in ref['object']:
-                            o = Structures.GenericStructure()
-                            if 'value' in obj_keys:
-                                o.value = ref['value']
-                            if 'size' in obj_keys:
-                                o._size = ref['size']
-                            if 'pickable' in obj_keys:
-                                o.set_pickable(ref['pickable'])
-                            if 'overlappable' in obj_keys:
-                                o.set_overlappable(ref['overlappable'])
-                        elif 'GenericActionnableStructure' in ref['object']:
-                            o = Structures.GenericActionnableStructure()
-                            if 'value' in obj_keys:
-                                o.value = ref['value']
-                            if 'size' in obj_keys:
-                                o._size = ref['size']
-                            if 'pickable' in obj_keys:
-                                o.set_pickable(ref['pickable'])
-                            if 'overlappable' in obj_keys:
-                                o.set_overlappable(ref['overlappable'])
-                        elif 'NPC' in ref['object']:
-                            o = NPC()
-                            if 'value' in obj_keys:
-                                o.value = ref['value']
-                            if 'size' in obj_keys:
-                                o._size = ref['size']
-                            if 'hp' in obj_keys:
-                                o.hp = ref['hp']
-                            if 'max_hp' in obj_keys:
-                                o.max_hp = ref['max_hp']
-                            if 'step' in obj_keys:
-                                o.step = ref['step']
-                            if 'remaining_lives' in obj_keys:
-                                o.remaining_lives = ref['remaining_lives']
-                            if 'attack_power' in obj_keys:
-                                o.attack_power = ref['attack_power']
-                            if 'actuator' in obj_keys:
-                                if 'RandomActuator' in ref['actuator']['type']:
-                                    o.actuator = RandomActuator()
-                                    if 'moveset' in ref['actuator'].keys():
-                                        for m in ref['actuator']['moveset']:
-                                            o.actuator.moveset.append( _string_to_constant(m) )
-                                elif 'PathActuator' in ref['actuator']['type']:
-                                    o.actuator = PathActuator()
-                                    if 'path' in ref['actuator'].keys():
-                                        for m in ref['actuator']['path']:
-                                            o.actuator.path.append( _string_to_constant(m) )
+                        o = _ref2obj(ref)
+                        # o = BoardItemVoid()
+                        # if 'Wall' in ref['object']:
+                        #     o = Structures.Wall()
+                        # elif 'Treasure' in ref['object']:
+                        #     o = Structures.Treasure()
+                        #     if 'value' in obj_keys:
+                        #         o.value = ref['value']
+                        #     if 'size' in obj_keys:
+                        #         o._size = ref['size']
+                        # elif 'GenericStructure' in ref['object']:
+                        #     o = Structures.GenericStructure()
+                        #     if 'value' in obj_keys:
+                        #         o.value = ref['value']
+                        #     if 'size' in obj_keys:
+                        #         o._size = ref['size']
+                        #     if 'pickable' in obj_keys:
+                        #         o.set_pickable(ref['pickable'])
+                        #     if 'overlappable' in obj_keys:
+                        #         o.set_overlappable(ref['overlappable'])
+                        # elif 'GenericActionnableStructure' in ref['object']:
+                        #     o = Structures.GenericActionnableStructure()
+                        #     if 'value' in obj_keys:
+                        #         o.value = ref['value']
+                        #     if 'size' in obj_keys:
+                        #         o._size = ref['size']
+                        #     if 'pickable' in obj_keys:
+                        #         o.set_pickable(ref['pickable'])
+                        #     if 'overlappable' in obj_keys:
+                        #         o.set_overlappable(ref['overlappable'])
+                        # elif 'NPC' in ref['object']:
+                        #     o = NPC()
+                        #     if 'value' in obj_keys:
+                        #         o.value = ref['value']
+                        #     if 'size' in obj_keys:
+                        #         o._size = ref['size']
+                        #     if 'hp' in obj_keys:
+                        #         o.hp = ref['hp']
+                        #     if 'max_hp' in obj_keys:
+                        #         o.max_hp = ref['max_hp']
+                        #     if 'step' in obj_keys:
+                        #         o.step = ref['step']
+                        #     if 'remaining_lives' in obj_keys:
+                        #         o.remaining_lives = ref['remaining_lives']
+                        #     if 'attack_power' in obj_keys:
+                        #         o.attack_power = ref['attack_power']
+                        #     if 'actuator' in obj_keys:
+                        #         if 'RandomActuator' in ref['actuator']['type']:
+                        #             o.actuator = RandomActuator()
+                        #             if 'moveset' in ref['actuator'].keys():
+                        #                 for m in ref['actuator']['moveset']:
+                        #                     o.actuator.moveset.append( _string_to_constant(m) )
+                        #         elif 'PathActuator' in ref['actuator']['type']:
+                        #             o.actuator = PathActuator()
+                        #             if 'path' in ref['actuator'].keys():
+                        #                 for m in ref['actuator']['path']:
+                        #                     o.actuator.path.append( _string_to_constant(m) )
+                        #     self.add_npc(lvl_number,o,x,y)
+                        # # Now what remains is what is common to all BoardItem
+                        # if not isinstance(o,BoardItemVoid):
+                        #     if 'name' in obj_keys:
+                        #             o.name = ref['name']
+                        #     if 'model' in obj_keys:
+                        #         o.model = ref['model']
+                        #     if 'type' in obj_keys:
+                        #         o.type = ref['type']
+                        # And finally we have to place the item on the board.
+                        if not isinstance(o,NPC) and not isinstance(o,BoardItemVoid):
+                            local_board.place_item(o,x,y)
+                        elif isinstance(o,NPC):
                             self.add_npc(lvl_number,o,x,y)
-                        # Now what remains is what is common to all BoardItem
-                        if not isinstance(o,BoardItemVoid):
-                            if 'name' in obj_keys:
-                                    o.name = ref['name']
-                            if 'model' in obj_keys:
-                                o.model = ref['model']
-                            if 'type' in obj_keys:
-                                o.type = ref['type']
-                            # And finally we have to place the item on the board.
-                            if not isinstance(o,NPC):
-                                local_board.place_item(o,x,y)
 
                     else:
                         Utils.warn(f'while loading the board in {filename}, at coordinates [{pos_x},{pos_y}] there is an entry without "object" attribute. NOT LOADED.')
@@ -519,6 +597,8 @@ class Game():
         Example::
         
             game.save_board( 1, 'hac-maps/level1.json')
+        
+        If Game.object_library is not an empty array, it will be saved also.
         """
         if type(lvl_number) is not int:
             raise HacInvalidTypeException("lvl_number must be an int in Game.save_board()")
@@ -538,6 +618,38 @@ class Game():
         data['ui_board_void_cell'] = local_board.ui_board_void_cell
         data['size'] = local_board.size
         data['map_data'] = {}
+
+        def _obj2ref(obj):
+            ref = {"object":str(  obj.__class__ ),"name":obj.name,"pos":obj.pos,"model":obj.model,"type":obj.type }
+
+            if isinstance(obj,Structures.Wall):
+                ref['size'] = obj.size()
+            elif isinstance(obj,Structures.Treasure):
+                ref['value'] = obj.value
+                ref['size'] = obj.size()
+            elif isinstance(obj,Structures.GenericActionnableStructure) or isinstance(obj,Structures.GenericStructure):
+                ref['value'] = obj.value
+                ref['size'] = obj.size()
+                ref['overlappable'] = obj.overlappable()
+                ref['pickable'] = obj.pickable()
+            elif isinstance(obj,NPC):
+                ref['hp'] = obj.hp
+                ref['max_hp'] = obj.max_hp
+                ref['step'] = obj.step
+                ref['remaining_lives'] = obj.remaining_lives
+                ref['attack_power'] = obj.attack_power
+                if obj.actuator != None:
+                    if isinstance(obj.actuator,RandomActuator):
+                        ref['actuator'] = {'type':'RandomActuator','moveset':obj.actuator.moveset}
+                    elif isinstance(obj.actuator,PathActuator):
+                        ref['actuator'] = {'type':'PathActuator','path':obj.actuator.path}
+            return ref
+
+        if len(self.object_library) > 0:
+            data['library'] = []
+            for o in self.object_library:
+                data['library'].append( _obj2ref(o) )
+
         # Now we need to run through all the cells to store anything that is not a BoardItemVoid
         for x in self.current_board()._matrix:
             for y in x:
@@ -545,29 +657,32 @@ class Game():
                     # print(f"Item: name={y.name} pos={y.pos} type={y.type}")
                     if str(y.pos[0]) not in data['map_data'].keys():
                          data['map_data'][str(y.pos[0])] = {}
-                    data['map_data'][str(y.pos[0])][str(y.pos[1])] = {"object":str(  y.__class__ ),"name":y.name,"pos":y.pos,"model":y.model,"type":y.type }
+                    
+                    data['map_data'][str(y.pos[0])][str(y.pos[1])] = _obj2ref(y)
 
-                    if isinstance(y,Structures.Wall):
-                        data['map_data'][str(y.pos[0])][str(y.pos[1])]['size'] = y.size()
-                    elif isinstance(y,Structures.Treasure):
-                        data['map_data'][str(y.pos[0])][str(y.pos[1])]['value'] = y.value
-                        data['map_data'][str(y.pos[0])][str(y.pos[1])]['size'] = y.size()
-                    elif isinstance(y,Structures.GenericActionnableStructure) or isinstance(y,Structures.GenericStructure):
-                        data['map_data'][str(y.pos[0])][str(y.pos[1])]['value'] = y.value
-                        data['map_data'][str(y.pos[0])][str(y.pos[1])]['size'] = y.size()
-                        data['map_data'][str(y.pos[0])][str(y.pos[1])]['overlappable'] = y.overlappable()
-                        data['map_data'][str(y.pos[0])][str(y.pos[1])]['pickable'] = y.pickable()
-                    elif isinstance(y,NPC):
-                        data['map_data'][str(y.pos[0])][str(y.pos[1])]['hp'] = y.hp
-                        data['map_data'][str(y.pos[0])][str(y.pos[1])]['max_hp'] = y.max_hp
-                        data['map_data'][str(y.pos[0])][str(y.pos[1])]['step'] = y.step
-                        data['map_data'][str(y.pos[0])][str(y.pos[1])]['remaining_lives'] = y.remaining_lives
-                        data['map_data'][str(y.pos[0])][str(y.pos[1])]['attack_power'] = y.attack_power
-                        if y.actuator != None:
-                            if isinstance(y.actuator,RandomActuator):
-                                data['map_data'][str(y.pos[0])][str(y.pos[1])]['actuator'] = {'type':'RandomActuator','moveset':y.actuator.moveset}
-                            elif isinstance(y.actuator,PathActuator):
-                                data['map_data'][str(y.pos[0])][str(y.pos[1])]['actuator'] = {'type':'PathActuator','path':y.actuator.path}
+                    # data['map_data'][str(y.pos[0])][str(y.pos[1])] = {"object":str(  y.__class__ ),"name":y.name,"pos":y.pos,"model":y.model,"type":y.type }
+
+                    # if isinstance(y,Structures.Wall):
+                    #     data['map_data'][str(y.pos[0])][str(y.pos[1])]['size'] = y.size()
+                    # elif isinstance(y,Structures.Treasure):
+                    #     data['map_data'][str(y.pos[0])][str(y.pos[1])]['value'] = y.value
+                    #     data['map_data'][str(y.pos[0])][str(y.pos[1])]['size'] = y.size()
+                    # elif isinstance(y,Structures.GenericActionnableStructure) or isinstance(y,Structures.GenericStructure):
+                    #     data['map_data'][str(y.pos[0])][str(y.pos[1])]['value'] = y.value
+                    #     data['map_data'][str(y.pos[0])][str(y.pos[1])]['size'] = y.size()
+                    #     data['map_data'][str(y.pos[0])][str(y.pos[1])]['overlappable'] = y.overlappable()
+                    #     data['map_data'][str(y.pos[0])][str(y.pos[1])]['pickable'] = y.pickable()
+                    # elif isinstance(y,NPC):
+                    #     data['map_data'][str(y.pos[0])][str(y.pos[1])]['hp'] = y.hp
+                    #     data['map_data'][str(y.pos[0])][str(y.pos[1])]['max_hp'] = y.max_hp
+                    #     data['map_data'][str(y.pos[0])][str(y.pos[1])]['step'] = y.step
+                    #     data['map_data'][str(y.pos[0])][str(y.pos[1])]['remaining_lives'] = y.remaining_lives
+                    #     data['map_data'][str(y.pos[0])][str(y.pos[1])]['attack_power'] = y.attack_power
+                    #     if y.actuator != None:
+                    #         if isinstance(y.actuator,RandomActuator):
+                    #             data['map_data'][str(y.pos[0])][str(y.pos[1])]['actuator'] = {'type':'RandomActuator','moveset':y.actuator.moveset}
+                    #         elif isinstance(y.actuator,PathActuator):
+                    #             data['map_data'][str(y.pos[0])][str(y.pos[1])]['actuator'] = {'type':'PathActuator','path':y.actuator.path}
 
 
         with open(filename, 'w') as f:  
