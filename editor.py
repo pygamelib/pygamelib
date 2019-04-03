@@ -4,6 +4,7 @@ import gamelib.Utils as Utils
 import gamelib.Constants as Constants
 import gamelib.Structures as Structures
 import gamelib.Sprites as Sprites
+import gamelib.Actuators.SimpleActuators as SimpleActuators
 from gamelib.Game import Game
 from gamelib.Characters import Player,NPC
 from gamelib.Board import Board
@@ -119,6 +120,9 @@ def create_wizzard():
         r = input(f'Number of cell crossed in one turn. Default: {new_object.step}(type: int) > ')
         if len(r)> 0:
             new_object.step = int(r)
+        else:
+            # If it's 0 it means it's going to be a static NPC so to prevent python to pass some random pre-initilized default, we explicitely set the Actuator to a static one
+            new_object.actuator = SimpleActuators.RandomActuator(moveset=[])
         r = input(f'Max HP (Health Points). Default: {new_object.max_hp}(type: int) > ')
         if len(r)> 0:
             new_object.max_hp = int(r)
@@ -218,6 +222,7 @@ elif int(choice) < len(hmaps):
     game.load_board('hac-maps/'+hmaps[int(choice)],1)
 
 game.change_level(1)
+
 if len(game.object_library)>0:
     object_history += game.object_library
 
