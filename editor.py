@@ -166,6 +166,18 @@ def save_current_board():
     game.save_board(1,'hac-maps/'+game.current_board().name.replace(' ','_')+'.json')
     is_modified=False
 
+def create_board_wizzard():
+    global game
+    global is_modified
+    game.clear_screen()
+    print( Utils.blue_bright("\t\tNew board") )
+    print("First we need some informations on your new board:")
+    name = str( input('Name: ') )
+    width = int( input('Width (in number of cells): ') )
+    height = int( input('Height (in number of cells): ') )
+    game.add_board(1, Board(name=name,size=[width,height], ui_borders=Utils.WHITE_SQUARE,ui_board_void_cell=Utils.BLACK_SQUARE) )
+    is_modified=True
+
 # Main program
 game = Game()
 game.player = Player(model='[]')
@@ -187,24 +199,21 @@ except FileNotFoundError as e:
 
 if len(hmaps) > 0:
     map_num = 0
+    game.add_menu_entry('boards_list',None,"Choose a map to edit")
     for m in hmaps:
         print(f"{map_num} - edit hac-maps/{m}")
+        game.add_menu_entry('boards_list',str(map_num),f"edit hac-maps/{m}",f"hac-maps/{m}")
         map_num += 1
 else:
     print("No pre-existing map found.")
 print("n - create a new map")
 print("q - Quit the editor")
-choice = str(input("> "))
+choice = str( Utils.get_key() )
 if choice == "q":
     print("Good Bye!")
     exit()
 elif choice == "n":
-    print("First we need some informations on your new board:")
-    name = str( input('Name: ') )
-    width = int( input('Width (in number of cells): ') )
-    height = int( input('Height (in number of cells): ') )
-    game.add_board(1, Board(name=name,size=[width,height], ui_borders=Utils.WHITE_SQUARE,ui_board_void_cell=Utils.BLACK_SQUARE) )
-    is_modified=True
+    create_board_wizzard()
 elif int(choice) < len(hmaps):
     game.load_board('hac-maps/'+hmaps[int(choice)],1)
 
@@ -234,6 +243,8 @@ game.add_menu_entry('main',Utils.white_bright('c'),'Create a new board item (bec
 game.add_menu_entry('main',Utils.white_bright('p'),'Modify board parameters')
 game.add_menu_entry('main',Utils.white_bright('P'),'Set player starting position')
 game.add_menu_entry('main',Utils.white_bright('S'),'Save the current Board to hac-maps/'+game.current_board().name.replace(' ','_')+'.json')
+game.add_menu_entry('main',Utils.white_bright('+'),'Save this Board and create a new one')
+game.add_menu_entry('main',Utils.white_bright('L'),'Save this Board and load a new one')
 game.add_menu_entry('main',Utils.white_bright('Q'),'Quit the editor')
 
 game.add_menu_entry('board',None,'=== Board ===')
@@ -304,6 +315,12 @@ while True:
             to_history(current_object)
             current_object = create_wizzard()
             to_history(current_object)
+        elif key == '+':
+            save_current_board()
+            create_board_wizzard()
+        elif key == 'L':
+            save_current_board()
+            current_menu = "boards_list"
     elif current_menu == 'board':
         if key == "0":
             current_menu = 'main'
@@ -352,6 +369,12 @@ while True:
         elif key == '8':
             game.current_board().ui_board_void_cell = model_picker()
             is_modified = True
+    elif current_menu == 'boards_list':
+        if key in '1234567890':
+            e = game.get_menu_entry('boards_list',key)
+            if e != None:
+                game.load_board(e['data'],1)
+                current_menu = 'main'
 
         
      # Print the screen and interface   
@@ -374,7 +397,7 @@ while True:
             cnt += 1
         print('')
         print(f'Current item: {current_object.model}')
-    game.display_menu(current_menu)
+    game.display_menu(current_menu,Constants.ORIENTATION_VERTICAL,15)
     for m in dbg_messages:
         Utils.debug(m)
     key = Utils.get_key()
