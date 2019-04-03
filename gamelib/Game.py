@@ -107,7 +107,7 @@ class Game():
         :type category: str
         :param shortcut: The shortcut of the entry you want to get.
         :type shortcut: str
-        :return: The menu entry
+        :return: The menu entry or None if none was found
         :rtype: dict
 
         Example::
@@ -119,6 +119,7 @@ class Game():
         for e in self._menu[category]:
             if e['shortcut'] == shortcut:
                 return e
+        return None
 
     def display_menu(self,category,orientation=Constants.ORIENTATION_VERTICAL,paginate=10):
         """
@@ -374,8 +375,10 @@ class Game():
             mynewboard = game.load_board( 'awesome_level.json', 1 )
             game.change_level( 1 )
         """
+        Utils.debug("Entering load_board")
         with open(filename,'r') as f:
             data = json.load(f)
+        Utils.debug("JSON loaded")
         local_board = Board()
         data_keys = data.keys()
         if "name" in data_keys:
@@ -400,7 +403,7 @@ class Game():
         local_board.init_board()
         # Then add board to the game
         self.add_board(lvl_number,local_board)
-
+        Utils.debug(f"Board added to level {lvl_number}")
         # Define an internal function to transform directions string into constants
         def _string_to_constant(s):
             if type(s) is int:
@@ -494,6 +497,7 @@ class Game():
             self.object_library = []
             for e in data['library']:
                 self.object_library.append( _ref2obj(e) )
+        Utils.debug("About to go through map_data")
         # Now let's place the good stuff on the board
         if 'map_data' in data_keys:
             for pos_x in data['map_data'].keys():
@@ -577,6 +581,7 @@ class Game():
 
                     else:
                         Utils.warn(f'while loading the board in {filename}, at coordinates [{pos_x},{pos_y}] there is an entry without "object" attribute. NOT LOADED.')
+        Utils.debug("Done loading board")
         return local_board
 
     def save_board(self,lvl_number,filename):
