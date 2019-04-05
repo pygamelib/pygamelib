@@ -593,31 +593,5 @@ class Game():
                          data['map_data'][str(y.pos[0])] = {}
                     
                     data['map_data'][str(y.pos[0])][str(y.pos[1])] = _obj2ref(y)
-
-                    # data['map_data'][str(y.pos[0])][str(y.pos[1])] = {"object":str(  y.__class__ ),"name":y.name,"pos":y.pos,"model":y.model,"type":y.type }
-
-                    # if isinstance(y,Structures.Wall):
-                    #     data['map_data'][str(y.pos[0])][str(y.pos[1])]['size'] = y.size()
-                    # elif isinstance(y,Structures.Treasure):
-                    #     data['map_data'][str(y.pos[0])][str(y.pos[1])]['value'] = y.value
-                    #     data['map_data'][str(y.pos[0])][str(y.pos[1])]['size'] = y.size()
-                    # elif isinstance(y,Structures.GenericActionnableStructure) or isinstance(y,Structures.GenericStructure):
-                    #     data['map_data'][str(y.pos[0])][str(y.pos[1])]['value'] = y.value
-                    #     data['map_data'][str(y.pos[0])][str(y.pos[1])]['size'] = y.size()
-                    #     data['map_data'][str(y.pos[0])][str(y.pos[1])]['overlappable'] = y.overlappable()
-                    #     data['map_data'][str(y.pos[0])][str(y.pos[1])]['pickable'] = y.pickable()
-                    # elif isinstance(y,NPC):
-                    #     data['map_data'][str(y.pos[0])][str(y.pos[1])]['hp'] = y.hp
-                    #     data['map_data'][str(y.pos[0])][str(y.pos[1])]['max_hp'] = y.max_hp
-                    #     data['map_data'][str(y.pos[0])][str(y.pos[1])]['step'] = y.step
-                    #     data['map_data'][str(y.pos[0])][str(y.pos[1])]['remaining_lives'] = y.remaining_lives
-                    #     data['map_data'][str(y.pos[0])][str(y.pos[1])]['attack_power'] = y.attack_power
-                    #     if y.actuator != None:
-                    #         if isinstance(y.actuator,RandomActuator):
-                    #             data['map_data'][str(y.pos[0])][str(y.pos[1])]['actuator'] = {'type':'RandomActuator','moveset':y.actuator.moveset}
-                    #         elif isinstance(y.actuator,PathActuator):
-                    #             data['map_data'][str(y.pos[0])][str(y.pos[1])]['actuator'] = {'type':'PathActuator','path':y.actuator.path}
-
-
         with open(filename, 'w') as f:  
             json.dump(data, f)

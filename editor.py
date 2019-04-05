@@ -10,6 +10,7 @@ from gamelib.Characters import Player,NPC
 from gamelib.Board import Board
 from gamelib.BoardItem import BoardItemVoid
 import os
+import uuid
 from copy import deepcopy
 
 # Global variables
@@ -149,12 +150,162 @@ def create_wizzard():
         r = input(f'Agility. Default: {new_object.agility}(type: int) > ')
         if len(r)> 0:
             new_object.agility = int(r)
-        # Now we need to take care of the actuators
+        game.clear_screen()
+        print("We now need to give some life to that NPC. What kind of movement should it have:")
+        print("1 - Randomly chosen from a preset of directions")
+        print("2 - Following a predetermined path")
+        r = Utils.get_key()
+        if r == '1':
+            new_object.actuator = SimpleActuators.RandomActuator(moveset=[])
+            print('Random it is! Now choose from which preset of movements should we give it:')
+            print('1 - UP,DOWN,LEFT, RIGHT')
+            print('2 - UP,DOWN')
+            print('3 - LEFT, RIGHT')
+            print('4 - UP,DOWN,LEFT, RIGHT + all DIAGONALES')
+            print('5 - DIAGONALES (DIAG UP LEFT, DIAG UP RIGHT, etc.) but NO straight UP, DOWN, LEFT and RIGHT')
+            r = Utils.get_key()
+            if r == '1':
+                new_object.actuator.moveset = [Constants.UP,Constants.DOWN,Constants.LEFT,Constants.RIGHT]
+            elif r == '2':
+                new_object.actuator.moveset = [Constants.UP,Constants.DOWN]
+            elif r == '3':
+                new_object.actuator.moveset = [Constants.RIGHT,Constants.LEFT]
+            elif r == '4':
+                new_object.actuator.moveset = [Constants.UP,Constants.DOWN,Constants.LEFT,Constants.RIGHT,Constants.DLDOWN,Constants.DLUP,Constants.DRDOWN,Constants.DRUP]
+            elif r == '5':
+                new_object.actuator.moveset = [Constants.DLDOWN,Constants.DLUP,Constants.DRDOWN,Constants.DRUP]
+        elif r == '2':
+            new_object.actuator = SimpleActuators.PathActuator(path=[])
+            print("Great, so what path this NPC should take:")
+            print('1 - UP/DOWN patrol')
+            print('2 - DOWN/UP patrol')
+            print('3 - LEFT/RIGHT patrol')
+            print('4 - RIGHT/LEFT patrol')
+            print('5 - Circle patrol: LEFT, DOWN, RIGHT, UP')
+            print('6 - Circle patrol: LEFT, UP, RIGHT, DOWN')
+            print('7 - Circle patrol: RIGHT, DOWN, LEFT, UP')
+            print('8 - Circle patrol: RIGHT, UP, LEFT, DOWN')
+            print('9 - Write your own path')
+            r = Utils.get_key()
+            if r == '1':
+                print("How many steps should the NPC go in one direction before turning back ?")
+                r = int(input("(please enter an integer)> "))
+                new_object.actuator.path += [Constants.UP for i in range(0, r,1) ]
+                new_object.actuator.path += [Constants.DOWN for i in range(0, r,1) ]
+            elif r == '2':
+                print("How many steps should the NPC go in one direction before turning back ?")
+                r = int(input("(please enter an integer)> "))
+                new_object.actuator.path += [Constants.DOWN for i in range(0, r,1) ]
+                new_object.actuator.path += [Constants.UP for i in range(0, r,1) ]
+            elif r == '3':
+                print("How many steps should the NPC go in one direction before turning back ?")
+                r = int(input("(please enter an integer)> "))
+                new_object.actuator.path += [Constants.LEFT for i in range(0, r,1) ]
+                new_object.actuator.path += [Constants.RIGHT for i in range(0, r,1) ]
+            elif r == '3':
+                print("How many steps should the NPC go in one direction before turning back ?")
+                r = int(input("(please enter an integer)> "))
+                new_object.actuator.path += [Constants.RIGHT for i in range(0, r,1) ]
+                new_object.actuator.path += [Constants.LEFT for i in range(0, r,1) ]
+            elif r == '4':
+                print("How many steps should the NPC go in one direction before turning back ?")
+                r = int(input("(please enter an integer)> "))
+                new_object.actuator.path += [Constants.DOWN for i in range(0, r,1) ]
+                new_object.actuator.path += [Constants.UP for i in range(0, r,1) ]
+            elif r == '5':
+                print("How many steps should the NPC go in EACH direction before changing ?")
+                r = int(input("(please enter an integer)> "))
+                new_object.actuator.path += [Constants.LEFT for i in range(0, r,1) ]
+                new_object.actuator.path += [Constants.DOWN for i in range(0, r,1) ]
+                new_object.actuator.path += [Constants.RIGHT for i in range(0, r,1) ]
+                new_object.actuator.path += [Constants.UP for i in range(0, r,1) ]
+            elif r == '6':
+                print("How many steps should the NPC go in EACH direction before changing ?")
+                r = int(input("(please enter an integer)> "))
+                new_object.actuator.path += [Constants.LEFT for i in range(0, r,1) ]
+                new_object.actuator.path += [Constants.UP for i in range(0, r,1) ]
+                new_object.actuator.path += [Constants.RIGHT for i in range(0, r,1) ]
+                new_object.actuator.path += [Constants.DOWN for i in range(0, r,1) ]
+            elif r == '7':
+                print("How many steps should the NPC go in EACH direction before changing ?")
+                r = int(input("(please enter an integer)> "))
+                new_object.actuator.path += [Constants.RIGHT for i in range(0, r,1) ]
+                new_object.actuator.path += [Constants.DOWN for i in range(0, r,1) ]
+                new_object.actuator.path += [Constants.LEFT for i in range(0, r,1) ]
+                new_object.actuator.path += [Constants.UP for i in range(0, r,1) ]
+            elif r == '8':
+                print("How many steps should the NPC go in EACH direction before changing ?")
+                r = int(input("(please enter an integer)> "))
+                new_object.actuator.path += [Constants.RIGHT for i in range(0, r,1) ]
+                new_object.actuator.path += [Constants.UP for i in range(0, r,1) ]
+                new_object.actuator.path += [Constants.LEFT for i in range(0, r,1) ]
+                new_object.actuator.path += [Constants.DOWN for i in range(0, r,1) ]
+            elif r == '9':
+                print("Write your own path using only words from this list: UP, DOWN, LEFT, RIGHT, DLDOWN, DLUP, DRDOWN, DRUP.")
+                print('Each direction has to be separated by a coma.')
+                r = str(input('Write your path: ')).upper()
+                new_object.actuator.path = r.split(',')
+
         return new_object
     elif key == '2':
         game.clear_screen()
         print(Utils.green_bright("\t\tObject creation wizzard: ")+Utils.magenta_bright("Structure") )
+        print("What kind of structure do you want to create:")
+        print('1 - A wall like structure (an object that cannot be picked-up and is not overlappable). Ex: walls, trees, non moving elephant (try to go through an elephant or to pick it up in your backpack...)')
+        print('2 - A treasure (can be picked up, take space in the inventory, give points to the player)')
+        print('3 - A generic object (you can set the properties to make it pickable or overlappable)')
+        print('4 - A generic actionnable object (to make portals, heart to resplenish life, etc.)')
         key = Utils.get_key()
+        new_object = None
+        if key == '1':
+            new_object = Structures.Wall()
+            new_object.name = str(uuid.uuid1())
+            new_object.model = model_picker()
+        if key == '2':
+            new_object = Structures.Treasure()
+            print("First give a name to your Treasure. Default value: "+new_object.name)
+            r = str( input('(Enter name)> ') )
+            if len(r) > 0:
+                new_object.name = r
+            print("Then give it a type. A type is important as it allows grouping (in this case probably in the inventory).\nType is a string. Default value: "+new_object.type)
+            r = str( input('(Enter type)> ') )
+            if len(r) > 0:
+                new_object.type = r
+            print("Now we need a model. Default value: "+new_object.model)
+            input('Hit "Enter" when you are ready to choose a model.')
+            new_object.model = model_picker()
+        if key == '3' or key == '4':
+            if key == '3':
+                new_object = Structures.GenericStructure()
+            else:
+                new_object = Structures.GenericActionnableStructure()
+            new_object.set_overlappable(False)
+            new_object.set_pickable(False)
+            print("First give a name to your structure. Default value: "+new_object.name)
+            r = str( input('(Enter name)> ') )
+            if len(r) > 0:
+                new_object.name = r
+            print("Then give it a type. \nType is a string. Default value: "+new_object.type)
+            r = str( input('(Enter type)> ') )
+            if len(r) > 0:
+                new_object.type = r
+            print("Now we need a model. Default value: "+new_object.model)
+            input('Hit "Enter" when you are ready to choose a model.')
+            new_object.model = model_picker()
+            print('Is this object pickable? (can it be picked up by the player)?')
+            print('0 - No')
+            print('1 - Yes')
+            r = Utils.get_key()
+            if r == '1':
+                new_object.set_pickable(True)
+            print('Is this object overlappable? (can it be walked over by player?')
+            print('0 - No')
+            print('1 - Yes')
+            r = Utils.get_key()
+            if r == '1':
+                new_object.set_overlappable(True)
+
+        return new_object
 
     #Placeholder
     return BoardItemVoid()
