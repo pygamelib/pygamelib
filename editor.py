@@ -458,9 +458,10 @@ while True:
         elif key == ' ':
             switch_edit_mode()
         elif key in '1234567890' and current_menu == 'main':
-            o = object_history[int(key)]
-            to_history(current_object)
-            current_object = o
+            if len(object_history) > int(key):
+                o = object_history[int(key)]
+                to_history(current_object)
+                current_object = o
         elif key == 'P':
             game.current_board().player_starting_position = game.player.pos
             is_modified = True
