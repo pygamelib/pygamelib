@@ -353,6 +353,20 @@ class Game():
         This is an alias for Board.current_board().display()
         """
         self.current_board().display()
+    
+    def neighbors(self,radius=1):
+        """Get a list of neighbors (non void item) around the player.
+
+        This method returns a list of objects that are all around the player between the position of the player and all the cells at **radius**.
+
+        :param radius: The distance to look at 
+        :type name: str
+        
+        Example::
+        
+            method()
+        """
+        pass
 
     def load_board(self,filename,lvl_number=0):
         """Load a saved board
