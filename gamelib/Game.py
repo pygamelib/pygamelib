@@ -359,14 +359,28 @@ class Game():
 
         This method returns a list of objects that are all around the player between the position of the player and all the cells at **radius**.
 
-        :param radius: The distance to look at 
-        :type name: str
+        :param radius: The radius in wich non void item should be included
+        :type radius: int
+        :return: A list of BoardItem. No BoardItemVoid is included.
+        :raises HacInvalidTypeException: If radius is not an int.
         
         Example::
         
-            method()
+            for item in game.neighbors(2):
+                print(f'{item.name} is around player at coordinates ({item.pos[0]},{item.pos[1]})')
         """
-        pass
+        if type(radius) is not int:
+            raise HacInvalidTypeException('In Game.neighbors(radius), radius must be an integer.')
+        return_array = []
+        for x in range(-radius,radius+1,1):
+            for y in range(-radius,radius+1,1):
+                if x == 0 and y == 0:
+                    continue
+                true_x = self.player.pos[0]+x
+                true_y = self.player.pos[1]+y
+                if not isinstance(self.current_board().item(true_x,true_y),BoardItemVoid):
+                    return_array.append( self.current_board().item(true_x,true_y) )
+        return return_array
 
     def load_board(self,filename,lvl_number=0):
         """Load a saved board
