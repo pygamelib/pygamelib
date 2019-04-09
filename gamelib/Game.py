@@ -354,13 +354,15 @@ class Game():
         """
         self.current_board().display()
     
-    def neighbors(self,radius=1):
-        """Get a list of neighbors (non void item) around the player.
+    def neighbors(self,radius=1,object=None):
+        """Get a list of neighbors (non void item) around an object.
 
-        This method returns a list of objects that are all around the player between the position of the player and all the cells at **radius**.
+        This method returns a list of objects that are all around an object between the position of an object and all the cells at **radius**.
 
         :param radius: The radius in wich non void item should be included
         :type radius: int
+        :param object: The central object. The neighbors are calculated for that object. If None, the player is the object.
+        :type object: gamelib.BoardItem.BoardItem
         :return: A list of BoardItem. No BoardItemVoid is included.
         :raises HacInvalidTypeException: If radius is not an int.
         
@@ -371,13 +373,15 @@ class Game():
         """
         if type(radius) is not int:
             raise HacInvalidTypeException('In Game.neighbors(radius), radius must be an integer.')
+        if object == None:
+            object = self.player
         return_array = []
         for x in range(-radius,radius+1,1):
             for y in range(-radius,radius+1,1):
                 if x == 0 and y == 0:
                     continue
-                true_x = self.player.pos[0]+x
-                true_y = self.player.pos[1]+y
+                true_x = object.pos[0]+x
+                true_y = object.pos[1]+y
                 if not isinstance(self.current_board().item(true_x,true_y),BoardItemVoid):
                     return_array.append( self.current_board().item(true_x,true_y) )
         return return_array

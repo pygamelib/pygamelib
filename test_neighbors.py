@@ -27,6 +27,10 @@ while True:
         break
     g.clear_screen()
     g.display_board()
-    for i in g.neighbors(2):
-        print(f'{i.name} ({i.pos[0]},{i.pos[1]})')
+    for i in g.neighbors(1):
+        print(f'Player: {i.name} ({i.pos[0]},{i.pos[1]})')
+    
+    for i in g.neighbors(1, g.current_board().item(7,7) ):
+        print(f'NPC: {i.name} ({i.pos[0]},{i.pos[1]})')
+
     key = Utils.get_key()
