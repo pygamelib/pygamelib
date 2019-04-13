@@ -51,8 +51,10 @@ def switch_edit_mode():
     edit_mode = not edit_mode
     if edit_mode:
         game.update_menu_entry('main',Utils.white_bright('j/i/k/l'),Utils.green_bright('Place')+' the current object and then move cursor Left/Up/Down/Right')
+        game.update_menu_entry('main',Utils.white_bright('0 to 9'),Utils.green_bright('Select')+' an item in history to be the current item')
     else:
         game.update_menu_entry('main',Utils.white_bright('j/i/k/l'),'Move cursor Left/Up/Down/Right and '+Utils.red_bright('Delete')+' anything that was at destination.')
+        game.update_menu_entry('main',Utils.white_bright('0 to 9'),Utils.red_bright('Remove')+' an item from history')
 
 
 def color_picker():
@@ -392,7 +394,7 @@ for sp in dir(Sprites):
 
 game.add_menu_entry('main',None,'\n=== Menu ===')
 game.add_menu_entry('main',Utils.white_bright('Space'),'Switch between edit/delete mode')
-game.add_menu_entry('main',Utils.white_bright('0 to 9'),'Select an item in history to be the current item')
+game.add_menu_entry('main',Utils.white_bright('0 to 9'),Utils.green_bright('Select')+' an item in history to be the current item')
 game.add_menu_entry('main',Utils.white_bright('a/w/s/d'),'Move cursor Left/Up/Down/Right')
 game.add_menu_entry('main',Utils.white_bright('j/i/k/l'),Utils.green_bright('Place')+' the current item and then move cursor Left/Up/Down/Right')
 game.add_menu_entry('main',Utils.white_bright('c'),'Create a new board item (becomes the current item, previous one is placed in history)')
@@ -458,10 +460,15 @@ while True:
         elif key == ' ':
             switch_edit_mode()
         elif key in '1234567890' and current_menu == 'main':
-            if len(object_history) > int(key):
-                o = object_history[int(key)]
-                to_history(current_object)
-                current_object = o
+            if edit_mode:
+                if len(object_history) > int(key):
+                    o = object_history[int(key)]
+                    to_history(current_object)
+                    current_object = o
+            else:
+                if len(object_history) > int(key):
+                    del(object_history[int(key)])
+                    is_modified=True
         elif key == 'P':
             game.current_board().player_starting_position = game.player.pos
             is_modified = True
