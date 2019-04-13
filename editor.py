@@ -16,14 +16,17 @@ from copy import deepcopy
 # Global variables
 is_modified = False
 edit_mode = True
+menu_mode = 'full'
 
 # Functions definition
 def place_and_go(object,x,y,direction):
     global is_modified
     global game
+    initial_position = game.player.pos
     game.move_player(direction,1)
-    game.current_board().place_item( deepcopy(object),x,y)
-    is_modified = True
+    if initial_position != game.player.pos:
+        game.current_board().place_item( deepcopy(object),x,y)
+        is_modified = True
 
 def clear_and_go(direction):
     global is_modified
@@ -392,7 +395,7 @@ for sp in dir(Sprites):
         game.add_menu_entry('graphics_sprites',str(i), getattr(Sprites,sp), getattr(Sprites,sp) )
         i += 1
 
-game.add_menu_entry('main',None,'\n=== Menu ===')
+game.add_menu_entry('main',None,'\n=== Menu ('+menu_mode+') ===')
 game.add_menu_entry('main',Utils.white_bright('Space'),'Switch between edit/delete mode')
 game.add_menu_entry('main',Utils.white_bright('0 to 9'),Utils.green_bright('Select')+' an item in history to be the current item')
 game.add_menu_entry('main',Utils.white_bright('a/w/s/d'),'Move cursor Left/Up/Down/Right')
@@ -403,6 +406,7 @@ game.add_menu_entry('main',Utils.white_bright('P'),'Set player starting position
 game.add_menu_entry('main',Utils.white_bright('S'),'Save the current Board to hac-maps/'+game.current_board().name.replace(' ','_')+'.json')
 game.add_menu_entry('main',Utils.white_bright('+'),'Save this Board and create a new one')
 game.add_menu_entry('main',Utils.white_bright('L'),'Save this Board and load a new one')
+game.add_menu_entry('main',Utils.white_bright('m'),'Switch menu display mode between full or hidden')
 game.add_menu_entry('main',Utils.white_bright('Q'),'Quit the editor')
 
 game.add_menu_entry('board',None,'=== Board ===')
@@ -432,6 +436,12 @@ while True:
     elif key == 'S':
         save_current_board()
         dbg_messages.append("Board saved")
+    elif key == 'm':
+        if menu_mode == 'full':
+            menu_mode = 'hidden'
+        else:
+            menu_mode = 'full'
+        game.update_menu_entry('main',None,'\n=== Menu ('+menu_mode+') ===')
     elif current_menu == 'main':
         if key == 'w':
             game.move_player(Constants.UP,1)
@@ -561,7 +571,8 @@ while True:
             cnt += 1
         print('')
         print(f'Current item: {current_object.model}')
-    game.display_menu(current_menu,Constants.ORIENTATION_VERTICAL,15)
+    if not (current_menu == 'main' and menu_mode == 'hidden'):
+        game.display_menu(current_menu,Constants.ORIENTATION_VERTICAL,15)
     for m in dbg_messages:
         Utils.debug(m)
     key = Utils.get_key()
