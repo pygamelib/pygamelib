@@ -198,7 +198,7 @@ class Board():
 
         .. warning:: Nothing prevents you from placing an object on top of another. Be sure to check that.
         """
-        if x < self.size[0] and y < self.size[0]:
+        if x < self.size[1] and y < self.size[0]:
             if isinstance(item, BoardItem):
                 self._matrix[x][y] = item
                 item.store_position(x,y)
