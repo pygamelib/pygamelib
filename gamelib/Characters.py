@@ -2,6 +2,33 @@ from gamelib.Movable import Movable
 from gamelib.Inventory import Inventory
 
 class Character():
+    """A base class for a character (playable or not)
+    
+    :param agility: Represent the agility of the character
+    :type agility: int
+    :param attack_power: Represent the attack power of the character.
+    :type attack_power: int
+    :param defense_power: Represent the defense_power of the character
+    :type defense_power: int
+    :param hp: Represent the hp (Health Point) of the character
+    :type hp: int
+    :param intelligence: Represent the intelligence of the character
+    :type intelligence: int   
+    :param max_hp: Represent the max_hp of the character
+    :type max_hp: int
+    :param max_mp: Represent the max_mp of the character
+    :type max_mp: int
+    :param mp: Represent the mp (Mana/Magic Point) of the character
+    :type mp: int
+    :param remaining_lives: Represent the remaining_lives of the character. For a NPC it is generally a good idea to set that to 1. Unless the NPC is a multi phased boss.
+    :type remaining_lives: int
+    :param strength: Represent the strength of the character
+    :type strength: int
+
+    These characteristics are here to be used by the game logic but very few of them are actually used by the Game (`gamelib.Game`) engine.
+
+
+    """
     def __init__(self, **kwargs):
         self.max_hp = None
         self.hp = None
@@ -50,7 +77,22 @@ class NPC(Movable,Character):
     """
     A class that represent a non playable character controlled by the computer.
     For the NPC to be successfully managed by the Game, you need to set an actuator.
-    Ex: mynpc.actuator = RandomActuator()
+
+    None of the parameters are mandatory, however it is advised to make good use of some of them (like type or name) for game design purpose.
+
+    In addition to its own member variables, this class inherits all members from:
+        * :class:`gamelib.Characters.Character`
+        * :class:`gamelib.Movable.Movable`
+        * :class:`gamelib.BoardItem.BoardItem`
+
+    :param actuator: An actuator, it can be any class but it need to implement gamelibe.Actuator.Actuator.
+    :type actuator: gamelib.Actuators.Actuator
+
+    Example:: 
+
+        mynpc = NPC(name='Idiot McStupid', type='dumb_ennemy')
+        mynpc.step = 1
+        mynpc.actuator = RandomActuator()
     """
     def __init__(self,**kwargs):
         if 'max_hp' not in kwargs.keys():
@@ -74,10 +116,48 @@ class NPC(Movable,Character):
             self.step = kwargs['step']
     
     def pickable(self):
+        """Define if the NPC is pickable.
+
+        Obviously this method always return False.
+
+        :return: False
+        :rtype: Boolean
+
+        Example::
+
+            if mynpc.pickable():
+                Utils.warn("Something is fishy, that NPC is pickable but is not a Pokemon...")
+        """
         return False
     
     def overlappable(self):
+        """Define if the NPC is overlappable.
+
+        Obviously this method also always return False.
+
+        :return: False
+        :rtype: Boolean
+
+        Example::
+
+            if mynpc.overlappable():
+                Utils.warn("Something is fishy, that NPC is overlappable but is not a Ghost...")
+        """
         return False
     
     def has_inventory(self):
+        """Define if the NPC has an inventory.
+
+        This method returns false because the game engine doesn't manage NPC inventory yet but it could be in the futur. It's a good habit to check the value returned byu this function.
+
+        :return: False
+        :rtype: Boolean
+
+        Example::
+
+            if mynpc.has_inventory():
+                print("Cool: we can pickpocket that NPC!")
+            else:
+                print("No pickpocketing XP for us today :(")
+        """
         return False
