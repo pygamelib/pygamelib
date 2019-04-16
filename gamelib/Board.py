@@ -12,11 +12,11 @@ class Board():
     The board is being represented by a square matrix.
     For the moment a board only support one player.
 
-    The Board object is the base object to build a level : you create a Board and then you add BoardItems and its subclasses.
+    The Board object is the base object to build a level : you create a Board and then you add BoardItems (or objects derived from BoardItem).
 
     :param name: the name of the Board
     :type name: str
-    :param size: array [x,y] with x and y being int. The size of the board.
+    :param size: array [width,height] with width and height being int. The size of the board.
     :type size: list
     :param player_starting_position: array [x,y] with x and y being int. The coordinates at wich Game will place the player on change_level().
     :type player_starting_position: list

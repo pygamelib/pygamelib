@@ -18,6 +18,7 @@ Hyrule Astronomy Club - hac-game-lib - documentation
    structures
    utils
    simpleactuators
+   advancedactuators
 
 Forewords
 ^^^^^^^^^
