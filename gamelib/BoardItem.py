@@ -3,11 +3,15 @@ from gamelib.HacExceptions import HacException, HacInvalidTypeException
 class BoardItem():
     """
     Base class for any item that will be placed on a Board.
-    Arguments:
-    type = str
-    name = str
-    pos = [x,y]
-    model = str
+    
+    :param type: A type you want to give your item. It can be any string. You can then use the type for sorting or grouping for example.
+    :type type: str
+    :param name: A name for this item. For identification purpose.
+    :type name: str
+    :param pos: the position of this item. When the item is managed by the Board and Game engine this member hold the last updated position of the item. It is not updated if you manually move the item.
+    :type pos: array
+    :param model: The model to use to display this item on the Board. Be mindful of the space it will require. Default value is '*'.
+    :type model: str
     """
     
     def __init__(self,**kwargs):
