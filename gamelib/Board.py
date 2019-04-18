@@ -18,7 +18,7 @@ class Board():
     :type name: str
     :param size: array [width,height] with width and height being int. The size of the board.
     :type size: list
-    :param player_starting_position: array [x,y] with x and y being int. The coordinates at wich Game will place the player on change_level().
+    :param player_starting_position: array [row,column] with row and column being int. The coordinates at wich Game will place the player on change_level().
     :type player_starting_position: list
     :param ui_borders: To set all the borders to the same value
     :type ui_borders: str
@@ -78,20 +78,20 @@ class Board():
 
         self._matrix = [ [ BoardItemVoid(model=self.ui_board_void_cell) for i in range(0,self.size[0],1) ] for j in range(0,self.size[1],1) ]
     
-    def init_cell(self,x,y):
+    def init_cell(self,row,column):
         """
         Initialize a specific cell of the board with BoardItemVoid that uses ui_board_void_cell as model.
 
-        :param x: the x coordinate.
-        :type x: int
-        :param y: the y coordinate.
-        :type y: int
+        :param row: the row coordinate.
+        :type row: int
+        :param column: the column coordinate.
+        :type column: int
 
         Example::
 
             myboard.init_cell(2,3)
         """
-        self._matrix[x][y] = BoardItemVoid(model=self.ui_board_void_cell)
+        self._matrix[row][column] = BoardItemVoid(model=self.ui_board_void_cell)
     
     def check_sanity(self):
         """Check the board sanity.
@@ -177,31 +177,33 @@ class Board():
             print(self.ui_border_right)
         print(border_bottom)
 
-    def item(self,x,y):
+    def item(self,row,column):
         """
-        Return the item at the x,y position if within board's bounds.
+        Return the item at the row,column position if within board's bounds.
 
-        Else raise an HacOutOfBoardBoundException
+        :rtype: gamelib.BoardItem.BoardItem
+
+        :raise HacOutOfBoardBoundException: if row or column are out of bound.
         """
-        if x < self.size[0] and y < self.size[0]:
-            return self._matrix[x][y]
+        if row < self.size[0] and column < self.size[0]:
+            return self._matrix[row][column]
         else:
-            raise HacOutOfBoardBoundException(f"There is no item at coordinates [{x},{y}] because it's out of the board boundaries ({self.size[0]}x{self.size[1]}).")
+            raise HacOutOfBoardBoundException(f"There is no item at coordinates [{row},{column}] because it's out of the board boundaries ({self.size[0]}x{self.size[1]}).")
     
-    def place_item(self,item,x,y):
+    def place_item(self,item,row,column):
         """
-        Place an item at coordinates x and y.
+        Place an item at coordinates row and column.
 
-        If x or y are our of the board boundaries, an HacOutOfBoardBoundException is raised.
+        If row or column are our of the board boundaries, an HacOutOfBoardBoundException is raised.
 
         If the item is not a subclass of BoardItem, an HacInvalidTypeException
 
         .. warning:: Nothing prevents you from placing an object on top of another. Be sure to check that.
         """
-        if x < self.size[1] and y < self.size[0]:
+        if row < self.size[1] and column < self.size[0]:
             if isinstance(item, BoardItem):
-                self._matrix[x][y] = item
-                item.store_position(x,y)
+                self._matrix[row][column] = item
+                item.store_position(row,column)
                 if isinstance(item, Movable):
                     self._movables.append(item)
                 elif isinstance(item, Immovable):
@@ -209,7 +211,7 @@ class Board():
             else:
                 raise HacInvalidTypeException("The item passed in argument is not a subclass of BoardItem")
         else:
-            raise HacOutOfBoardBoundException(f"There is no item at coordinates [{x},{y}] because it's out of the board boundaries ({self.size[0]}x{self.size[1]}).")
+            raise HacOutOfBoardBoundException(f"There is no item at coordinates [{row},{column}] because it's out of the board boundaries ({self.size[0]}x{self.size[1]}).")
     
     def move(self,item,direction,step):
         """
@@ -279,8 +281,8 @@ class Board():
         else:
             raise HacObjectIsNotMovableException(f"Item '{item.name}' at position [{item.pos[0]},{item.pos[1]}] is not a subclass of Movable, therefor it cannot be moved.")
     
-    def clear_cell(self,x,y):
-        """Clear cell (x,y)
+    def clear_cell(self,row,column):
+        """Clear cell (row,column)
 
         This method clears a cell, meaning it position a void_cell BoardItemVoid at these coordinates.
 
@@ -289,19 +291,19 @@ class Board():
             myboard.clear_cell(3,4)
 
         Parameters:
-            :x: int
-            :y: int
+            :row: int
+            :column: int
         
         .. WARNING:: This method does not check the content before, it *will* overwrite the content.
 
         """
-        if self._matrix[x][y] in self._movables:
-            index = self._movables.index(self._matrix[x][y])
+        if self._matrix[row][column] in self._movables:
+            index = self._movables.index(self._matrix[row][column])
             del( self._movables[index] )
-        elif self._matrix[x][y] in self._immovables:
-            index = self._immovables.index(self._matrix[x][y])
+        elif self._matrix[row][column] in self._immovables:
+            index = self._immovables.index(self._matrix[row][column])
             del( self._immovables[index] )
-        self.place_item( BoardItemVoid(model=self.ui_board_void_cell, name='void_cell'), x, y )
+        self.place_item( BoardItemVoid(model=self.ui_board_void_cell, name='void_cell'), row, column )
 
     def get_movables(self):
         """Return a list of all the Movable objects in the Board.
