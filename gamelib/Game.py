@@ -238,10 +238,10 @@ class Game():
         else:
             raise HacInvalidTypeException('level_number needs to be an int in change_level(level_number).')
         
-    def add_npc(self,level_number,npc,x=None,y=None):
+    def add_npc(self,level_number,npc,row=None,column=None):
         """
         Add a NPC to the game. It will be placed on the board corresponding to the level_number.
-        If x and y are not None, the NPC is placed at these coordinates. Else, it's randomly placed in an empy cell.
+        If row and column are not None, the NPC is placed at these coordinates. Else, it's randomly placed in an empy cell.
 
         Example::
  
@@ -251,10 +251,10 @@ class Game():
         :type level_number: int
         :param npc: the NPC to place.
         :type npc: gamelib.Characters.NPC
-        :param x: the x coordinate to place the NPC at.
-        :type x: int
-        :param y: the y coordinate to place the NPC at.
-        :type y: int
+        :param row: the row coordinate to place the NPC at.
+        :type row: int
+        :param column: the column coordinate to place the NPC at.
+        :type column: int
 
         If either of these parameters are not of the correct type, a HacInvalidTypeException exception is raised.
 
@@ -262,27 +262,27 @@ class Game():
         """
         if type(level_number) is int:
             if isinstance(npc, NPC):
-                if x == None or y == None:
+                if row == None or column == None:
                     retry = 0
                     while True :
-                        if x == None:
-                            x = random.randint(0,self._boards[level_number]['board'].size[1]-1)
-                        if y == None:
-                            y = random.randint(0,self._boards[level_number]['board'].size[0]-1)
+                        if row == None:
+                            row = random.randint(0,self._boards[level_number]['board'].size[1]-1)
+                        if column == None:
+                            column = random.randint(0,self._boards[level_number]['board'].size[0]-1)
                         # print(f"Game.add_npc() finding a position for NPC {npc.name} trying ({x},{y})")
-                        if isinstance(self._boards[level_number]['board'].item(x,y), BoardItemVoid):
+                        if isinstance(self._boards[level_number]['board'].item(row,column), BoardItemVoid):
                             break
                         else:
-                            x = None
-                            y = None
+                            row = None
+                            column = None
                             retry += 1
-                if type(x) is int:
-                    if type(y) is int:
+                if type(row) is int:
+                    if type(column) is int:
                         if npc.actuator == None:
                             npc.actuator = RandomActuator(moveset=[Constants.UP,Constants.DOWN,Constants.LEFT,Constants.RIGHT])
                         if npc.step == None:
                             npc.step = 1
-                        self._boards[level_number]['board'].place_item(npc,x,y)
+                        self._boards[level_number]['board'].place_item(npc,row,column)
                         self._boards[level_number]['npcs'].append(npc)
                     else:
                         raise HacInvalidTypeException("y must be an int.")
