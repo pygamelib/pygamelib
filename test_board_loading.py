@@ -1,6 +1,8 @@
 from gamelib.Game import Game
 from gamelib.Characters import Player
 import gamelib.Sprites as Sprites
+import gamelib.Constants as Constants
+import gamelib.Utils as Utils
 import time
 import sys
 
@@ -23,13 +25,27 @@ print(b)
 g.player = Player(model=Sprites.FLYING_SAUCER)
 g.change_level(1)
 
-# print('Printing the complete list of sprites')
-# print([getattr(Sprites,item) for item in dir(Sprites) if not item.startswith("__")])
+
 idx=0
-while idx< max_iter: 
+key = None
+
+while idx< max_iter or max_iter == 0:
+    if key == 'w':
+        g.move_player(Constants.UP,1)
+    elif key == 's':
+        g.move_player(Constants.DOWN,1)
+    elif key == 'a':
+        g.move_player(Constants.LEFT,1)
+    elif key == 'd':
+        g.move_player(Constants.RIGHT,1)
+    elif key == 'q':
+        break
     g.clear_screen()
     g.actuate_npcs(1)
     g.display_board()
 
-    time.sleep(0.1)
-    idx += 1
+    if max_iter == 0: 
+        key = Utils.get_key()
+    else: 
+        time.sleep(0.1)
+        idx += 1
