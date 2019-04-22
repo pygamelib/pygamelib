@@ -110,7 +110,7 @@ lvl2 = Board(name='Level_2',size=[40,20],ui_border_left=Utils.WHITE_SQUARE,ui_bo
 
 game = Game(name='HAC Game')
 p = Player(model=sprite_player['right'],name='Nazbrok')
-npc1 = NPC(model=sprite_npc,name='Bad guy 1')
+npc1 = NPC(model=sprite_npc,name='Bad guy 1',step=1)
 # Test of the PathActuator
 npc1.actuator = PathActuator(path=[cst.UP,cst.UP,cst.UP,cst.UP,cst.UP,cst.UP,cst.UP,cst.UP,cst.RIGHT,cst.RIGHT,cst.RIGHT,cst.RIGHT,cst.DOWN,cst.DOWN,cst.DOWN,cst.DOWN,cst.DOWN,cst.DOWN,cst.DOWN,cst.DOWN,cst.LEFT,cst.LEFT,cst.LEFT,cst.LEFT])
 
@@ -185,13 +185,13 @@ game.add_npc(1,npc1,15,4)
 bg2_actuator = PathActuator( path=[cst.RIGHT for k in range(0,30,1)])
 for k in range(0,30,1):
     bg2_actuator.path.append(cst.LEFT)
-game.add_npc(1,NPC(model=sprite_npc,name='Bad guy 2',actuator=bg2_actuator),7,9)
+game.add_npc(1,NPC(model=sprite_npc,name='Bad guy 2',actuator=bg2_actuator,step=1),7,9)
 
 lvl2.place_item(money_bag,10,35)
 lvl2.place_item(portal1,11,35)
 
 for k in range(0,20,1):
-    game.add_npc(2, NPC( model=sprite_npc2 , name=f'poopy_{k}' ) )
+    game.add_npc(2, NPC( model=sprite_npc2 , name=f'poopy_{k}', step=1 ) )
 
 game.add_menu_entry('main_menu','w','Go up')
 game.add_menu_entry('main_menu','s','Go down')
@@ -276,9 +276,7 @@ while key != 'q':
         Utils.fatal("Invalid direction: "+str(ord(key)))
     
     # Now let's take care of our NPC movement.
-    # We are going to make it move one cell in a random direction (this is the default actuator)
-    # This is not really an efficient strategy...
-    # Also the NPC move whatever our input, even when we navigates in menus.
+    # NPC move whatever our input, even when we navigates in menus.
     # Finally, we only move the NPCs of the current level. Nothing moves in the other levels.
     game.actuate_npcs(game.current_level)
     time.sleep(game_speed)
