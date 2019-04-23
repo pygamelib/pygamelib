@@ -245,7 +245,7 @@ class Game():
 
         Example::
  
-            game.add_board(1,myboard)
+            game.add_npc(1,my_evil_npc,5,2)
 
         :param level_number: the level number of the board.
         :type level_number: int
@@ -475,6 +475,18 @@ class Game():
                     local_object.set_pickable(ref['pickable'])
                 if 'overlappable' in obj_keys:
                     local_object.set_overlappable(ref['overlappable'])
+            elif 'Door' in ref['object']:
+                local_object = Structures.Door()
+                if 'value' in obj_keys:
+                    local_object.value = ref['value']
+                if 'size' in obj_keys:
+                    local_object._size = ref['size']
+                if 'pickable' in obj_keys:
+                    local_object.set_pickable(ref['pickable'])
+                if 'overlappable' in obj_keys:
+                    local_object.set_overlappable(ref['overlappable'])
+                if 'restorable' in obj_keys:
+                    local_object.set_restorable(ref['restorable'])
             elif 'GenericActionnableStructure' in ref['object']:
                 local_object = Structures.GenericActionnableStructure()
                 if 'value' in obj_keys:
@@ -598,6 +610,13 @@ class Game():
                 ref['size'] = obj.size()
                 ref['overlappable'] = obj.overlappable()
                 ref['pickable'] = obj.pickable()
+                ref['restorable'] = obj.restorable()
+            elif isinstance(obj,Structures.Door):
+                ref['value'] = obj.value
+                ref['size'] = obj.size()
+                ref['overlappable'] = obj.overlappable()
+                ref['pickable'] = obj.pickable()
+                ref['restorable'] = obj.restorable()
             elif isinstance(obj,NPC):
                 ref['hp'] = obj.hp
                 ref['max_hp'] = obj.max_hp
