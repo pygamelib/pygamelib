@@ -221,20 +221,26 @@ class Board():
 
             board.move(player,Constants.UP,1)
 
-        Parameters are:
-            :item: an item to move (it has to be a subclass of Movable)
-            :direction: a direction from :ref:`constants-module`
-            :step: the number of steps to move the item.
+            :param item: an item to move (it has to be a subclass of Movable)
+            :type item: gamelib.Movable.Movable
+            :param direction: a direction from :ref:`constants-module`
+            :type direction: gamelib.Constants
+            :param step: the number of steps to move the item.
+            :type step: int
 
         If the number of steps is greater than the Board, the item will be move to the maximum possible position.
 
         If the item is not a subclass of Movable, an HacObjectIsNotMovableException exception (see :class:`gamelib.HacExceptions.HacObjectIsNotMovableException`).
 
-        .. Important:: if the move is successfull, an empty BoardItemVoid (see :class:`gamelib.BoardItem.BoardItemVoid`) will be put at the departure position.
+        .. Important:: if the move is successfull, an empty BoardItemVoid (see :class:`gamelib.BoardItem.BoardItemVoid`) will be put at the departure position (unless the movable item is over an overlappable item). If the movable item is over an overlappable item, the overlapped item is restored.
 
         .. todo:: check all types!
         """
         if isinstance(item, Movable) and item.can_move():
+            
+            # if direction not in dir(Constants):
+            #     raise HacInvalidTypeException('In Board.move(item, direction, step), direction must be a direction contant from the gamelib.Constants module')
+            
             new_x = None
             new_y = None
             if direction == Constants.UP:
@@ -262,18 +268,35 @@ class Board():
                 new_x = item.pos[0] + step
                 new_y = item.pos[1] - step
             if new_x != None and new_y != None and new_x>=0 and new_y>=0 and new_x < self.size[1] and new_y < self.size[0] and self._matrix[new_x][new_y].overlappable():
+                # If we are here, it means the cell we are going to already has an overlappable item, so let's save it for later restoration
+                if not isinstance(self._matrix[new_x][new_y], BoardItemVoid) and isinstance(self._matrix[new_x][new_y], Immovable) and self._matrix[new_x][new_y].restorable():
+                    item._overlapping = self._matrix[new_x][new_y]
                 if isinstance(self._matrix[new_x][new_y],Actionnable):
                     if (isinstance(item, Player) and (self._matrix[new_x][new_y].perm == Constants.PLAYER_AUTHORIZED or self._matrix[new_x][new_y].perm == Constants.ALL_PLAYABLE_AUTHORIZED)) or (isinstance(item, NPC) and (self._matrix[new_x][new_y].perm == Constants.NPC_AUTHORIZED or self._matrix[new_x][new_y].perm == Constants.ALL_PLAYABLE_AUTHORIZED)):
                         self._matrix[new_x][new_y].activate()
-                        self.place_item( BoardItemVoid(model=self.ui_board_void_cell), item.pos[0], item.pos[1] )
+                        if item._overlapping != None and isinstance(item._overlapping, Immovable) and item._overlapping.restorable() and ( item._overlapping.pos[0] != new_x or item._overlapping.pos[1] != new_y ):
+                            self.place_item(item._overlapping,item._overlapping.pos[0],item._overlapping.pos[1])
+                            item._overlapping = None
+                        else:
+                            self.place_item( BoardItemVoid(model=self.ui_board_void_cell), item.pos[0], item.pos[1] )
                         self.place_item( item, new_x, new_y )
                 else:
-                    self.place_item( BoardItemVoid(model=self.ui_board_void_cell), item.pos[0], item.pos[1] )
+                    # if there is an overlapped item, restore it. Else just move
+                    if item._overlapping != None and isinstance(item._overlapping, Immovable) and item._overlapping.restorable() and ( item._overlapping.pos[0] != new_x or item._overlapping.pos[1] != new_y ):
+                        self.place_item(item._overlapping,item._overlapping.pos[0],item._overlapping.pos[1])
+                        item._overlapping = None
+                    else:
+                        self.place_item( BoardItemVoid(model=self.ui_board_void_cell), item.pos[0], item.pos[1] )
+
                     self.place_item( item, new_x, new_y )
             elif new_x != None and new_y != None and new_x>=0 and new_y>=0 and new_x < self.size[1] and new_y < self.size[0] and self._matrix[new_x][new_y].pickable():
                 if isinstance(item, Movable) and item.has_inventory():
                     item.inventory.add_item(self._matrix[new_x][new_y])
-                    self.place_item( BoardItemVoid(model=self.ui_board_void_cell), item.pos[0], item.pos[1] )
+                    if item._overlapping != None and isinstance(item._overlapping, Immovable) and item._overlapping.restorable() and ( item._overlapping.pos[0] != new_x or item._overlapping.pos[1] != new_y ):
+                        self.place_item(item._overlapping,item._overlapping.pos[0],item._overlapping.pos[1])
+                        item._overlapping = None
+                    else:
+                        self.place_item( BoardItemVoid(model=self.ui_board_void_cell), item.pos[0], item.pos[1] )
                     self.place_item( item, new_x, new_y )
             elif new_x != None and new_y != None and new_x>=0 and new_y>=0 and new_x < self.size[1] and new_y < self.size[0] and isinstance(self._matrix[new_x][new_y],Actionnable):
                 if (isinstance(item, Player) and (self._matrix[new_x][new_y].perm == Constants.PLAYER_AUTHORIZED or self._matrix[new_x][new_y].perm == Constants.ALL_PLAYABLE_AUTHORIZED)) or (isinstance(item, NPC) and (self._matrix[new_x][new_y].perm == Constants.NPC_AUTHORIZED or self._matrix[new_x][new_y].perm == Constants.ALL_PLAYABLE_AUTHORIZED)):
