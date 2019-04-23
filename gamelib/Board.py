@@ -286,14 +286,15 @@ class Board():
 
         This method clears a cell, meaning it position a void_cell BoardItemVoid at these coordinates.
 
+        :param row: The row of the item to remove
+        :type row: int
+        :param column: The column of the item to remove
+        :type column: int
+
         Example::
 
             myboard.clear_cell(3,4)
 
-        Parameters:
-            :row: int
-            :column: int
-        
         .. WARNING:: This method does not check the content before, it *will* overwrite the content.
 
         """
