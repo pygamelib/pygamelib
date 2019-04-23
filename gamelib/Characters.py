@@ -111,7 +111,7 @@ class NPC(Movable,Character):
             self.actuator = kwargs['actuator']
         
         if 'step' not in kwargs.keys():
-            self.step = 0
+            self.step = 1
         else:
             self.step = kwargs['step']
     
