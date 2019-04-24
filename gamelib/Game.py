@@ -36,6 +36,7 @@ class Game():
         self._config_parsers = None
         self._configuration = None
         self.object_library = []
+        Utils.init_term_colors()
 
     
     def add_menu_entry(self,category,shortcut,message,data=None):

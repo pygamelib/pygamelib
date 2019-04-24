@@ -1,4 +1,4 @@
-from colorama import Fore, Back, Style
+from colorama import Fore, Back, Style, init
 import sys
 import termios
 import tty
@@ -293,3 +293,6 @@ def black_dim(message):
     This method works exactly the way green_bright() work with different color.
     """
     return Fore.BLACK+Style.DIM+message+Style.RESET_ALL
+
+def init_term_colors():
+    init()
