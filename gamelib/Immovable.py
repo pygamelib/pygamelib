@@ -19,6 +19,14 @@ class Immovable(BoardItem):
     
     def size(self):
         return self._size
+    
+    def restorable(self):
+        """
+        This is a virtual method that must be implemented in deriving class.
+        This method has to return True or False.
+        This represent the capacity for an Immovable BoardItem to be restored by the board if the item is overlappable and has been overlapped by another Movable (:class:`gamelib.Movable.Movable`) item.
+        """
+        raise NotImplementedError()
 
 class Actionnable(Immovable):
     """

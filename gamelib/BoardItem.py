@@ -77,7 +77,7 @@ class BoardItem():
         This represent the capacity for a BoardItem to be overlapped by another BoardItem.
         """
         raise NotImplementedError()
-    
+
     def size(self):
         """
         This is a virtual method that must be implemented in deriving class.
