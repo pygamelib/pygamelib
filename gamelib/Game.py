@@ -25,7 +25,10 @@ class Game():
     :param current_level: The current level.
     :type current_level: int
 
-    The game object has an object_library member that is always an empty array that is always empty except just after loading a board. In this case, if the board have a "library" field, it is going to be used to populate object_library
+    .. note:: The game object has an object_library member that is always an empty array that is always empty except just after loading a board. In this case, if the board have a "library" field, it is going to be used to populate object_library.
+
+    .. note:: The constructor of Game takes care of initializing the terminal to properly render the colors on Windows.
+
     """
     def __init__(self,name='Game',boards = {}, menu = {}, current_level = None):
         self.name = name
