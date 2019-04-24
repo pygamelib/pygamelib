@@ -1,5 +1,5 @@
 from gamelib.BoardItem import BoardItem
-import gamelib.Constants as C
+import gamelib.Constants as Constants
 
 class Immovable(BoardItem):
     """
@@ -15,22 +15,45 @@ class Immovable(BoardItem):
             self._size = kwargs['size']
 
     def can_move(self):
+        """ Return the capability of moving of an item.
+
+        Obviously an Immovable item is not capable of moving. So that method always returns False.
+
+        :return: False
+        :rtype: bool
+        """
         return False
     
     def size(self):
+        """Return the size of the Immovable Item.
+
+        :return: The size of the item.
+        :rtype: int
+        """
         return self._size
     
     def restorable(self):
         """
         This is a virtual method that must be implemented in deriving class.
         This method has to return True or False.
-        This represent the capacity for an Immovable BoardItem to be restored by the board if the item is overlappable and has been overlapped by another Movable (:class:`gamelib.Movable.Movable`) item.
+        This represent the capacity for an Immovable BoardItem to be restored by the board if the item is overlappable and has been overlapped by another Movable (:class:`~gamelib.Movable.Movable`) item.
         """
         raise NotImplementedError()
 
 class Actionnable(Immovable):
     """
-    .. TODO:: Documentation
+    This class derives :class:`~gamelib.Immovable.Immovable`. It adds the ability to an Immovable BoardItem to be triggered and execute some code.
+
+    :param action: the reference to a function (Attention: no parentheses at the end of the function name).
+    :type action: function
+    :param action_parameters: the parameters to the action function.
+    :type action_parameters: list
+    :param perm: The permission that defines what types of items can actually activate the actionnable. The permission has to be one of the permissions defined in :mod:`~gamelib.Constants`
+    :type perm: :mod:`~gamelib.Constants`
+
+    On top of these parameters Actionnable accepts all parameters from :class:`~gamelib.Immovable.Immovable` and therefor from :class:`~gamelib.BoardItem.BoardItem`.
+
+    .. note:: The common way to use this class is to use GenericActionnableStructure. Please refer to :class:`~gamelib.Structures.GenericActionnableStructure` for more details.
     """
     def __init__(self,**kwargs):
         if 'action' not in kwargs.keys():
@@ -42,11 +65,16 @@ class Actionnable(Immovable):
         else:
             self.action_parameters = kwargs['action_parameters']
         if 'perm' not in kwargs.keys():
-            self.perm = C.PLAYER_AUTHORIZED
+            self.perm = Constants.PLAYER_AUTHORIZED
         else:
             self.perm = kwargs['perm']
         Immovable.__init__(self,**kwargs)
     
     def activate(self):
+        """
+        This function is calling the action function with the action_parameters.
+
+        Usually it's automatically called by :meth:`~gamelib.Board.Board.move` when a Player or NPC (see :mod:`~gamelib.Characters`)
+        """
         if self.action != None:
             self.action(self.action_parameters)
