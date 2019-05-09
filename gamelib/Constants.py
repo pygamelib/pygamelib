@@ -1,5 +1,5 @@
 # Main version
-HAC_GAME_LIB_VERSION = '2019.4a1'
+HAC_GAME_LIB_VERSION = '2019.4a3'
 # Directions
 UP     = 10000001
 DOWN   = 10000010
@@ -21,3 +21,34 @@ POS_TOP                 = 10001101
 POS_BOTTOM              = 10001110
 ORIENTATION_HORIZONTAL  = 10001111
 ORIENTATION_VERTICAL    = 10010000
+
+"""
+
+Accessible constants are the following:
+
+General purpose:
+ * HAC_GAME_LIB_VERSION 
+
+Directions:
+ * UP     
+ * DOWN   
+ * LEFT   
+ * RIGHT  
+ * DRUP   
+ * DRDOWN 
+ * DLUP   
+ * DLDOWN 
+
+Permissions:
+ * PLAYER_AUTHORIZED       
+ * NPC_AUTHORIZED          
+ * ALL_PLAYABLE_AUTHORIZED 
+ * NONE_AUTHORIZED         
+
+UI positions:
+ * POS_TOP                 
+ * POS_BOTTOM              
+ * ORIENTATION_HORIZONTAL  
+ * ORIENTATION_VERTICAL    
+
+"""
