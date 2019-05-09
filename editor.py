@@ -94,20 +94,20 @@ def to_history(object):
         del(object_history[0])
         object_history.append(object)
 
-def create_wizzard():
+def create_wizard():
     global game
     game.clear_screen()
     # 1 - Choose object type between structures or characters
     # 2 - pick one
     # 3 - Structure: customize name, type, size, etc.
-    print(Utils.green_bright("\t\tObject creation wizzard"))
+    print(Utils.green_bright("\t\tObject creation wizard"))
     print('What do you want to create: a NPC or a structure?')
     print('1 - NPC (Non Playable Character)')
-    print('2 - Structure (Wall, Treasure, Portal, Trees, etc.)')
+    print('2 - Structure (Wall, Door, Treasure, Portal, Trees, etc.)')
     key = Utils.get_key()
     if key == '1':
         game.clear_screen()
-        print(Utils.green_bright("\t\tObject creation wizzard: ")+Utils.cyan_bright("NPC") )
+        print(Utils.green_bright("\t\tObject creation wizard: ")+Utils.cyan_bright("NPC") )
         new_object = NPC()
         print("First give a name to your NPC. Default value: "+new_object.name)
         r = str( input('(Enter name)> ') )
@@ -121,13 +121,13 @@ def create_wizzard():
         input('Hit "Enter" when you are ready to choose a model.')
         new_object.model = model_picker()
         game.clear_screen()
-        print(Utils.green_bright("\t\tObject creation wizzard: ")+Utils.cyan_bright("NPC")+f' - {new_object.model}' )
+        print(Utils.green_bright("\t\tObject creation wizard: ")+Utils.cyan_bright("NPC")+f' - {new_object.model}' )
         print('We now needs to go through some basic statistics. You can decide to go with default by simply hitting the "Enter" key.')
         r = input(f'Number of cell crossed in one turn. Default: {new_object.step}(type: int) > ')
         if len(r)> 0:
             new_object.step = int(r)
         else:
-            # If it's 0 it means it's going to be a static NPC so to prevent python to pass some random pre-initilized default, we explicitely set the Actuator to a static one
+            # If it's 0 it means it's going to be a static NPC so to prevent python to pass some random pre-initialized default, we explicitly set the Actuator to a static one
             new_object.actuator = SimpleActuators.RandomActuator(moveset=[])
         r = input(f'Max HP (Health Points). Default: {new_object.max_hp}(type: int) > ')
         if len(r)> 0:
@@ -254,12 +254,13 @@ def create_wizzard():
         return new_object
     elif key == '2':
         game.clear_screen()
-        print(Utils.green_bright("\t\tObject creation wizzard: ")+Utils.magenta_bright("Structure") )
+        print(Utils.green_bright("\t\tObject creation wizard: ")+Utils.magenta_bright("Structure") )
         print("What kind of structure do you want to create:")
         print('1 - A wall like structure (an object that cannot be picked-up and is not overlappable). Ex: walls, trees, non moving elephant (try to go through an elephant or to pick it up in your backpack...)')
-        print('2 - A treasure (can be picked up, take space in the inventory, give points to the player)')
-        print('3 - A generic object (you can set the properties to make it pickable or overlappable)')
-        print('4 - A generic actionnable object (to make portals, heart to resplenish life, etc.)')
+        print('2 - A door (player and/or NPC can go through)')
+        print('3 - A treasure (can be picked up, take space in the inventory, give points to the player)')
+        print('4 - A generic object (you can set the properties to make it pickable or overlappable)')
+        print('5 - A generic actionable object (to make portals, heart to replenish life, etc.)')
         key = Utils.get_key()
         new_object = None
         if key == '1':
@@ -267,6 +268,10 @@ def create_wizzard():
             new_object.name = str(uuid.uuid1())
             new_object.model = model_picker()
         if key == '2':
+            new_object = Structures.Door()
+            new_object.name = str(uuid.uuid1())
+            new_object.model = model_picker()
+        if key == '3':
             new_object = Structures.Treasure()
             print("First give a name to your Treasure. Default value: "+new_object.name)
             r = str( input('(Enter name)> ') )
@@ -279,11 +284,11 @@ def create_wizzard():
             print("Now we need a model. Default value: "+new_object.model)
             input('Hit "Enter" when you are ready to choose a model.')
             new_object.model = model_picker()
-        if key == '3' or key == '4':
-            if key == '3':
+        if key == '4' or key == '5':
+            if key == '4':
                 new_object = Structures.GenericStructure()
             else:
-                new_object = Structures.GenericActionnableStructure()
+                new_object = Structures.GenericActionableStructure()
             new_object.set_overlappable(False)
             new_object.set_pickable(False)
             print("First give a name to your structure. Default value: "+new_object.name)
@@ -326,12 +331,12 @@ def save_current_board():
     game.save_board(1,'hac-maps/'+game.current_board().name.replace(' ','_')+'.json')
     is_modified=False
 
-def create_board_wizzard():
+def create_board_wizard():
     global game
     global is_modified
     game.clear_screen()
     print( Utils.blue_bright("\t\tNew board") )
-    print("First we need some informations on your new board:")
+    print("First we need some information on your new board:")
     name = str( input('Name: ') )
     width = int( input('Width (in number of cells): ') )
     height = int( input('Height (in number of cells): ') )
@@ -373,7 +378,7 @@ if choice == "q":
     print("Good Bye!")
     exit()
 elif choice == "n":
-    create_board_wizzard()
+    create_board_wizard()
 elif int(choice) < len(hmaps):
     game.load_board('hac-maps/'+hmaps[int(choice)],1)
 
@@ -487,11 +492,11 @@ while True:
             current_menu = 'board'
         elif key == 'c':
             to_history(current_object)
-            current_object = create_wizzard()
+            current_object = create_wizard()
             to_history(current_object)
         elif key == '+':
             save_current_board()
-            create_board_wizzard()
+            create_board_wizard()
         elif key == 'L':
             save_current_board()
             current_menu = "boards_list"
