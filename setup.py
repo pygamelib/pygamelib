@@ -22,6 +22,7 @@ setuptools.setup(
     ],
     project_urls={
         'Documentation': 'https://hac-game-lib.readthedocs.io/en/latest/index.html',
+        'Guides & Tutorials': 'https://astro.hyrul.es/guides/hac-game-lib/',
         'Source': 'https://github.com/arnauddupuis/hac-game-lib',
         'Tracker': 'https://github.com/arnauddupuis/hac-game-lib/issues',
         'Release Notes' : 'https://astro.hyrul.es/release-notes/2019.4a1/'

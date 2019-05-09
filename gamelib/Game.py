@@ -397,7 +397,7 @@ class Game():
 
         If the filename argument is not an existing file, the open function is going to raise an exception.
 
-        This method, laod the board from the JSON file, populate it with all BoardItem included, check for sanity, init the board with BoardItemVoid and then associate the freshly created board to a lvl_number.
+        This method, load the board from the JSON file, populate it with all BoardItem included, check for sanity, init the board with BoardItemVoid and then associate the freshly created board to a lvl_number.
         It then create the NPCs and add them to the board.
 
         :param filename: The file to load
@@ -491,8 +491,8 @@ class Game():
                     local_object.set_overlappable(ref['overlappable'])
                 if 'restorable' in obj_keys:
                     local_object.set_restorable(ref['restorable'])
-            elif 'GenericActionnableStructure' in ref['object']:
-                local_object = Structures.GenericActionnableStructure()
+            elif 'GenericActionableStructure' in ref['object']:
+                local_object = Structures.GenericActionableStructure()
                 if 'value' in obj_keys:
                     local_object.value = ref['value']
                 if 'size' in obj_keys:
@@ -562,7 +562,7 @@ class Game():
         return local_board
 
     def save_board(self,lvl_number,filename):
-        """Save a baord to a JSON file
+        """Save a board to a JSON file
 
         This method saves a Board and everything in it but the BoardItemVoid.
 
@@ -609,7 +609,7 @@ class Game():
             elif isinstance(obj,Structures.Treasure):
                 ref['value'] = obj.value
                 ref['size'] = obj.size()
-            elif isinstance(obj,Structures.GenericActionnableStructure) or isinstance(obj,Structures.GenericStructure):
+            elif isinstance(obj,Structures.GenericActionableStructure) or isinstance(obj,Structures.GenericStructure):
                 ref['value'] = obj.value
                 ref['size'] = obj.size()
                 ref['overlappable'] = obj.overlappable()

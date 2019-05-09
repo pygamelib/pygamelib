@@ -2,7 +2,7 @@ from gamelib.Utils import warn, debug
 from gamelib.HacExceptions import HacException, HacOutOfBoardBoundException, HacInvalidTypeException, HacObjectIsNotMovableException
 from gamelib.BoardItem import BoardItem, BoardItemVoid
 from gamelib.Movable import Movable
-from gamelib.Immovable import Immovable,Actionnable
+from gamelib.Immovable import Immovable,Actionable
 from gamelib.Characters import Player,NPC
 import gamelib.Constants as Constants
 
@@ -18,7 +18,7 @@ class Board():
     :type name: str
     :param size: array [width,height] with width and height being int. The size of the board.
     :type size: list
-    :param player_starting_position: array [row,column] with row and column being int. The coordinates at wich Game will place the player on change_level().
+    :param player_starting_position: array [row,column] with row and column being int. The coordinates at which Game will place the player on change_level().
     :type player_starting_position: list
     :param ui_borders: To set all the borders to the same value
     :type ui_borders: str
@@ -57,7 +57,7 @@ class Board():
         except HacException as error:
             raise error
         
-        # Init the list of movables and immovables objects
+        # Init the list of movable and immovable objects
         self._movables = []
         self._immovables = []
         # If sanity check passed then, initialize the board
@@ -273,7 +273,7 @@ class Board():
                 # If we are here, it means the cell we are going to already has an overlappable item, so let's save it for later restoration
                 if not isinstance(self._matrix[new_x][new_y], BoardItemVoid) and isinstance(self._matrix[new_x][new_y], Immovable) and self._matrix[new_x][new_y].restorable():
                     item._overlapping = self._matrix[new_x][new_y]
-                if isinstance(self._matrix[new_x][new_y],Actionnable):
+                if isinstance(self._matrix[new_x][new_y],Actionable):
                     if (isinstance(item, Player) and (self._matrix[new_x][new_y].perm == Constants.PLAYER_AUTHORIZED or self._matrix[new_x][new_y].perm == Constants.ALL_PLAYABLE_AUTHORIZED)) or (isinstance(item, NPC) and (self._matrix[new_x][new_y].perm == Constants.NPC_AUTHORIZED or self._matrix[new_x][new_y].perm == Constants.ALL_PLAYABLE_AUTHORIZED)):
                         self._matrix[new_x][new_y].activate()
                         # Here instead of just placing a BoardItemVoid on the departure position we first make sure there is no _overlapping object to restore.
@@ -302,7 +302,7 @@ class Board():
                     else:
                         self.place_item( BoardItemVoid(model=self.ui_board_void_cell), item.pos[0], item.pos[1] )
                     self.place_item( item, new_x, new_y )
-            elif new_x != None and new_y != None and new_x>=0 and new_y>=0 and new_x < self.size[1] and new_y < self.size[0] and isinstance(self._matrix[new_x][new_y],Actionnable):
+            elif new_x != None and new_y != None and new_x>=0 and new_y>=0 and new_x < self.size[1] and new_y < self.size[0] and isinstance(self._matrix[new_x][new_y],Actionable):
                 if (isinstance(item, Player) and (self._matrix[new_x][new_y].perm == Constants.PLAYER_AUTHORIZED or self._matrix[new_x][new_y].perm == Constants.ALL_PLAYABLE_AUTHORIZED)) or (isinstance(item, NPC) and (self._matrix[new_x][new_y].perm == Constants.NPC_AUTHORIZED or self._matrix[new_x][new_y].perm == Constants.ALL_PLAYABLE_AUTHORIZED)):
                     self._matrix[new_x][new_y].activate()
         else:
@@ -346,7 +346,7 @@ class Board():
         return self._movables
 
     def get_immovables(self):
-        """Return a list of all the Imovable objects in the Board.
+        """Return a list of all the Immovable objects in the Board.
 
         See :class:`gamelib.Immovable.Immovable` for more on an Immovable object.
         

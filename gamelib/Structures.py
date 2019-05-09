@@ -1,4 +1,4 @@
-from gamelib.Immovable import Immovable, Actionnable
+from gamelib.Immovable import Immovable, Actionable
 from gamelib.HacExceptions import HacInvalidTypeException
 
 class Wall(Immovable):
@@ -65,18 +65,18 @@ class GenericStructure(Immovable):
 
     It can be tweaked with all the properties of :class:`~gamelib.BoardItem.BoardItem`, :class:`~gamelib.Immovable.Immovable` and it can be made pickable, overlappable or restorable or any combination of these.
 
-    If you need an action to be done when a Player and/or a NPC touch the structure please have a look at :class:`gamelib.Structures.GenericActionnableStructure`.
+    If you need an action to be done when a Player and/or a NPC touch the structure please have a look at :class:`gamelib.Structures.GenericActionableStructure`.
 
     :param pickable: Define if the structure can be picked-up by a Player or NPC.
     :type pickable: bool
     :param overlappable: Define if the structure can be overlapped by a Player or NPC.
     :type overlappable: bool
-    :param restorable: Define if the structure can be restored by the Board after a Player or NPC passed through. For example, you want a door or an activator structure (see GenericActionnableStructure for that) to remain on the board after it's been overlapped by a player. But you could also want to develop some kind of Space Invaders game were the protection block are overlappable but not restorable.
+    :param restorable: Define if the structure can be restored by the Board after a Player or NPC passed through. For example, you want a door or an activator structure (see GenericActionableStructure for that) to remain on the board after it's been overlapped by a player. But you could also want to develop some kind of Space Invaders game were the protection block are overlappable but not restorable.
     :type restorable: bool
 
     On top of these, this object takes all parameters of :class:`~gamelib.BoardItem.BoardItem` and :class:`~gamelib.Immovable.Immovable`
 
-    .. important:: If you need a structure with a permission system please have a look at :class:`~gamelib.Structures.GenericActionnableStructure`. This class has a permission system for activation.
+    .. important:: If you need a structure with a permission system please have a look at :class:`~gamelib.Structures.GenericActionableStructure`. This class has a permission system for activation.
 
     """
     def __init__(self,**kwargs):
@@ -106,10 +106,12 @@ class GenericStructure(Immovable):
     def pickable(self):
         """ This represent the capacity for a BoardItem to be picked-up by player or NPC.
 
-        To set this value please use :meth:`~gamelib.Structures.GenericStructure.set_pickable`
+        To set this value please use :meth:`~.set_pickable`
 
         :return: True or False
         :rtype: bool
+
+        .. seealso:: :meth:`~.set_pickable`
         """
         return self.__is_pickable
 
@@ -125,15 +127,29 @@ class GenericStructure(Immovable):
         """
         if type(val) is bool:
             self.__is_pickable = val
-    """ This represent the capacity for a :class:`~gamelib.BoardItem.BoardItem` to be overlapped by player or NPC.
+    
+    def overlappable(self):
+        """ This represent the capacity for a :class:`~gamelib.BoardItem.BoardItem` to be overlapped by player or NPC.
+
+        To set this value please use :meth:`~.set_overlappable`
 
         :return: False
         :rtype: bool
+
+        .. seealso:: :meth:`~.set_overlappable`
         """
-    def overlappable(self):
         return self.__is_overlappable
 
     def set_overlappable(self,val):
+        """Make the structure overlappable or not.
+
+        :param val: True or False depending on the fact that the structure can be overlapped (i.e that a Player or NPC can step on it) or not.
+        :type val: bool
+        
+        Example::
+        
+            myneatstructure.set_overlappable(True)
+        """
         if type(val) is bool:
             self.__is_overlappable = val
     
@@ -145,6 +161,8 @@ class GenericStructure(Immovable):
         
         :return: False
         :rtype: bool
+
+        .. seealso:: :meth:`~.set_restorable`
         """
         return self.__is_restorable
         
@@ -152,7 +170,7 @@ class GenericStructure(Immovable):
     def set_restorable(self,val):
         """Make the structure restorable or not.
 
-        :param val: True or False depending on the pickability of the structure.
+        :param val: True or False depending on the restorability of the structure.
         :type val: bool
         
         Example::
@@ -164,13 +182,13 @@ class GenericStructure(Immovable):
         else:
             raise HacInvalidTypeException('set_restorable(bool) takes a boolean as paramater.')
 
-class GenericActionnableStructure(GenericStructure,Actionnable):
+class GenericActionableStructure(GenericStructure,Actionable):
     """
     .. TODO:: Documentation
     """
     def __init__(self,**kwargs):
         GenericStructure.__init__(self,**kwargs)
-        Actionnable.__init__(self,**kwargs)
+        Actionable.__init__(self,**kwargs)
 
 
 class Treasure(Immovable):

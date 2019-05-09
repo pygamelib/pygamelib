@@ -40,7 +40,7 @@ class Immovable(BoardItem):
         """
         raise NotImplementedError()
 
-class Actionnable(Immovable):
+class Actionable(Immovable):
     """
     This class derives :class:`~gamelib.Immovable.Immovable`. It adds the ability to an Immovable BoardItem to be triggered and execute some code.
 
@@ -48,12 +48,12 @@ class Actionnable(Immovable):
     :type action: function
     :param action_parameters: the parameters to the action function.
     :type action_parameters: list
-    :param perm: The permission that defines what types of items can actually activate the actionnable. The permission has to be one of the permissions defined in :mod:`~gamelib.Constants`
+    :param perm: The permission that defines what types of items can actually activate the actionable. The permission has to be one of the permissions defined in :mod:`~gamelib.Constants`
     :type perm: :mod:`~gamelib.Constants`
 
-    On top of these parameters Actionnable accepts all parameters from :class:`~gamelib.Immovable.Immovable` and therefor from :class:`~gamelib.BoardItem.BoardItem`.
+    On top of these parameters Actionable accepts all parameters from :class:`~gamelib.Immovable.Immovable` and therefor from :class:`~gamelib.BoardItem.BoardItem`.
 
-    .. note:: The common way to use this class is to use GenericActionnableStructure. Please refer to :class:`~gamelib.Structures.GenericActionnableStructure` for more details.
+    .. note:: The common way to use this class is to use GenericActionableStructure. Please refer to :class:`~gamelib.Structures.GenericActionableStructure` for more details.
     """
     def __init__(self,**kwargs):
         if 'action' not in kwargs.keys():

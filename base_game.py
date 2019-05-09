@@ -4,7 +4,7 @@ from gamelib.Board import Board
 from gamelib.BoardItem import BoardItem
 from gamelib.Characters import Player, NPC
 from gamelib.Game import Game
-from gamelib.Structures import Wall,Treasure, GenericStructure, GenericActionnableStructure
+from gamelib.Structures import Wall,Treasure, GenericStructure, GenericActionableStructure
 import gamelib.Constants as cst
 from gamelib.Actuators.SimpleActuators import PathActuator
 import gamelib.Utils as Utils
@@ -124,22 +124,22 @@ tree = GenericStructure(model=sprite_tree)
 tree.set_overlappable(False)
 tree.set_pickable(False)
 
-portal2 = GenericActionnableStructure(model=sprite_portal)
+portal2 = GenericActionableStructure(model=sprite_portal)
 portal2.set_overlappable(False)
 portal2.action = change_current_level
 portal2.action_parameters = [game,2]
 
-portal1 = GenericActionnableStructure(model=sprite_portal)
+portal1 = GenericActionableStructure(model=sprite_portal)
 portal1.set_overlappable(False)
 portal1.action = change_current_level
 portal1.action_parameters = [game,1]
 
-life_heart = GenericActionnableStructure(model=sprite_heart)
+life_heart = GenericActionableStructure(model=sprite_heart)
 life_heart.set_overlappable(True)
 life_heart.action = add_hp
 life_heart.action_parameters = [game,100]
 
-life_heart_minor = GenericActionnableStructure(model=sprite_heart_minor)
+life_heart_minor = GenericActionableStructure(model=sprite_heart_minor)
 life_heart_minor.set_overlappable(True)
 life_heart_minor.action = add_hp
 life_heart_minor.action_parameters = [game,25]
