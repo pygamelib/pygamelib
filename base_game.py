@@ -193,6 +193,16 @@ lvl2.place_item(portal1,11,35)
 for k in range(0,20,1):
     game.add_npc(2, NPC( model=sprite_npc2 , name=f'poopy_{k}', step=1 ) )
 
+
+# Now let's add a nice NPC, one we can talk to!
+nice_npc = NPC(name='Unipici', model=Sprites.UNICORN_FACE,step=0) # because of step=0 this NPC is static
+game.add_npc(1,nice_npc,18,1)
+# Now let's use the menu system to have the basis for a dialog
+game.add_menu_entry('unipici_dialog',None,'Hello! I am Unipici. Nice to meet you! What can I do for you?')
+game.add_menu_entry('unipici_dialog','1','Restore my life '+Sprites.HEART_SPARKLING)
+game.add_menu_entry('unipici_dialog','2','Nearly kill me '+Sprites.SKULL)
+game.add_menu_entry('unipici_dialog','3','Stop talking')
+
 game.add_menu_entry('main_menu','w','Go up')
 game.add_menu_entry('main_menu','s','Go down')
 game.add_menu_entry('main_menu','a','Go left')
