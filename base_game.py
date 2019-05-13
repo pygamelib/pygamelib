@@ -201,7 +201,8 @@ game.add_npc(1,nice_npc,18,1)
 game.add_menu_entry('unipici_dialog',None,'Hello! I am Unipici. Nice to meet you! What can I do for you?')
 game.add_menu_entry('unipici_dialog','1','Restore my life '+Sprites.HEART_SPARKLING)
 game.add_menu_entry('unipici_dialog','2','Nearly kill me '+Sprites.SKULL)
-game.add_menu_entry('unipici_dialog','3','Stop talking')
+game.add_menu_entry('unipici_dialog','3','Solve the Uni-riddle')
+game.add_menu_entry('unipici_dialog','4','Stop talking')
 
 game.add_menu_entry('main_menu','w','Go up')
 game.add_menu_entry('main_menu','s','Go down')
@@ -226,9 +227,18 @@ key = None
 game_speed = 0.1
 current_menu = 'main_menu'
 npc_movements = [cst.UP,cst.DOWN,cst.LEFT,cst.RIGHT]
+
+uniriddles = [
+    {'q': 'Who is never hungry during Christmas?', 'a': 'The turkey because he is always stuffed.', 'k':['turkey','stuff']},
+    {'q': 'The more you take away, the more I become.\nWhat am I?', 'a': 'A hole.', 'k':['hole']},
+    {'q': 'I have no feet, no hands, no wings, but I climb to the sky.\nWhat am I?', 'a': 'Smoke.', 'k':['smoke']},
+    {'q': 'Why do mummies like Christmas so much?', 'a': 'Because of all the wrapping.', 'k':['wrap']}
+]
+
 while key != 'q':
     refresh_screen(game,p,current_menu)
     Utils.debug(f"Current game speed: {game_speed}")
+    Utils.debug(f"Current menu: {current_menu}")
     key = Utils.get_key()
     
     if current_menu == 'main_menu':
@@ -263,6 +273,10 @@ while key != 'q':
             current_menu = 'speed_menu'
         elif key == 'k':
             game.player.hp -= 5
+        
+        # Once we've moved we check if we are in the neighborhood of Unipici
+        if game.player in game.neighbors(1,nice_npc):
+            current_menu = 'unipici_dialog'
     # Here we change the speed of the game and then go back to main menu.
     elif current_menu == 'speed_menu':
         if key == '1':
@@ -282,6 +296,34 @@ while key != 'q':
             current_menu = 'main_menu'
         elif key == 'b':
             current_menu = 'main_menu'
+    # Here is the interaction menu with Unipici
+    elif current_menu == 'unipici_dialog':
+        if key == '4':
+            current_menu = 'main_menu'
+        elif key == '2':
+            game.player.hp -= (game.player.max_hp-5)
+        elif key == '1':
+            game.player.hp = game.player.max_hp
+        elif key == '3':
+            # The riddle game
+            game.clear_screen()
+            print( nice_npc.model +Utils.cyan_bright(' YEAAAH RIDDLE TIME!! Answer my riddle and you will be awarded an awesome treasure!')  )
+            riddle = random.choice(uniriddles)
+            print( nice_npc.model + Utils.magenta_bright(riddle['q'])  )
+            answer = input('And your answer is? ')
+            match_count = 0
+            for k in riddle['k']:
+                if k.lower() in answer.lower():
+                    match_count += 1
+            if len(riddle['k']) == match_count:
+                print( nice_npc.model + Utils.green_bright('You got it!! Congratulations! Here is your prize: ' + Sprites.RAINBOW + ' Rainbow Prize!') )
+                game.player.inventory.add_item( Treasure(model=Sprites.RAINBOW, value=1000, name='Rainbow Prize', type='good_prize') )
+            else:
+                print( nice_npc.model + Utils.red_bright('WRONG! You still get a prize... ' + sprite_npc2+' a nice looser poop!') )
+                print( nice_npc.model + Utils.cyan_bright(f" by the way, the answer is: {riddle['a']}") )
+                game.player.inventory.add_item( Treasure(model=sprite_npc2, value=-1000, name='Looser poop', type='loose_prize') )
+            print(nice_npc.model + Utils.cyan_bright('Come again for more fun!\n(press any key to exit this dialog)') )
+            Utils.get_key()
     else:
         Utils.fatal("Invalid direction: "+str(ord(key)))
     
