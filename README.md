@@ -34,11 +34,22 @@ The base game makes use of:
 
 ## Requirements
 
+### Python
+
+The hac-game-lib only supports Python 3+. It will **not** run with Python 2.
+
 Run PIP to install the requirements (only colorama):
 
 ```bash
 pip3 install -r requirements.txt
 ```
+
+### Terminal color and emojis
+
+It is not really a hard requirement but colored emojis are really bringing the games created to life.  
+We then recommend to have a color emojis font installed like Noto Color Emojis (on most Linux distributions you can install it from the package manager, search for "noto-color-emoji").
+
+If your terminal application is not displaying color emojis, please have a look at this [file](https://gist.github.com/IgnoredAmbience/7c99b6cf9a8b73c9312a71d1209d9bbb) and follow the instructions.
 
 ## Limitations
 
