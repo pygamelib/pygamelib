@@ -1,8 +1,12 @@
 import setuptools
 import gamelib.Constants as Constants
+from os import path
 
 with open("README.md", "r") as fh:
     long_description = fh.read()
+
+DIR = path.dirname(path.abspath(__file__))
+INSTALL_PACKAGES = open(path.join(DIR, 'requirements.txt')).read().splitlines()
 
 setuptools.setup(
     name="hac-game-lib",
@@ -12,9 +16,11 @@ setuptools.setup(
     description="A small game development framework for teaching programming to young kids.",
     long_description=long_description,
     long_description_content_type="text/markdown",
+    install_requires=INSTALL_PACKAGES,
     url="https://astro.hyrul.es",
     packages=setuptools.find_packages(),
-    keywords='game development beginner',
+    scripts=['hgl-base_game.py','hgl-editor.py'],
+    keywords=['game','development','beginner'],
     classifiers=[
         "Programming Language :: Python :: 3",
         "License :: OSI Approved :: GNU General Public License v3 (GPLv3)",
