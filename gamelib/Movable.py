@@ -22,6 +22,7 @@ class Movable(BoardItem):
         else:
             self.step = kwargs['step']
         self._overlapping = None
+        self._overlapping_buffer = None
     
     def can_move(self):
         """

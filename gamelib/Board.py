@@ -272,14 +272,21 @@ class Board():
             if new_x != None and new_y != None and new_x>=0 and new_y>=0 and new_x < self.size[1] and new_y < self.size[0] and self._matrix[new_x][new_y].overlappable():
                 # If we are here, it means the cell we are going to already has an overlappable item, so let's save it for later restoration
                 if not isinstance(self._matrix[new_x][new_y], BoardItemVoid) and isinstance(self._matrix[new_x][new_y], Immovable) and self._matrix[new_x][new_y].restorable():
-                    item._overlapping = self._matrix[new_x][new_y]
+                    if item._overlapping == None:
+                        item._overlapping = self._matrix[new_x][new_y]
+                    else:
+                        item._overlapping_buffer = self._matrix[new_x][new_y]
+                    
                 if isinstance(self._matrix[new_x][new_y],Actionable):
                     if (isinstance(item, Player) and (self._matrix[new_x][new_y].perm == Constants.PLAYER_AUTHORIZED or self._matrix[new_x][new_y].perm == Constants.ALL_PLAYABLE_AUTHORIZED)) or (isinstance(item, NPC) and (self._matrix[new_x][new_y].perm == Constants.NPC_AUTHORIZED or self._matrix[new_x][new_y].perm == Constants.ALL_PLAYABLE_AUTHORIZED)):
                         self._matrix[new_x][new_y].activate()
                         # Here instead of just placing a BoardItemVoid on the departure position we first make sure there is no _overlapping object to restore.
                         if item._overlapping != None and isinstance(item._overlapping, Immovable) and item._overlapping.restorable() and ( item._overlapping.pos[0] != new_x or item._overlapping.pos[1] != new_y ):
                             self.place_item(item._overlapping,item._overlapping.pos[0],item._overlapping.pos[1])
-                            item._overlapping = None
+                            if item._overlapping_buffer != None:
+                                item._overlapping = item._overlapping_buffer
+                            else:
+                                item._overlapping = None
                         else:
                             self.place_item( BoardItemVoid(model=self.ui_board_void_cell), item.pos[0], item.pos[1] )
                         self.place_item( item, new_x, new_y )
@@ -287,10 +294,12 @@ class Board():
                     # if there is an overlapped item, restore it. Else just move
                     if item._overlapping != None and isinstance(item._overlapping, Immovable) and item._overlapping.restorable() and ( item._overlapping.pos[0] != new_x or item._overlapping.pos[1] != new_y ):
                         self.place_item(item._overlapping,item._overlapping.pos[0],item._overlapping.pos[1])
-                        item._overlapping = None
+                        if item._overlapping_buffer != None:
+                            item._overlapping = item._overlapping_buffer
+                        else:
+                            item._overlapping = None
                     else:
                         self.place_item( BoardItemVoid(model=self.ui_board_void_cell), item.pos[0], item.pos[1] )
-
                     self.place_item( item, new_x, new_y )
             elif new_x != None and new_y != None and new_x>=0 and new_y>=0 and new_x < self.size[1] and new_y < self.size[0] and self._matrix[new_x][new_y].pickable():
                 if isinstance(item, Movable) and item.has_inventory():
