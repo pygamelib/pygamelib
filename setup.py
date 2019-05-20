@@ -19,7 +19,7 @@ setuptools.setup(
     install_requires=INSTALL_PACKAGES,
     url="https://astro.hyrul.es",
     packages=setuptools.find_packages(),
-    scripts=['hgl-base_game.py','hgl-editor.py'],
+    scripts=['hgl-base_game.py','hgl-editor.py','hgl-board-tester.py'],
     keywords=['game','development','beginner'],
     classifiers=[
         "Programming Language :: Python :: 3",
