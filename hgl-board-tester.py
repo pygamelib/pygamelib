@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+
 from gamelib.Game import Game
 from gamelib.Characters import Player
 import gamelib.Sprites as Sprites
