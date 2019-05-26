@@ -285,6 +285,7 @@ class Board():
                             self.place_item(item._overlapping,item._overlapping.pos[0],item._overlapping.pos[1])
                             if item._overlapping_buffer != None:
                                 item._overlapping = item._overlapping_buffer
+                                item._overlapping_buffer = None
                             else:
                                 item._overlapping = None
                         else:
@@ -296,6 +297,7 @@ class Board():
                         self.place_item(item._overlapping,item._overlapping.pos[0],item._overlapping.pos[1])
                         if item._overlapping_buffer != None:
                             item._overlapping = item._overlapping_buffer
+                            item._overlapping_buffer = None
                         else:
                             item._overlapping = None
                     else:
