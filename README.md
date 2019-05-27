@@ -3,7 +3,8 @@
 [![GPLv3 license](https://img.shields.io/badge/License-GPLv3-blue.svg)](http://perso.crans.org/besson/LICENSE.html)
 [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](http://makeapullrequest.com)
 [![Documentation Status](https://readthedocs.org/projects/hac-game-lib/badge/?version=latest)](http://hac-game-lib.readthedocs.io/?badge=latest)
-
+[![Known Vulnerabilities](https://snyk.io/test/github/arnauddupuis/hac-game-lib/badge.svg)](https://snyk.io/test/github/arnauddupuis/hac-game-lib)
+[![CII Best Practices](https://bestpractices.coreinfrastructure.org/projects/2849/badge)](https://bestpractices.coreinfrastructure.org/projects/2849)
 
 # hac-game-lib
 Hyrule Astronomy Club - Kids coding class - base library for a game development
