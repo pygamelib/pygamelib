@@ -76,15 +76,20 @@ def sprite_picker():
 
 def model_picker():
     global game
-    game.clear_screen()
-    print("What kind of model do you want (you can edit that later)?\n1 - Colored squares and rectangles\n2 - Sprites\n3 - Set your own string of character(s)")
-    choice = str( Utils.get_key() )
-    if choice == '1':
-        return game.get_menu_entry('graphics_utils',color_picker())['data']
-    if choice == '2':
-        return game.get_menu_entry('graphics_sprites',sprite_picker())['data']
-    if choice == '3':
-        return str( input('Enter your string now: ') )
+    while True:
+        game.clear_screen()
+        print("What kind of model do you want (you can edit that later)?\n1 - Colored squares and rectangles\n2 - Sprites\n3 - Set your own string of character(s)")
+        choice = str( Utils.get_key() )
+        if choice == '1':
+            picked = game.get_menu_entry('graphics_utils',color_picker())
+            if picked != None:
+                return picked['data']
+        if choice == '2':
+            picked = game.get_menu_entry('graphics_sprites',sprite_picker())
+            if picked != None:
+                return picked['data']
+        if choice == '3':
+            return str( input('Enter your string now: ') )
 
 def to_history(object):
     global object_history
