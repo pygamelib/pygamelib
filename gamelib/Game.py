@@ -49,7 +49,7 @@ class Game():
 
         Categories help organize the different sections of a menu or dialogues.
         
-        :param category: The category to wich the entry should be added.
+        :param category: The category to which the entry should be added.
         :type category: str
         :param shortcut: A shortcut (usually one key) to display.
         :type shortcut: str
@@ -77,7 +77,7 @@ class Game():
 
         Update the message associated to a category and a shortcut.
         
-        :param category: The category in wich the entry is located.
+        :param category: The category in which the entry is located.
         :type category: str
         :param shortcut: The shortcut of the entry you want to update.
         :type shortcut: str
@@ -107,7 +107,7 @@ class Game():
             * message
             * data
         
-        :param category: The category in wich the entry is located.
+        :param category: The category in which the entry is located.
         :type category: str
         :param shortcut: The shortcut of the entry you want to get.
         :type shortcut: str
@@ -208,7 +208,7 @@ class Game():
 
             game.current_board().display()
 
-        If current_level is set to a value with no corresponding board a HacException excepetion is raised with an invalid_level error.
+        If current_level is set to a value with no corresponding board a HacException exception is raised with an invalid_level error.
         """
         if  self.current_level in self._boards.keys():
             return self._boards[self.current_level]['board']
@@ -245,7 +245,7 @@ class Game():
     def add_npc(self,level_number,npc,row=None,column=None):
         """
         Add a NPC to the game. It will be placed on the board corresponding to the level_number.
-        If row and column are not None, the NPC is placed at these coordinates. Else, it's randomly placed in an empy cell.
+        If row and column are not None, the NPC is placed at these coordinates. Else, it's randomly placed in an empty cell.
 
         Example::
  
@@ -300,7 +300,7 @@ class Game():
     def actuate_npcs(self,level_number):
         """Actuate all NPCs on a given level
 
-        This method actuate all NPCs on a board associated with a level. At the moment it means moving the NPCs but as the Actuators become more capable this method will evolve to allow mpre choice (like attack use objects, etc.)
+        This method actuate all NPCs on a board associated with a level. At the moment it means moving the NPCs but as the Actuators become more capable this method will evolve to allow more choice (like attack use objects, etc.)
 
         :param level_number: The number of the level to actuate NPCs in.
         :type int:
@@ -329,7 +329,7 @@ class Game():
         :param void_model: The character(s) that should be used to represent the *lost* life.
         :type void_model: str
 
-        .. note:: This method might change in the futur. Particularly it could take a template of what to display.
+        .. note:: This method might change in the future. Particularly it could take a template of what to display.
 
         """
         if self.player == None:
@@ -363,7 +363,7 @@ class Game():
 
         This method returns a list of objects that are all around an object between the position of an object and all the cells at **radius**.
 
-        :param radius: The radius in wich non void item should be included
+        :param radius: The radius in which non void item should be included
         :type radius: int
         :param object: The central object. The neighbors are calculated for that object. If None, the player is the object.
         :type object: gamelib.BoardItem.BoardItem
