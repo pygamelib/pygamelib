@@ -25,7 +25,7 @@ class Game():
     :param current_level: The current level.
     :type current_level: int
 
-    .. note:: The game object has an object_library member that is always an empty array that is always empty except just after loading a board. In this case, if the board have a "library" field, it is going to be used to populate object_library.
+    .. note:: The game object has an object_library member that is always an empty array except just after loading a board. In this case, if the board have a "library" field, it is going to be used to populate object_library. This library is accessible through the Game object mainly so people have access to it across different Boards during level design in the editor. That architecture decision is debatable.
 
     .. note:: The constructor of Game takes care of initializing the terminal to properly render the colors on Windows.
 
