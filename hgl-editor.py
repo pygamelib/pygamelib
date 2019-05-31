@@ -99,17 +99,24 @@ def to_history(object):
         del(object_history[0])
         object_history.append(object)
 
+def input_digit(str):
+    while True:
+        result = input(str)
+        if result.isdigit() or result == '':
+            return result
+
 def create_wizard():
     global game
-    game.clear_screen()
-    # 1 - Choose object type between structures or characters
-    # 2 - pick one
-    # 3 - Structure: customize name, type, size, etc.
-    print(Utils.green_bright("\t\tObject creation wizard"))
-    print('What do you want to create: a NPC or a structure?')
-    print('1 - NPC (Non Playable Character)')
-    print('2 - Structure (Wall, Door, Treasure, Portal, Trees, etc.)')
-    key = Utils.get_key()
+    key = ''
+    while True:
+        game.clear_screen()
+        print(Utils.green_bright("\t\tObject creation wizard"))
+        print('What do you want to create: a NPC or a structure?')
+        print('1 - NPC (Non Playable Character)')
+        print('2 - Structure (Wall, Door, Treasure, Portal, Trees, etc.)')
+        key = Utils.get_key()
+        if key == '1' or key == '2':
+            break
     if key == '1':
         game.clear_screen()
         print(Utils.green_bright("\t\tObject creation wizard: ")+Utils.cyan_bright("NPC") )
@@ -128,36 +135,36 @@ def create_wizard():
         game.clear_screen()
         print(Utils.green_bright("\t\tObject creation wizard: ")+Utils.cyan_bright("NPC")+f' - {new_object.model}' )
         print('We now needs to go through some basic statistics. You can decide to go with default by simply hitting the "Enter" key.')
-        r = input(f'Number of cell crossed in one turn. Default: {new_object.step}(type: int) > ')
+        r = input_digit(f'Number of cell crossed in one turn. Default: {new_object.step}(type: int) > ')
         if len(r)> 0:
             new_object.step = int(r)
         else:
             # If it's 0 it means it's going to be a static NPC so to prevent python to pass some random pre-initialized default, we explicitly set the Actuator to a static one
             new_object.actuator = SimpleActuators.RandomActuator(moveset=[])
-        r = input(f'Max HP (Health Points). Default: {new_object.max_hp}(type: int) > ')
+        r = input_digit(f'Max HP (Health Points). Default: {new_object.max_hp}(type: int) > ')
         if len(r)> 0:
             new_object.max_hp = int(r)
         new_object.hp = new_object.max_hp
-        r = input(f'Max MP (Mana Points). Default: {new_object.max_mp}(type: int) > ')
+        r = input_digit(f'Max MP (Mana Points). Default: {new_object.max_mp}(type: int) > ')
         if len(r)> 0:
             new_object.max_mp = int(r)
         new_object.mp = new_object.max_mp
-        r = input(f'Remaining lives (it is advised to set that to 1 for a standard NPC). Default: {new_object.remaining_lives}(type: int) > ')
+        r = input_digit(f'Remaining lives (it is advised to set that to 1 for a standard NPC). Default: {new_object.remaining_lives}(type: int) > ')
         if len(r)> 0:
             new_object.remaining_lives = int(r)
-        r = input(f'AP (Attack Power). Default: {new_object.attack_power}(type: int) > ')
+        r = input_digit(f'AP (Attack Power). Default: {new_object.attack_power}(type: int) > ')
         if len(r)> 0:
             new_object.attack_power = int(r)
-        r = input(f'DP (Defense Power). Default: {new_object.defense_power}(type: int) > ')
+        r = input_digit(f'DP (Defense Power). Default: {new_object.defense_power}(type: int) > ')
         if len(r)> 0:
             new_object.defense_power = int(r)
-        r = input(f'Strength. Default: {new_object.strength}(type: int) > ')
+        r = input_digit(f'Strength. Default: {new_object.strength}(type: int) > ')
         if len(r)> 0:
             new_object.strength = int(r)
-        r = input(f'Intelligence. Default: {new_object.intelligence}(type: int) > ')
+        r = input_digit(f'Intelligence. Default: {new_object.intelligence}(type: int) > ')
         if len(r)> 0:
             new_object.intelligence = int(r)
-        r = input(f'Agility. Default: {new_object.agility}(type: int) > ')
+        r = input_digit(f'Agility. Default: {new_object.agility}(type: int) > ')
         if len(r)> 0:
             new_object.agility = int(r)
         game.clear_screen()
@@ -184,6 +191,9 @@ def create_wizard():
                 new_object.actuator.moveset = [Constants.UP,Constants.DOWN,Constants.LEFT,Constants.RIGHT,Constants.DLDOWN,Constants.DLUP,Constants.DRDOWN,Constants.DRUP]
             elif r == '5':
                 new_object.actuator.moveset = [Constants.DLDOWN,Constants.DLUP,Constants.DRDOWN,Constants.DRUP]
+            else: 
+                Utils.warn(f'"{r}" is not a valid choice. Movement set is now empty.')
+                new_object.actuator.moveset = []
         elif r == '2':
             new_object.actuator = SimpleActuators.PathActuator(path=[])
             print("Great, so what path this NPC should take:")
@@ -199,53 +209,53 @@ def create_wizard():
             r = Utils.get_key()
             if r == '1':
                 print("How many steps should the NPC go in one direction before turning back ?")
-                r = int(input("(please enter an integer)> "))
+                r = int(input_digit("(please enter an integer)> "))
                 new_object.actuator.path += [Constants.UP for i in range(0, r,1) ]
                 new_object.actuator.path += [Constants.DOWN for i in range(0, r,1) ]
             elif r == '2':
                 print("How many steps should the NPC go in one direction before turning back ?")
-                r = int(input("(please enter an integer)> "))
+                r = int(input_digit("(please enter an integer)> "))
                 new_object.actuator.path += [Constants.DOWN for i in range(0, r,1) ]
                 new_object.actuator.path += [Constants.UP for i in range(0, r,1) ]
             elif r == '3':
                 print("How many steps should the NPC go in one direction before turning back ?")
-                r = int(input("(please enter an integer)> "))
+                r = int(input_digit("(please enter an integer)> "))
                 new_object.actuator.path += [Constants.LEFT for i in range(0, r,1) ]
                 new_object.actuator.path += [Constants.RIGHT for i in range(0, r,1) ]
             elif r == '3':
                 print("How many steps should the NPC go in one direction before turning back ?")
-                r = int(input("(please enter an integer)> "))
+                r = int(input_digit("(please enter an integer)> "))
                 new_object.actuator.path += [Constants.RIGHT for i in range(0, r,1) ]
                 new_object.actuator.path += [Constants.LEFT for i in range(0, r,1) ]
             elif r == '4':
                 print("How many steps should the NPC go in one direction before turning back ?")
-                r = int(input("(please enter an integer)> "))
+                r = int(input_digit("(please enter an integer)> "))
                 new_object.actuator.path += [Constants.DOWN for i in range(0, r,1) ]
                 new_object.actuator.path += [Constants.UP for i in range(0, r,1) ]
             elif r == '5':
                 print("How many steps should the NPC go in EACH direction before changing ?")
-                r = int(input("(please enter an integer)> "))
+                r = int(input_digit("(please enter an integer)> "))
                 new_object.actuator.path += [Constants.LEFT for i in range(0, r,1) ]
                 new_object.actuator.path += [Constants.DOWN for i in range(0, r,1) ]
                 new_object.actuator.path += [Constants.RIGHT for i in range(0, r,1) ]
                 new_object.actuator.path += [Constants.UP for i in range(0, r,1) ]
             elif r == '6':
                 print("How many steps should the NPC go in EACH direction before changing ?")
-                r = int(input("(please enter an integer)> "))
+                r = int(input_digit("(please enter an integer)> "))
                 new_object.actuator.path += [Constants.LEFT for i in range(0, r,1) ]
                 new_object.actuator.path += [Constants.UP for i in range(0, r,1) ]
                 new_object.actuator.path += [Constants.RIGHT for i in range(0, r,1) ]
                 new_object.actuator.path += [Constants.DOWN for i in range(0, r,1) ]
             elif r == '7':
                 print("How many steps should the NPC go in EACH direction before changing ?")
-                r = int(input("(please enter an integer)> "))
+                r = int(input_digit("(please enter an integer)> "))
                 new_object.actuator.path += [Constants.RIGHT for i in range(0, r,1) ]
                 new_object.actuator.path += [Constants.DOWN for i in range(0, r,1) ]
                 new_object.actuator.path += [Constants.LEFT for i in range(0, r,1) ]
                 new_object.actuator.path += [Constants.UP for i in range(0, r,1) ]
             elif r == '8':
                 print("How many steps should the NPC go in EACH direction before changing ?")
-                r = int(input("(please enter an integer)> "))
+                r = int(input_digit("(please enter an integer)> "))
                 new_object.actuator.path += [Constants.RIGHT for i in range(0, r,1) ]
                 new_object.actuator.path += [Constants.UP for i in range(0, r,1) ]
                 new_object.actuator.path += [Constants.LEFT for i in range(0, r,1) ]
@@ -255,70 +265,78 @@ def create_wizard():
                 print('Each direction has to be separated by a coma.')
                 r = str(input('Write your path: ')).upper()
                 new_object.actuator.path = r.split(',')
+            else: 
+                Utils.warn(f'"{r}" is not a valid choice. Path is now empty.')
+                new_object.actuator.path = []
 
         return new_object
     elif key == '2':
-        game.clear_screen()
-        print(Utils.green_bright("\t\tObject creation wizard: ")+Utils.magenta_bright("Structure") )
-        print("What kind of structure do you want to create:")
-        print('1 - A wall like structure (an object that cannot be picked-up and is not overlappable). Ex: walls, trees, non moving elephant (try to go through an elephant or to pick it up in your backpack...)')
-        print('2 - A door (player and/or NPC can go through)')
-        print('3 - A treasure (can be picked up, take space in the inventory, give points to the player)')
-        print('4 - A generic object (you can set the properties to make it pickable or overlappable)')
-        print('5 - A generic actionable object (to make portals, heart to replenish life, etc.)')
-        key = Utils.get_key()
-        new_object = None
-        if key == '1':
-            new_object = Structures.Wall()
-            new_object.name = str(uuid.uuid1())
-            new_object.model = model_picker()
-        if key == '2':
-            new_object = Structures.Door()
-            new_object.name = str(uuid.uuid1())
-            new_object.model = model_picker()
-        if key == '3':
-            new_object = Structures.Treasure()
-            print("First give a name to your Treasure. Default value: "+new_object.name)
-            r = str( input('(Enter name)> ') )
-            if len(r) > 0:
-                new_object.name = r
-            print("Then give it a type. A type is important as it allows grouping (in this case probably in the inventory).\nType is a string. Default value: "+new_object.type)
-            r = str( input('(Enter type)> ') )
-            if len(r) > 0:
-                new_object.type = r
-            print("Now we need a model. Default value: "+new_object.model)
-            input('Hit "Enter" when you are ready to choose a model.')
-            new_object.model = model_picker()
-        if key == '4' or key == '5':
-            if key == '4':
-                new_object = Structures.GenericStructure()
-            else:
-                new_object = Structures.GenericActionableStructure()
-            new_object.set_overlappable(False)
-            new_object.set_pickable(False)
-            print("First give a name to your structure. Default value: "+new_object.name)
-            r = str( input('(Enter name)> ') )
-            if len(r) > 0:
-                new_object.name = r
-            print("Then give it a type. \nType is a string. Default value: "+new_object.type)
-            r = str( input('(Enter type)> ') )
-            if len(r) > 0:
-                new_object.type = r
-            print("Now we need a model. Default value: "+new_object.model)
-            input('Hit "Enter" when you are ready to choose a model.')
-            new_object.model = model_picker()
-            print('Is this object pickable? (can it be picked up by the player)?')
-            print('0 - No')
-            print('1 - Yes')
-            r = Utils.get_key()
-            if r == '1':
-                new_object.set_pickable(True)
-            print('Is this object overlappable? (can it be walked over by player?')
-            print('0 - No')
-            print('1 - Yes')
-            r = Utils.get_key()
-            if r == '1':
-                new_object.set_overlappable(True)
+        while True:
+            game.clear_screen()
+            print(Utils.green_bright("\t\tObject creation wizard: ")+Utils.magenta_bright("Structure") )
+            print("What kind of structure do you want to create:")
+            print('1 - A wall like structure (an object that cannot be picked-up and is not overlappable). Ex: walls, trees, non moving elephant (try to go through an elephant or to pick it up in your backpack...)')
+            print('2 - A door (player and/or NPC can go through)')
+            print('3 - A treasure (can be picked up, take space in the inventory, give points to the player)')
+            print('4 - A generic object (you can set the properties to make it pickable or overlappable)')
+            print('5 - A generic actionable object (to make portals, heart to replenish life, etc.)')
+            key = Utils.get_key()
+            new_object = None
+            if key == '1':
+                new_object = Structures.Wall()
+                new_object.name = str(uuid.uuid1())
+                new_object.model = model_picker()
+                break
+            elif key == '2':
+                new_object = Structures.Door()
+                new_object.name = str(uuid.uuid1())
+                new_object.model = model_picker()
+                break
+            elif key == '3':
+                new_object = Structures.Treasure()
+                print("First give a name to your Treasure. Default value: "+new_object.name)
+                r = str( input('(Enter name)> ') )
+                if len(r) > 0:
+                    new_object.name = r
+                print("Then give it a type. A type is important as it allows grouping (in this case probably in the inventory).\nType is a string. Default value: "+new_object.type)
+                r = str( input('(Enter type)> ') )
+                if len(r) > 0:
+                    new_object.type = r
+                print("Now we need a model. Default value: "+new_object.model)
+                input('Hit "Enter" when you are ready to choose a model.')
+                new_object.model = model_picker()
+                break
+            elif key == '4' or key == '5':
+                if key == '4':
+                    new_object = Structures.GenericStructure()
+                else:
+                    new_object = Structures.GenericActionableStructure()
+                new_object.set_overlappable(False)
+                new_object.set_pickable(False)
+                print("First give a name to your structure. Default value: "+new_object.name)
+                r = str( input('(Enter name)> ') )
+                if len(r) > 0:
+                    new_object.name = r
+                print("Then give it a type. \nType is a string. Default value: "+new_object.type)
+                r = str( input('(Enter type)> ') )
+                if len(r) > 0:
+                    new_object.type = r
+                print("Now we need a model. Default value: "+new_object.model)
+                input('Hit "Enter" when you are ready to choose a model.')
+                new_object.model = model_picker()
+                print('Is this object pickable? (can it be picked up by the player)?')
+                print('0 - No')
+                print('1 - Yes')
+                r = Utils.get_key()
+                if r == '1':
+                    new_object.set_pickable(True)
+                print('Is this object overlappable? (can it be walked over by player?')
+                print('0 - No')
+                print('1 - Yes')
+                r = Utils.get_key()
+                if r == '1':
+                    new_object.set_overlappable(True)
+                break
 
         return new_object
 
@@ -343,8 +361,8 @@ def create_board_wizard():
     print( Utils.blue_bright("\t\tNew board") )
     print("First we need some information on your new board:")
     name = str( input('Name: ') )
-    width = int( input('Width (in number of cells): ') )
-    height = int( input('Height (in number of cells): ') )
+    width = int( input_digit('Width (in number of cells): ') )
+    height = int( input_digit('Height (in number of cells): ') )
     game.add_board(1, Board(name=name,size=[width,height], ui_borders=Utils.WHITE_SQUARE,ui_board_void_cell=Utils.BLACK_SQUARE) )
     is_modified=True
 
@@ -355,37 +373,39 @@ key = 'None'
 current_object = BoardItemVoid(model='None')
 object_history = []
 current_menu = 'main'
+while True:
+    game.clear_screen()
+    print( Utils.cyan_bright("HAC-GAME-LIB - EDITOR v"+Constants.HAC_GAME_LIB_VERSION) )
 
-game.clear_screen()
-print( Utils.cyan_bright("HAC-GAME-LIB - EDITOR v"+Constants.HAC_GAME_LIB_VERSION) )
+    print('Looking for existing maps in hac-maps/ directory...',end='')
+    hmaps = []
+    try:
+        hmaps = os.listdir('hac-maps/')
+        print(Utils.green('OK'))
+    except FileNotFoundError as e:
+        print(Utils.red('KO'))
 
-print('Looking for existing maps in hac-maps/ directory...',end='')
-hmaps = []
-try:
-    hmaps = os.listdir('hac-maps/')
-    print(Utils.green('OK'))
-except FileNotFoundError as e:
-    print(Utils.red('KO'))
-
-if len(hmaps) > 0:
-    map_num = 0
-    game.add_menu_entry('boards_list',None,"Choose a map to edit")
-    for m in hmaps:
-        print(f"{map_num} - edit hac-maps/{m}")
-        game.add_menu_entry('boards_list',str(map_num),f"edit hac-maps/{m}",f"hac-maps/{m}")
-        map_num += 1
-else:
-    print("No pre-existing map found.")
-print("n - create a new map")
-print("q - Quit the editor")
-choice = str( Utils.get_key() )
-if choice == "q":
-    print("Good Bye!")
-    exit()
-elif choice == "n":
-    create_board_wizard()
-elif int(choice) < len(hmaps):
-    game.load_board('hac-maps/'+hmaps[int(choice)],1)
+    if len(hmaps) > 0:
+        map_num = 0
+        game.add_menu_entry('boards_list',None,"Choose a map to edit")
+        for m in hmaps:
+            print(f"{map_num} - edit hac-maps/{m}")
+            game.add_menu_entry('boards_list',str(map_num),f"edit hac-maps/{m}",f"hac-maps/{m}")
+            map_num += 1
+    else:
+        print("No pre-existing map found.")
+    print("n - create a new map")
+    print("q - Quit the editor")
+    choice = str( Utils.get_key() )
+    if choice == "q":
+        print("Good Bye!")
+        exit()
+    elif choice == "n":
+        create_board_wizard()
+        break
+    elif choice.isdigit() and int(choice) < len(hmaps):
+        game.load_board('hac-maps/'+hmaps[int(choice)],1)
+        break
 
 game.change_level(1)
 
@@ -431,7 +451,9 @@ game.add_menu_entry('board','8','Change '+Utils.white_bright('void cell'))
 game.add_menu_entry('board','0','Go back to the main menu')
 
 while True:
-    dbg_messages = []    
+    dbg_messages = []
+    info_messages = []
+    warn_messages = []
 
     if key == 'Q':
         if is_modified:
@@ -510,7 +532,7 @@ while True:
             current_menu = 'main'
         elif key == "1":
             game.clear_screen()
-            nw = int(input("Enter the new width: "))
+            nw = int(input_digit("Enter the new width: "))
             if nw >= game.current_board().size[0]:
                 old_value = game.current_board().size[0]
                 game.current_board().size[0] = nw
@@ -522,7 +544,7 @@ while True:
 
         elif key == "2":
             game.clear_screen()
-            nw = int(input("Enter the new height: "))
+            nw = int(input_digit("Enter the new height: "))
             if nw >= game.current_board().size[1]:
                 old_value = game.current_board().size[1]
                 game.current_board().size[1]=nw
@@ -585,5 +607,9 @@ while True:
         game.display_menu(current_menu,Constants.ORIENTATION_VERTICAL,15)
     for m in dbg_messages:
         Utils.debug(m)
+    for m in info_messages:
+        Utils.info(m)
+    for m in warn_messages:
+        Utils.warn(m)
     key = Utils.get_key()
 
