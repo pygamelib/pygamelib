@@ -17,6 +17,9 @@ from copy import deepcopy
 is_modified = False
 edit_mode = True
 menu_mode = 'full'
+dbg_messages = []
+info_messages = []
+warn_messages = []
 
 # Functions definition
 def place_and_go(object,x,y,direction):
@@ -65,14 +68,14 @@ def color_picker():
     game.clear_screen()
     print('Pick a form and color from the list:')
     game.display_menu('graphics_utils',Constants.ORIENTATION_HORIZONTAL,8)
-    return str(input('\n(Enter a number)> '))
+    return str(input_digit('\n(Enter a number)> '))
 
 def sprite_picker():
     global game
     game.clear_screen()
     print('Pick a sprite from the list:')
     game.display_menu('graphics_sprites',Constants.ORIENTATION_HORIZONTAL,8)
-    return str(input('\n(Enter a number)> '))
+    return str(input_digit('\n(Enter a number)> '))
 
 def model_picker():
     global game
@@ -180,6 +183,7 @@ def create_wizard():
             print('3 - LEFT, RIGHT')
             print('4 - UP,DOWN,LEFT, RIGHT + all DIAGONALES')
             print('5 - DIAGONALES (DIAG UP LEFT, DIAG UP RIGHT, etc.) but NO straight UP, DOWN, LEFT and RIGHT')
+            print('6 - No movement')
             r = Utils.get_key()
             if r == '1':
                 new_object.actuator.moveset = [Constants.UP,Constants.DOWN,Constants.LEFT,Constants.RIGHT]
@@ -191,6 +195,8 @@ def create_wizard():
                 new_object.actuator.moveset = [Constants.UP,Constants.DOWN,Constants.LEFT,Constants.RIGHT,Constants.DLDOWN,Constants.DLUP,Constants.DRDOWN,Constants.DRUP]
             elif r == '5':
                 new_object.actuator.moveset = [Constants.DLDOWN,Constants.DLUP,Constants.DRDOWN,Constants.DRUP]
+            elif r == '6':
+                new_object.actuator.moveset = []
             else: 
                 Utils.warn(f'"{r}" is not a valid choice. Movement set is now empty.')
                 new_object.actuator.moveset = []
@@ -451,6 +457,7 @@ game.add_menu_entry('board','8','Change '+Utils.white_bright('void cell'))
 game.add_menu_entry('board','0','Go back to the main menu')
 
 while True:
+    # Empty the messages
     dbg_messages = []
     info_messages = []
     warn_messages = []
@@ -467,7 +474,7 @@ while True:
         break
     elif key == 'S':
         save_current_board()
-        dbg_messages.append("Board saved")
+        info_messages.append("Board saved")
     elif key == 'm':
         if menu_mode == 'full':
             menu_mode = 'hidden'
@@ -514,7 +521,7 @@ while True:
         elif key == 'P':
             game.current_board().player_starting_position = game.player.pos
             is_modified = True
-            dbg_messages.append(f'New player starting position set at {game.player.pos}')
+            info_messages.append(f'New player starting position set at {game.player.pos}')
         elif key == 'p':
             current_menu = 'board'
         elif key == 'c':

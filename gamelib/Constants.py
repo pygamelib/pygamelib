@@ -1,5 +1,5 @@
 # Main version
-HAC_GAME_LIB_VERSION = '2019.5a6'
+HAC_GAME_LIB_VERSION = '2019.5a7'
 # Directions
 UP     = 10000001
 DOWN   = 10000010
