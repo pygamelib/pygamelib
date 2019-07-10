@@ -184,7 +184,10 @@ class GenericStructure(Immovable):
 
 class GenericActionableStructure(GenericStructure,Actionable):
     """
-    .. TODO:: Documentation
+    A GenericActionableStructure is the combination of a GenericSructure and an Actionable.  
+    It is only a helper combination. 
+
+    Please see the documentation for :class:`~gamelib.Structures.GenericStructure` and :class:`~gamelib.Actionable.Actionable` for more information.
     """
     def __init__(self,**kwargs):
         GenericStructure.__init__(self,**kwargs)
@@ -193,7 +196,23 @@ class GenericActionableStructure(GenericStructure,Actionable):
 
 class Treasure(Immovable):
     """
-    .. TODO:: Documentation
+    A Treasure is an :class:`~gamelib.Immovable.Immovable` that is pickable and with a non zero value. It is an helper class that allows to focus on game design and mechanics instead of small building blocks.
+
+    :param model: The model that will represent the treasure on the map
+    :type model: str
+    :param value: The value of the treasure, it is usually used to calculate the score.
+    :type value: int
+    :param size: The size of the treasure. It is used by :class:`~gamelib.Inventory.Inventory` as a measure of space. If the treasure's size exceed the Inventory size (or the cumulated size of all items + the treasure exceed the inventory max_size()) the :class:`~gamelib.Inventory.Inventory` will refuse to add the treasure.
+    :type size: str
+
+    .. note:: All the options from :class:`~gamelib.Immovable.Immovable` are also available to this constructor.
+
+    Example::
+
+        money_bag = Treasure(model=Sprites.MONEY_BAG,value=100,size=2)
+        print(f"This is a money bag {money_bag}")
+        player.inventory.add_item(money_bag)
+        print(f"The inventory value is {player.inventory.value()} and is at {player.inventory.size()}/{player.inventory.max_size}")
     """
     def __init__(self,**kwargs):
         if 'model' not in kwargs.keys():
@@ -209,12 +228,33 @@ class Treasure(Immovable):
             self._size = kwargs['size']
 
     def pickable(self):
+        """ This represent the capacity for a Treasure to be picked-up by player or NPC.
+
+        A treasure is obviously pickable by the player and potentially NPCs. :class:`~gamelib.Board.Board` puts the Treasure in the :class:`~gamelib.Inventory.Inventory` if the picker implements has_inventory()
+
+        :return: True
+        :rtype: bool
+        """
         return True
     
     def overlappable(self):
+        """ This represent the capacity for a Treasure to be overlapped by player or NPC.
+
+        A treasure is not overlappable.
+
+        :return: False
+        :rtype: bool
+        """
         return False
 
     def restorable(self):
+        """ This represent the capacity for a Treasure to be restored after being overlapped.
+
+        A treasure is not overlappable, therefor is not restorable.
+
+        :return: False
+        :rtype: bool
+        """
         return False
 
 class Door(GenericStructure):
