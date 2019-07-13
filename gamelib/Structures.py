@@ -184,7 +184,7 @@ class GenericStructure(Immovable):
 
 class GenericActionableStructure(GenericStructure,Actionable):
     """
-    A GenericActionableStructure is the combination of a GenericSructure and an Actionable.  
+    A GenericActionableStructure is the combination of a :class:`~gamelib.Structures.GenericStructure` and an :class:`~gamelib.Immovable.Actionable`.  
     It is only a helper combination. 
 
     Please see the documentation for :class:`~gamelib.Structures.GenericStructure` and :class:`~gamelib.Actionable.Actionable` for more information.
@@ -259,7 +259,29 @@ class Treasure(Immovable):
 
 class Door(GenericStructure):
     """
-    .. TODO:: Documentation
+    A Door is a :class:`~gamelib.Structures.GenericStructure` that is not pickable, overlappable and restorable. It has a value of 0 and a size of 1 by default. 
+    It is an helper class that allows to focus on game design and mechanics instead of small building blocks.
+
+    :param model: The model that will represent the door on the map
+    :type model: str
+    :param value: The value of the door, it is useless in that case. The default value is 0.
+    :type value: int
+    :param size: The size of the door. Unless you make the door pickable (I have no idea why you would do that...), this parameter is not used.
+    :type size: str
+    :param type: The type of the door. It is often used as a type identifier for your game main loop. For example: unlocked_door or locked_door.
+    :type type: str
+    :param pickable: Is this door pickable by the player? Default value is False.
+    :type pickable: Boolean
+    :param overlappable: Is this door overlappable by the player? Default value is True.
+    :type overlappable: Boolean
+    :param restorable: Is this door restorable after being overlapped? Default value is True.
+    :type restorable: Boolean
+
+    .. note:: All the options from :class:`~gamelib.Structures.GenericStructure` are also available to this constructor. 
+
+    Example::
+
+        door1 = Door(model=Sprites.DOOR,type='locked_door')
     """
     def __init__(self,**kwargs):
         if 'model' not in kwargs.keys():
