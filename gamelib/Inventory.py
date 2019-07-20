@@ -48,6 +48,7 @@ class Inventory():
         :raises: HacInventoryException, HacInvalidTypeException
 
         Example::
+        
             item = Treasure(model=Sprites.MONEY_BAG,size=2,name='Money bag')
             try:
                 mygame.player.inventory.add_item(item)
@@ -83,6 +84,7 @@ class Inventory():
         :rtype: int
 
         Example:: 
+
             print(f"Inventory: {mygame.player.inventory.size()}/{mygame.player.inventory.max_size}")
         """
         val = 0
@@ -100,6 +102,7 @@ class Inventory():
         :rtype: int
 
         Example:: 
+
             if inventory,value() >= 10:
                 print('Victory!')
                 break
@@ -133,6 +136,7 @@ class Inventory():
         .. sealso:: :class:`gamelib.HacExceptions.HacInventoryException`.
 
         Example::
+
             life_container = mygame.player.inventory.get_item('heart_1')
             if isinstance(life_container,GenericActionableStructure):
                 life_container.action(life_container.action_parameters)
@@ -156,6 +160,7 @@ class Inventory():
         .. sealso:: :class:`gamelib.HacExceptions.HacInventoryException`.
 
         Example::
+
             life_container = mygame.player.inventory.get_item('heart_1')
             if isinstance(life_container,GenericActionableStructure):
                 life_container.action(life_container.action_parameters)
