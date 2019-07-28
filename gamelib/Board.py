@@ -366,7 +366,7 @@ class Board():
             for m in myboard.get_immovables() :
                 print(m.name)
         """
-        return self._movables
+        return self._immovables
 
 
 
