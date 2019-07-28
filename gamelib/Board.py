@@ -167,15 +167,15 @@ class Board():
             border_top += self.ui_border_top
         border_bottom += self.ui_border_bottom*2
         border_top += self.ui_border_top*2
-        print(border_top)
+        print(border_top+"\r")
         for x in self._matrix:
             print(self.ui_border_left,end='')
             for y in x:
                 if isinstance(y,BoardItemVoid) and y.model != self.ui_board_void_cell:
                     y.model = self.ui_board_void_cell
                 print(y,end='')
-            print(self.ui_border_right)
-        print(border_bottom)
+            print(self.ui_border_right+"\r")
+        print(border_bottom+"\r")
 
     def item(self,row,column):
         """

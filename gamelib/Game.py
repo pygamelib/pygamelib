@@ -11,6 +11,10 @@ import random
 import json
 from configparser import ConfigParser
 
+"""
+The Game.py module has only one class: Game. It is what could be called the game engine. It holds a lot of methods that helps taking care of some complex mechanics behind the 
+"""
+
 class Game():
     """A class that serve as a game engine.
 
