@@ -312,11 +312,14 @@ class Game():
         Example::
 
             mygame.actuate_npcs(1)
+        
+        .. note:: This method only move NPCs when their actuator state is ACT_RUNNING. If it is ACT_PAUSED or ACT_STOPPED, theNPC is not moved.
         """
         if type(level_number) is int:
             if  level_number in self._boards.keys():
                 for npc in self._boards[level_number]['npcs']:
-                    self._boards[level_number]['board'].move(npc, npc.actuator.next_move(), npc.step)
+                    if npc.actuator.state == Constants.ACT_RUNNING:
+                        self._boards[level_number]['board'].move(npc, npc.actuator.next_move(), npc.step)
             else:
                 raise HacInvalidLevelException(f"Impossible to actuate NPCs for this level (level number {level_number} is not associated with any board).")
         else:

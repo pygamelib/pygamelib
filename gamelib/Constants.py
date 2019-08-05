@@ -24,7 +24,12 @@ UI positions:
  * POS_TOP                 
  * POS_BOTTOM              
  * ORIENTATION_HORIZONTAL  
- * ORIENTATION_VERTICAL    
+ * ORIENTATION_VERTICAL   
+
+Actuators status:
+ * ACT_RUNNING
+ * ACT_PAUSED
+ * ACT_STOPPED 
 
 """
 
@@ -51,3 +56,9 @@ POS_TOP                 = 10001101
 POS_BOTTOM              = 10001110
 ORIENTATION_HORIZONTAL  = 10001111
 ORIENTATION_VERTICAL    = 10010000
+
+
+# Actuators status
+ACT_RUNNING             = 10010001
+ACT_PAUSED              = 10010010
+ACT_STOPPED             = 10010011
