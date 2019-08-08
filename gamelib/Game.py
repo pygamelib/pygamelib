@@ -293,9 +293,9 @@ class Game():
                         self._boards[level_number]['board'].place_item(npc,row,column)
                         self._boards[level_number]['npcs'].append(npc)
                     else:
-                        raise HacInvalidTypeException("y must be an int.")
+                        raise HacInvalidTypeException("column must be an int.")
                 else:
-                    raise HacInvalidTypeException("x must be an int.")
+                    raise HacInvalidTypeException("row must be an int.")
             else:
                 raise HacInvalidTypeException("The npc paramater must be a gamelib.Characters.NPC() object.")
         else:
