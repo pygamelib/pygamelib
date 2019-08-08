@@ -204,9 +204,9 @@ class Board():
             if isinstance(item, BoardItem):
                 self._matrix[row][column] = item
                 item.store_position(row,column)
-                if isinstance(item, Movable):
+                if isinstance(item, Movable) and item not in self._movables:
                     self._movables.append(item)
-                elif isinstance(item, Immovable):
+                elif isinstance(item, Immovable) and item not in self._immovables:
                     self._immovables.append(item)
             else:
                 raise HacInvalidTypeException("The item passed in argument is not a subclass of BoardItem")
@@ -344,29 +344,64 @@ class Board():
             del( self._immovables[index] )
         self.place_item( BoardItemVoid(model=self.ui_board_void_cell, name='void_cell'), row, column )
 
-    def get_movables(self):
+    def get_movables(self,**kwargs):
         """Return a list of all the Movable objects in the Board.
 
         See :class:`gamelib.Movable.Movable` for more on a Movable object.
+
+        :param ``**kwargs``: an optional dictionnary with keys matching Movables class members and value being something contained in that member.
+        :return: A list of Movable items
 
         Example::
 
             for m in myboard.get_movables():
                 print(m.name)
+            
+            # Get all the Movable objects that has a type that contains "foe"
+            foes = myboard.get_movables(type="foe")
         """
-        return self._movables
+        if kwargs:
+            retvals = []
+            for item in self._movables:
+                counter = 0
+                for (arg_key,arg_value) in kwargs.items():
+                    if arg_value in getattr(item,arg_key):
+                        counter += 1
+                if counter == len(kwargs):
+                    retvals.append(item)
+            return retvals
+        else:
+            return self._movables
 
-    def get_immovables(self):
+    def get_immovables(self,**kwargs):
         """Return a list of all the Immovable objects in the Board.
 
         See :class:`gamelib.Immovable.Immovable` for more on an Immovable object.
         
+        :param ``**kwargs``: an optional dictionnary with keys matching Immovables class members and value being something **contained** in that member.
+        :return: A list of Immovable items
+
         Example::
 
-            for m in myboard.get_immovables() :
+            for m in myboard.get_immovables():
                 print(m.name)
+            
+            # Get all the Immovable objects that type contains "wall" AND name contains fire
+            walls = myboard.get_immovables(type="wall",name="fire")
+
         """
-        return self._immovables
+        if kwargs:
+            retvals = []
+            for item in self._immovables:
+                counter = 0
+                for (arg_key,arg_value) in kwargs.items():
+                    if arg_value in getattr(item,arg_key):
+                        counter += 1
+                if counter == len(kwargs):
+                    retvals.append(item)
+            return retvals
+        else:
+            return self._immovables
 
 
 
