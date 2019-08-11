@@ -354,7 +354,7 @@ class Game():
     def display_board(self):
         """Display the current board.
 
-        This is an alias for Board.current_board().display()
+        This is an alias for Game.current_board().display()
         """
         self.current_board().display()
     
