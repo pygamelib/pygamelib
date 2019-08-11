@@ -184,7 +184,10 @@ class GenericStructure(Immovable):
 
 class GenericActionableStructure(GenericStructure,Actionable):
     """
-    .. TODO:: Documentation
+    A GenericActionableStructure is the combination of a :class:`~gamelib.Structures.GenericStructure` and an :class:`~gamelib.Immovable.Actionable`.  
+    It is only a helper combination. 
+
+    Please see the documentation for :class:`~gamelib.Structures.GenericStructure` and :class:`~gamelib.Actionable.Actionable` for more information.
     """
     def __init__(self,**kwargs):
         GenericStructure.__init__(self,**kwargs)
@@ -193,7 +196,23 @@ class GenericActionableStructure(GenericStructure,Actionable):
 
 class Treasure(Immovable):
     """
-    .. TODO:: Documentation
+    A Treasure is an :class:`~gamelib.Immovable.Immovable` that is pickable and with a non zero value. It is an helper class that allows to focus on game design and mechanics instead of small building blocks.
+
+    :param model: The model that will represent the treasure on the map
+    :type model: str
+    :param value: The value of the treasure, it is usually used to calculate the score.
+    :type value: int
+    :param size: The size of the treasure. It is used by :class:`~gamelib.Inventory.Inventory` as a measure of space. If the treasure's size exceed the Inventory size (or the cumulated size of all items + the treasure exceed the inventory max_size()) the :class:`~gamelib.Inventory.Inventory` will refuse to add the treasure.
+    :type size: str
+
+    .. note:: All the options from :class:`~gamelib.Immovable.Immovable` are also available to this constructor.
+
+    Example::
+
+        money_bag = Treasure(model=Sprites.MONEY_BAG,value=100,size=2)
+        print(f"This is a money bag {money_bag}")
+        player.inventory.add_item(money_bag)
+        print(f"The inventory value is {player.inventory.value()} and is at {player.inventory.size()}/{player.inventory.max_size}")
     """
     def __init__(self,**kwargs):
         if 'model' not in kwargs.keys():
@@ -209,17 +228,60 @@ class Treasure(Immovable):
             self._size = kwargs['size']
 
     def pickable(self):
+        """ This represent the capacity for a Treasure to be picked-up by player or NPC.
+
+        A treasure is obviously pickable by the player and potentially NPCs. :class:`~gamelib.Board.Board` puts the Treasure in the :class:`~gamelib.Inventory.Inventory` if the picker implements has_inventory()
+
+        :return: True
+        :rtype: bool
+        """
         return True
     
     def overlappable(self):
+        """ This represent the capacity for a Treasure to be overlapped by player or NPC.
+
+        A treasure is not overlappable.
+
+        :return: False
+        :rtype: bool
+        """
         return False
 
     def restorable(self):
+        """ This represent the capacity for a Treasure to be restored after being overlapped.
+
+        A treasure is not overlappable, therefor is not restorable.
+
+        :return: False
+        :rtype: bool
+        """
         return False
 
 class Door(GenericStructure):
     """
-    .. TODO:: Documentation
+    A Door is a :class:`~gamelib.Structures.GenericStructure` that is not pickable, overlappable and restorable. It has a value of 0 and a size of 1 by default. 
+    It is an helper class that allows to focus on game design and mechanics instead of small building blocks.
+
+    :param model: The model that will represent the door on the map
+    :type model: str
+    :param value: The value of the door, it is useless in that case. The default value is 0.
+    :type value: int
+    :param size: The size of the door. Unless you make the door pickable (I have no idea why you would do that...), this parameter is not used.
+    :type size: str
+    :param type: The type of the door. It is often used as a type identifier for your game main loop. For example: unlocked_door or locked_door.
+    :type type: str
+    :param pickable: Is this door pickable by the player? Default value is False.
+    :type pickable: Boolean
+    :param overlappable: Is this door overlappable by the player? Default value is True.
+    :type overlappable: Boolean
+    :param restorable: Is this door restorable after being overlapped? Default value is True.
+    :type restorable: Boolean
+
+    .. note:: All the options from :class:`~gamelib.Structures.GenericStructure` are also available to this constructor. 
+
+    Example::
+
+        door1 = Door(model=Sprites.DOOR,type='locked_door')
     """
     def __init__(self,**kwargs):
         if 'model' not in kwargs.keys():

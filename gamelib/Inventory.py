@@ -3,6 +3,20 @@ from gamelib.HacExceptions import HacInvalidTypeException, HacInventoryException
 import uuid
 
 class Inventory():
+    """A class that represent the Player (or NPC) inventory.
+
+    This class is pretty straightforward: it is an object container, you can add, get and remove items and you can get a value from the objects in the inventory.
+
+    The constructor takes only one parameter: the maximum size of the inventory. Each :class:`~gamelib.BoardItem.BoardItem` that is going to be put in the inventory has a size (default is 1), the total addition of all these size cannot exceed max_size.
+
+    :param max_size: The maximum size of the inventory. Deafult value: 10.
+    :type max_size: int
+
+    .. note:: You can print() the inventory. This is mostly useful for debug as you want to have a better display in your game.
+
+    .. warning:: The :class:`~gamelib.Game.Game` engine and :class:`~gamelib.Characters.Player` takes care to initiate an inventory for the player, you don't need to do it.
+
+    """
     def __init__(self,max_size=10):
         self.max_size = max_size
         self.__items = {}
@@ -22,6 +36,32 @@ class Inventory():
         return s
     
     def add_item(self, item):
+        """Add an item to the inventory.
+
+        This method will add an item to the inventory unless:
+         * it is not an instance of :class:`~gamelib.BoardItem.BoardItem`,
+         * you try to add an item that is not pickable,
+         * there is no more space left in the inventory (i.e: the cumulated size of the inventory + your item.size is greater than the inventory max_size)
+
+        :param item: the item you want to add
+        :type item: :class:`~gamelib.BoardItem.BoardItem`
+        :raises: HacInventoryException, HacInvalidTypeException
+
+        Example::
+        
+            item = Treasure(model=Sprites.MONEY_BAG,size=2,name='Money bag')
+            try:
+                mygame.player.inventory.add_item(item)
+            expect HacInventoryException as e:
+                if e.error == 'not_enough_space':
+                    print(f"Impossible to add {item.name} to the inventory, there is no space left in it!")
+                    print(e.message)
+                elif e.error == 'not_pickable':
+                    print(e.message)
+        
+        .. warning:: if you try to add more than one item with the same name (or if the name is empty), this function will automatically change the name of the item by adding a UUID to it.
+
+        """
         if isinstance(item, BoardItem):
             if item.pickable():
                 if item.name == None or item.name == '' or item.name in self.__items.keys():
@@ -36,6 +76,17 @@ class Inventory():
             raise HacInvalidTypeException("The item is not an instance of BoardItem. The item is of type: "+type(item))
     
     def size(self):
+        """
+        Return the cumulated size of the inventory.
+        It can be used in the UI to display the size compared to max_size for example.
+
+        :return: size of inventory
+        :rtype: int
+
+        Example:: 
+
+            print(f"Inventory: {mygame.player.inventory.size()}/{mygame.player.inventory.max_size}")
+        """
         val = 0
         for k in self.__items.keys():
             if hasattr(self.__items[k],'size'):
@@ -46,10 +97,15 @@ class Inventory():
         """
         Return the cumulated value of the inventory.
         It can be used for scoring for example.
-        Ex: 
-        if inventory,value() >= 10:
-            print('Victory!')
-            break
+
+        :return: value of inventory
+        :rtype: int
+
+        Example:: 
+
+            if inventory,value() >= 10:
+                print('Victory!')
+                break
         """
         val = 0
         for k in self.__items.keys():
@@ -58,15 +114,59 @@ class Inventory():
         return val
 
     def items_name(self):
+        """Return the list of all items names in the inventory.
+
+        :return: a list of string representing the items names.
+        :rtype: list
+
+        """
         return self.__items.keys()
     
     def get_item(self,name):
+        """Return the item corresponding to the name given in argument.
+
+        :param name: the name of the item you want to get.
+        :type name: str
+        :return: An item.
+        :rtype: :class:`~gamelib.BoardItem.BoardItem`
+        :raises: HacInventoryException
+
+        .. note:: in case an execpetion is raised, the error will be 'no_item_by_that_name' and the message is giving the specifics.
+
+        .. sealso:: :class:`gamelib.HacExceptions.HacInventoryException`.
+
+        Example::
+
+            life_container = mygame.player.inventory.get_item('heart_1')
+            if isinstance(life_container,GenericActionableStructure):
+                life_container.action(life_container.action_parameters)
+
+        .. note:: Please note that the item object reference is returned but nothing is changed in the inventory. The item hasn't been removed.
+
+        """
         if name in self.__items.keys():
             return self.__items[name]
         else:
             raise HacInventoryException('no_item_by_that_name',f'There is no item named "{name}" in the inventory.')
 
     def delete_item(self,name):
+        """Delete the item corresponding to the name given in argument.
+
+        :param name: the name of the item you want to delete.
+        :type name: str
+
+        .. note:: in case an execpetion is raised, the error will be 'no_item_by_that_name' and the message is giving the specifics.
+
+        .. sealso:: :class:`gamelib.HacExceptions.HacInventoryException`.
+
+        Example::
+
+            life_container = mygame.player.inventory.get_item('heart_1')
+            if isinstance(life_container,GenericActionableStructure):
+                life_container.action(life_container.action_parameters)
+                mygame.player.inventory.delete_item('heart_1')
+
+        """
         if name in self.__items.keys():
             del self.__items[name]
         else:

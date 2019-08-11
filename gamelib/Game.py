@@ -11,6 +11,10 @@ import random
 import json
 from configparser import ConfigParser
 
+"""
+The Game.py module has only one class: Game. It is what could be called the game engine. It holds a lot of methods that helps taking care of some complex mechanics behind the 
+"""
+
 class Game():
     """A class that serve as a game engine.
 
@@ -289,9 +293,9 @@ class Game():
                         self._boards[level_number]['board'].place_item(npc,row,column)
                         self._boards[level_number]['npcs'].append(npc)
                     else:
-                        raise HacInvalidTypeException("y must be an int.")
+                        raise HacInvalidTypeException("column must be an int.")
                 else:
-                    raise HacInvalidTypeException("x must be an int.")
+                    raise HacInvalidTypeException("row must be an int.")
             else:
                 raise HacInvalidTypeException("The npc paramater must be a gamelib.Characters.NPC() object.")
         else:
@@ -308,11 +312,14 @@ class Game():
         Example::
 
             mygame.actuate_npcs(1)
+        
+        .. note:: This method only move NPCs when their actuator state is ACT_RUNNING. If it is ACT_PAUSED or ACT_STOPPED, theNPC is not moved.
         """
         if type(level_number) is int:
             if  level_number in self._boards.keys():
                 for npc in self._boards[level_number]['npcs']:
-                    self._boards[level_number]['board'].move(npc, npc.actuator.next_move(), npc.step)
+                    if npc.actuator.state == Constants.ACT_RUNNING:
+                        self._boards[level_number]['board'].move(npc, npc.actuator.next_move(), npc.step)
             else:
                 raise HacInvalidLevelException(f"Impossible to actuate NPCs for this level (level number {level_number} is not associated with any board).")
         else:
