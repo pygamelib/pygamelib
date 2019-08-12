@@ -110,6 +110,7 @@ for item in g.current_board().get_immovables():
         item.model = g.current_board().ui_board_void_cell
         item.action = activate_portal
         item.action_parameters = [1]
+        item.set_overlappable(True)
     # Finally, we set the fire walls to damage the player a bit
     elif item.type == 'fire_wall':
         item.action = damage_player
