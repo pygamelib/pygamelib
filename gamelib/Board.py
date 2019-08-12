@@ -179,7 +179,7 @@ class Board():
 
     def item(self,row,column):
         """
-        Return the item at the row,column position if within board's bounds.
+        Return the item at the row,column position if within board's boundaries.
 
         :rtype: gamelib.BoardItem.BoardItem
 
@@ -198,10 +198,13 @@ class Board():
 
         If the item is not a subclass of BoardItem, an HacInvalidTypeException
 
-        .. warning:: Nothing prevents you from placing an object on top of another. Be sure to check that.
+        .. warning:: Nothing prevents you from placing an object on top of another. Be sure to check that. This method will check for items that are both overlappable **and** restorable to save them, but that's the extend of it.
         """
         if row < self.size[1] and column < self.size[0]:
             if isinstance(item, BoardItem):
+                # If we are about to place the item on a overlappable and restorable we store it to be restored when the Movable will move.
+                if isinstance(self._matrix[row][column], Immovable) and self._matrix[row][column].restorable() and self._matrix[row][column].overlappable():
+                    item._overlapping = self._matrix[row][column]
                 self._matrix[row][column] = item
                 item.store_position(row,column)
                 if isinstance(item, Movable) and item not in self._movables:
