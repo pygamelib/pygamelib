@@ -133,7 +133,7 @@ class Inventory():
 
         .. note:: in case an execpetion is raised, the error will be 'no_item_by_that_name' and the message is giving the specifics.
 
-        .. sealso:: :class:`gamelib.HacExceptions.HacInventoryException`.
+        .. seealso:: :class:`gamelib.HacExceptions.HacInventoryException`.
 
         Example::
 
@@ -157,7 +157,7 @@ class Inventory():
 
         .. note:: in case an execpetion is raised, the error will be 'no_item_by_that_name' and the message is giving the specifics.
 
-        .. sealso:: :class:`gamelib.HacExceptions.HacInventoryException`.
+        .. seealso:: :class:`gamelib.HacExceptions.HacInventoryException`.
 
         Example::
 
