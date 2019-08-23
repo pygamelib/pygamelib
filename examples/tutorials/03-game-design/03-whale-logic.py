@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
 
 import sys, os
-sys.path.append(os.path.abspath(os.path.join('..', '..')))
+sys.path.append(os.path.abspath(os.path.join('..', '..','..')))
 
 from gamelib.Game import Game
-from gamelib.Characters import Player
+from gamelib.Characters import Player, NPC
 import gamelib.Sprites as Sprites
 import gamelib.Constants as Constants
 import gamelib.Utils as Utils
@@ -19,6 +19,7 @@ def refresh_screen():
     g.clear_screen()
     g.display_player_stats()
     g.display_board()
+    print( Utils.cyan_bright(f"Inventory ({g.player.inventory.size()}/{g.player.inventory.max_size})  ") )
     if g.player.inventory.size() > 0:
         # If inventory is not empty print it
         items_by_type = {}
@@ -39,10 +40,13 @@ def refresh_screen():
     for n in notifications:
         print(n)
 
+# Here we define all the callbacks we are going to need
+# One to damage the player (to be used with fire walls and explosions)
 def damage_player(params):
     global g
     g.player.hp -= params[0]
 
+# One to manage the explosions
 def explosion(params):
     global g
     item = params[0]
@@ -61,6 +65,7 @@ def explosion(params):
     else:
         damage_player([damage_value/2])
 
+# And one to manage the portals activation
 def activate_portal(params):
     global g
     level = params[0]
@@ -74,45 +79,58 @@ def activate_portal(params):
 def whale_behavior():
     global g
     global notifications
-    right_whale = None
-    left_whale = None
+    whales = []
+    # Here we only ask for the movable objects (like the NPCs) that have "whale" in their type. 
+    # This matches both "left_whale" and "right_whale"
     for item in g.current_board().get_movables(type="whale"):
-        if item.type == 'right_whale':
-            right_whale = item
-        elif item.type == 'left_whale':
-            left_whale = item
-    if right_whale != None:
-        for item in g.neighbors(2,right_whale):
-            if isinstance(item,Player):
-                inventory_item_name = None
-                for item_name in g.player.inventory.items_name():
-                    if item_name.startswith('Happy Octopus'):
-                       inventory_item_name = item_name
-                       break
-                if inventory_item_name != None:
-                    g.player.inventory.delete_item(inventory_item_name)
-                    g.current_board().place_item(BoardItemVoid(model=g.current_board().ui_board_void_cell),25,32) 
-    if left_whale != None:
-        for item in g.neighbors(2,left_whale):
-            if isinstance(item,Player):
-                inventory_item_name = None
-                for item_name in g.player.inventory.items_name():
-                    if item_name.startswith('Happy Octopus'):
-                       inventory_item_name = item_name
-                       break
-                if inventory_item_name != None:
-                    notifications.append(left_whale.model+": Thank you! Here, let me extinguish that fire for you!")
-                    notifications.append(left_whale.model+": "+Sprites.WATER_DROP)
-                    g.player.inventory.delete_item(inventory_item_name)
-                    g.current_board().item(26,32).model = Sprites.WATER_DROP
-                    left_whale.type = 'happy_left_whale'
-                    refresh_screen()
-                    time.sleep(1.5)
-                    g.current_board().clear_cell(26,32)
-                    refresh_screen()
-                    
-                else:
-                    notifications.append(left_whale.model+": I am so lonely, if only I had an aquatic friend to play with...") 
+        if item.type == 'right_whale' or item.type == 'left_whale':
+            whales.append(item)
+    # if right_whale != None:
+    #     for item in g.neighbors(2,right_whale):
+    #         if isinstance(item,Player):
+    #             inventory_item_name = None
+    #             for item_name in g.player.inventory.items_name():
+    #                 if item_name.startswith('Happy Octopus'):
+    #                    inventory_item_name = item_name
+    #                    break
+    #             if inventory_item_name != None:
+    #                 g.player.inventory.delete_item(inventory_item_name)
+    #                 g.current_board().place_item(BoardItemVoid(model=g.current_board().ui_board_void_cell),25,32) 
+    if len(whales) > 0:
+        for whale in whales:
+            # Let's look at the neighborhood of the whales (within a 2 cells radius)
+            for item in g.neighbors(2,whale):
+                # If there is a Player around, then look into the inventory...
+                if isinstance(item,Player):
+                    inventory_item_name = None
+                    # And reserve that Happy Octopus if present
+                    for item_name in g.player.inventory.items_name():
+                        if item_name.startswith('Happy Octopus'):
+                            inventory_item_name = item_name
+                            break
+                    if inventory_item_name != None:
+                        row = 0
+                        column = 0
+                        if whale.type == 'left_whale':
+                            g.add_npc(1,NPC(model=Sprites.OCTOPUS,name="Swimming Octopus (Left)",type="swimming_octopus"),8,16)
+                            row = 26
+                            column = 32
+                        else:
+                            g.add_npc(1,NPC(model=Sprites.OCTOPUS,name="Swimming Octopus (Right)",type="swimming_octopus"),14,37)
+                            row = 25
+                            column = 32
+                        notifications.append(whale.model+": Thank you! Here, let me extinguish that fire for you!")
+                        notifications.append(whale.model+": "+Sprites.WATER_DROP)
+                        g.player.inventory.delete_item(inventory_item_name)
+                        g.current_board().item(row,column).model = Sprites.WATER_DROP
+                        whale.type = 'happy_' + whale.type
+                        refresh_screen()
+                        time.sleep(1.5)
+                        g.current_board().clear_cell(row,column)
+                        refresh_screen()
+                        
+                    else:
+                        notifications.append(whale.model+": I am so lonely, if only I had an aquatic friend to play with...") 
 
     
 
@@ -165,6 +183,8 @@ for item in g.current_board().get_immovables():
         item.model = g.current_board().ui_board_void_cell
         item.action = activate_portal
         item.action_parameters = [1]
+        # Here is a small trick: we configure the portal to be overlappable so that even if the Player has a hint that something must be there (because of the trees for example), he is not bumping into an invisible wall.
+        item.set_overlappable(True)
     # Finally, we set the fire walls to damage the player a bit
     elif item.type == 'fire_wall':
         item.action = damage_player
