@@ -1,5 +1,5 @@
 from gamelib.Actuators.Actuator import Actuator
-from gamelib.Constants import ACT_PAUSED,ACT_RUNNING,ACT_STOPPED
+from gamelib.Constants import PAUSED,RUNNING,STOPPED
 import random
 
 class RandomActuator(Actuator):
@@ -17,7 +17,7 @@ class RandomActuator(Actuator):
         self.moveset = moveset
     
     def next_move(self):
-        if self.state == ACT_RUNNING:
+        if self.state == RUNNING:
             return random.choice(self.moveset)
         else:
             return None
@@ -29,7 +29,7 @@ class PathActuator(Actuator):
         self.index = 0
     
     def next_move(self):
-        if self.state == ACT_RUNNING:
+        if self.state == RUNNING:
             move = self.path[self.index]
             self.index += 1
             if self.index == len(self.path):

@@ -1,18 +1,18 @@
-from gamelib.Constants import ACT_PAUSED,ACT_RUNNING,ACT_STOPPED
+from gamelib.Constants import PAUSED,RUNNING,STOPPED
 
 class Actuator():
     def __init__(self):
         self.type = None
-        self.state = ACT_RUNNING
+        self.state = RUNNING
     
     def start(self):
-        self.state = ACT_RUNNING
+        self.state = RUNNING
     
     def pause(self):
-        self.state = ACT_PAUSED
+        self.state = PAUSED
     
     def stop(self):
-        self.state = ACT_STOPPED
+        self.state = STOPPED
 
     def next_move(self):
         raise NotImplementedError()

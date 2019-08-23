@@ -26,10 +26,10 @@ UI positions:
  * ORIENTATION_HORIZONTAL  
  * ORIENTATION_VERTICAL   
 
-Actuators states:
- * ACT_RUNNING
- * ACT_PAUSED
- * ACT_STOPPED 
+Actions states (for Actuators for example):
+ * RUNNING
+ * PAUSED
+ * STOPPED 
 
 """
 
@@ -58,7 +58,7 @@ ORIENTATION_HORIZONTAL  = 10001111
 ORIENTATION_VERTICAL    = 10010000
 
 
-# Actuators states
-ACT_RUNNING             = 10010001
-ACT_PAUSED              = 10010010
-ACT_STOPPED             = 10010011
+# Running states
+RUNNING             = 10010001
+PAUSED              = 10010010
+STOPPED             = 10010011

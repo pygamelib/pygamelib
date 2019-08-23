@@ -40,6 +40,7 @@ class Game():
         self._menu = menu
         self.current_level = current_level
         self.player = None
+        self.state = Constants.RUNNING
         self._config_parsers = None
         self._configuration = None
         self.object_library = []
@@ -313,17 +314,18 @@ class Game():
 
             mygame.actuate_npcs(1)
         
-        .. note:: This method only move NPCs when their actuator state is ACT_RUNNING. If it is ACT_PAUSED or ACT_STOPPED, theNPC is not moved.
+        .. note:: This method only move NPCs when their actuator state is RUNNING. If it is PAUSED or STOPPED, theNPC is not moved.
         """
-        if type(level_number) is int:
-            if  level_number in self._boards.keys():
-                for npc in self._boards[level_number]['npcs']:
-                    if npc.actuator.state == Constants.ACT_RUNNING:
-                        self._boards[level_number]['board'].move(npc, npc.actuator.next_move(), npc.step)
+        if self.state == Constants.RUNNING:
+            if type(level_number) is int:
+                if  level_number in self._boards.keys():
+                    for npc in self._boards[level_number]['npcs']:
+                        if npc.actuator.state == Constants.RUNNING:
+                            self._boards[level_number]['board'].move(npc, npc.actuator.next_move(), npc.step)
+                else:
+                    raise HacInvalidLevelException(f"Impossible to actuate NPCs for this level (level number {level_number} is not associated with any board).")
             else:
-                raise HacInvalidLevelException(f"Impossible to actuate NPCs for this level (level number {level_number} is not associated with any board).")
-        else:
-            raise HacInvalidTypeException('In actuate_npcs(level_number) the level_number must be an int.')
+                raise HacInvalidTypeException('In actuate_npcs(level_number) the level_number must be an int.')
 
     def display_player_stats(self,life_model=Utils.RED_RECT, void_model=Utils.BLACK_RECT):
         """Display the player name and health.
@@ -356,7 +358,8 @@ class Game():
 
             mygame.move_player(Constants.RIGHT,1)
         """
-        self._boards[self.current_level]['board'].move(self.player,direction,step)
+        if self.state == Constants.RUNNING:
+            self._boards[self.current_level]['board'].move(self.player,direction,step)
     
     def display_board(self):
         """Display the current board.
@@ -657,3 +660,33 @@ class Game():
                     data['map_data'][str(y.pos[0])][str(y.pos[1])] = _obj2ref(y)
         with open(filename, 'w') as f:  
             json.dump(data, f)
+    
+    def start(self):
+        """Set the game engine state to RUNNING.
+
+        The game has to be RUNNING for actuate_npcs() and move_player() to do anything.
+
+        Example::
+        
+            mygame.start()
+        """
+        self.state = Constants.RUNNING
+    
+    def pause(self):
+        """Set the game engine state to PAUSE.
+
+        Example::
+        
+            mygame.pause()
+        """
+        self.state = Constants.PAUSED
+    
+    def stop(self):
+
+        """Set the game engine state to STOPPED.
+
+        Example::
+        
+            mygame.stop()
+        """
+        self.state = Constants.STOPPED
