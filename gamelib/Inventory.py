@@ -121,6 +121,22 @@ class Inventory():
 
         """
         return self.__items.keys()
+
+    def search(self,query):
+        """Search for objects in the inventory.
+
+        All objects that matches the query are going to be returned.
+        :param query: the query that items in the inventory have to match to be returned.
+        :type name: str
+        :returns: a table of BoardItems.
+        :rtype: list
+        
+        Example::
+        
+            for item in game.player.inventory.search('mighty'):
+                print(f"This is a mighty item: {item.name}")
+        """
+        return [ item for key, item in self.__items.items() if query in key ]
     
     def get_item(self,name):
         """Return the item corresponding to the name given in argument.
