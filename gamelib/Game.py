@@ -77,6 +77,28 @@ class Game():
         else:
             self._menu[category] = [{'shortcut' : shortcut,'message':message,'data':data}]
     
+    def delete_menu_category(self,category=None):
+        """Delete an entire category from the menu.
+
+        That function removes the entire list of messages that are attached to the category.
+        
+        :param category: The category tp delete.
+        :type category: str
+        :raise HacInvalidTypeException: If the category is not a string
+        
+        .. important:: If the entry have no shortcut it's advised not to try to update unless you have only one NoneType as a shortcut.
+
+        Example::
+
+            game.add_menu_entry('main_menu','d','Go right')
+            game.update_menu_entry('main_menu','d','Go LEFT',Constants.LEFT)
+
+        """
+        if type(category) is str and category in self._menu:
+            del self._menu[category]
+        else:
+            raise HacInvalidTypeException("in Game.delete_menu_entry(): category cannot be anything else but a string.")
+    
     def update_menu_entry(self,category,shortcut,message,data=None):
         """Update an entry of the menu.
 
@@ -125,9 +147,10 @@ class Game():
             game.move_player(int(ent['data']),1)
 
         """
-        for e in self._menu[category]:
-            if e['shortcut'] == shortcut:
-                return e
+        if category in self._menu:
+            for e in self._menu[category]:
+                if e['shortcut'] == shortcut:
+                    return e
         return None
 
     def display_menu(self,category,orientation=Constants.ORIENTATION_VERTICAL,paginate=10):
