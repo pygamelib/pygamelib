@@ -89,7 +89,9 @@ venv/
 ENV/
 env.bak/
 venv.bak/
-.desktop
+
+# Desktop environments
+.directory
 
 # Spyder project settings
 .spyderproject
