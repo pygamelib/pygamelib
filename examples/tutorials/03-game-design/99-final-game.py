@@ -382,14 +382,14 @@ while run:
     if key == 'q':
         run = False
         break
-    elif key == '1':
-        teleport_player(g.current_board().player_starting_position[0],g.current_board().player_starting_position[1])
-    elif key == '2':
-        teleport_player(22,10)
-    elif key == '3':
-        teleport_player(2,42)
-    elif key == '4':
-        teleport_player(3,4)
+    # elif key == '1':
+    #     teleport_player(g.current_board().player_starting_position[0],g.current_board().player_starting_position[1])
+    # elif key == '2':
+    #     teleport_player(22,10)
+    # elif key == '3':
+    #     teleport_player(2,42)
+    # elif key == '4':
+    #     teleport_player(3,4)
     elif key == 'p':
         notifications.append(f"Player position is [{g.player.pos[0]},{g.player.pos[1]}]")
     elif current_menu == 'default':
