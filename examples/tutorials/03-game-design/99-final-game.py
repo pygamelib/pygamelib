@@ -123,7 +123,10 @@ def activate_portal(params):
             g.clear_screen()
             print( Utils.green_bright("CONGRATULATIONS\n\nYOU WIN!") )
             exit()
-    else:
+    elif level == 2:
+        g.clear_screen()
+        print_animated(f"{Sprites.UNICORN_FACE}: Congratulations {g.player.name}, you found the entrance to a world of riches!\n{Sprites.UNICORN_FACE}: However, your time is limited and you will need to grab as much treasures as you can in 20 moves only!\n{Sprites.UNICORN_FACE}: Good luck!")
+        input("\n\n(Hit ENTER when you are ready to enter the world of riches)")
         g.player.inventory.max_size += 1500
         g.change_level(2)
 
@@ -313,7 +316,7 @@ for k in range(0,100):
     bonus_board.place_item(Treasure(model=Sprites.GEM_STONE, value=1000, name=f'diamond_{k}'), row, column)
 
 # Create the player object.
-g.player = Player(name='The Mighty Wizard',model=Sprites.MAGE)
+g.player = Player(name='Mighty Wizard',model=Sprites.MAGE)
 g.change_level(1)
 
 introduction_scene()
@@ -382,15 +385,15 @@ while run:
     if key == 'q':
         run = False
         break
-    # elif key == '1':
-    #     teleport_player(g.current_board().player_starting_position[0],g.current_board().player_starting_position[1])
-    # elif key == '2':
-    #     teleport_player(22,10)
-    # elif key == '3':
-    #     teleport_player(2,42)
-    # elif key == '4':
-    #     teleport_player(3,4)
-    elif key == 'p':
+    elif key == 'v' and g.current_level == 1:
+        teleport_player(g.current_board().player_starting_position[0],g.current_board().player_starting_position[1])
+    elif key == 'b' and g.current_level == 1:
+        teleport_player(22,10)
+    elif key == 'n' and g.current_level == 1:
+        teleport_player(2,42)
+    elif key == 'm' and g.current_level == 1:
+        teleport_player(3,4)
+    elif key == 'p' and g.current_level == 1:
         notifications.append(f"Player position is [{g.player.pos[0]},{g.player.pos[1]}]")
     elif current_menu == 'default':
         # If we are in the default menu we use the normal controls.
