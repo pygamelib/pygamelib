@@ -248,7 +248,7 @@ def portal_fairy_behavior():
                 time.sleep(2)
                 current_menu = 'default'
                 refresh_screen()
-            else:
+            elif fairy_gold < 300 and (key == '1' or key == '2' or key == '3' or key == '4'):
                 print(Sprites.FAIRY+' Thank you, that is a good start but I still don\'t have enough gold to open a portal.')
             # When we are finished we un-pause the game
             g.start()
@@ -314,6 +314,28 @@ for k in range(0,100):
             column = None
             retry += 1
     bonus_board.place_item(Treasure(model=Sprites.GEM_STONE, value=1000, name=f'diamond_{k}'), row, column)
+
+# And ultimately 25 crown with a super high value of 5000.
+for k in range(0,100):
+    row = None
+    column = None
+    retry = 0
+    while True :
+        if row == None:
+            row = random.randint(0,bonus_board.size[1]-1)
+        if column == None:
+            column = random.randint(0,bonus_board.size[0]-1)
+        # print(f"Game.add_npc() finding a position for NPC {npc.name} trying ({x},{y})")
+        if isinstance(bonus_board.item(row,column), BoardItemVoid):
+            break
+        elif retry > 20:
+            break
+        else:
+            row = None
+            column = None
+            retry += 1
+    bonus_board.place_item(Treasure(model=Sprites.CROWN, value=5000, name=f'crown_{k}'), row, column)
+
 
 # Create the player object.
 g.player = Player(name='Mighty Wizard',model=Sprites.MAGE)
@@ -459,6 +481,6 @@ while run:
     # Finally if the amount of turn left in level 2 is 0 we exit with a message
     if level_2_turns_left == 0:
         g.clear_screen()
-        print_animated(f"{Sprites.UNICORN_FACE}: Congratulations Mighty Wizard!\n{Sprites.UNICORN_FACE}: The whales are happy and the sheep are patrolling!\n{Sprites.UNICORN_FACE}: You also got {Utils.green_bright(str(g.player.inventory.value()))} points!\n{Sprites.UNICORN_FACE}: Try to do even better next time.\n\n{Sprites.UNICORN_FACE}: Thank you for playing!\n")
+        print_animated(f"{Sprites.UNICORN_FACE}: Congratulations Mighty Wizard!\n{Sprites.UNICORN_FACE}: The whales are happy and the sheep are patrolling!\n{Sprites.UNICORN_FACE}: You also got {Utils.green_bright(str(g.player.inventory.value()+(g.player.hp*100)))} points!\n{Sprites.UNICORN_FACE}: Try to do even better next time.\n\n{Sprites.UNICORN_FACE}: Thank you for playing!\n")
         break
     key = Utils.get_key()
