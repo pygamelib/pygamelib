@@ -4,38 +4,39 @@ import sys, os
 sys.path.append(os.path.abspath(os.path.join('..', '..','..')))
 
 from gamelib.Game import Game
-from gamelib.Characters import Player
+from gamelib.Board import Board
+from gamelib.Characters import Player, NPC
+from gamelib.Structures import Door, Treasure
+from gamelib.BoardItem import BoardItemVoid
 import gamelib.Sprites as Sprites
 import gamelib.Constants as Constants
 import gamelib.Utils as Utils
-from gamelib.Structures import Door
 import time
-import sys
+import random
 
-def refresh_screen():
-    global g
-    g.clear_screen()
-    g.display_player_stats()
-    g.display_board()
 
-# Here we define all the callbacks we are going to need
-# One to damage the player (to be used with fire walls and explosions)
-def damage_player(params):
-    pass
-
-# One to manage the explosions
-def explosion(params):
-    pass
-
-# And one to manage the portals activation
-def activate_portal(params):
-    pass
-
-# The name of board we want to load for the first level
+## Here are our global variables (it is usually a bad idea to use global variables but it will simplify that tutorial, keep in mind that we don't usually rely on global variables)
+# The board we want to load for the first level
 level_1 = 'levels/TutoMap-hac-game-lib.json'
 
 # Create the game object. We are going to use this as a global variable.
 g = Game()
+
+def refresh_screen():
+    global g
+    
+    g.clear_screen()
+    g.display_player_stats()
+    g.display_board()
+    
+def damage_player(params):
+    pass
+
+def explosion(params):
+    pass
+
+def activate_portal(params):
+    pass
 
 # Load the board as level 1
 b = g.load_board(level_1,1)
@@ -54,8 +55,7 @@ g.current_board().place_item(Door(model=Utils.BLUE_SQUARE),11,0)
 # Now we need to take care of the explosions. Hide them and set the callback functions.
 for item in g.current_board().get_immovables():
     # Here we need to set the functions that are going to be called when the player touches our hidden traps.
-    if 'explosion' in item.type:
-        print(f"{item.model} : {item.type} {item.name}")
+    if item.type == 'simple_explosion' or item.type == 'mega_explosion':
         # First let's set our model to the same as the current level's board void cell model.
         item.model = g.current_board().ui_board_void_cell
 
@@ -63,24 +63,39 @@ for item in g.current_board().get_immovables():
         # This function will be called when the player interact with the GenericActionable object.
         # explosion() takes 3 parameters: the calling item, a model to use when it's exploded and a damage value to hurt the player.
         if item.type == 'simple_explosion':
-            pass
+            item.action = explosion
+            item.action_parameters = [item,Sprites.FIRE,10]
         else:
-            pass
-    # Now let's hide the portal
+            item.action = explosion
+            item.action_parameters = [item,Sprites.EXPLOSION,80]
     elif item.type == 'portal':
         item.model = g.current_board().ui_board_void_cell
-        # Here is a small trick: we configure the portal to be overlappable so that even if the Player has a hint that something must be there (because of the trees for example), he is not bumping into an invisible wall.
+        item.action = activate_portal
+        item.action_parameters = [2]
         item.set_overlappable(True)
+    # Set a higher score value to the money bags
+    elif item.type == 'money':
+        item.value = 100
+    # Same thing with the Scroll of Wisdom.
+    elif item.type == 'scroll':
+        item.value = 1000
     # Finally, we set the fire walls to damage the player a bit
     elif item.type == 'fire_wall':
-        pass
+        item.action = damage_player
+        item.action_parameters = [10]
 
+# This variable is the input buffer.
 key = None
 # This one is going to be useful later
 run = True
+# This one will hold our level history (only the previous)
+previous_level = None
 
 while run:
-    if key == 'w':
+    if key == 'q':
+        run = False
+        break
+    elif key == 'w':
         g.move_player(Constants.UP,1)
     elif key == 's':
         g.move_player(Constants.DOWN,1)
@@ -88,9 +103,6 @@ while run:
         g.move_player(Constants.LEFT,1)
     elif key == 'd':
         g.move_player(Constants.RIGHT,1)
-    elif key == 'q':
-        run = False
-        break
     refresh_screen()
     g.actuate_npcs(g.current_level)
     key = Utils.get_key()
