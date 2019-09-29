@@ -14,13 +14,12 @@ import gamelib.Utils as Utils
 import time
 import random
 
-
 ## Here are our global variables (it is usually a bad idea to use global variables but it will simplify that tutorial, keep in mind that we don't usually rely on global variables)
-# The board we want to load for the first level
-level_1 = 'levels/TutoMap-hac-game-lib.json'
 
 # Create the game object. We are going to use this as a global variable.
 g = Game()
+# Load the board as level 1
+b = g.load_board('levels/TutoMap-hac-game-lib.json',1)
 
 def refresh_screen():
     global g
@@ -37,9 +36,6 @@ def explosion(params):
 
 def activate_portal(params):
     pass
-
-# Load the board as level 1
-b = g.load_board(level_1,1)
 
 # Create the player object.
 g.player = Player(name='The Mighty Wizard',model=Sprites.MAGE)
