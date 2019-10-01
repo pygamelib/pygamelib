@@ -5,14 +5,15 @@ General purpose:
  * HAC_GAME_LIB_VERSION 
 
 Directions:
- * UP     
- * DOWN   
+ * NO_DIR : This one is used when no direction can be provided by an actuator (destination reached for a PathFinder for example)
+ * UP    
+ * DOWN
  * LEFT   
  * RIGHT  
- * DRUP   
- * DRDOWN 
- * DLUP   
- * DLDOWN 
+ * DRUP : Diagonal right up
+ * DRDOWN : Diagonal right down
+ * DLUP : Diagonal Left up
+ * DLDOWN : Diagonal left down
 
 Permissions:
  * PLAYER_AUTHORIZED       
@@ -35,7 +36,9 @@ Actions states (for Actuators for example):
 
 # Main version
 HAC_GAME_LIB_VERSION = '2019.5a7'
+
 # Directions
+NO_DIR = 10000000
 UP     = 10000001
 DOWN   = 10000010
 LEFT   = 10000011
