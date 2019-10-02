@@ -145,8 +145,8 @@ class PathFinder(Behavioral):
 
         If no waypoint have been added, this function return None. 
 
-        :return: Either None or the current waypoint.
-        :rtype: None or a tuple of integer.
+        :return: Either a None tuple or the current waypoint.
+        :rtype: A None tuple or a tuple of integer.
         
         Example::
         
@@ -155,7 +155,7 @@ class PathFinder(Behavioral):
 
         """
         if len(self.waypoints) == 0:
-            return None
+            return (None,None)
         return self.waypoints[self._waypoint_index]
     
     def next_waypoint(self):
@@ -166,8 +166,8 @@ class PathFinder(Behavioral):
             * if PathFinder.circle_waypoints is True this function reset the waypoints stack and return the first one.
             * else, return None.
 
-        :return: Either None or the next waypoint.
-        :rtype: None or a tuple of integer.
+        :return: Either a None tuple or the next waypoint.
+        :rtype: A None tuple or a tuple of integer.
         
         Example::
 
@@ -177,12 +177,12 @@ class PathFinder(Behavioral):
 
         """
         if len(self.waypoints) == 0:
-            return None
+            return (None,None)
         self._waypoint_index += 1
         if self._waypoint_index >= len(self.waypoints):
             if self.circle_waypoints:
                 self._waypoint_index = 0
             else:
-                return None
+                return (None,None)
         return self.waypoints[self._waypoint_index]
 

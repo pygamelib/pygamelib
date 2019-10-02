@@ -59,16 +59,20 @@ while nm != Constants.NO_DIR:
 pf.add_waypoint(g.player.pos[0],g.player.pos[1])
 pf.add_waypoint(24,24)
 pf.add_waypoint(21,40)
-
-while True:
+pf.circle_waypoints = True
+nm = None
+while nm != Constants.NO_DIR:
     (cwr,cwc) = pf.current_waypoint()
     if g.player.pos[0] == cwr and g.player.pos[1] == cwc:
         (r,c) = pf.next_waypoint()
+        if r == None or c == None:
+            break
         pf.set_destination(r,c)
         reset_drawn_path(path)
         path = pf.find_path()
         draw_path(path)
-    g.move_player(pf.next_move(),1)
+    nm = pf.next_move()
+    g.move_player(nm,1)
     g.clear_screen()
     g.display_board()
     time.sleep(0.1)
