@@ -8,14 +8,17 @@ import collections
 
 class PathFinder(Behavioral):
     """
-    .. warning:: Do not use this module at the moment, it's a work in progress
+    .. warning:: This module is still experimental however all documented methods works as intended.
     """
-    def __init__(self,game=None,actuated_object=None,destination=(0,0)):
+    def __init__(self,game=None,actuated_object=None,destination=(0,0), circle_waypoints=True):
         Behavioral.__init__(self)
         self.actuated_object = actuated_object
         self.destination = destination
         self.game = game
         self._current_path = []
+        self.waypoints = []
+        self._waypoint_index = 0
+        self.circle_waypoints = circle_waypoints
     
     def set_destination(self,row=0,column=0):
         """Set the targeted destination.
@@ -103,4 +106,83 @@ class PathFinder(Behavioral):
             return Constants.DLDOWN
         elif dr == 1 and dc == 1:
             return Constants.DLUP
+    
+    def add_waypoint(self, row, column):
+        """Add a waypoint to the list of waypoints.
+
+        Waypoints are used one after the other on a FIFO basis (First In, First Out).
+
+        :param row: The "row" part of the waypoint's coordinate.
+        :type row: int
+        :param column: The "column" part of the waypoint's coordinate.
+        :type row: int
+        :raise HacInvalidTypeException: If any of the parameters is not an int.
         
+        Example::
+        
+            pf = PathFinder(game=mygame, actuated_object=npc1)
+            pf.add_waypoint(3,5)
+            pf.add_waypoint(12,15)
+
+        """
+        if type(row) is not int:
+            raise HacInvalidTypeException('"row" is not an integer. It must be.')
+        if type(column) is not int:
+            raise HacInvalidTypeException('"column" is not an integer. It must be.')
+        self.waypoints.append( (row,column) )
+    
+    def clear_waypoints(self):
+        """Empty the waypoints stack.
+        
+        Example::
+        
+            pf.clear_waypoints()
+        """
+        self.waypoints.clear()
+    
+    def current_waypoint(self):
+        """Return the currently active waypoint.
+
+        If no waypoint have been added, this function return None. 
+
+        :return: Either None or the current waypoint.
+        :rtype: None or a tuple of integer.
+        
+        Example::
+        
+            (row,column) = pf.current_waypoint()
+            pf.set_destination(row,column)
+
+        """
+        if len(self.waypoints) == 0:
+            return None
+        return self.waypoints[self._waypoint_index]
+    
+    def next_waypoint(self):
+        """Return the next active waypoint.
+
+        If no waypoint have been added, this function return None. 
+        If there is no more waypoint in the stack:
+            * if PathFinder.circle_waypoints is True this function reset the waypoints stack and return the first one.
+            * else, return None.
+
+        :return: Either None or the next waypoint.
+        :rtype: None or a tuple of integer.
+        
+        Example::
+
+            pf.circle_waypoints = True
+            (row,column) = pf.next_waypoint()
+            pf.set_destination(row,column)
+
+        """
+        if len(self.waypoints) == 0:
+            return None
+        self._waypoint_index += 1
+        if self._waypoint_index >= len(self.waypoints):
+            if self.circle_waypoints:
+                self._waypoint_index = 0
+            else:
+                return None
+        return self.waypoints[self._waypoint_index]
+
