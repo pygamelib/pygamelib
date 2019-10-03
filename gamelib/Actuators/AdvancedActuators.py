@@ -185,4 +185,33 @@ class PathFinder(Behavioral):
             else:
                 return (None,None)
         return self.waypoints[self._waypoint_index]
+    
+    def remove_waypoint(self,row, column):
+        """ Remove a waypoint from the stack.
+
+        This method removes the first occurrence of a waypoint in the stack.
+
+        If the waypoint cannot be found, it raises a ValueError exception.
+        If the row and column parameters are not int, an HacInvalidTypeException is raised.
+
+        :param row: The "row" part of the waypoint's coordinate.
+        :type row: int
+        :param column: The "column" part of the waypoint's coordinate.
+        :type row: int
+        :raise HacInvalidTypeException: If any of the parameters is not an int.
+        :raise ValueError: If the waypoint is not found in the stack.
+        
+        Example::
+        
+            method()
+        """
+        if type(row) is not int:
+            raise HacInvalidTypeException('"row" is not an integer. It must be.')
+        if type(column) is not int:
+            raise HacInvalidTypeException('"column" is not an integer. It must be.')
+        try:
+            idx = self.waypoints.index( (row,column) )
+            self.waypoints.pop(idx)
+        except ValueError as e:
+            print(e)
 
