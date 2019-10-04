@@ -402,7 +402,7 @@ while True:
         print("No pre-existing map found.")
     print("n - create a new map")
     print("q - Quit the editor")
-    choice = str( Utils.get_key() )
+    choice = str(input())
     if choice == "q":
         print("Good Bye!")
         exit()
