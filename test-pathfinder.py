@@ -14,13 +14,14 @@ def draw_path(p):
     global g
     for (r,c) in p:
         if r != g.player.pos[0] or c != g.player.pos[1]:
-            g.current_board().place_item(Door(model=Utils.RED_SQUARE),r,c)
+            g.current_board().place_item(Door(model=Utils.RED_SQUARE,type='path_marker'),r,c)
 
-def reset_drawn_path(p):
-    for i in p:
-        g.current_board().place_item(BoardItemVoid(),i[0],i[1])
+def reset_drawn_path():
+    global g
+    for i in g.current_board().get_immovables(type='path_marker'):
+        g.current_board().place_item(BoardItemVoid(),i.pos[0],i.pos[1])
 
-# Destination 17,12
+# Destination (24,24) is the center of the labyrinth
 dest_row = 24
 dest_col = 24
 
@@ -29,7 +30,7 @@ if len(sys.argv) > 1:
 
 if len(sys.argv) > 2:
     dest_col = int(sys.argv[2])
-print(f'dest_row={dest_row} dest_col={dest_col}')
+
 g = Game()
 b = g.load_board('hac-maps/Maze.json',1)
 
@@ -38,40 +39,30 @@ g.change_level(1)
 g.actuate_npcs(1)
 
 pf = PathFinder(game=g,actuated_object=g.player)
-pf.set_destination(dest_row,dest_col)
-path = pf.find_path()
-print("Path found:")
-print(path)
 
-for (r,c) in path:
-    if r != g.player.pos[0] or c != g.player.pos[1]:
-        b.place_item(Door(model=Utils.RED_SQUARE),r,c)
-
-g.display_board()
-nm = None
-while nm != Constants.NO_DIR:
-    nm = pf.next_move()
-    g.move_player(nm,1)
-    g.clear_screen()
-    g.display_board()
-    time.sleep(0.1)
-
-pf.add_waypoint(g.player.pos[0],g.player.pos[1])
+pf.add_waypoint(dest_row,dest_col)
 pf.add_waypoint(24,24)
 pf.add_waypoint(21,40)
+
 pf.circle_waypoints = True
+
+pf.set_destination(dest_row,dest_col)
+
 nm = None
+(wpr,wpc) = (None,None)
+path = []
+
 while nm != Constants.NO_DIR:
-    (cwr,cwc) = pf.current_waypoint()
-    if g.player.pos[0] == cwr and g.player.pos[1] == cwc:
-        (r,c) = pf.next_waypoint()
-        if r == None or c == None:
-            break
-        pf.set_destination(r,c)
-        reset_drawn_path(path)
-        path = pf.find_path()
-        draw_path(path)
     nm = pf.next_move()
+    (tmp_wpr,tmp_wpc) = pf.current_waypoint()
+    if wpr != tmp_wpr or wpc != tmp_wpc:
+        if len(path) != 0:
+            reset_drawn_path()
+        path = pf.current_path()
+        draw_path(path)
+        wpr = tmp_wpr
+        wpc = tmp_wpc
+
     g.move_player(nm,1)
     g.clear_screen()
     g.display_board()
