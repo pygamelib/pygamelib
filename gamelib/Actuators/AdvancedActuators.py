@@ -9,8 +9,10 @@ import collections
 class PathFinder(Behavioral):
     """
     .. warning:: This module is still experimental however all documented methods works as intended.
+
+    .. important:: This module assume a one step movement. If you need more than one step, you will need to sub-class this module and re-implement next_waypoint().
     """
-    def __init__(self,game=None,actuated_object=None,destination=(0,0), circle_waypoints=True):
+    def __init__(self,game=None,actuated_object=None,destination=(None,None), circle_waypoints=True):
         Behavioral.__init__(self)
         self.actuated_object = actuated_object
         self.destination = destination
@@ -36,8 +38,6 @@ class PathFinder(Behavioral):
         if type(row) is not int or type(column) is not int:
             raise HacInvalidTypeException("In Actuator.PathFinder.set_destination(x,y) both x and y must be integer.")
         self.destination = (row,column)
-        # if self.actuated_object != None and issubclass(self.actuated_object, Movable):
-        #     self.find_path()
     
     def find_path(self):
         """Find a path to the destination.
@@ -75,12 +75,80 @@ class PathFinder(Behavioral):
                     seen.add((x2, y2))
         return []
     
+    def current_path(self):
+        """This method simply return a copy of the current path of the actuator.
+
+        The current path is to be understood as: the list of positions still remaining. All positions that have already been gone through are removed from the stack.
+
+        .. important:: A copy of the path is returned for every call to that function so be wary of the performances impact.
+        
+        Example::
+        
+            mykillernpc.actuator = PathFinder(game=mygame,actuated_object=mykillernpc)
+            mykillernpc.actuator.set_destination( mygame.player.pos[0], mygame.player.pos[1] )
+            mykillernpc.actuator.find_path()
+            for i in mykillernpc.actuator.current_path():
+                print(i)
+
+        """
+        return self._current_path.copy()
+    
     def next_move(self):
+        """This method return the next move calculated by this actuator. 
+
+        In the case of this PathFinder actuator, next move does the following:
+         - If the destination is not set return NO_DIR (see :py:mod:`~gamelib.Constants`)
+         - If the destination is set, but the path is empty and actuated object's position is different from destination: call :meth:`find_path()`
+         - Look at the current waypoint, if the actuated object is not at that position return a direction from the :mod:`~gamelib.Constants` module. The direction is calculated from the difference betwen actuated object's position and waypoint's position.
+         - If the actuated object is at the waypoint position, then call next_waypoint(), set the destination and return a direction. In this case, also call :meth:`find_path()`.
+         - If 
+         - In any case, if there is no more waypoints in the path this method returns NO_DIR (see :py:mod:`~gamelib.Constants`)
+
+        :param name: some param
+        :type name: str
+        
+        Example::
+        
+            seeker = NPC(model=Sprites.SKULL)
+            seeker.actuator = PathFinder(game=mygame,actuated_object=seeker)
+            while True:
+                seeker.actuator.set_destination(mygame.player.pos[0],mygame.player.pos[1])
+                # next_move() will call find_path() for us.
+                next_move = seeker.actuator.next_move()
+                if next_move == Constants.NO_DIR:
+                    seeker.actuator.set_destination(mygame.player.pos[0],mygame.player.pos[1])
+                else:
+                    mygame.current_board().move(seeker,next_move,1)
+        """
+        # If one of destination coordinate is None, return NO_DIR
+        if self.destination[0] == None or self.destination[1] == None:
+            print('Destination not set')
+            return Constants.NO_DIR
+        
+        # If path is empty and actuated_object is not at destination, try to find a path to destination
         if len(self._current_path) == 0 and (self.actuated_object.pos[0] != self.destination[0] or self.actuated_object.pos[1] != self.destination[1]):
             self.find_path()
+        
+        # If path is still empty return NO_DIR (destination is unreachable or the current waypoint is reached)
         if len(self._current_path) == 0:
+            # First we check if we already are at current waypoint
+            (cwr,cwc) = self.current_waypoint()
+            if self.actuated_object.pos[0] == cwr and self.actuated_object.pos[1] == cwc:
+                # If so, we get the next waypoint
+                (r,c) = self.next_waypoint()
+                # If there are no more waypoints, then we return NO_DIR
+                if r == None or c == None:
+                    return Constants.NO_DIR
+                else:
+                    # Else we set the new destination and calculate the path
+                    self.set_destination(r,c)
+                    self.find_path()
+            else:
                 return Constants.NO_DIR
+        
+        # Get the next position from the path
         next_position = self._current_path.pop(0)
+        # If actuated object is already there check if the path is empty, if so return NO_DIR, else get the next position from the path.
         if next_position[0] == self.actuated_object.pos[0] and next_position[1] == self.actuated_object.pos[1]:
             if len(self._current_path) == 0:
                 return Constants.NO_DIR
@@ -89,7 +157,11 @@ class PathFinder(Behavioral):
         # print(f'Next position is: {next_position} and object position is {self.actuated_object.pos} _current_path length is {len(self._current_path)}')
         dr = self.actuated_object.pos[0] - next_position[0]
         dc = self.actuated_object.pos[1] - next_position[1]
-        print(f'dr={dr} dc={dc}')
+        
+        # Look at the difference between the current position and next position and return the correct direction.
+        # If the coordinates are impossible to resolve return NO_DIR
+        # NOTE: We could use a comparison with 0 (dr < 0 instead of dr == -1 for example) but the sides effects are numerous in case the user use a step higher than 1 in Board.move().
+        #       The actuated object could end up going into a wall or out of bound.
         if dr == -1 and dc == 0:
             return Constants.DOWN
         elif dr == 1 and dc == 0:
@@ -106,6 +178,8 @@ class PathFinder(Behavioral):
             return Constants.DLDOWN
         elif dr == 1 and dc == 1:
             return Constants.DLUP
+        else:
+            return Constants.NO_DIR
     
     def add_waypoint(self, row, column):
         """Add a waypoint to the list of waypoints.
@@ -163,8 +237,8 @@ class PathFinder(Behavioral):
 
         If no waypoint have been added, this function return None. 
         If there is no more waypoint in the stack:
-            * if PathFinder.circle_waypoints is True this function reset the waypoints stack and return the first one.
-            * else, return None.
+         - if PathFinder.circle_waypoints is True this function reset the waypoints stack and return the first one.
+         - else, return None.
 
         :return: Either a None tuple or the next waypoint.
         :rtype: A None tuple or a tuple of integer.
