@@ -8,19 +8,29 @@ import collections
 
 class PathFinder(Behavioral):
     """
-    .. warning:: This module is still experimental however all documented methods works as intended.
-
     .. important:: This module assume a one step movement. If you need more than one step, you will need to sub-class this module and re-implement next_waypoint().
+
+    This actuator is a bit different than the simple actuators (:mod:`~gamelib.Actuators.SimpleActuators`) as it requires the knowledge of both the game object and the actuated object.
+    
+    The constructor takes the following parameters:
+    :param game: A reference to the instanciated game engine.
+    :type game: gamelib.Game.Game
+    :param actuated_object: The object to actuate.
+    :type actuated_object: gamelib.BoardItem.BoardItem
+    :param circle_waypoints: If True the next_waypoint() method is going to circle between the waypoints (when the last is visited, go back to the first)
+    :type circle_waypoints: bool
+
     """
-    def __init__(self,game=None,actuated_object=None,destination=(None,None), circle_waypoints=True):
+    def __init__(self,game=None,actuated_object=None, circle_waypoints=True):
         Behavioral.__init__(self)
         self.actuated_object = actuated_object
-        self.destination = destination
+        self.destination = (None,None)
         self.game = game
         self._current_path = []
         self.waypoints = []
         self._waypoint_index = 0
         self.circle_waypoints = circle_waypoints
+        self._position_history = []
     
     def set_destination(self,row=0,column=0):
         """Set the targeted destination.
@@ -103,9 +113,6 @@ class PathFinder(Behavioral):
          - If the actuated object is at the waypoint position, then call next_waypoint(), set the destination and return a direction. In this case, also call :meth:`find_path()`.
          - If 
          - In any case, if there is no more waypoints in the path this method returns NO_DIR (see :py:mod:`~gamelib.Constants`)
-
-        :param name: some param
-        :type name: str
         
         Example::
         
