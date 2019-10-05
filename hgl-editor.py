@@ -629,5 +629,8 @@ while True:
         Utils.info(m)
     for m in warn_messages:
         Utils.warn(m)
-    key = input()
+    if current_menu == 'boards_list':
+        key = input()
+    else:
+        key = Utils.get_key()
 
