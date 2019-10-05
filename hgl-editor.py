@@ -391,7 +391,7 @@ while True:
         hmaps = []
         try:
             for directory in directories:
-                files = [f'{directory}{f}' for f in os.listdir(directory)]
+                files = [f'{directory}/{f}' for f in os.listdir(directory)]
                 hmaps += files
             print(Utils.green('OK'))
         except FileNotFoundError as e:
