@@ -128,7 +128,6 @@ class PathFinder(Behavioral):
         """
         # If one of destination coordinate is None, return NO_DIR
         if self.destination[0] == None or self.destination[1] == None:
-            print('Destination not set')
             return Constants.NO_DIR
         
         # If path is empty and actuated_object is not at destination, try to find a path to destination
