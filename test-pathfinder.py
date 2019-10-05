@@ -48,12 +48,17 @@ pf.circle_waypoints = True
 
 pf.set_destination(dest_row,dest_col)
 
+blocker = NPC(model=Sprites.SKULL)
+g.current_board().place_item(blocker, 20,1)
+
 nm = None
 (wpr,wpc) = (None,None)
 path = []
 
 while nm != Constants.NO_DIR:
     nm = pf.next_move()
+
+    # The following code is only to draw the path calculated by the PathFinder.
     (tmp_wpr,tmp_wpc) = pf.current_waypoint()
     if wpr != tmp_wpr or wpc != tmp_wpc:
         if len(path) != 0:
@@ -62,8 +67,16 @@ while nm != Constants.NO_DIR:
         draw_path(path)
         wpr = tmp_wpr
         wpc = tmp_wpc
-
+    if g.player.pos[0] == 15 and g.player.pos[1] == 0:
+        g.current_board().move(blocker, Constants.LEFT, 1)
+    if g.player.pos[0] == 19 and g.player.pos[1] == 1:
+        reset_drawn_path()
+        path = pf.current_path()
+        draw_path(path)
+        g.current_board().place_item(blocker, 20,0)
+    
+    # Now we use the direction to move the player and display the board.
     g.move_player(nm,1)
     g.clear_screen()
     g.display_board()
-    time.sleep(0.1)
+    time.sleep(0.05)

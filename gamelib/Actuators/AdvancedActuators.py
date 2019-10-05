@@ -185,6 +185,10 @@ class PathFinder(Behavioral):
             return Constants.DLDOWN
         elif dr == 1 and dc == 1:
             return Constants.DLUP
+        elif dr > 1 or dr < -1 or dc > 1 or dc < -1:
+            # If we are here it means that something is blocking the movement
+            self.find_path()
+            return self.next_move()
         else:
             return Constants.NO_DIR
     
