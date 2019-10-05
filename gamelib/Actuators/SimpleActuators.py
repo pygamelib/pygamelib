@@ -19,14 +19,26 @@ class RandomActuator(Actuator):
     def next_move(self):
         if self.state == RUNNING:
             return random.choice(self.moveset)
-        else:
-            return None
 
 class PathActuator(Actuator):
+    """A class that follows a given path of movement.
+
+    The path actuator is a subclass of :class:`~gamelib.Actuators.Actuator.Actuator`.
+    When the Actuator is created it receives a list with a path.
+    while the state it's running it will move trough the values of that list.
+    Once the lists finishes the path is reset and starts all over again.
+
+    :param path: A list of moves
+    :type path: list
+    each move is a tuple of two integer from the grid.
+
+    Example: PathActuator(path=[(1,1), (1,2), (2,2), (2,1)])
+    """
     def __init__(self,path=[]):
         Actuator.__init__(self)
         self.path = path
         self.index = 0
+
     
     def next_move(self):
         if self.state == RUNNING:
@@ -35,10 +47,7 @@ class PathActuator(Actuator):
             if self.index == len(self.path):
                 self.index = 0
             return move
-        else:
-            return None
-            
+
     def set_path(self,path):
         self.path = path
         self.index = 0
-        
