@@ -1,5 +1,9 @@
 #!/usr/bin/env python3
 
+import os
+import uuid
+import json
+from copy import deepcopy
 import gamelib.Utils as Utils
 import gamelib.Constants as Constants
 import gamelib.Structures as Structures
@@ -9,9 +13,6 @@ from gamelib.Game import Game
 from gamelib.Characters import Player,NPC
 from gamelib.Board import Board
 from gamelib.BoardItem import BoardItemVoid
-import os
-import uuid
-from copy import deepcopy
 
 # Global variables
 is_modified = False
@@ -357,7 +358,7 @@ def save_current_board():
     if not os.path.exists('hac-maps') or not os.path.isdir('hac-maps'):
         os.makedirs('hac-maps')
     game.object_library = object_history
-    game.save_board(1,'hac-maps/'+game.current_board().name.replace(' ','_')+'.json')
+    game.save_board(1,current_file)
     is_modified=False
 
 def create_board_wizard():
@@ -374,6 +375,7 @@ def create_board_wizard():
 
 # Main program
 game = Game()
+current_file = ''
 game.player = Player(model='[]')
 key = 'None'
 current_object = BoardItemVoid(model='None')
@@ -383,20 +385,24 @@ while True:
     game.clear_screen()
     print( Utils.cyan_bright("HAC-GAME-LIB - EDITOR v"+Constants.HAC_GAME_LIB_VERSION) )
 
-    print('Looking for existing maps in hac-maps/ directory...',end='')
-    hmaps = []
-    try:
-        hmaps = os.listdir('hac-maps/')
-        print(Utils.green('OK'))
-    except FileNotFoundError as e:
-        print(Utils.red('KO'))
+    print('Looking for existing maps in selected directories...',end='')
+    with open('directories.json') as paths:
+        directories = json.load(paths)
+        hmaps = []
+        try:
+            for directory in directories:
+                files = [f'{directory}/{f}' for f in os.listdir(directory)]
+                hmaps += files
+            print(Utils.green('OK'))
+        except FileNotFoundError as e:
+            print(Utils.red('KO'))
 
     if len(hmaps) > 0:
         map_num = 0
         game.add_menu_entry('boards_list',None,"Choose a map to edit")
         for m in hmaps:
-            print(f'{map_num} - edit hac-maps/{m}')
-            game.add_menu_entry('boards_list',str(map_num),f'edit hac-maps/{m}',f'hac-maps/{m}')
+            print(f"{map_num} - edit {m}")
+            game.add_menu_entry('boards_list',str(map_num),f"edit {m}",f"{m}")
             map_num += 1
     else:
         print('No pre-existing map found.')
@@ -410,7 +416,8 @@ while True:
         create_board_wizard()
         break
     elif choice.isdigit() and int(choice) < len(hmaps):
-        game.load_board('hac-maps/'+hmaps[int(choice)],1)
+        current_file = hmaps[int(choice)]
+        game.load_board(hmaps[int(choice)],1)
         break
 
 game.change_level(1)
@@ -439,7 +446,7 @@ game.add_menu_entry('main',Utils.white_bright('j/i/k/l'),Utils.green_bright('Pla
 game.add_menu_entry('main',Utils.white_bright('c'),'Create a new board item (becomes the current item, previous one is placed in history)')
 game.add_menu_entry('main',Utils.white_bright('p'),'Modify board parameters')
 game.add_menu_entry('main',Utils.white_bright('P'),'Set player starting position')
-game.add_menu_entry('main',Utils.white_bright('S'),'Save the current Board to hac-maps/'+game.current_board().name.replace(' ','_')+'.json')
+game.add_menu_entry('main',Utils.white_bright('S'),f'Save the current Board to {current_file}')
 game.add_menu_entry('main',Utils.white_bright('+'),'Save this Board and create a new one')
 game.add_menu_entry('main',Utils.white_bright('L'),'Save this Board and load a new one')
 game.add_menu_entry('main',Utils.white_bright('m'),'Switch menu display mode between full or hidden')
@@ -470,7 +477,7 @@ while True:
                 if not os.path.exists('hac-maps') or not os.path.isdir('hac-maps'):
                     os.makedirs('hac-maps')
                 game.object_library = object_history
-                game.save_board(1,'hac-maps/'+game.current_board().name.replace(' ','_')+'.json')
+                game.save_board(1,current_file)
         break
     elif key == 'S':
         save_current_board()
