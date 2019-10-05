@@ -30,7 +30,6 @@ class PathFinder(Behavioral):
         self.waypoints = []
         self._waypoint_index = 0
         self.circle_waypoints = circle_waypoints
-        self._position_history = []
     
     def set_destination(self,row=0,column=0):
         """Set the targeted destination.
