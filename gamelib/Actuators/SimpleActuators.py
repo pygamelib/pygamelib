@@ -23,6 +23,13 @@ class RandomActuator(Actuator):
             return None
 
 class PathActuator(Actuator):
+    """ 
+    The path actuator is a subclass of :class:`~gamelib.Actuators.Actuator.Actuator`.  The move inside the function next_move 
+    depends on path and index. If the state is not running it returns None otherwise it increments the index & then, further compares the index 
+    with length of the path. If they both are same then, index is set to value zero and the move is returned back.
+    :param path: A list of paths.
+    :type path: list
+    """
     def __init__(self,path=[]):
         Actuator.__init__(self)
         self.path = path
