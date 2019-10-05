@@ -15,7 +15,7 @@ class RandomActuator(Actuator):
     def __init__(self,moveset=None):
         if moveset is None:
             moveset = []
-        super.__init__(self)
+        super().__init__()
         self.moveset = moveset
     
     def next_move(self):
@@ -33,7 +33,7 @@ class PathActuator(Actuator):
     def __init__(self,path=None):
         if path is None:
             path = []
-        Actuator.__init__(self)
+        super().__init__()
         self.path = path
         self.index = 0
     
