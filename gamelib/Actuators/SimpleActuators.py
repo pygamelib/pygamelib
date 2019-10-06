@@ -19,6 +19,17 @@ class RandomActuator(Actuator):
         self.moveset = moveset
     
     def next_move(self):
+        """Return a randomly selected movement
+
+        The movement is randomly selected from moveset if state is RUNNING, otherwise it should return None.
+
+        :return: The next movement
+        :rtype: int | None
+
+        Example::
+
+            randomactuator.next_move()
+        """
         if self.state == RUNNING:
             return random.choice(self.moveset)
 
