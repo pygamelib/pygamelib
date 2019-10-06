@@ -22,7 +22,7 @@ class PathFinder(Behavioral):
 
     """
     def __init__(self,game=None,actuated_object=None, circle_waypoints=True):
-        Behavioral.__init__(self)
+        super().__init__()
         self.actuated_object = actuated_object
         self.destination = (None,None)
         self.game = game
@@ -150,7 +150,10 @@ class PathFinder(Behavioral):
                     self.find_path()
             else:
                 return Constants.NO_DIR
-        
+
+        if len(self._current_path) == 0:
+            return Constants.NO_DIR
+
         # Get the next position from the path
         next_position = self._current_path.pop(0)
         # If actuated object is already there check if the path is empty, if so return NO_DIR, else get the next position from the path.
