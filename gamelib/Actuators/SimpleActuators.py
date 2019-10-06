@@ -97,6 +97,19 @@ class PatrolActuator(PathActuator):
     """
 
     def next_move(self):
+        """Return the movement based on current index
+
+        The movement is selected from path if state is RUNNING, otherwise it should return None.
+        When state is RUNNING, the movement is selected before incrementing the index by 1.
+        When the index equals the length of path, the index should return back to 0 and the path list should be reversed before the next call.
+
+        :return: The next movement
+        :rtype: int | None
+
+        Example::
+
+            patrolactuator.next_move()
+        """
         if self.state == RUNNING:
             move = self.path[self.index]
             self.index += 1
