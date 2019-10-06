@@ -19,6 +19,17 @@ class RandomActuator(Actuator):
         self.moveset = moveset
     
     def next_move(self):
+        """Return a randomly selected movement
+
+        The movement is randomly selected from moveset if state is RUNNING, otherwise it should return None.
+
+        :return: The next movement
+        :rtype: int | None
+
+        Example::
+
+            randomactuator.next_move()
+        """
         if self.state == RUNNING:
             return random.choice(self.moveset)
 
@@ -38,6 +49,19 @@ class PathActuator(Actuator):
         self.index = 0
     
     def next_move(self):
+        """Return the movement based on current index
+
+        The movement is selected from path if state is RUNNING, otherwise it should return None.
+        When state is RUNNING, the movement is selected before incrementing the index by 1.
+        When the index equal the length of path, the index should return back to 0.
+
+        :return: The next movement
+        :rtype: int | None
+
+        Example::
+
+            pathactuator.next_move()
+        """
         if self.state == RUNNING:
             move = self.path[self.index]
             self.index += 1
@@ -46,6 +70,17 @@ class PathActuator(Actuator):
             return move
             
     def set_path(self,path):
+        """Defines a new path
+
+        This will also reset the index back to 0.
+
+        :param path: A list of movements.
+        :type path: list
+
+        Example::
+
+            pathactuator.set_path([Constants.UP,Constants.DOWN,Constants.LEFT,Constants.RIGHT])
+        """
         self.path = path
         self.index = 0
 
@@ -62,6 +97,19 @@ class PatrolActuator(PathActuator):
     """
 
     def next_move(self):
+        """Return the movement based on current index
+
+        The movement is selected from path if state is RUNNING, otherwise it should return None.
+        When state is RUNNING, the movement is selected before incrementing the index by 1.
+        When the index equals the length of path, the index should return back to 0 and the path list should be reversed before the next call.
+
+        :return: The next movement
+        :rtype: int | None
+
+        Example::
+
+            patrolactuator.next_move()
+        """
         if self.state == RUNNING:
             move = self.path[self.index]
             self.index += 1
