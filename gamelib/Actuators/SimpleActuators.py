@@ -70,6 +70,17 @@ class PathActuator(Actuator):
             return move
             
     def set_path(self,path):
+        """Defines a new path
+
+        This will also reset the index back to 0.
+
+        :param path: A list of movements.
+        :type path: list
+
+        Example::
+
+            pathactuator.set_path([Constants.UP,Constants.DOWN,Constants.LEFT,Constants.RIGHT])
+        """
         self.path = path
         self.index = 0
 
