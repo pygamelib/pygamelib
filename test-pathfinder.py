@@ -2,7 +2,7 @@ from gamelib.Actuators.AdvancedActuators import PathFinder
 from gamelib.Game import Game
 from gamelib.Board import Board
 from gamelib.Characters import Player, NPC
-from gamelib.Structures import Door
+from gamelib.Structures import Door, Wall
 from gamelib.BoardItem import BoardItemVoid
 from gamelib.Animation import Animation
 import gamelib.Sprites as Sprites
@@ -57,6 +57,13 @@ pf.set_destination(dest_row,dest_col)
 blocker = NPC(model=Sprites.SKULL)
 g.current_board().place_item(blocker, 20,1)
 
+wall = Wall(model=Sprites.WALL)
+wall.animation = Animation(animated_object=wall)
+wall.animation.add_frame(Sprites.BANKNOTE_DOLLARS)
+wall.animation.add_frame(Sprites.BANKNOTE_EUROS)
+wall.animation.add_frame(Sprites.BANKNOTE_WINGS)
+g.current_board().place_item(wall,5,25)
+
 # 43,28 43,34 39,34 39,40 44,40 44,28
 patroller = NPC(model=Sprites.ALIEN, name='patroller')
 patroller.actuator = PathFinder(game=g,actuated_object=patroller)
@@ -106,6 +113,6 @@ while nm != Constants.NO_DIR:
     # Now we use the direction to move the player and display the board.
     g.move_player(nm,1)
     g.actuate_npcs(1)
-    patroller.animation.next_frame()
+    g.animate_items(1)
     redraw()
-    time.sleep(0.25)
+    time.sleep(0.1)
