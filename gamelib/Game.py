@@ -349,6 +349,22 @@ class Game():
                     raise HacInvalidLevelException(f"Impossible to actuate NPCs for this level (level number {level_number} is not associated with any board).")
             else:
                 raise HacInvalidTypeException('In actuate_npcs(level_number) the level_number must be an int.')
+    
+    def animate_items(self,level_number):
+        """That method goes through all the BoardItems of a given map and call Animation.next_frame()
+        :param level_number: The number of the level to animate items in.
+        :type level_number: int
+        
+        Example::
+        
+            mygame.animate_items(1)
+        """
+        for item in self._boards[level_number]['board'].get_immovables():
+            if item.animation != None:
+                item.animation.next_frame()
+        for item in self._boards[level_number]['board'].get_movables():
+            if item.animation != None:
+                item.animation.next_frame()
 
     def display_player_stats(self,life_model=Utils.RED_RECT, void_model=Utils.BLACK_RECT):
         """Display the player name and health.
