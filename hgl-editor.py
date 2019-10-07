@@ -594,6 +594,8 @@ while True:
             e = game.get_menu_entry('boards_list',key)
             if e != None:
                 game.load_board(e['data'],1)
+                current_file = e['data']
+                game.update_menu_entry('main',Utils.white_bright('S'),f'Save the current Board to {current_file}')
                 current_menu = 'main'
         elif key == 'B':
             current_menu = 'main'
