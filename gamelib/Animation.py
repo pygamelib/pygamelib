@@ -134,6 +134,8 @@ class Animation(object):
         """
         if type(index) is not int:
             raise HacInvalidTypeException('The "index" parameter must be an int.')
+        if index <= self._frame_index and self._frame_index > 0:
+            self._frame_index -= 1
         return self.frames.pop(index)
     
     def reset(self):
@@ -183,9 +185,8 @@ class Animation(object):
         elif self.state == PAUSED:
             self.animated_object.model = self.frames[self._frame_index]
             return self.frames[self._frame_index]
-        else:
-            # This is debatable: why shouldn't we do the same thing for STOPPED and PAUSED
-            return None
+        # By default Python will return None for the STOPPED case.
+        # This is debatable: why shouldn't we do the same thing for STOPPED and PAUSED
 
     def play_all(self):
         """Play the entire animation once.

@@ -365,10 +365,10 @@ class Game():
             if type(level_number) is int:
                 if  level_number in self._boards.keys():
                     for item in self._boards[level_number]['board'].get_immovables():
-                        if item.animation != None:
+                        if item.animation is not None:
                             item.animation.next_frame()
                     for item in self._boards[level_number]['board'].get_movables():
-                        if item.animation != None:
+                        if item.animation is not None:
                             item.animation.next_frame()
                 else:
                     raise HacInvalidLevelException(f"Impossible to animate items for this level (level number {level_number} is not associated with any board).")

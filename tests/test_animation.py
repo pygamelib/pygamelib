@@ -55,10 +55,20 @@ class TestAnimation(unittest.TestCase):
         self.item = NPC(model='-o-', name='Dancer')
         self.animation = Animation(animated_object=self.item,refresh_screen=self.redraw, display_time=0.5)
         self.animation.add_frame('-o-')
+        self.animation.add_frame('\\o-')
+        self.animation.add_frame('\\o\\')
+        self.animation.add_frame('|o|')
+        self.animation.add_frame('/o/')
+        self.animation.add_frame('-o/')
         with self.assertRaises(Exception) as context:
             self.animation.remove_frame(999)
         self.assertTrue('out of range' in str(context.exception))
         self.assertEqual( self.animation.remove_frame(0), '-o-' )
+        self.animation.next_frame()
+        self.animation.next_frame()
+        self.assertEqual( self.animation.remove_frame(2), '|o|' )
+        self.assertEqual( self.animation.current_frame(), '\\o\\' )
+        self.assertEqual( self.animation.next_frame(), '/o/' )
     
     def test_current_frame(self):
         self.item = NPC(model='-o-', name='Dancer')
