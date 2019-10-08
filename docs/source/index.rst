@@ -19,6 +19,8 @@ Hyrule Astronomy Club - hac-game-lib - documentation
    utils
    simpleactuators
    advancedactuators
+   authors
+   history
 
 Forewords
 ^^^^^^^^^
@@ -51,12 +53,18 @@ Here is an example of what the current version allow to build:
 
 The base game makes use of:
     * The main "game engine" (gamelib.Game.Game)
-    * Many different types of structures (from gamelib.Structures) : Wall (well the walls...), Treasure (gems and money bag), GenericStructure (trees) and GenericActionnableStructure (hearts and portals)
+    * Many different types of structures (from gamelib.Structures), like:
+        * Wall (well the walls...),
+        * Treasure (gems and money bag),
+        * GenericStructure (trees),
+        * GenericActionnableStructure (hearts and portals).
     * Game()'s menu capabilities.
     * Player and NPC (from gamelib.Characters)
     * Inventory (from gamelib.Inventory)
     * Player and Inventory stats
-    * RandomActuator (NPCs in level 2) and PathActuator (NPCs in level 1) (from gamelib.Actuators.SimpleActuators)
+    * Simple actuators (gamelib.SimpleActuators) like:
+        * RandomActuator (NPCs in level 2),
+        * PathActuator (NPCs in level 1).
 
 Indices and tables
 ==================
