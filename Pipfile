@@ -4,6 +4,9 @@ url = "https://pypi.org/simple"
 verify_ssl = true
 
 [dev-packages]
+flake8 = "*"
+ipdb = "*"
+ipython = "*"
 
 [packages]
 colorama = ">=0.3.8"
