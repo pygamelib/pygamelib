@@ -2,8 +2,9 @@ from gamelib.Actuators.AdvancedActuators import PathFinder
 from gamelib.Game import Game
 from gamelib.Board import Board
 from gamelib.Characters import Player, NPC
-from gamelib.Structures import Door
+from gamelib.Structures import Door, Wall
 from gamelib.BoardItem import BoardItemVoid
+from gamelib.Animation import Animation
 import gamelib.Sprites as Sprites
 import gamelib.Constants as Constants
 import gamelib.Utils as Utils
@@ -20,6 +21,11 @@ def reset_drawn_path():
     global g
     for i in g.current_board().get_immovables(type='path_marker'):
         g.current_board().place_item(BoardItemVoid(),i.pos[0],i.pos[1])
+
+def redraw():
+    global g
+    g.clear_screen()
+    g.display_board()
 
 # Destination (24,24) is the center of the labyrinth
 dest_row = 24
@@ -51,6 +57,35 @@ pf.set_destination(dest_row,dest_col)
 blocker = NPC(model=Sprites.SKULL)
 g.current_board().place_item(blocker, 20,1)
 
+wall = Wall(model=Sprites.WALL)
+wall.animation = Animation(animated_object=wall)
+wall.animation.add_frame(Sprites.BANKNOTE_DOLLARS)
+wall.animation.add_frame(Sprites.BANKNOTE_EUROS)
+wall.animation.add_frame(Sprites.BANKNOTE_WINGS)
+g.current_board().place_item(wall,5,25)
+
+# 43,28 43,34 39,34 39,40 44,40 44,28
+patroller = NPC(model=Sprites.ALIEN, name='patroller')
+patroller.actuator = PathFinder(game=g,actuated_object=patroller)
+g.add_npc(1,patroller,42,28)
+patroller.actuator.set_destination(43,29)
+patroller.actuator.add_waypoint(43,29)
+patroller.actuator.add_waypoint(43,34)
+patroller.actuator.add_waypoint(39,34)
+patroller.actuator.add_waypoint(39,40)
+patroller.actuator.add_waypoint(44,40)
+patroller.actuator.add_waypoint(44,28)
+patroller.animation = Animation(animated_object=patroller,refresh_screen=redraw, display_time=0.5)
+# patroller.animation.add_frame('--')
+# patroller.animation.add_frame(' |')
+
+patroller.animation.add_frame(Sprites.ALIEN)
+patroller.animation.add_frame(Sprites.ALIEN_MONSTER)
+patroller.animation.add_frame(Sprites.EXPLOSION)
+patroller.animation.add_frame(Sprites.SKULL)
+
+patroller.animation.play_all()
+
 nm = None
 (wpr,wpc) = (None,None)
 path = []
@@ -77,6 +112,7 @@ while nm != Constants.NO_DIR:
     
     # Now we use the direction to move the player and display the board.
     g.move_player(nm,1)
-    g.clear_screen()
-    g.display_board()
-    time.sleep(0.05)
+    g.actuate_npcs(1)
+    g.animate_items(1)
+    redraw()
+    time.sleep(0.1)
