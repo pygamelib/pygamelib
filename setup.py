@@ -2,11 +2,22 @@ import setuptools
 import gamelib.Constants as Constants
 from os import path
 
+try:
+    from pipenv.project import Project
+    from pipenv.utils import convert_deps_to_pip
+except ImportError:
+    print("Please install pipenv first. See: https://github.com/pypa/pipenv")
+
 with open("README.md", "r") as fh:
     long_description = fh.read()
 
+# Compatibility layer between Pipenv and Pip requirements.txt
+# See https://github.com/pypa/pipenv/issues/209
+pipfile = Project(chdir=False).parsed_pipfile
+requirements_path = convert_deps_to_pip(pipfile['packages'])
+
 DIR = path.dirname(path.abspath(__file__))
-INSTALL_PACKAGES = open(path.join(DIR, 'requirements.txt')).read().splitlines()
+INSTALL_PACKAGES = open(requirements_path).read().splitlines()
 
 setuptools.setup(
     name="hac-game-lib",
