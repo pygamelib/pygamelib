@@ -409,7 +409,7 @@ while True:
         print('No pre-existing map found.')
     print('n - create a new map')
     print('q - Quit the editor')
-    choice = input()
+    choice = input('Enter your choice (and hit ENTER): ')
     if choice == 'q':
         print('Good Bye!')
         exit()
@@ -631,7 +631,7 @@ while True:
     for m in warn_messages:
         Utils.warn(m)
     if current_menu == 'boards_list':
-        key = input()
+        key = input('Enter your choice (and hit ENTER): ')
     else:
         key = Utils.get_key()
 
