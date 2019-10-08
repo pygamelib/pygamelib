@@ -404,6 +404,7 @@ while True:
             print(f"{map_num} - edit {m}")
             game.add_menu_entry('boards_list',str(map_num),f"edit {m}",f"{m}")
             map_num += 1
+        game.add_menu_entry('boards_list','B',"Go Back to main menu")
     else:
         print('No pre-existing map found.')
     print('n - create a new map')
@@ -594,6 +595,8 @@ while True:
             e = game.get_menu_entry('boards_list',key)
             if e != None:
                 game.load_board(e['data'],1)
+                current_file = e['data']
+                game.update_menu_entry('main',Utils.white_bright('S'),f'Save the current Board to {current_file}')
                 current_menu = 'main'
         elif key == 'B':
             current_menu = 'main'
@@ -619,8 +622,6 @@ while True:
             cnt += 1
         print('')
         print(f'Current item: {current_object.model}')
-    if current_menu == 'boards_list':
-        game.add_menu_entry('boards_list','B',"Go Back to main menu")
     if not (current_menu == 'main' and menu_mode == 'hidden'):
         game.display_menu(current_menu,Constants.ORIENTATION_VERTICAL,15)
     for m in dbg_messages:
