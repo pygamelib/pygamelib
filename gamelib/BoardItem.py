@@ -19,6 +19,7 @@ class BoardItem():
         self.type = 'item'
         self.pos = [None,None]
         self.model = '*'
+        self.animation = None
         # Setting class parameters
         for item in ['name','type','pos','model']:
             if item in kwargs:
