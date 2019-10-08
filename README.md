@@ -39,10 +39,17 @@ The base game makes use of:
 
 The hac-game-lib only supports Python 3+. It will **not** run with Python 2.
 
-Run PIP to install the requirements (only colorama):
+Run Pipenv to install the requirements (only colorama):
 
 ```bash
-pip3 install -r requirements.txt
+pip3 install pipenv
+pipenv install
+```
+
+If you want the developmnent dependencies you need to run:
+```bash
+pip3 install pipenv
+pipenv install --dev
 ```
 
 ### Terminal color and emojis
