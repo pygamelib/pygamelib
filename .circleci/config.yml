@@ -1,0 +1,37 @@
+version: 2
+jobs:
+  build:
+    working_directory: ~/hac-game-lib
+    docker:
+      - image: circleci/python:3.7
+        environment:
+          PIPENV_VENV_IN_PROJECT: true
+    steps:
+      - checkout
+      - run: sudo chown -R circleci:circleci /usr/local/bin
+      - run: sudo chown -R circleci:circleci /usr/local/lib/python3.7/site-packages
+      - restore_cache:
+          key: deps10-{{ .Branch }}-{{ checksum "Pipfile.lock" }}
+      - run:
+          command: |
+            sudo pip3 install pipenv
+            pipenv install
+      - save_cache:
+          key: deps10-{{ .Branch }}-{{ checksum "Pipfile.lock" }}
+          paths:
+            - '.venv'
+            - '/usr/local/bin'
+            - '/usr/local/lib/python3.7/site-packages'
+      - run:
+        name: run unit tests under tests folder
+          command: |
+            pipenv run python3 -m unittest discover -s tests
+      - run:
+          name: run linting and metrics
+          command: |
+            pipenv run python3 -m flake8 --output-file test-results
+      - store_test_results:
+          path: test-results
+      - store_artifacts:
+          path: test-results
+          destination: tr1
