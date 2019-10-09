@@ -15,7 +15,6 @@ with open("README.md", "r") as fh:
 pipfile = Project(chdir=False).parsed_pipfile
 requirements_path = convert_deps_to_pip(pipfile['packages'])
 
-DIR = path.dirname(path.abspath(__file__))
 INSTALL_PACKAGES = open(requirements_path).read().splitlines()
 
 setuptools.setup(
