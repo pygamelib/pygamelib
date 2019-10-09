@@ -296,3 +296,46 @@ def black_dim(message):
 
 def init_term_colors():
     init()
+
+class StateMachine:
+    """
+    StateMachine provides a way to transition between class states
+    Every item that needs it should provide in states a dictionary with the following
+    format:
+        {
+            'attribute_name_1': attribute_value_1,
+            'attribute_name_2': attribute_value_2,
+        }
+    Note that attributes can be functions too.
+    it implements the next_state and previous_state methods that advance between
+   class states
+
+    the preserve old parameter allows the user to control if he wants to keep
+    old parameters between state transitions.
+    """
+    def __init__(self, states, initial_state=0, preserve_old=False):
+        if initial_state > len(states):
+            raise ValueError('initial state cannot be greater than the length of states')
+        self.current_state = initial_state
+        self.states = states
+        self.preserve_old = preserve_old
+
+    def next_state(self):
+        if not self.preserve_old: #  clean up the old attributes
+            for key in self.states[self.current_state].keys():
+                delattr(self, key)
+
+        if self.current_state < len(self.states):
+            self.current_state += 1
+            for key, value in self.states[self.current_state]:
+                setattr(self, key, value)
+
+    def previous_state(self):
+        if not self.preserve_old: #  clean up the old attributes
+            for key in self.states[self.current_state].keys():
+                delattr(self, key)
+
+        if self.current_state > 0:
+            self.current_state -= 1
+            for key, value in self.states[self.current_state]:
+                setattr(self, key, value)
