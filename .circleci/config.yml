@@ -22,16 +22,31 @@ jobs:
             - '.venv'
             - '/usr/local/bin'
             - '/usr/local/lib/python3.7/site-packages'
+
+  test:
+    docker:
+      - image: circleci/python:3.7
+    steps:
+      - checkout
       - run:
-          name: run unit tests under tests folder
+          name: Run unit tests under tests folder
           command: |
             pipenv run python3 -m unittest discover -s tests
+          when: always
       - run:
-          name: run linting and metrics
+          name: Run linting and metrics
           command: |
-            pipenv run python3 -m flake8 --output-file test-results
+            pipenv run python3 -m flake8 --output-file reports/linter-results
+          when: always
       - store_test_results:
-          path: test-results
+          path: reports
       - store_artifacts:
-          path: test-results
+          path: reports
           destination: tr1
+
+workflows:
+  version: 2
+  build_and_test:
+    jobs:
+      - build
+      - test
