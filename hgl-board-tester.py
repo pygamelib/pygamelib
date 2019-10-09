@@ -20,7 +20,7 @@ if len(sys.argv) > 2:
 
 g = Game()
 
-b = g.load_board(board_to_load,1)
+b = g.load_board(board_to_load, 1)
 
 print(b)
 
@@ -28,26 +28,26 @@ g.player = Player(model=Sprites.FLYING_SAUCER)
 g.change_level(1)
 
 
-idx=0
+idx = 0
 key = None
 
-while idx< max_iter or max_iter == 0:
+while idx < max_iter or max_iter == 0:
     if key == 'w':
-        g.move_player(Constants.UP,1)
+        g.move_player(Constants.UP, 1)
     elif key == 's':
-        g.move_player(Constants.DOWN,1)
+        g.move_player(Constants.DOWN, 1)
     elif key == 'a':
-        g.move_player(Constants.LEFT,1)
+        g.move_player(Constants.LEFT, 1)
     elif key == 'd':
-        g.move_player(Constants.RIGHT,1)
+        g.move_player(Constants.RIGHT, 1)
     elif key == 'q':
         break
     g.clear_screen()
     g.actuate_npcs(1)
     g.display_board()
 
-    if max_iter == 0: 
+    if max_iter == 0:
         key = Utils.get_key()
-    else: 
+    else:
         time.sleep(0.1)
         idx += 1
