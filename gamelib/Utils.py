@@ -1,4 +1,6 @@
 from colorama import Fore, Back, Style, init
+import colorama.ansi
+import subprocess
 import sys
 import termios
 import tty
@@ -23,6 +25,12 @@ CYAN_SQUARE = Back.CYAN+'  '+Style.RESET_ALL
 
 RED_BLUE_SQUARE = Back.RED+' '+Back.BLUE+' '+Style.RESET_ALL
 YELLOW_CYAN_SQUARE = Back.YELLOW+' '+Back.CYAN+' '+Style.RESET_ALL
+
+# get clear sequence for the terminal
+# TODO: check OS
+_exitcode, clear_sequence = subprocess.getstatusoutput("tput clear")
+if _exitcode:
+    clear_sequence = colorama.ansi.clear_screen()
 
 """
 Utils define a couple of constants and functions for styling the Board and terminal.
@@ -293,6 +301,12 @@ def black_dim(message):
     This method works exactly the way green_bright() work with different color.
     """
     return Fore.BLACK+Style.DIM+message+Style.RESET_ALL
+
+def clear_screen():
+    """
+    This methods clear the screen
+    """
+    sys.stdout.write(clear_sequence)
 
 def init_term_colors():
     init()
