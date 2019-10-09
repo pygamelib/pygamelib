@@ -15,8 +15,8 @@ jobs:
       - run:
           name: install dependencies
           command: |
-            pip3 install --upgrade pip --user
-            pip3 install pipenv
+            pip install --upgrade pip --user
+            pip install pipenv
             pipenv install --dev
 
 workflows:
