@@ -34,6 +34,8 @@ myboard.display()
 # WARNING: in real life we would use the Game object to manage the game and the screen
 
 for k in range(1,10,1):
+    # Clear screen
+    Utils.clear_screen()
     # Print a debug message
     Utils.debug(f'Round {k} player position is ({playerone.pos[0]},{playerone.pos[1]}) -- BEFORE moving')
     # Ask myboard to move playerone to the right by one cell
