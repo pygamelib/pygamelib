@@ -23,7 +23,7 @@ jobs:
             - '/usr/local/bin'
             - '/usr/local/lib/python3.7/site-packages'
       - run:
-        name: run unit tests under tests folder
+          name: run unit tests under tests folder
           command: |
             pipenv run python3 -m unittest discover -s tests
       - run:
