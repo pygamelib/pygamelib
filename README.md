@@ -60,6 +60,16 @@ We then recommend to have a color emojis font installed like Noto Color Emojis (
 
 If your terminal application is not displaying color emojis, please have a look at this [file](https://gist.github.com/IgnoredAmbience/7c99b6cf9a8b73c9312a71d1209d9bbb) and follow the instructions.
 
+### Running examples
+
+To run the examples using [pipenv](https://github.com/pypa/pipenv):
+
+```bash
+pipenv shell
+(hac-game-lib) cd examples
+(hac-game-lib) python3 01_board_and_wall.py
+```
+
 ## Limitations
 
 There is tons of limitations but for the most important ones: 
