@@ -177,7 +177,7 @@ class Game():
         """
         Clear the whole screen (i.e: remove everything written in terminal)
         """
-        os.system('clear')
+        Utils.clear_screen()
     
     def load_config(self,filename,section='main',defaults={}):
         """
