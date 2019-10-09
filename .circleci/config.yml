@@ -15,7 +15,7 @@ jobs:
       - run:
           name: install dependencies
           command: |
-            sudo pip install --upgrade pip --user
+            sudo pip install --upgrade pip
             pip install pipenv
             pipenv install --dev
 
