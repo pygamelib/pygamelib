@@ -18,3 +18,8 @@ jobs:
             pip3 install pipenv
             pipenv install --dev
 
+workflows:
+  version: 2
+  build_and_test:
+    jobs:
+      - build
