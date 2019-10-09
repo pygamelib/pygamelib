@@ -17,6 +17,7 @@ Contributors
 * Gunjan Rawal (`@gunjanraval`_)
 * Anshul Choudhary (`@achoudh5`_)
 * Raymond Beaudoin (`@synackray`_)
+* Felipe Rodrigues (`@fbidu`_)
 
 
 .. _`@arnauddupuis`: https://github.com/arnauddupuis
@@ -27,3 +28,4 @@ Contributors
 .. _`@gunjanraval`: https://github.com/gunjanraval
 .. _`@achoudh5`: https://github.com/achoudh5
 .. _`@synackray`: https://github.com/synackray
+.. _`@fbidu`: https://github.com/fbidu
