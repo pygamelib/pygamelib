@@ -23,14 +23,15 @@ jobs:
             - '/usr/local/bin'
             - '/usr/local/lib/python3.7/site-packages'
       - run:
+          name: Run linting and metrics
+          command: |
+            mkdir reports
+            pipenv run python3 -m flake8 --output-file reports/linter-results
+      - run:
           name: Run unit tests under tests folder
           command: |
             pipenv run python3 -m unittest discover -s tests
           when: always
-      - run:
-          name: Run linting and metrics
-          command: |
-            pipenv run python3 -m flake8 --output-file reports/linter-results
           when: always
       - store_test_results:
           path: reports
