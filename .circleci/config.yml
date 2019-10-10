@@ -16,8 +16,8 @@ jobs:
           name: install dependencies
           command: |
             sudo chmod 777 -R /usr/local/lib/python3.6/site-packages/
+            sudo chmod 777 /usr/local/bin/virtualenv
             pip install virtualenv
-            sudo chmod +x /usr/local/bin/virtualenv
             virtualenv -p python3 .venv
             . venv/bin/activate
             pip install --upgrade pip --user
