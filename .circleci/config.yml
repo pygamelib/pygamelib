@@ -26,6 +26,7 @@ jobs:
       - run:
           name: check pep8
           command: |
+            pip install pep8
             pep8 .
 
 workflows:
