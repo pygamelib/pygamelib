@@ -133,7 +133,7 @@ class Board():
             sanity_check += 1
         else:
             raise HacException('SANITY_CHECK_KO', ("The 'size' parameter must"
-                                                   "be a list of 2 elements."))
+                                                   " be a list of 2 elements."))
         if type(self.size[0]) is int:
             sanity_check += 1
         else:
