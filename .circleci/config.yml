@@ -16,7 +16,7 @@ jobs:
           name: install dependencies
           command: |
             sudo chmod 777 -R /usr/local/lib/python3.6/site-packages/
-            pip install virtualenv
+            sudo pip install virtualenv
 
 workflows:
   version: 2
