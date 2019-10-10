@@ -23,6 +23,10 @@ jobs:
             pip --version
             pip install pipenv
             pipenv install --dev
+      - run:
+          name: check pep8
+          command: |
+            pep8 .
 
 workflows:
   version: 2
