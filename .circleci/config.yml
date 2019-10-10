@@ -34,7 +34,7 @@ jobs:
           command: |
             . .venv/bin/activate
             pip install pep8
-            pep8 .
+            pep8 gamelib
 
 workflows:
   version: 2
