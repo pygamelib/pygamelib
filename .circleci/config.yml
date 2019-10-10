@@ -16,11 +16,22 @@ jobs:
           name: install dependencies
           command: |
             curl -L https://github.com/pyenv/pyenv-installer/raw/master/bin/pyenv-installer | bash
+            echo export PATH="$HOME/.pyenv/bin:$PATH" >> ~/.bashrc
+            echo eval "$(pyenv init -)" >> ~/.bashrc
+            echo eval "$(pyenv virtualenv-init -)" >> ~/.bashrc
+            cat ~/.bashrc
+            virtualenv -p python3 .venv
+            source .venv/bin/activate
             pip install --upgrade pip --user
             pip --version
-            virtualenv -p python3 venv
             pip install pipenv
             pipenv install --dev
+      - save_cache:
+        key: deps9-{{ .Branch }}-{{ checksum "Pipfile.lock" }}
+        paths:
+          - ".venv"
+          - "/usr/local/bin"
+          - "/usr/local/lib/python3.6/site-packages"
 
 workflows:
   version: 2
