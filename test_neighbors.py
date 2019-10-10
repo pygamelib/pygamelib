@@ -15,13 +15,13 @@ g.change_level(1)
 key = None
 
 while True:
-    if key == 'w':
+    if key == 'w' or key == Utils.key.UP:
         g.move_player(Constants.UP, 1)
-    elif key == 's':
+    elif key == 's' or key == Utils.key.DOWN:
         g.move_player(Constants.DOWN, 1)
-    elif key == 'a':
+    elif key == 'a' or key == Utils.key.LEFT:
         g.move_player(Constants.LEFT, 1)
-    elif key == 'd':
+    elif key == 'd' or key == Utils.key.RIGHT:
         g.move_player(Constants.RIGHT, 1)
     elif key == 'q':
         break
