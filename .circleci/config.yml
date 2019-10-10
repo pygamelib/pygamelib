@@ -19,7 +19,7 @@ jobs:
             sudo pip install virtualenv
             virtualenv -p python3 .venv
             . .venv/bin/activate
-            pip install --upgrade pip --user
+            pip install --upgrade pip
             pip --version
             pip install pipenv
             pipenv install --dev
