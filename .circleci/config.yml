@@ -15,9 +15,8 @@ jobs:
       - run:
           name: install dependencies
           command: |
-            curl -L https://github.com/pyenv/pyenv-installer/raw/master/bin/pyenv-installer | bash
-            $HOME/.pyenv/bin/virtualenv -p python3 .venv
-            source .venv/bin/activate
+            python -m virtualenv venv
+            . venv/bin/activate
             pip install --upgrade pip --user
             pip --version
             pip install pipenv
