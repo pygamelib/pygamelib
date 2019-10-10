@@ -1,3 +1,4 @@
+import examples_includes
 
 # Board is our base object  to display so we need that
 from gamelib.Board import Board
