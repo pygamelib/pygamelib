@@ -16,10 +16,9 @@ jobs:
           name: install dependencies
           command: |
             curl -L https://github.com/pyenv/pyenv-installer/raw/master/bin/pyenv-installer | bash
-            echo export PATH="$HOME/.pyenv/bin:$PATH" >> ~/.bashrc
-            echo eval "$(pyenv init -)" >> ~/.bashrc
-            echo eval "$(pyenv virtualenv-init -)" >> ~/.bashrc
-            cat ~/.bashrc
+            export PATH="$HOME/.pyenv/bin:$PATH"
+            eval "$(pyenv init -)"
+            eval "$(pyenv virtualenv-init -)"
             virtualenv -p python3 .venv
             source .venv/bin/activate
             pip install --upgrade pip --user
