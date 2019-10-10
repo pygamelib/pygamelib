@@ -32,6 +32,7 @@ jobs:
       - run:
           name: check pep8
           command: |
+            . .venv/bin/activate
             pip install pep8
             pep8 .
 
