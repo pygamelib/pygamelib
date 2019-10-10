@@ -82,8 +82,17 @@ def get_key():
     remember_attributes=termios.tcgetattr(fd)
     tty.setraw(sys.stdin.fileno())
     character=sys.stdin.read(1)
-    termios.tcsetattr(fd, termios.TCSADRAIN, remember_attributes)
-    return character
+    try:
+        # Captures the special character preceding an arrow key
+        if character == '\x1b':
+            character = sys.stdin.read(2)
+            # Maps the arrow keys to predefined wasd layout
+            character_map = {'[A':'w', '[B':'s','[D':'a','[C':'d'}
+
+            return character_map[character]
+        return character
+    finally:
+        termios.tcsetattr(fd, termios.TCSADRAIN, remember_attributes)
 
 ## the warn() function print a message prefixed by a yellow WARNING.
 def warn(message):
