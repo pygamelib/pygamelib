@@ -17,6 +17,12 @@ jobs:
           command: |
             sudo chmod 777 -R /usr/local/lib/python3.6/site-packages/
             sudo pip install virtualenv
+            virtualenv -p python3 .venv
+            . venv/bin/activate
+            pip install --upgrade pip --user
+            pip --version
+            pip install pipenv
+            pipenv install --dev
 
 workflows:
   version: 2
