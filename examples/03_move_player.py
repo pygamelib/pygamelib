@@ -34,8 +34,6 @@ myboard.display()
 # And make a short loop that moves the player and display the board
 # WARNING: in real life we would use the Game object to manage the game
 # and the screen
-
-
 for k in range(1, 10, 1):
     # Clear screen
     Utils.clear_screen()
