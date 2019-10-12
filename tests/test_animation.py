@@ -1,59 +1,74 @@
 from gamelib.Animation import Animation
-from gamelib.BoardItem import BoardItem
 from gamelib.Characters import NPC
-from gamelib.HacExceptions import HacException, HacOutOfBoardBoundException
 import gamelib.Constants as Constants
 import unittest
+
 
 class TestAnimation(unittest.TestCase):
     def redraw(self):
         pass
+
     def test_create_animation(self):
         self.item = NPC(model='-o-', name='Dancer')
-        self.animation = Animation(animated_object=self.item,refresh_screen=self.redraw, display_time=0.5)
-        self.assertEqual(self.item.name,self.animation.animated_object.name)
-    
+        self.animation = Animation(animated_object=self.item,
+                                   refresh_screen=self.redraw,
+                                   display_time=0.5
+                                   )
+        self.assertEqual(self.item.name, self.animation.animated_object.name)
+
     def test_start(self):
         self.item = NPC(model='-o-', name='Dancer')
-        self.animation = Animation(animated_object=self.item,refresh_screen=self.redraw, display_time=0.5)
+        self.animation = Animation(animated_object=self.item,
+                                   refresh_screen=self.redraw,
+                                   display_time=0.5)
         self.animation.start()
-        self.assertEqual(self.animation.state,Constants.RUNNING)
-    
+        self.assertEqual(self.animation.state, Constants.RUNNING)
+
     def test_pause(self):
         self.item = NPC(model='-o-', name='Dancer')
-        self.animation = Animation(animated_object=self.item,refresh_screen=self.redraw, display_time=0.5)
+        self.animation = Animation(animated_object=self.item,
+                                   refresh_screen=self.redraw,
+                                   display_time=0.5)
         self.animation.pause()
-        self.assertEqual(self.animation.state,Constants.PAUSED)
+        self.assertEqual(self.animation.state, Constants.PAUSED)
 
     def test_stop(self):
         self.item = NPC(model='-o-', name='Dancer')
-        self.animation = Animation(animated_object=self.item,refresh_screen=self.redraw, display_time=0.5)
+        self.animation = Animation(animated_object=self.item,
+                                   refresh_screen=self.redraw,
+                                   display_time=0.5)
         self.animation.stop()
-        self.assertEqual(self.animation.state,Constants.STOPPED)
-    
+        self.assertEqual(self.animation.state, Constants.STOPPED)
+
     def test_add_frame(self):
         self.item = NPC(model='-o-', name='Dancer')
-        self.animation = Animation(animated_object=self.item,refresh_screen=self.redraw, display_time=0.5)
+        self.animation = Animation(animated_object=self.item,
+                                   refresh_screen=self.redraw,
+                                   display_time=0.5)
         self.animation.add_frame('\\o-')
         with self.assertRaises(Exception) as context:
             self.animation.add_frame(2)
         self.assertTrue('must be a string' in str(context.exception))
-    
+
     def test_search_frame(self):
         self.item = NPC(model='-o-', name='Dancer')
-        self.animation = Animation(animated_object=self.item,refresh_screen=self.redraw, display_time=0.5)
+        self.animation = Animation(animated_object=self.item,
+                                   refresh_screen=self.redraw,
+                                   display_time=0.5)
         self.animation.add_frame('-o-')
         self.animation.add_frame('\\o-')
         self.animation.add_frame('\\o-')
-        self.assertEqual(self.animation.search_frame('\\o-'),1)
-        self.assertNotEqual(self.animation.search_frame('\\o-'),2)
+        self.assertEqual(self.animation.search_frame('\\o-'), 1)
+        self.assertNotEqual(self.animation.search_frame('\\o-'), 2)
         with self.assertRaises(Exception) as context:
             self.animation.search_frame(2)
         self.assertTrue('must be a string' in str(context.exception))
-    
+
     def test_remove_frame(self):
         self.item = NPC(model='-o-', name='Dancer')
-        self.animation = Animation(animated_object=self.item,refresh_screen=self.redraw, display_time=0.5)
+        self.animation = Animation(animated_object=self.item,
+                                   refresh_screen=self.redraw,
+                                   display_time=0.5)
         self.animation.add_frame('-o-')
         self.animation.add_frame('\\o-')
         self.animation.add_frame('\\o\\')
@@ -63,62 +78,76 @@ class TestAnimation(unittest.TestCase):
         with self.assertRaises(Exception) as context:
             self.animation.remove_frame(999)
         self.assertTrue('out of range' in str(context.exception))
-        self.assertEqual( self.animation.remove_frame(0), '-o-' )
+        self.assertEqual(self.animation.remove_frame(0), '-o-')
         self.animation.next_frame()
         self.animation.next_frame()
-        self.assertEqual( self.animation.remove_frame(2), '|o|' )
-        self.assertEqual( self.animation.current_frame(), '\\o\\' )
-        self.assertEqual( self.animation.next_frame(), '/o/' )
-    
+        self.assertEqual(self.animation.remove_frame(2), '|o|')
+        self.assertEqual(self.animation.current_frame(), '\\o\\')
+        self.assertEqual(self.animation.next_frame(), '/o/')
+
     def test_current_frame(self):
         self.item = NPC(model='-o-', name='Dancer')
-        self.animation = Animation(animated_object=self.item,refresh_screen=self.redraw, display_time=0.5)
+        self.animation = Animation(animated_object=self.item,
+                                   refresh_screen=self.redraw,
+                                   display_time=0.5)
         self.animation.add_frame('-o-')
         self.animation.add_frame('\\o-')
         self.animation.add_frame('\\o\\')
         self.animation.add_frame('|o|')
-        self.assertEqual( self.animation.current_frame(), '-o-' )
+        self.assertEqual(self.animation.current_frame(), '-o-')
         self.animation.next_frame()
-        self.assertEqual( self.animation.current_frame(), '\\o-' )
-    
+        self.assertEqual(self.animation.current_frame(), '\\o-')
+
     def test_next_frame(self):
         self.item = NPC(model='-o-', name='Dancer')
-        self.animation = Animation(animated_object=self.item,refresh_screen=self.redraw, display_time=0.5)
+        self.animation = Animation(animated_object=self.item,
+                                   refresh_screen=self.redraw,
+                                   display_time=0.5)
         self.animation.add_frame('-o-')
         self.animation.add_frame('\\o-')
         self.animation.add_frame('\\o\\')
         self.animation.add_frame('|o|')
-        self.assertEqual( self.animation.next_frame(), '\\o-' )
+        self.assertEqual(self.animation.next_frame(), '\\o-')
         self.animation.pause()
-        self.assertEqual( self.animation.next_frame(), '\\o-' )
+        self.assertEqual(self.animation.next_frame(), '\\o-')
         self.animation.stop()
         self.assertIsNone(self.animation.next_frame())
         self.animation.animated_object = 'This is going to break!'
         with self.assertRaises(Exception) as context:
             self.animation.next_frame()
-        self.assertTrue('needs to be a sub class of BoardItem' in str(context.exception))
-    
+        self.assertTrue('needs to be a sub class of BoardItem' in
+                        str(context.exception))
+
     def test_play_all(self):
         self.item = NPC(model='-o-', name='Dancer')
-        self.animation = Animation(animated_object=self.item,refresh_screen=self.redraw, display_time=0.5)
+        self.animation = Animation(animated_object=self.item,
+                                   refresh_screen=self.redraw,
+                                   display_time=0.5)
         self.animation.add_frame('-o-')
         self.animation.add_frame('\\o-')
         self.animation.add_frame('\\o\\')
         self.animation.add_frame('|o|')
-        self.assertTrue( self.animation.play_all() )
+        self.assertTrue(self.animation.play_all())
         self.animation.pause()
-        self.assertFalse( self.animation.play_all() )
+        self.assertFalse(self.animation.play_all())
         self.animation.stop()
-        self.assertFalse( self.animation.play_all() )
-        self.animation = Animation(animated_object='breaking',refresh_screen=self.redraw, display_time=0.5)
+        self.assertFalse(self.animation.play_all())
+        self.animation = Animation(animated_object='breaking',
+                                   refresh_screen=self.redraw,
+                                   display_time=0.5)
         with self.assertRaises(Exception) as context:
             self.animation.play_all()
-        self.assertTrue('needs to be a sub class of BoardItem' in str(context.exception))
+        self.assertTrue('needs to be a sub class of BoardItem' in
+                        str(context.exception))
 
-        self.animation = Animation(animated_object=self.item,refresh_screen='breaking', display_time=0.5)
+        self.animation = Animation(animated_object=self.item,
+                                   refresh_screen='breaking',
+                                   display_time=0.5)
         with self.assertRaises(Exception) as context:
             self.animation.play_all()
-        self.assertTrue('needs to be a callback function reference' in str(context.exception))
+        self.assertTrue('needs to be a callback function reference' in
+                        str(context.exception))
+
 
 if __name__ == '__main__':
     unittest.main()
