@@ -93,5 +93,5 @@ class Actionable(Immovable):
         Usually it's automatically called by :meth:`~gamelib.Board.Board.move`
         when a Player or NPC (see :mod:`~gamelib.Characters`)
         """
-        if self.action is None:
+        if self.action is not None:
             self.action(self.action_parameters)
