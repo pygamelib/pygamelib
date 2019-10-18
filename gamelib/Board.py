@@ -237,7 +237,7 @@ class Board():
         :rtype: gamelib.BoardItem.BoardItem
 
         :raise HacOutOfBoardBoundException: if row or column are
-        out of bound.
+            out of bound.
         """
         if row < self.size[0] and column < self.size[0]:
             return self._matrix[row][column]
@@ -258,9 +258,9 @@ class Board():
         If the item is not a subclass of BoardItem, an HacInvalidTypeException
 
         .. warning:: Nothing prevents you from placing an object on top of
-        another. Be sure to check that. This method will check for items that
-        are both overlappable **and** restorable to save them, but that's
-        the extend of it.
+            another. Be sure to check that. This method will check for items that
+            are both overlappable **and** restorable to save them, but that's
+            the extend of it.
         """
         if row < self.size[1] and column < self.size[0]:
             if isinstance(item, BoardItem):
@@ -312,21 +312,22 @@ class Board():
         :class:`gamelib.HacExceptions.HacObjectIsNotMovableException`).
 
         .. Important:: if the move is successfull, an empty BoardItemVoid
-        (see :class:`gamelib.BoardItem.BoardItemVoid`) will be put at the
-        departure position (unless the movable item is over an overlappable
-        item). If the movable item is over an overlappable item, the
-        overlapped item is restored.
+            (see :class:`gamelib.BoardItem.BoardItemVoid`) will be put at the
+            departure position (unless the movable item is over an overlappable
+            item). If the movable item is over an overlappable item, the
+            overlapped item is restored.
 
         .. note:: It could be interesting here, instead of relying on storing
-        the overlapping item in a property of a Movable
-        (:class:`gamelib.Movable.Movable`) object, to have another dimension
-        on the board matrix to push and pop objects on a cell. Only the first
-        item would be rendered and it would avoid the complicated and error
-        prone logic in this method. If anyone feel up to the challenge,
-        `PR are welcome ;-)
-        <https://github.com/arnauddupuis/hac-game-lib/pulls>`_.
+            the overlapping item in a property of a Movable
+            (:class:`gamelib.Movable.Movable`) object, to have another dimension
+            on the board matrix to push and pop objects on a cell. Only the first
+            item would be rendered and it would avoid the complicated and error
+            prone logic in this method. If anyone feel up to the challenge,
+            `PR are welcome ;-)
+            <https://github.com/arnauddupuis/hac-game-lib/pulls>`_.
 
         .. todo:: check all types!
+
         """
         if isinstance(item, Movable) and item.can_move():
 
@@ -506,7 +507,7 @@ class Board():
             myboard.clear_cell(3,4)
 
         .. WARNING:: This method does not check the content before,
-        it *will* overwrite the content.
+            it *will* overwrite the content.
 
         """
         if self._matrix[row][column] in self._movables:
