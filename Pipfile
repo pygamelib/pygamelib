@@ -11,6 +11,9 @@ ipython = "*"
 [packages]
 colorama = ">=0.3.8"
 readchar = ">=2.0.0"
+configparser = ">=3.7.3"
 
 [requires]
 python_version = "3.7"
+
+# Please update the .legacy/requirements.txt with new dependencies added here.
