@@ -37,3 +37,9 @@ jobs:
           path: reports
       - store_artifacts:
           path: reports
+
+workflows:
+  version: 2
+  build_and_test:
+    jobs:
+      - build

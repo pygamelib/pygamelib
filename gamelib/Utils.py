@@ -1,7 +1,8 @@
 from colorama import Fore, Back, Style, init
+import colorama.ansi
+from readchar import readkey, key
+import subprocess
 import sys
-import termios
-import tty
 
 WHITE_RECT = Back.WHITE+' '+Style.RESET_ALL
 BLUE_RECT = Back.BLUE+' '+Style.RESET_ALL
@@ -23,6 +24,12 @@ CYAN_SQUARE = Back.CYAN+'  '+Style.RESET_ALL
 
 RED_BLUE_SQUARE = Back.RED+' '+Back.BLUE+' '+Style.RESET_ALL
 YELLOW_CYAN_SQUARE = Back.YELLOW+' '+Back.CYAN+' '+Style.RESET_ALL
+
+# get clear sequence for the terminal
+# TODO: check OS
+_exitcode, clear_sequence = subprocess.getstatusoutput("tput clear")
+if _exitcode:
+    clear_sequence = colorama.ansi.clear_screen()
 
 """
 Utils define a couple of constants and functions for styling the Board and terminal.
@@ -53,29 +60,20 @@ And finally an example of composition of rectangles to make different colored sq
 
 """
 
-# This function comes from: http://code.activestate.com/recipes/577728-simpletron3xpy-game-to-demo-xy-drawing-using-the-k/?in=user-4177147 
-# it is named inkey() in this game.
 def get_key():
-    """Get a key from the keyboard.
-
-    This function capture one unique key from the keyboard **without** waiting for a carriage return.
+    """Reads the next key-stroke returning it as a string.
 
     Example::
 
         key = Utils.get_key()
-        if key == "q"
+        if key == Utils.key.UP:
+            print("Up")
+        elif key == "q"
             exit()
     
-    .. note:: Anything that return more than one key code is not going to be correctly captured (like the arrow keys)
-
-    .. todo:: Make it possible to use the arrow keys.
+    .. note:: See `readkey` documentation in `readchar` package.
     """
-    fd=sys.stdin.fileno()
-    remember_attributes=termios.tcgetattr(fd)
-    tty.setraw(sys.stdin.fileno())
-    character=sys.stdin.read(1)
-    termios.tcsetattr(fd, termios.TCSADRAIN, remember_attributes)
-    return character
+    return readkey()
 
 ## the warn() function print a message prefixed by a yellow WARNING.
 def warn(message):
@@ -293,6 +291,12 @@ def black_dim(message):
     This method works exactly the way green_bright() work with different color.
     """
     return Fore.BLACK+Style.DIM+message+Style.RESET_ALL
+
+def clear_screen():
+    """
+    This methods clear the screen
+    """
+    sys.stdout.write(clear_sequence)
 
 def init_term_colors():
     init()
