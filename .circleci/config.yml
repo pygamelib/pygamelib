@@ -1,40 +1,42 @@
-# Python CircleCI 2.0 configuration file
-#
-# Check https://circleci.com/docs/2.0/language-python/ for more details
-#
 version: 2
 jobs:
   build:
+    working_directory: ~/hac-game-lib
     docker:
-      - image: circleci/python:3.6.1
-
-    working_directory: ~/repo
-
+      - image: circleci/python:3.7
+        environment:
+          PIPENV_VENV_IN_PROJECT: true
     steps:
       - checkout
+      - run: sudo chown -R circleci:circleci /usr/local/bin
+      - run: sudo chown -R circleci:circleci /usr/local/lib/python3.7/site-packages
+      - restore_cache:
+          key: deps10-{{ .Branch }}-{{ checksum "Pipfile.lock" }}
       - run:
-          name: install dependencies
           command: |
-            sudo chmod 777 -R /usr/local/lib/python3.6/site-packages/
-            sudo pip install virtualenv
-            virtualenv -p python3 .venv
-            . .venv/bin/activate
-            pip install --upgrade pip
-            pip --version
-            pip install pipenv
+            sudo pip3 install pipenv
             pipenv install --dev
-      - save_cache: # cache Python dependencies using checksum of Pipfile as the cache-key
-          key: deps9-{{ .Branch }}-{{ checksum "Pipfile.lock" }}
+      - save_cache:
+          key: deps10-{{ .Branch }}-{{ checksum "Pipfile.lock" }}
           paths:
-            - ".venv"
-            - "/usr/local/bin"
-            - "/usr/local/lib/python3.6/site-packages"
+            - '.venv'
+            - '/usr/local/bin'
+            - '/usr/local/lib/python3.7/site-packages'
       - run:
-          name: check pep8
+          name: Run linting and metrics
           command: |
-            . .venv/bin/activate
-            pip install pep8
-            pep8 gamelib
+            mkdir reports
+            pipenv run python3 -m flake8 --output-file reports/linter-results
+          when: always
+      - run:
+          name: Run unit tests under tests folder
+          command: |
+            pipenv run python3 -m unittest discover -s tests
+          when: always
+      - store_test_results:
+          path: reports
+      - store_artifacts:
+          path: reports
 
 workflows:
   version: 2
