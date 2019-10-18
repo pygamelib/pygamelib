@@ -26,9 +26,7 @@ setuptools.setup(
         programming to young kids.",
     long_description=long_description,
     long_description_content_type="text/markdown",
-    install_requires=[
-        'colorama >= 0.3.8'
-    ],
+    install_requires=INSTALL_PACKAGES,
     url="https://astro.hyrul.es",
     packages=setuptools.find_packages(),
     scripts=['hgl-base_game.py', 'hgl-editor.py', 'hgl-board-tester.py'],
