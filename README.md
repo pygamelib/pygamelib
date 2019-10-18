@@ -54,6 +54,14 @@ pip3 install pipenv
 pipenv install --dev
 ```
 
+### Runing tests 
+
+To run the unit tests use the following command:
+
+```bash
+python -m unittest discover -s tests
+```
+
 ### Terminal color and emojis
 
 It is not really a hard requirement but colored emojis are really bringing the games created to life.  
