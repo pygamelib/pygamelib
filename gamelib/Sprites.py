@@ -178,7 +178,7 @@ The complete list of aliased emojis is:
     * RADIOACTIVE = \U00002622
     * FLAG_GOAL = \U0001F3C1
     * DOOR = \U0001F6AA
-        
+
 """
 
 COWBOY = '\U0001F920'
