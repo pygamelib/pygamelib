@@ -671,7 +671,7 @@ game.add_menu_entry(
     + ' an item in history to be the current item')
 game.add_menu_entry(
     'main',
-    Utils.white_bright('a/w/s/d'),
+    Utils.white_bright('\u2190/\u2191/\u2193/\u2192'),
     'Move cursor Left/Up/Down/Right')
 game.add_menu_entry(
     'main',
@@ -781,13 +781,13 @@ while True:
             menu_mode = 'full'
         game.update_menu_entry('main', None, '\n=== Menu ('+menu_mode+') ===')
     elif current_menu == 'main':
-        if key == 'w':
+        if key == Utils.key.UP:
             game.move_player(Constants.UP, 1)
-        elif key == 's':
+        elif key == Utils.key.DOWN:
             game.move_player(Constants.DOWN, 1)
-        elif key == 'a':
+        elif key == Utils.key.LEFT:
             game.move_player(Constants.LEFT, 1)
-        elif key == 'd':
+        elif key == Utils.key.RIGHT:
             game.move_player(Constants.RIGHT, 1)
         elif key == "k" and edit_mode:
             place_and_go(
