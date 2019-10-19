@@ -1,9 +1,11 @@
-import examples_includes
+import examples_includes  # noqa: F401
 
 # Board is our base object  to display so we need that
 from gamelib.Board import Board
+
 # Then we need to get the Wall object from Structures.py
 from gamelib.Structures import Wall
+
 # Finally we import Utils as it contains a lot of useful things
 import gamelib.Utils as Utils
 
@@ -11,15 +13,15 @@ import gamelib.Utils as Utils
 # Borders are going to be white squares
 # Cells with nothing inside are going to be black squares
 myboard = Board(
-                name='A demo board',
-                size=[40, 20],
-                ui_border_left=Utils.WHITE_SQUARE,
-                ui_border_right=Utils.WHITE_SQUARE,
-                ui_border_top=Utils.WHITE_SQUARE,
-                ui_border_bottom=Utils.WHITE_SQUARE,
-                ui_board_void_cell=Utils.BLACK_SQUARE,
-                player_starting_position=[10, 20]
-                )
+    name="A demo board",
+    size=[40, 20],
+    ui_border_left=Utils.WHITE_SQUARE,
+    ui_border_right=Utils.WHITE_SQUARE,
+    ui_border_top=Utils.WHITE_SQUARE,
+    ui_border_bottom=Utils.WHITE_SQUARE,
+    ui_board_void_cell=Utils.BLACK_SQUARE,
+    player_starting_position=[10, 20],
+)
 
 # Now let's make a couple of walls using colored squares as models
 green_wall = Wall(model=Utils.GREEN_SQUARE)

@@ -17,7 +17,7 @@ import sys
 sys.path.insert(0, os.path.abspath('.'))
 sys.path.insert(1, os.path.abspath('..'))
 sys.path.insert(2, os.path.abspath('../..'))
-import gamelib.Constants as CST
+import gamelib.Constants as CST  # noqa: F402
 
 # -- Project information -----------------------------------------------------
 

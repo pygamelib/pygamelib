@@ -5,17 +5,27 @@ import gamelib.Sprites as Sprites
 from gamelib.Characters import Player
 import time
 
-mygame = Game(name='Demo Game')
+mygame = Game(name="Demo Game")
 
-board1 = Board(name='Level 1', ui_borders=Sprites.WALL, ui_board_void_cell=Utils.BLACK_SQUARE, player_starting_position=[0,0])
-board2 = Board(name='Level 2', ui_borders=Utils.RED_SQUARE, ui_board_void_cell=Utils.BLACK_SQUARE, player_starting_position=[4,4])
+board1 = Board(
+    name="Level 1",
+    ui_borders=Sprites.WALL,
+    ui_board_void_cell=Utils.BLACK_SQUARE,
+    player_starting_position=[0, 0],
+)
+board2 = Board(
+    name="Level 2",
+    ui_borders=Utils.RED_SQUARE,
+    ui_board_void_cell=Utils.BLACK_SQUARE,
+    player_starting_position=[4, 4],
+)
 
-mygame.player = Player(name='DaPlay3r', model=Sprites.UNICORN_FACE)
+mygame.player = Player(name="DaPlay3r", model=Sprites.UNICORN_FACE)
 
-mygame.add_board(1,board1)
-mygame.add_board(2,board2)
+mygame.add_board(1, board1)
+mygame.add_board(2, board2)
 
-count = 0 
+count = 0
 lvl = 1
 while count < 10:
     mygame.clear_screen()
@@ -26,5 +36,3 @@ while count < 10:
         lvl = 1
     time.sleep(2)
     count += 1
-
-
