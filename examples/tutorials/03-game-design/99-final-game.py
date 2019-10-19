@@ -7,18 +7,16 @@ import random
 
 sys.path.append(os.path.abspath(os.path.join("..", "..", "..")))
 
-# fmt: off
-from gamelib.Game import Game
-from gamelib.Board import Board
-from gamelib.Characters import Player
-from gamelib.Characters import NPC
-import gamelib.Sprites as Sprites
-import gamelib.Constants as Constants
-import gamelib.Utils as Utils
-from gamelib.Structures import Door
-from gamelib.Structures import Treasure
-from gamelib.BoardItem import BoardItemVoid
-# fmt: on
+from gamelib.Game import Game  # noqa: E402
+from gamelib.Board import Board  # noqa: E402
+from gamelib.Characters import Player  # noqa: E402
+from gamelib.Characters import NPC  # noqa: E402
+import gamelib.Sprites as Sprites  # noqa: E402
+import gamelib.Constants as Constants  # noqa: E402
+import gamelib.Utils as Utils  # noqa: E402
+from gamelib.Structures import Door  # noqa: E402
+from gamelib.Structures import Treasure  # noqa: E402
+from gamelib.BoardItem import BoardItemVoid  # noqa: E402
 
 # Here are our global variables (it is usually a bad idea to use global variables but
 # it will simplify that tutorial, keep in mind that we don't usually rely on global
