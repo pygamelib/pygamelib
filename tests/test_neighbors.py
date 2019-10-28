@@ -17,7 +17,7 @@ class GameNeighborTestCase(unittest.TestCase):
     def setUp(self):
         super().setUp()
         self.game = Game()
-        self.board = self.game.load_board("../hac-maps/kneighbors.json", 1)
+        self.board = self.game.load_board("hac-maps/kneighbors.json", 1)
         self.game.player = Player(name='player')
         self.game.change_level(1)
         self.tree26 = self.board.item(2, 6)
