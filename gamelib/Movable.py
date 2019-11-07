@@ -1,3 +1,7 @@
+"""This module contains the Movable class.
+It can potentially hold more movement related classes.
+"""
+
 from gamelib.BoardItem import BoardItem
 
 

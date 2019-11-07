@@ -1,3 +1,6 @@
+"""This module regroup different utility functions and constants.
+"""
+
 from colorama import Fore, Back, Style, init
 import colorama.ansi
 

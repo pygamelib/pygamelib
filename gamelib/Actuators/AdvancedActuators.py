@@ -1,3 +1,8 @@
+"""This module contains the more advanced actuators.
+AdvancedActuators allow for more actions and not only movement.
+It can also be more advanced movement classes.
+"""
+
 
 from gamelib.Actuators.Actuator import Behavioral
 from gamelib.HacExceptions import HacInvalidTypeException, HacException

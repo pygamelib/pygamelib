@@ -1,3 +1,8 @@
+"""This module contains the simple actuators classes.
+Simple actuators are movement related one. They allow for predetermined movements
+patterns.
+"""
+
 from gamelib.Actuators.Actuator import Actuator
 from gamelib.Constants import RUNNING
 import random

@@ -1,3 +1,8 @@
+"""This module contains the base classes for simple and advanced actuators.
+These classes are the base contract for actuators.
+If you wish to create your own one, you need to inheritate from one of these base class.
+"""
+
 from gamelib.Constants import PAUSED, RUNNING, STOPPED
 
 

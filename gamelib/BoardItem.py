@@ -1,3 +1,7 @@
+"""This module contains the basic board items classes (regular and void items).
+"""
+
+
 class BoardItem:
     """
     Base class for any item that will be placed on a Board.

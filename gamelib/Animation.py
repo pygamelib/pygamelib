@@ -1,3 +1,6 @@
+"""This module contains the animation relation classes (so far only Animation).
+"""
+
 from gamelib.Constants import PAUSED, RUNNING, STOPPED
 from gamelib.HacExceptions import HacInvalidTypeException
 from gamelib.BoardItem import BoardItem
