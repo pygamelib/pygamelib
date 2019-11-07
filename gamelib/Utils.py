@@ -160,6 +160,15 @@ def debug(message):
 
 
 def print_white_on_red(message):
+    """Print a white message over a red background.
+
+    :param message: The message to print.
+    :type message: str
+
+    Example::
+
+        Utils.print_white_on_red("This is bright!")
+    """
     print(Fore.WHITE + Back.RED + message + Style.RESET_ALL)
 
 
@@ -352,4 +361,7 @@ def clear_screen():
 
 
 def init_term_colors():
+    """
+    This function is a forward to colorama.init()
+    """
     init()
