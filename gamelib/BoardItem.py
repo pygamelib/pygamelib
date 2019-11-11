@@ -62,8 +62,22 @@ class BoardItem:
                 string += f"'{key}' = '" + getattr(self, key) + "'\n"
         return string
 
-    def store_position(self, x, y):
-        self.pos = [x, y]
+    def store_position(self, row, column):
+        """Store the BoardItem position for self access.
+
+        The stored position is used for consistency and quick access to the self
+        postion. It is a redundant information and might not be synchronized.
+
+        :param row: the row of the item in the :class:`~gamelib.Board.Board`.
+        :type row: int
+        :param column: the column of the item in the :class:`~gamelib.Board.Board`.
+        :type column: int
+
+        Example::
+
+            item.store_position(3,4)
+        """
+        self.pos = [row, column]
 
     def can_move(self):
         """
