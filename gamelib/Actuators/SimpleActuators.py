@@ -17,8 +17,6 @@ class RandomActuator(Actuator):
 
     :param moveset: A list of movements.
     :type moveset: list
-
-    ..todo:: finish the doc.
     """
     def __init__(self, moveset=None):
         if moveset is None:

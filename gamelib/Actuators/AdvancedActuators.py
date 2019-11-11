@@ -334,9 +334,10 @@ class PathFinder(Behavioral):
 
         If no waypoint have been added, this function return None.
         If there is no more waypoint in the stack:
-         - if PathFinder.circle_waypoints is True this function reset the \
-         waypoints stack and return the first one.
-         - else, return None.
+
+        - if PathFinder.circle_waypoints is True this function reset the \
+        waypoints stack and return the first one.
+        - else, return None.
 
         :return: Either a None tuple or the next waypoint.
         :rtype: A None tuple or a tuple of integer.
