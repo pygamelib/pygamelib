@@ -1,3 +1,7 @@
+"""This module contains the Board class.
+It is the base class for all levels.
+"""
+
 from gamelib.Utils import warn
 from gamelib.HacExceptions import (HacException,
                                    HacOutOfBoardBoundException,

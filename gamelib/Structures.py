@@ -1,3 +1,8 @@
+"""
+This module contains many "helpers" classes to populate your game with structures.
+It contains many directly usable structures and some generic ones that can be turned
+in anything you like.
+"""
 from gamelib.Immovable import Immovable, Actionable
 from gamelib.HacExceptions import HacInvalidTypeException
 

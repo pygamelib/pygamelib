@@ -1,3 +1,8 @@
+"""This module contains the simple actuators classes.
+Simple actuators are movement related one. They allow for predetermined movements
+patterns.
+"""
+
 from gamelib.Actuators.Actuator import Actuator
 from gamelib.Constants import RUNNING
 import random
@@ -12,8 +17,6 @@ class RandomActuator(Actuator):
 
     :param moveset: A list of movements.
     :type moveset: list
-
-    ..todo:: finish the doc.
     """
     def __init__(self, moveset=None):
         if moveset is None:

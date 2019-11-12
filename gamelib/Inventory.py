@@ -1,3 +1,5 @@
+"""This module contains the Inventory class.
+"""
 from gamelib.BoardItem import BoardItem
 from gamelib.HacExceptions import HacInvalidTypeException, HacInventoryException
 import uuid
