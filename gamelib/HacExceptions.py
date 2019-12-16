@@ -1,3 +1,9 @@
+"""This module regroup all the specific exceptions of the library.
+The idea behind most exceptions is to provide more context and info that the standard
+exceptions.
+"""
+
+
 class HacInvalidTypeException(Exception):
     """
     Exception raised for invalid types.

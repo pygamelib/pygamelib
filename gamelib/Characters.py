@@ -1,3 +1,7 @@
+"""
+This module contains the base classes for both playable and non playable characters.
+"""
+
 from gamelib.Movable import Movable
 from gamelib.Inventory import Inventory
 
@@ -64,6 +68,10 @@ class Character:
 class Player(Movable, Character):
     """
     A class that represent a player controlled by a human.
+    It accepts all the parameters from :class:`~gamelib.Characters.Character` and is a
+    :class:`~gamelib.Movable.Movable`.
+
+    .. note:: If no inventory is passed as parameter a default one is created.
     """
 
     def __init__(self, **kwargs):
@@ -83,12 +91,21 @@ class Player(Movable, Character):
             self.inventory = Inventory()
 
     def pickable(self):
+        """This method returns False (a player is obviously not pickable).
+        """
         return False
 
     def has_inventory(self):
+        """This method returns True (a player has an inventory).
+        """
         return True
 
     def overlappable(self):
+        """This method returns false (a player cannot be overlapped).
+
+        .. note:: If you wish your player to be overlappable, you need to inherit from
+            that class and re-implement overlappable().
+        """
         return False
 
 

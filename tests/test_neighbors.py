@@ -10,7 +10,7 @@ def readable_board_item(boarditem):
 
 
 def readable_board_items(board_item_list):
-    return "[" + ", ".join([readable_board_item(item) for item in board_item_list]) + "]"
+    return "["+", ".join([readable_board_item(item) for item in board_item_list])+"]"
 
 
 class GameNeighborTestCase(unittest.TestCase):
@@ -51,7 +51,8 @@ class GameNeighborTestCase(unittest.TestCase):
                     "!=",
                     readable_board_items(actual_board_items)
                 ])
-                self.assertSetEqual(set(expected_board_items), set(actual_board_items), assertion_message)
+                self.assertSetEqual(set(expected_board_items), set(actual_board_items),
+                                    assertion_message)
 
     def test_npc_neighbors(self):
         def move_player_next_to_npc77():

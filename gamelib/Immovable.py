@@ -1,3 +1,6 @@
+"""This module contains the Immovable and Actionable classes.
+"""
+
 from gamelib.BoardItem import BoardItem
 import gamelib.Constants as Constants
 
