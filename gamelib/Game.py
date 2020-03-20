@@ -103,7 +103,7 @@ class Game:
         That function removes the entire list of messages that are attached to the
         category.
 
-        :param category: The category tp delete.
+        :param category: The category to delete.
         :type category: str
         :raise HacInvalidTypeException: If the category is not a string
 
@@ -183,8 +183,23 @@ class Game:
     def display_menu(
         self, category, orientation=Constants.ORIENTATION_VERTICAL, paginate=10
     ):
-        """
-        .. TODO:: Documentation
+        """Display the menu.
+
+        This method display the whole menu for a given category.
+
+        :param category: The category to display. **Mandatory** parameter.
+        :type category: str
+        :param orientation: The shortcut of the entry you want to get.
+        :type orientation: :class:`gamelib.Constants.Constants`
+        :param paginate: pagination parameter (how many items to display before
+                        changing line or page).
+        :type paginate: int
+
+        Example::
+
+            game.display_menu('main_menu')
+            game.display_menu('main_menu', Constants.ORIENTATION_HORIZONTAL, 5)
+
         """
         line_end = "\n"
         if orientation == Constants.ORIENTATION_HORIZONTAL:
