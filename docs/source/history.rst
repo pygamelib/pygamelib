@@ -3,7 +3,7 @@
 History
 -------
 
-2019.9 (2019-09-31)
+1.0.0 (2020-03-20)
 ~~~~~~~~~~~~~~~~~~~
 
 * Add AdvancedActuators.PathFinder `@arnauddupuis`_
