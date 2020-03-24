@@ -21,6 +21,9 @@ menu_mode = 'full'
 dbg_messages = []
 info_messages = []
 warn_messages = []
+base_config_dir = os.path.expanduser("~/.hac-game-lib")
+config_dir = os.path.join(base_config_dir, "config")
+default_map_dir = os.path.join(base_config_dir, "editor", "maps")
 
 
 # Functions definition
@@ -556,8 +559,9 @@ def save_current_board():
     global game
     global object_history
     global is_modified
-    if not os.path.exists('hac-maps') or not os.path.isdir('hac-maps'):
-        os.makedirs('hac-maps')
+    # This should be deprecated and use the default directory.
+    # if not os.path.exists('hac-maps') or not os.path.isdir('hac-maps'):
+    #     os.makedirs('hac-maps')
     game.object_library = object_history
     game.save_board(1, current_file)
     is_modified = False
@@ -566,6 +570,8 @@ def save_current_board():
 def create_board_wizard():
     global game
     global is_modified
+    global current_file
+    global default_map_dir
     game.clear_screen()
     print(Utils.blue_bright("\t\tNew board"))
     print("First we need some information on your new board:")
@@ -578,6 +584,28 @@ def create_board_wizard():
         ui_borders=Utils.WHITE_SQUARE,
         ui_board_void_cell=Utils.BLACK_SQUARE))
     is_modified = True
+    current_file = os.path.join(default_map_dir, name.replace(' ', '_')+'.json')
+
+
+def first_use():
+    global config_dir
+    global base_config_dir
+    global default_map_dir
+    print(Utils.yellow_bright("Configuration wizard (fresh install or update)"))
+    os.makedirs(config_dir)
+    os.makedirs(os.path.join(base_config_dir, 'editor', 'maps'))
+    print("We need to set up the default directory where we are going to save maps.",
+          f"Default is {default_map_dir}")
+    new_default = str(input("Default maps directory: "))
+    while((not os.path.exists(new_default) or not os.path.isdir(new_default)
+          or not os.path.isabs(new_default)) and new_default != ""):
+        print(Utils.red("The path to directory needs to exists and be absolute."))
+        new_default = str(input("Default maps directory: "))
+    if new_default != "":
+        default_map_dir = new_default
+    if not os.path.exists(os.path.join(config_dir, 'directories.json')):
+        with open(os.path.join(config_dir, 'directories.json'), 'w') as fp:
+            fp.write(f'["{default_map_dir}","hac-maps","maps"]')
 
 
 # Main program
@@ -596,18 +624,46 @@ while True:
             + Constants.HAC_GAME_LIB_VERSION
         )
     )
-
+    # Create config_dir if not exist and populate it with a directories.json file.
+    if (
+            not os.path.exists(config_dir)
+            or not os.path.isdir(config_dir)
+            or not os.path.exists(base_config_dir)
+            or not os.path.isdir(base_config_dir)
+    ):
+        first_use()
     print('Looking for existing maps in selected directories...', end='')
-    with open('directories.json') as paths:
-        directories = json.load(paths)
+    default_map_dir = None
+    with open(os.path.join(config_dir, 'directories.json')) as paths:
         hmaps = []
         try:
+            directories = json.load(paths)
             for directory in directories:
-                files = [f'{directory}/{f}' for f in os.listdir(directory)]
-                hmaps += files
-            print(Utils.green('OK'))
+                # files = [f'{directory}/{f}' for f in os.listdir(directory)]
+                # hmaps += files
+                test_dir = os.path.join(base_config_dir, directory)
+                if os.path.exists(test_dir):
+                    directory = test_dir
+                    # Utils.debug(f"Setting directory to: {directory}")
+                if os.path.exists(directory):
+                    if default_map_dir is None:
+                        default_map_dir = directory
+                    for f in os.listdir(directory):
+                        if os.path.isabs(f):
+                            hmaps.append(f)
+                        else:
+                            if os.path.exists(f):
+                                hmaps.append(f)
+                            elif os.path.exists(os.path.join(directory, f)):
+                                hmaps.append(os.path.join(directory, f))
+            if len(hmaps) > 0:
+                print(Utils.green('OK'))
+            else:
+                print(Utils.red_bright('KO'))
         except FileNotFoundError:
-            print(Utils.red('KO'))
+            print(Utils.red_bright('KO'))
+        except json.decoder.JSONDecodeError:
+            print(Utils.blue_bright('Initialized'))
 
     if len(hmaps) > 0:
         map_num = 0
@@ -681,8 +737,8 @@ game.add_menu_entry(
 game.add_menu_entry(
     'main',
     Utils.white_bright('c'),
-    'Create a new board item (becomes the current item,\
-         previous one is placed in history)')
+    'Create a new board item (becomes the current item,' +
+    ' previous one is placed in history)')
 game.add_menu_entry(
     'main',
     Utils.white_bright('p'),
@@ -759,8 +815,8 @@ while True:
     if key == 'Q':
         if is_modified:
             print(
-                "Board has been modified, do you want to save it \
-                    to avoid loosing your changes? (y/n)")
+                "Board has been modified, do you want to save it",
+                "to avoid loosing your changes? (y/n)")
             answer = str(input('> '))
             if answer.startswith('y'):
                 if (
@@ -930,8 +986,8 @@ while True:
         else:
             print(Utils.red_bright('DELETE'), end='')
         print(
-            f' | Board: {game.current_board().name} - \
-                {game.current_board().size} | Cursor @ {game.player.pos}')
+            f' | Board: {game.current_board().name} -',
+            f'{game.current_board().size} | Cursor @ {game.player.pos}')
     game.display_board()
     if len(object_history) > 10:
         del(object_history[0])
