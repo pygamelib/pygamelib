@@ -233,6 +233,7 @@ class Game:
         """
         Load a configuration file from the disk.
         The configuration file must respect the INI syntax.
+        The goal of these methods is to be simplify configuration files management.
 
         :param filename: The filename to load. does not check for existence.
         :type filename: str
