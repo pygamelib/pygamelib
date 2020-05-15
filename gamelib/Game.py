@@ -569,7 +569,8 @@ class Game:
                     continue
                 true_x = object.pos[0] + x
                 true_y = object.pos[1] + y
-                if not isinstance(
+                if (true_x < self.current_board().size[1] and
+                    true_y < self.current_board().size[0]) and not isinstance(
                     self.current_board().item(true_x, true_y), BoardItemVoid
                 ):
                     return_array.append(self.current_board().item(true_x, true_y))
