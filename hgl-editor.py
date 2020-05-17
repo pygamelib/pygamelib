@@ -114,10 +114,10 @@ def model_picker():
     while True:
         game.clear_screen()
         print(
-            "What kind of model do you want (you can edit that later)?\n\
-                1 - Colored squares and rectangles\n\
-                2 - Sprites\n\
-                3 - Set your own string of character(s)")
+            "What kind of model do you want (you can edit that later)?\n"
+            "1 - Colored squares and rectangles\n"
+            "2 - Sprites\n"
+            "3 - Set your own string of character(s)")
         choice = str(Utils.get_key())
         if choice == '1':
             picked = game.get_menu_entry('graphics_utils', color_picker())
