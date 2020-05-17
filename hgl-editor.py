@@ -21,6 +21,9 @@ menu_mode = 'full'
 dbg_messages = []
 info_messages = []
 warn_messages = []
+base_config_dir = os.path.expanduser("~/.hac-game-lib")
+config_dir = os.path.join(base_config_dir, "config")
+default_map_dir = os.path.join(base_config_dir, "editor", "maps")
 
 
 # Functions definition
@@ -55,8 +58,8 @@ def clear_and_go(direction):
         or new_y > (game.current_board().size[0]-1)
     ):
         Utils.warn(
-            f"Cannot remove anything at [{new_x},{new_y}] \
-                as it is out of bound.")
+            f"Cannot remove anything at [{new_x},{new_y}] "
+            "as it is out of bound.")
     else:
         game.current_board().clear_cell(new_x, new_y)
         game.move_player(direction, 1)
@@ -175,8 +178,8 @@ def create_wizard():
         if len(r) > 0:
             new_object.name = r
         print(
-            "Then give it a type. A type is important as it allows grouping.\n\
-            Type is a string. Default value: "
+            "Then give it a type. A type is important as it allows grouping.\n"
+            "Type is a string. Default value: "
             + new_object.type)
         r = str(input('(Enter type)> '))
         if len(r) > 0:
@@ -189,12 +192,12 @@ def create_wizard():
             Utils.green_bright("\t\tObject creation wizard: ")
             + Utils.cyan_bright("NPC")+f' - {new_object.model}')
         print(
-            'We now needs to go through some basic statistics. \
-            You can decide to go with default by simply hitting \
-            the "Enter" key.')
+            'We now needs to go through some basic statistics. '
+            'You can decide to go with default by simply hitting '
+            'the "Enter" key.')
         r = input_digit(
-            f'Number of cell crossed in one turn. \
-            Default: {new_object.step}(type: int) > ')
+            f'Number of cell crossed in one turn. '
+            f'Default: {new_object.step}(type: int) > ')
         if len(r) > 0:
             new_object.step = int(r)
         else:
@@ -204,35 +207,35 @@ def create_wizard():
             new_object.actuator = SimpleActuators.RandomActuator(moveset=[])
 
         r = input_digit(
-            f'Max HP (Health Points). \
-            Default: {new_object.max_hp}(type: int) > ')
+            f'Max HP (Health Points). '
+            f'Default: {new_object.max_hp}(type: int) > ')
         if len(r) > 0:
             new_object.max_hp = int(r)
         new_object.hp = new_object.max_hp
 
         r = input_digit(
-            f'Max MP (Mana Points). \
-            Default: {new_object.max_mp}(type: int) > ')
+            f'Max MP (Mana Points). '
+            f'Default: {new_object.max_mp}(type: int) > ')
         if len(r) > 0:
             new_object.max_mp = int(r)
         new_object.mp = new_object.max_mp
 
         r = input_digit(
-            f'Remaining lives (it is advised to set that to 1 for a \
-            standard NPC). \
-            Default: {new_object.remaining_lives}(type: int) > ')
+            f'Remaining lives (it is advised to set that to 1 for a '
+            f'standard NPC). '
+            f'Default: {new_object.remaining_lives}(type: int) > ')
         if len(r) > 0:
             new_object.remaining_lives = int(r)
 
         r = input_digit(
-            f'AP (Attack Power). \
-            Default: {new_object.attack_power}(type: int) > ')
+            f'AP (Attack Power). '
+            f'Default: {new_object.attack_power}(type: int) > ')
         if len(r) > 0:
             new_object.attack_power = int(r)
 
         r = input_digit(
-            f'DP (Defense Power). \
-            Default: {new_object.defense_power}(type: int) > ')
+            f'DP (Defense Power). '
+            f'Default: {new_object.defense_power}(type: int) > ')
         if len(r) > 0:
             new_object.defense_power = int(r)
 
@@ -252,21 +255,21 @@ def create_wizard():
             new_object.agility = int(r)
 
         game.clear_screen()
-        print("We now need to give some life to that NPC. \
-            What kind of movement should it have:")
+        print("We now need to give some life to that NPC. "
+              "What kind of movement should it have:")
         print("1 - Randomly chosen from a preset of directions")
         print("2 - Following a predetermined path")
         r = Utils.get_key()
         if r == '1':
             new_object.actuator = SimpleActuators.RandomActuator(moveset=[])
-            print('Random it is! Now choose from which preset \
-                of movements should we give it:')
+            print('Random it is! Now choose from which preset '
+                  'of movements should we give it:')
             print('1 - UP,DOWN,LEFT, RIGHT')
             print('2 - UP,DOWN')
             print('3 - LEFT, RIGHT')
             print('4 - UP,DOWN,LEFT, RIGHT + all DIAGONALES')
-            print('5 - DIAGONALES (DIAG UP LEFT, DIAG UP RIGHT, etc.) \
-                but NO straight UP, DOWN, LEFT and RIGHT')
+            print('5 - DIAGONALES (DIAG UP LEFT, DIAG UP RIGHT, etc.) '
+                  'but NO straight UP, DOWN, LEFT and RIGHT')
             print('6 - No movement')
             r = Utils.get_key()
             if r == '1':
@@ -319,8 +322,8 @@ def create_wizard():
             r = Utils.get_key()
             if r == '1':
                 print(
-                    "How many steps should the NPC go in one direction \
-                    before turning back ?",
+                    "How many steps should the NPC go in one direction "
+                    "before turning back ?",
                     )
                 r = int(input_digit("(please enter an integer)> "))
                 new_object.actuator.path += [
@@ -331,8 +334,8 @@ def create_wizard():
                 ]
             elif r == '2':
                 print(
-                    "How many steps should the NPC go in one \
-                    direction before turning back ?")
+                    "How many steps should the NPC go in one "
+                    "direction before turning back ?")
                 r = int(input_digit("(please enter an integer)> "))
                 new_object.actuator.path += [
                     Constants.DOWN for i in range(0, r, 1)
@@ -342,8 +345,8 @@ def create_wizard():
                 ]
             elif r == '3':
                 print(
-                    "How many steps should the NPC go in one \
-                        direction before turning back ?")
+                    "How many steps should the NPC go in one "
+                    "direction before turning back ?")
                 r = int(input_digit("(please enter an integer)> "))
                 new_object.actuator.path += [
                     Constants.LEFT for i in range(0, r, 1)
@@ -353,8 +356,8 @@ def create_wizard():
                 ]
             elif r == '3':
                 print(
-                    "How many steps should the NPC go in one direction \
-                        before turning back ?")
+                    "How many steps should the NPC go in one direction "
+                    "before turning back ?")
                 r = int(input_digit("(please enter an integer)> "))
                 new_object.actuator.path += [
                     Constants.RIGHT for i in range(0, r, 1)
@@ -364,8 +367,8 @@ def create_wizard():
                 ]
             elif r == '4':
                 print(
-                    "How many steps should the NPC go in one \
-                        direction before turning back ?")
+                    "How many steps should the NPC go in one "
+                    "direction before turning back ?")
                 r = int(input_digit("(please enter an integer)> "))
                 new_object.actuator.path += [
                     Constants.DOWN for i in range(0, r, 1)
@@ -375,8 +378,8 @@ def create_wizard():
                 ]
             elif r == '5':
                 print(
-                    "How many steps should the NPC go in EACH \
-                        direction before changing ?")
+                    "How many steps should the NPC go in EACH "
+                    "direction before changing ?")
                 r = int(input_digit("(please enter an integer)> "))
                 new_object.actuator.path += [
                     Constants.LEFT for i in range(0, r, 1)
@@ -392,8 +395,8 @@ def create_wizard():
                 ]
             elif r == '6':
                 print(
-                    "How many steps should the NPC go in EACH \
-                        direction before changing ?")
+                    "How many steps should the NPC go in EACH "
+                    "direction before changing ?")
                 r = int(input_digit("(please enter an integer)> "))
                 new_object.actuator.path += [
                     Constants.LEFT for i in range(0, r, 1)
@@ -409,8 +412,8 @@ def create_wizard():
                 ]
             elif r == '7':
                 print(
-                    "How many steps should the NPC go in EACH \
-                        direction before changing ?")
+                    "How many steps should the NPC go in EACH "
+                    "direction before changing ?")
                 r = int(input_digit("(please enter an integer)> "))
                 new_object.actuator.path += [
                     Constants.RIGHT for i in range(0, r, 1)
@@ -426,8 +429,8 @@ def create_wizard():
                 ]
             elif r == '8':
                 print(
-                    "How many steps should the NPC go in EACH direction \
-                        before changing ?")
+                    "How many steps should the NPC go in EACH direction "
+                    "before changing ?")
                 r = int(input_digit("(please enter an integer)> "))
                 new_object.actuator.path += [
                     Constants.RIGHT for i in range(0, r, 1)
@@ -443,8 +446,8 @@ def create_wizard():
                 ]
             elif r == '9':
                 print(
-                    "Write your own path using only words from this list: \
-                        UP, DOWN, LEFT, RIGHT, DLDOWN, DLUP, DRDOWN, DRUP.")
+                    "Write your own path using only words from this list: "
+                    "UP, DOWN, LEFT, RIGHT, DLDOWN, DLUP, DRDOWN, DRUP.")
                 print('Each direction has to be separated by a coma.')
                 r = str(input('Write your path: ')).upper()
                 new_object.actuator.path = r.split(',')
@@ -461,20 +464,20 @@ def create_wizard():
                 + Utils.magenta_bright("Structure"))
             print("What kind of structure do you want to create:")
             print(
-                '1 - A wall like structure (an object that cannot be picked-up \
-                    and is not overlappable). Ex: walls, trees, non moving \
-                    elephant (try to go through an elephant or to pick it up \
-                    in your backpack...)')
+                '1 - A wall like structure (an object that cannot be picked-up '
+                'and is not overlappable). Ex: walls, trees, non moving '
+                'elephant (try to go through an elephant or to pick it up '
+                'in your backpack...)')
             print('2 - A door (player and/or NPC can go through)')
             print(
-                '3 - A treasure (can be picked up, take space in the \
-                inventory, give points to the player)')
+                '3 - A treasure (can be picked up, take space in the '
+                'inventory, give points to the player)')
             print(
-                '4 - A generic object (you can set the properties to \
-                    make it pickable or overlappable)')
+                '4 - A generic object (you can set the properties to '
+                'make it pickable or overlappable)')
             print(
-                '5 - A generic actionable object (to make portals, heart \
-                    to replenish life, etc.)')
+                '5 - A generic actionable object (to make portals, heart '
+                'to replenish life, etc.)')
             key = Utils.get_key()
             new_object = None
             if key == '1':
@@ -496,9 +499,9 @@ def create_wizard():
                 if len(r) > 0:
                     new_object.name = r
                 print(
-                    "Then give it a type. A type is important as it allows \
-                    grouping (in this case probably in the inventory).\n\
-                    Type is a string. Default value: " + new_object.type)
+                    "Then give it a type. A type is important as it allows "
+                    "grouping (in this case probably in the inventory).\n"
+                    "Type is a string. Default value: " + new_object.type)
                 r = str(input('(Enter type)> '))
                 if len(r) > 0:
                     new_object.type = r
@@ -529,16 +532,16 @@ def create_wizard():
                 input('Hit "Enter" when you are ready to choose a model.')
                 new_object.model = model_picker()
                 print(
-                    'Is this object pickable? (can it be picked up \
-                    by the player)?')
+                    'Is this object pickable? (can it be picked up '
+                    'by the player)?')
                 print('0 - No')
                 print('1 - Yes')
                 r = Utils.get_key()
                 if r == '1':
                     new_object.set_pickable(True)
                 print(
-                    'Is this object overlappable? (can it be walked \
-                    over by player?')
+                    'Is this object overlappable? (can it be walked '
+                    'over by player?')
                 print('0 - No')
                 print('1 - Yes')
                 r = Utils.get_key()
@@ -556,8 +559,9 @@ def save_current_board():
     global game
     global object_history
     global is_modified
-    if not os.path.exists('hac-maps') or not os.path.isdir('hac-maps'):
-        os.makedirs('hac-maps')
+    # This should be deprecated and use the default directory.
+    # if not os.path.exists('hac-maps') or not os.path.isdir('hac-maps'):
+    #     os.makedirs('hac-maps')
     game.object_library = object_history
     game.save_board(1, current_file)
     is_modified = False
@@ -566,6 +570,8 @@ def save_current_board():
 def create_board_wizard():
     global game
     global is_modified
+    global current_file
+    global default_map_dir
     game.clear_screen()
     print(Utils.blue_bright("\t\tNew board"))
     print("First we need some information on your new board:")
@@ -578,6 +584,28 @@ def create_board_wizard():
         ui_borders=Utils.WHITE_SQUARE,
         ui_board_void_cell=Utils.BLACK_SQUARE))
     is_modified = True
+    current_file = os.path.join(default_map_dir, name.replace(' ', '_')+'.json')
+
+
+def first_use():
+    global config_dir
+    global base_config_dir
+    global default_map_dir
+    print(Utils.yellow_bright("Configuration wizard (fresh install or update)"))
+    os.makedirs(config_dir)
+    os.makedirs(os.path.join(base_config_dir, 'editor', 'maps'))
+    print("We need to set up the default directory where we are going to save maps.",
+          f"Default is {default_map_dir}")
+    new_default = str(input("Default maps directory: "))
+    while((not os.path.exists(new_default) or not os.path.isdir(new_default)
+          or not os.path.isabs(new_default)) and new_default != ""):
+        print(Utils.red("The path to directory needs to exists and be absolute."))
+        new_default = str(input("Default maps directory: "))
+    if new_default != "":
+        default_map_dir = new_default
+    if not os.path.exists(os.path.join(config_dir, 'directories.json')):
+        with open(os.path.join(config_dir, 'directories.json'), 'w') as fp:
+            fp.write(f'["{default_map_dir}","hac-maps","maps"]')
 
 
 # Main program
@@ -596,18 +624,46 @@ while True:
             + Constants.HAC_GAME_LIB_VERSION
         )
     )
-
+    # Create config_dir if not exist and populate it with a directories.json file.
+    if (
+            not os.path.exists(config_dir)
+            or not os.path.isdir(config_dir)
+            or not os.path.exists(base_config_dir)
+            or not os.path.isdir(base_config_dir)
+    ):
+        first_use()
     print('Looking for existing maps in selected directories...', end='')
-    with open('directories.json') as paths:
-        directories = json.load(paths)
+    default_map_dir = None
+    with open(os.path.join(config_dir, 'directories.json')) as paths:
         hmaps = []
         try:
+            directories = json.load(paths)
             for directory in directories:
-                files = [f'{directory}/{f}' for f in os.listdir(directory)]
-                hmaps += files
-            print(Utils.green('OK'))
+                # files = [f'{directory}/{f}' for f in os.listdir(directory)]
+                # hmaps += files
+                test_dir = os.path.join(base_config_dir, directory)
+                if os.path.exists(test_dir):
+                    directory = test_dir
+                    # Utils.debug(f"Setting directory to: {directory}")
+                if os.path.exists(directory):
+                    if default_map_dir is None:
+                        default_map_dir = directory
+                    for f in os.listdir(directory):
+                        if os.path.isabs(f):
+                            hmaps.append(f)
+                        else:
+                            if os.path.exists(f):
+                                hmaps.append(f)
+                            elif os.path.exists(os.path.join(directory, f)):
+                                hmaps.append(os.path.join(directory, f))
+            if len(hmaps) > 0:
+                print(Utils.green('OK'))
+            else:
+                print(Utils.red_bright('KO'))
         except FileNotFoundError:
-            print(Utils.red('KO'))
+            print(Utils.red_bright('KO'))
+        except json.decoder.JSONDecodeError:
+            print(Utils.blue_bright('Initialized'))
 
     if len(hmaps) > 0:
         map_num = 0
@@ -681,8 +737,8 @@ game.add_menu_entry(
 game.add_menu_entry(
     'main',
     Utils.white_bright('c'),
-    'Create a new board item (becomes the current item,\
-         previous one is placed in history)')
+    'Create a new board item (becomes the current item,' +
+    ' previous one is placed in history)')
 game.add_menu_entry(
     'main',
     Utils.white_bright('p'),
@@ -759,8 +815,8 @@ while True:
     if key == 'Q':
         if is_modified:
             print(
-                "Board has been modified, do you want to save it \
-                    to avoid loosing your changes? (y/n)")
+                "Board has been modified, do you want to save it",
+                "to avoid loosing your changes? (y/n)")
             answer = str(input('> '))
             if answer.startswith('y'):
                 if (
@@ -930,8 +986,8 @@ while True:
         else:
             print(Utils.red_bright('DELETE'), end='')
         print(
-            f' | Board: {game.current_board().name} - \
-                {game.current_board().size} | Cursor @ {game.player.pos}')
+            f' | Board: {game.current_board().name} -',
+            f'{game.current_board().size} | Cursor @ {game.player.pos}')
     game.display_board()
     if len(object_history) > 10:
         del(object_history[0])

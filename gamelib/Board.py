@@ -58,10 +58,11 @@ class Board():
         self.ui_border_top = '-'
         self.ui_border_bottom = '-'
         self.ui_board_void_cell = ' '
+        self.DISPLAY_SIZE_WARNINGS = True
         # Setting class parameters
         for item in ['name', 'size', 'ui_border_bottom', 'ui_border_top',
                      'ui_border_left', 'ui_border_right', 'ui_board_void_cell',
-                     'player_starting_position']:
+                     'player_starting_position', 'DISPLAY_SIZE_WARNINGS']:
             if item in kwargs:
                 setattr(self, item, kwargs[item])
         # if ui_borders is set then set all borders to that value
@@ -187,14 +188,16 @@ class Board():
                                 "be a string."))
 
         if self.size[0] > 80:
-            warn((f"The first dimension of your board is {self.size[0]}. "
-                  "It is a good practice to keep it at a maximum of 80 for "
-                  "compatibility with older terminals."))
+            if self.DISPLAY_SIZE_WARNINGS:
+                warn((f"The first dimension of your board is {self.size[0]}. "
+                     "It is a good practice to keep it at a maximum of 80 for "
+                      "compatibility with older terminals."))
 
         if self.size[1] > 80:
-            warn((f"The second dimension of your board is {self.size[1]}. "
-                  "It is a good practice to keep it at a maximum of 80 for "
-                  "compatibility with older terminals."))
+            if self.DISPLAY_SIZE_WARNINGS:
+                warn((f"The second dimension of your board is {self.size[1]}. "
+                     "It is a good practice to keep it at a maximum of 80 for "
+                      "compatibility with older terminals."))
 
         # If all sanity check clears return True else raise a general error.
         # I have no idea how the general error could ever occur but...
@@ -205,7 +208,104 @@ class Board():
             raise HacException('SANITY_CHECK_KO',
                                "The board data are not valid.")
 
+    def _wip_display_around(self, object, p_row, p_col):
+        """Display only a part of the board.
+
+        .. warning:: THIS FUNCTION IS UNDER ACTIVE DEVELOPMENT. USE IT AT YOUR OWN RISKS
+
+        This method behaves like display() but only display a part of the board around
+        an object (usually the player).
+        Example::
+
+            board.display_around(player,30,60)
+
+        :param item: an item to move (it has to be a subclass of Movable)
+        :type item: gamelib.Movable.Movable
+        :param direction: a direction from :ref:`constants-module`
+        :type direction: gamelib.Constants
+        :param step: the number of steps to move the item.
+        :type step: int
+        It uses the same display algorithm than the regular display() method.
+        """
+        # print(self.ui_border_top*len(self._matrix[0]) + self.ui_border_top*2+"\r")
+        row_min_bound = 0
+        row_max_bound = self.size[0]
+        column_min_bound = 0
+        column_max_bound = self.size[1]
+        # Row
+        if object.pos[0]-p_row >= 0:
+            row_min_bound = object.pos[0]-p_row
+        if object.pos[0]+p_row < row_max_bound:
+            row_max_bound = object.pos[0]+p_row
+        # Columns
+        if object.pos[1]-p_row >= 0:
+            column_min_bound = object.pos[1]-p_col
+        if object.pos[1]+p_col < column_max_bound:
+            column_max_bound = object.pos[1]+p_col
+        # Now adjust boundaries so it looks fine at min and max
+        if column_min_bound <= 0:
+            column_min_bound = 0
+            column_max_bound = 2*p_col
+        if column_max_bound >= self.size[1]:
+            column_max_bound = self.size[1]
+            column_min_bound = self.size[1]-2*p_col
+        if row_min_bound <= 0:
+            row_min_bound = 0
+            row_max_bound = 2*p_row
+        if row_max_bound >= self.size[0]:
+            row_max_bound = self.size[0]
+            row_min_bound = self.size[0]-2*p_row
+        print(f'[debug] row boundaries {row_min_bound},{row_max_bound}')
+        print(f'[debug] column boundaries {column_min_bound},{column_max_bound}')
+        print(f'[debug] size: {self.size}')
+        if row_min_bound == 0:
+            print(self.ui_border_top*(p_col*2) + self.ui_border_top+"\r")
+        for row in self._matrix[row_min_bound:row_max_bound]:
+            if column_min_bound == 0:
+                print(self.ui_border_left, end='')
+            for y in row[column_min_bound:column_max_bound]:
+                if (isinstance(y, BoardItemVoid)
+                        and y.model != self.ui_board_void_cell):
+                    y.model = self.ui_board_void_cell
+                print(y, end='')
+            if column_max_bound == self.size[1]:
+                print(self.ui_border_right, end='')
+            print('\r')
+        if row_max_bound == self.size[0]:
+            print(self.ui_border_bottom*(p_col*2) + self.ui_border_bottom+"\r")
+
     def display(self):
+        """Display the entire board.
+
+        This method display the Board (as in print()), taking care of
+        displaying the borders, and everything inside.
+
+        It uses the __str__ method of the item, which by default is
+        BoardItem.model. If you want to override this behavior you have
+        to subclass BoardItem.
+        """
+        # border_top = ''
+        # border_bottom = ''
+        # for x in self._matrix[0]:
+        #     border_bottom += self.ui_border_bottom
+        #     border_top += self.ui_border_top
+        # border_bottom += self.ui_border_bottom*len(self._matrix[0]) \
+        #     + self.ui_border_bottom*2
+        # border_top += self.ui_border_top*len(self._matrix[0]) + self.ui_border_top*2
+        # print(border_top+"\r")
+        print(self.ui_border_top*len(self._matrix[0]) + self.ui_border_top*2+"\r")
+        for x in self._matrix:
+            print(self.ui_border_left, end='')
+            for y in x:
+                if (isinstance(y, BoardItemVoid)
+                        and y.model != self.ui_board_void_cell):
+                    y.model = self.ui_board_void_cell
+                print(y, end='')
+            print(self.ui_border_right + "\r")
+        # print(border_bottom + "\r")
+        print(self.ui_border_bottom*len(self._matrix[0]) + self.ui_border_bottom*2+"\r")
+
+    def display_old(self):
         """Display the board.
 
         This method display the Board (as in print()), taking care of

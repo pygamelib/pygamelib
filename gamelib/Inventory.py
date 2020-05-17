@@ -96,11 +96,11 @@ class Inventory:
                     raise HacInventoryException(
                         "not_enough_space",
                         "There is not enough space left in the inventory. Max. size: "
-                        + self.max_size
+                        + str(self.max_size)
                         + ", current inventory size: "
-                        + self.size()
+                        + str(self.size())
                         + " and item size: "
-                        + item.size(),
+                        + str(item.size()),
                     )
             else:
                 raise HacInventoryException(
