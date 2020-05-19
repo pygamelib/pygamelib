@@ -7,6 +7,8 @@ from gamelib.Board import Board
 from gamelib.BoardItem import BoardItemVoid
 from gamelib.Characters import NPC, Player
 from gamelib.Actuators.SimpleActuators import RandomActuator, PathActuator
+from gamelib.Movable import Movable
+from gamelib.Immovable import Immovable
 import gamelib.Structures as Structures
 import gamelib.Constants as Constants
 import gamelib.Utils as Utils
@@ -58,6 +60,8 @@ class Game:
         self.current_level = current_level
         self.player = None
         self.state = Constants.RUNNING
+        self.enable_partial_display = False
+        self.partial_display_viewport = None
         self._config_parsers = None
         self._configuration = None
         self.object_library = []
@@ -283,6 +287,23 @@ class Game:
                 raise HacInvalidTypeException(
                     "The board paramater must be a gamelib.Board.Board() object."
                 )
+        else:
+            raise HacInvalidTypeException("The level number must be an int.")
+
+    def get_board(self, level_number):
+        """
+        This method returns the board associated with a level number.
+        :param level_number: The number of the level.
+        :type level_number: int
+
+        :raises HacInvalidTypeException: if the level_number is not an int.
+
+        Example::
+
+            level1_board = mygame.get_board(1)
+        """
+        if type(level_number) is int:
+            return self._boards[level_number]["board"]
         else:
             raise HacInvalidTypeException("The level number must be an int.")
 
@@ -532,9 +553,34 @@ class Game:
     def display_board(self):
         """Display the current board.
 
-        This is an alias for Game.current_board().display()
+        The behavior of that function is dependant on how you configured this object.
+        If you set enable_partial_display to True AND partial_display_viewport is set
+        to a correct value, it will call Game.current_board().display_around() with the
+        correct parameters.
+        The partial display will be centered on the player (Game.player).
+        Otherwise it will just call Game.current_board().display().
+
+        Example::
+
+            mygame.enable_partial_display = True
+            # Number of rows, number of column (on each side, total viewport
+            # will be 20x20 in that case).
+            mygame.partial_display_viewport = [10, 10]
+            # This will call Game.current_board().display_around()
+            mygame.display()
+            mygame.enable_partial_display = False
+            # This will call Game.current_board().display()
+            mygame.display()
         """
-        self.current_board().display()
+        if(self.enable_partial_display
+           and self.partial_display_viewport is not None
+           and type(self.partial_display_viewport) is list):
+            # display_around(self, object, p_row, p_col)
+            self.current_board().display_around(self.player,
+                                                self.partial_display_viewport[0],
+                                                self.partial_display_viewport[1])
+        else:
+            self.current_board().display()
 
     def neighbors(self, radius=1, object=None):
         """Get a list of neighbors (non void item) around an object.
@@ -750,14 +796,27 @@ class Game:
                     if "object" in obj_keys:
                         o = _ref2obj(ref)
                         if not isinstance(o, NPC) and not isinstance(o, BoardItemVoid):
-                            local_board.place_item(o, x, y)
+                            # Optimization:
+                            # We replace the call to local_board.place_item(o, x, y)
+                            # By almost the same code, but:
+                            #   - We don't need to check if anything is already here
+                            #     as we are loading the map (nothing pre-exist)
+                            #   - We don't need to check the existence of movables or
+                            #     immovables for the same reason.
+                            #   - We manipulate the board matrix directly.
+                            # This is more dangerous but around 70 times faster.
+                            local_board._matrix[x][y] = o
+                            if (isinstance(o, Movable)):
+                                local_board._movables.append(o)
+                            elif (isinstance(o, Immovable)):
+                                local_board._immovables.append(o)
                         elif isinstance(o, NPC):
                             self.add_npc(lvl_number, o, x, y)
 
                     else:
                         Utils.warn(
                             f'while loading the board in {filename}, at coordinates '
-                            '[{pos_x},{pos_y}] there is an entry without "object" '
+                            f'[{pos_x},{pos_y}] there is an entry without "object" '
                             'attribute. NOT LOADED.'
                         )
         return local_board
