@@ -24,6 +24,8 @@ warn_messages = []
 base_config_dir = os.path.expanduser("~/.hac-game-lib")
 config_dir = os.path.join(base_config_dir, "config")
 default_map_dir = os.path.join(base_config_dir, "editor", "maps")
+viewport_height = 10
+viewport_width = 30
 
 
 # Functions definition
@@ -615,6 +617,11 @@ game.player = Player(model='[]')
 key = 'None'
 current_object = BoardItemVoid(model='None')
 object_history = []
+viewport_board = Board(name='Viewport testing board',
+                       size=[viewport_width*2, viewport_height*2],
+                       ui_borders=Utils.GREEN_SQUARE,
+                       ui_board_void_cell=Utils.RED_SQUARE)
+game.add_board(2, viewport_board)
 current_menu = 'main'
 while True:
     game.clear_screen()
@@ -687,7 +694,12 @@ while True:
         break
     elif choice.isdigit() and int(choice) < len(hmaps):
         current_file = hmaps[int(choice)]
-        game.load_board(hmaps[int(choice)], 1)
+        board = game.load_board(hmaps[int(choice)], 1)
+        if board.size[0] >= 50 or board.size[1] >= 50:
+            game.enable_partial_display = True
+            game.partial_display_viewport = [viewport_height, viewport_width]
+        else:
+            game.enable_partial_display = False
         break
 
 game.change_level(1)
@@ -749,6 +761,10 @@ game.add_menu_entry(
     'Set player starting position')
 game.add_menu_entry(
     'main',
+    Utils.white_bright('V'),
+    'Modify partial display viewport (resolution)')
+game.add_menu_entry(
+    'main',
     Utils.white_bright('S'),
     f'Save the current Board to {current_file}')
 game.add_menu_entry(
@@ -805,7 +821,26 @@ game.add_menu_entry(
     'board',
     '0',
     'Go back to the main menu')
-
+game.add_menu_entry(
+    'viewport',
+    Utils.white_bright('\u2191'),
+    'Increase the number of rows displayed')
+game.add_menu_entry(
+    'viewport',
+    Utils.white_bright('\u2193'),
+    'Decrease the number of rows displayed')
+game.add_menu_entry(
+    'viewport',
+    Utils.white_bright('\u2192'),
+    'Increase the number of columns displayed')
+game.add_menu_entry(
+    'viewport',
+    Utils.white_bright('\u2190'),
+    'Decrease the number of columns displayed')
+game.add_menu_entry(
+    'viewport',
+    'B',
+    'Go back to the main menu')
 while True:
     # Empty the messages
     dbg_messages = []
@@ -900,6 +935,10 @@ while True:
                 f'New player starting position set at {game.player.pos}')
         elif key == 'p':
             current_menu = 'board'
+        elif key == 'V':
+            current_menu = 'viewport'
+            game.change_level(2)
+            game.player.model = Utils.RED_SQUARE
         elif key == 'c':
             to_history(current_object)
             current_object = create_wizard()
@@ -967,7 +1006,17 @@ while True:
         if key in '1234567890':
             e = game.get_menu_entry('boards_list', key)
             if e is not None:
-                game.load_board(e['data'], 1)
+                board = game.load_board(e['data'], 1)
+                if board.size[0] >= 50 or board.size[1] >= 50:
+                    game.enable_partial_display = True
+                    game.partial_display_viewport = [viewport_height, viewport_width]
+                else:
+                    game.enable_partial_display = False
+                board.place_item(
+                    game.player,
+                    board.player_starting_position[0],
+                    board.player_starting_position[1],
+                )
                 current_file = e['data']
                 game.update_menu_entry(
                     'main',
@@ -976,6 +1025,24 @@ while True:
                 current_menu = 'main'
         elif key == 'B':
             current_menu = 'main'
+    elif current_menu == 'viewport':
+        if game.current_level != 2:
+            game.change_level(2)
+        if key == "B":
+            game.change_level(1)
+            game.player.model = '[]'
+            current_menu = 'main'
+        elif key == Utils.key.UP:
+            viewport_height += 1
+        elif key == Utils.key.DOWN:
+            viewport_height -= 1
+        elif key == Utils.key.LEFT:
+            viewport_width -= 1
+        elif key == Utils.key.RIGHT:
+            viewport_width += 1
+        viewport_board.size = [viewport_width*2, viewport_height*2]
+        viewport_board.init_board()
+        game.partial_display_viewport = [viewport_height, viewport_width]
 
     # Print the screen and interface
     game.clear_screen()
