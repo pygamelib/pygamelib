@@ -298,7 +298,8 @@ class Board():
         BoardItem.model. If you want to override this behavior you have
         to subclass BoardItem.
         """
-        print(self.ui_border_top*len(self._matrix[0]) + self.ui_border_top*2+"\r")
+        print(''.join([self.ui_border_top*len(self._matrix[0]),
+                       self.ui_border_top*2, "\r"]))
         for row in self._matrix:
             print(self.ui_border_left, end='')
             for column in row:
@@ -307,35 +308,8 @@ class Board():
                     column.model = self.ui_board_void_cell
                 print(column, end='')
             print(self.ui_border_right + "\r")
-        print(self.ui_border_bottom*len(self._matrix[0]) + self.ui_border_bottom*2+"\r")
-
-    def display_old(self):
-        """Display the board.
-
-        This method display the Board (as in print()), taking care of
-        displaying the boarders, and everything inside.
-
-        It uses the __str__ method of the item, which by default is
-        BoardItem.model. If you want to override this behavior you have
-        to subclass BoardItem.
-        """
-        border_top = ''
-        border_bottom = ''
-        for x in self._matrix[0]:
-            border_bottom += self.ui_border_bottom
-            border_top += self.ui_border_top
-        border_bottom += self.ui_border_bottom*2
-        border_top += self.ui_border_top*2
-        print(border_top+"\r")
-        for x in self._matrix:
-            print(self.ui_border_left, end='')
-            for y in x:
-                if (isinstance(y, BoardItemVoid)
-                        and y.model != self.ui_board_void_cell):
-                    y.model = self.ui_board_void_cell
-                print(y, end='')
-            print(self.ui_border_right + "\r")
-        print(border_bottom + "\r")
+        print(''.join([self.ui_border_bottom*len(self._matrix[0]),
+                       self.ui_border_bottom*2, "\r"]))
 
     def item(self, row, column):
         """
