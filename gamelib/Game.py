@@ -237,7 +237,7 @@ class Game:
         """
         Load a configuration file from the disk.
         The configuration file must respect the INI syntax.
-        The goal of these methods is to be simplify configuration files management.
+        The goal of these methods is to simplify configuration files management.
 
         :param filename: The filename to load. does not check for existence.
         :type filename: str
@@ -806,6 +806,7 @@ class Game:
                             #   - We manipulate the board matrix directly.
                             # This is more dangerous but around 70 times faster.
                             local_board._matrix[x][y] = o
+                            o.store_position(x, y)
                             if (isinstance(o, Movable)):
                                 local_board._movables.append(o)
                             elif (isinstance(o, Immovable)):
