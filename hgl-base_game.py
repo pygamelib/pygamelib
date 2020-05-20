@@ -38,9 +38,9 @@ if 'nosprite' in sys.argv:
 elif 'sprite' in sys.argv:
     sprite_mode = 'sprite'
 else:
-    print('How do you want the game to be rendered?\n 1 - \
-         with icons and sprites (might not render correctly \
-         in your terminal)\n 2 - with color blocks\n')
+    print('How do you want the game to be rendered?\n 1 - '
+          'with icons and sprites (might not render correctly '
+          'in your terminal)\n 2 - with color blocks\n')
     answer = input('Answer (1 or 2): ')
     if answer == '1':
         sprite_mode = 'sprite'
@@ -386,8 +386,8 @@ while key != 'q':
             print(
                 nice_npc.model
                 + Utils.cyan_bright(
-                    ' YEAAAH RIDDLE TIME!! Answer my riddle and you \
-                        will be awarded an awesome treasure!'))
+                    'YEAAAH RIDDLE TIME!! Answer my riddle and you '
+                    'will be awarded an awesome treasure!'))
             riddle = random.choice(uniriddles)
             print(nice_npc.model + Utils.magenta_bright(riddle['q']))
             answer = input('And your answer is? ')
