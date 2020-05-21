@@ -349,7 +349,7 @@ class Board():
                 # If we are about to place the item on a overlappable and
                 # restorable we store it to be restored
                 # when the Movable will move.
-                existing_item = self._matrix[row][column] 
+                existing_item = self._matrix[row][column]
                 if (isinstance(existing_item, Immovable)
                         and existing_item.restorable()
                         and existing_item.overlappable()):
@@ -360,8 +360,10 @@ class Board():
                 #     item._overlapping = self._matrix[row][column]
                 self._matrix[row][column] = item
                 item.store_position(row, column)
-                self._movables.add(item)
-                self._immovables.add(item)
+                if isinstance(item, Movable):
+                    self._movables.add(item)
+                elif isinstance(item, Immovable):
+                    self._immovables.add(item)
             else:
                 raise HacInvalidTypeException(
                     "The item passed in argument is "
