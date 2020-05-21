@@ -7,8 +7,6 @@ from gamelib.Board import Board
 from gamelib.BoardItem import BoardItemVoid
 from gamelib.Characters import NPC, Player
 from gamelib.Actuators.SimpleActuators import RandomActuator, PathActuator
-from gamelib.Movable import Movable
-from gamelib.Immovable import Immovable
 import gamelib.Structures as Structures
 import gamelib.Constants as Constants
 import gamelib.Utils as Utils
@@ -212,9 +210,9 @@ class Game:
             raise HacException(
                 "invalid_menu_category",
                 f"The '{category}' category is not registered in the menu. Did you add"
-                "any menu entry in that category with Game.add_menu_entry('{category}',"
-                "'some shortcut','some message') ? If yes, then you should check "
-                "for typos.",
+                f"a menu entry in that category with Game.add_menu_entry('{category}',"
+                f"'some shortcut','some message') ? If yes, then you should check "
+                f"for typos.",
             )
         pagination_counter = 1
         for k in self._menu[category]:
@@ -361,8 +359,8 @@ class Game:
             else:
                 raise HacInvalidLevelException(
                     f"Impossible to change level to an unassociated level (level number"
-                    " {level_number} is not associated with any board).\nHave you "
-                    "called:\ngame.add_board({level_number},Board()) ?"
+                    f" {level_number} is not associated with any board).\nHave you "
+                    f"called:\ngame.add_board({level_number},Board()) ?"
                 )
         else:
             raise HacInvalidTypeException(
@@ -471,7 +469,7 @@ class Game:
                 else:
                     raise HacInvalidLevelException(
                         f"Impossible to actuate NPCs for this level (level number "
-                        "{level_number} is not associated with any board)."
+                        f"{level_number} is not associated with any board)."
                     )
             else:
                 raise HacInvalidTypeException(
@@ -503,11 +501,11 @@ class Game:
                 else:
                     raise HacInvalidLevelException(
                         f"Impossible to animate items for this level (level number "
-                        "{level_number} is not associated with any board)."
+                        f"{level_number} is not associated with any board)."
                     )
             else:
                 raise HacInvalidTypeException(
-                    "In animate_items(level_number) the level_number must be an int."
+                    f"In animate_items(level_number) the level_number must be an int."
                 )
 
     def display_player_stats(
@@ -796,21 +794,7 @@ class Game:
                     if "object" in obj_keys:
                         o = _ref2obj(ref)
                         if not isinstance(o, NPC) and not isinstance(o, BoardItemVoid):
-                            # Optimization:
-                            # We replace the call to local_board.place_item(o, x, y)
-                            # By almost the same code, but:
-                            #   - We don't need to check if anything is already here
-                            #     as we are loading the map (nothing pre-exist)
-                            #   - We don't need to check the existence of movables or
-                            #     immovables for the same reason.
-                            #   - We manipulate the board matrix directly.
-                            # This is more dangerous but around 70 times faster.
-                            local_board._matrix[x][y] = o
-                            o.store_position(x, y)
-                            if (isinstance(o, Movable)):
-                                local_board._movables.append(o)
-                            elif (isinstance(o, Immovable)):
-                                local_board._immovables.append(o)
+                            local_board.place_item(o, x, y)
                         elif isinstance(o, NPC):
                             self.add_npc(lvl_number, o, x, y)
 

@@ -77,8 +77,8 @@ class Board():
             raise error
 
         # Init the list of movable and immovable objects
-        self._movables = []
-        self._immovables = []
+        self._movables = set()
+        self._immovables = set()
         # If sanity check passed then, initialize the board
         self.init_board()
 
@@ -259,9 +259,9 @@ class Board():
             row_max_bound = self.size[1]
             if (self.size[1]-2*p_row) >= 0:
                 row_min_bound = self.size[1]-2*p_row
-        print(f'[debug] row boundaries {row_min_bound},{row_max_bound}')
-        print(f'[debug] column boundaries {column_min_bound},{column_max_bound}')
-        print(f'[debug] size: {self.size}')
+        # print(f'[debug] row boundaries {row_min_bound},{row_max_bound}')
+        # print(f'[debug] column boundaries {column_min_bound},{column_max_bound}')
+        # print(f'[debug] size: {self.size}')
         if row_min_bound == 0:
             # TODO: We need to handle the case were partial display is used but the map
             # is actually the same (or smaller) than the viewport.
@@ -349,18 +349,19 @@ class Board():
                 # If we are about to place the item on a overlappable and
                 # restorable we store it to be restored
                 # when the Movable will move.
-                if (isinstance(self._matrix[row][column], Immovable)
-                        and self._matrix[row][column].restorable()
-                        and self._matrix[row][column].overlappable()):
+                existing_item = self._matrix[row][column] 
+                if (isinstance(existing_item, Immovable)
+                        and existing_item.restorable()
+                        and existing_item.overlappable()):
                     item._overlapping = self._matrix[row][column]
+                # if (isinstance(self._matrix[row][column], Immovable)
+                #         and self._matrix[row][column].restorable()
+                #         and self._matrix[row][column].overlappable()):
+                #     item._overlapping = self._matrix[row][column]
                 self._matrix[row][column] = item
                 item.store_position(row, column)
-                if (isinstance(item, Movable)
-                        and item not in self._movables):
-                    self._movables.append(item)
-                elif (isinstance(item, Immovable)
-                        and item not in self._immovables):
-                    self._immovables.append(item)
+                self._movables.add(item)
+                self._immovables.add(item)
             else:
                 raise HacInvalidTypeException(
                     "The item passed in argument is "
@@ -593,11 +594,15 @@ class Board():
 
         """
         if self._matrix[row][column] in self._movables:
-            index = self._movables.index(self._matrix[row][column])
-            del(self._movables[index])
+            self._movables.discard(self._matrix[row][column])
         elif self._matrix[row][column] in self._immovables:
-            index = self._immovables.index(self._matrix[row][column])
-            del(self._immovables[index])
+            self._immovables.discard(self._matrix[row][column])
+        # if self._matrix[row][column] in self._movables:
+        #     index = self._movables.index(self._matrix[row][column])
+        #     del(self._movables[index])
+        # elif self._matrix[row][column] in self._immovables:
+        #     index = self._immovables.index(self._matrix[row][column])
+        #     del(self._immovables[index])
         self.place_item(
             BoardItemVoid(model=self.ui_board_void_cell, name='void_cell'),
             row,
@@ -633,7 +638,7 @@ class Board():
                     retvals.append(item)
             return retvals
         else:
-            return self._movables
+            return list(self._movables)
 
     def get_immovables(self, **kwargs):
         """Return a list of all the Immovable objects in the Board.
@@ -667,4 +672,4 @@ class Board():
                     retvals.append(item)
             return retvals
         else:
-            return self._immovables
+            return list(self._immovables)
