@@ -227,6 +227,7 @@ class Board():
         :type direction: gamelib.Constants
         :param step: the number of steps to move the item.
         :type step: int
+
         It uses the same display algorithm than the regular display() method.
         """
         # print(self.ui_border_top*len(self._matrix[0]) + self.ui_border_top*2+"\r")
@@ -599,6 +600,7 @@ class Board():
             self._movables.discard(self._matrix[row][column])
         elif self._matrix[row][column] in self._immovables:
             self._immovables.discard(self._matrix[row][column])
+        self._matrix[row][column] = None
         # if self._matrix[row][column] in self._movables:
         #     index = self._movables.index(self._matrix[row][column])
         #     del(self._movables[index])
