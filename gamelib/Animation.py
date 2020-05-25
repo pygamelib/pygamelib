@@ -10,7 +10,7 @@ import time
 class Animation(object):
     """
     The Animation class is used to give the ability to have more than one model
-    for a BoardItem. An BoardItem can have an animation and all of them that
+    for a BoardItem. A BoardItem can have an animation and all of them that
     are available to the Game object can be animated through
     Game.animate_items(lvl_number).
     To benefit from that, BoardItem.animation must be set explicitely.
