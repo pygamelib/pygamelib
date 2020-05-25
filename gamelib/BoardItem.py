@@ -28,7 +28,7 @@ class BoardItem:
         self.model = "*"
         self.animation = None
         # Setting class parameters
-        for item in ["name", "type", "pos", "model"]:
+        for item in ["name", "type", "pos", "model", "parent"]:
             if item in kwargs:
                 setattr(self, item, kwargs[item])
 
