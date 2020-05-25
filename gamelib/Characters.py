@@ -123,12 +123,12 @@ class NPC(Movable, Character):
         * :class:`gamelib.BoardItem.BoardItem`
 
     :param actuator: An actuator, it can be any class but it need to implement
-        gamelibe.Actuator.Actuator.
+        gamelib.Actuator.Actuator.
     :type actuator: gamelib.Actuators.Actuator
 
     Example::
 
-        mynpc = NPC(name='Idiot McStupid', type='dumb_ennemy')
+        mynpc = NPC(name='Idiot McStupid', type='dumb_enemy')
         mynpc.step = 1
         mynpc.actuator = RandomActuator()
     """
