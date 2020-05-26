@@ -328,7 +328,7 @@ class Board():
             raise HacOutOfBoardBoundException(
                   (f"There is no item at coordinates [{row},{column}] "
                    "because it's out of the board boundaries "
-                   "({self.size[0]}x{self.size[1]}).")
+                   f"({self.size[0]}x{self.size[1]}).")
                   )
 
     def place_item(self, item, row, column):
@@ -371,9 +371,8 @@ class Board():
                     "not a subclass of BoardItem")
         else:
             raise HacOutOfBoardBoundException(
-                f"There is no item at coordinates [{row},{column}] because "
-                "it's out of the board boundaries "
-                f"({self.size[0]}x{self.size[1]}).")
+                f"Cannot place item at coordinates [{row},{column}] because "
+                f"it's out of the board boundaries ({self.size[0]}x{self.size[1]}).")
 
     def move(self, item, direction, step):
         """
