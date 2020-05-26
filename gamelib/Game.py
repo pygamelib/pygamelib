@@ -6,6 +6,7 @@ from gamelib.HacExceptions import (
 from gamelib.Board import Board
 from gamelib.BoardItem import BoardItemVoid
 from gamelib.Characters import NPC, Player
+from gamelib.Movable import Projectile
 from gamelib.Actuators.SimpleActuators import RandomActuator, PathActuator
 import gamelib.Structures as Structures
 import gamelib.Constants as Constants
@@ -280,7 +281,9 @@ class Game:
         """
         if type(level_number) is int:
             if isinstance(board, Board):
-                self._boards[level_number] = {"board": board, "npcs": []}
+                self._boards[level_number] = {"board": board,
+                                              "npcs": [],
+                                              "projectiles": []}
             else:
                 raise HacInvalidTypeException(
                     "The board paramater must be a gamelib.Board.Board() object."
@@ -466,6 +469,198 @@ class Game:
                             self._boards[level_number]["board"].move(
                                 npc, npc.actuator.next_move(), npc.step
                             )
+                else:
+                    raise HacInvalidLevelException(
+                        f"Impossible to actuate NPCs for this level (level number "
+                        f"{level_number} is not associated with any board)."
+                    )
+            else:
+                raise HacInvalidTypeException(
+                    "In actuate_npcs(level_number) the level_number must be an int."
+                )
+
+    def add_projectile(self, level_number, projectile, row=None, column=None):
+        """
+        Add a Projectile to the game. It will be placed on the board corresponding to
+        level_number. Neither row nor column can be None.
+
+        Example::
+
+            game.add_projectile(1, fireball, 5, 2)
+
+        :param level_number: the level number of the board.
+        :type level_number: int
+        :param projectile: the Projectile to place.
+        :type projectile: :class:`~gamelib.Movable.Projectile`
+        :param row: the row coordinate to place the Projectile at.
+        :type row: int
+        :param column: the column coordinate to place the Projectile at.
+        :type column: int
+
+        If either of these parameters are not of the correct type, a
+        HacInvalidTypeException exception is raised.
+
+        .. Important:: If the Projectile does not have an actuator, this method is going
+            to affect gamelib.Actuators.SimpleActuators.RandomActuator(moveset=[RIGHT])
+            to projectile.actuator. And if projectile.step == None, this method sets it
+            to 1.
+        """
+        if type(level_number) is int:
+            if isinstance(projectile, Projectile):
+                if row is None or column is None:
+                    raise HacInvalidTypeException('In Game.add_projectile neither row'
+                                                  ' nor column can be None.'
+                                                  )
+                if type(row) is int:
+                    if type(column) is int:
+                        # If we're trying to send a projectile out of the board's bounds
+                        # We do nothing and return.
+                        if (row >= self._boards[level_number]["board"].size[1]
+                           or column >= self._boards[level_number]["board"].size[0]
+                           or row < 0
+                           or column < 0):
+                            return
+                        # If there is something were we should put the projectile,
+                        # then we consider it an immediate hit.
+                        check_object = self._boards[level_number]["board"].item(row,
+                                                                                column)
+                        if not isinstance(check_object, BoardItemVoid):
+                            if projectile.is_aoe:
+                                # AoE is easy, just return everything in range
+                                projectile.hit(self.neighbors(projectile.aoe_radius,
+                                                              check_object))
+                                return
+                            else:
+                                projectile.hit([check_object])
+                                return
+                        if projectile.actuator is None:
+                            projectile.actuator = RandomActuator(
+                                moveset=[Constants.RIGHT]
+                            )
+                        if projectile.step is None:
+                            projectile.step = 1
+                        self._boards[level_number]["board"].place_item(projectile,
+                                                                       row,
+                                                                       column)
+                        self._boards[level_number]["projectiles"].append(projectile)
+                    else:
+                        raise HacInvalidTypeException("column must be an int.")
+                else:
+                    raise HacInvalidTypeException("row must be an int.")
+            else:
+                raise HacInvalidTypeException(
+                    "The projectile paramater must be a "
+                    "gamelib.Characters.Projectile() object."
+                )
+        else:
+            raise HacInvalidTypeException("The level number must be an int.")
+
+    def remove_npc(self, level_number, npc):
+        """This methods remove the NPC from the level in parameter.
+
+        :param level: The number of the level from where the NPC is to be removed.
+        :type level: int
+        :param npc: The NPC object to remove.
+        :type npc: :class:`~gamelib.Characters.NPC`
+
+        Example::
+
+            mygame.remove_npc(1, dead_npc)
+        """
+        self._boards[level_number]["npcs"].remove(npc)
+        self.current_board().clear_cell(npc.pos[0], npc.pos[1])
+
+    def actuate_projectiles(self, level_number):
+        """Actuate all Projectiles on a given level
+
+        This method actuate all Projectiles on a board associated with a level.
+        This method differs from actuate_npcs() as some logic is involved with
+        projectiles that NPC do not have.
+        This method decrease the available range by projectile.step each time it's
+        called.
+        It also detects potential collisions.
+        If the available range falls to 0 or a collision is detected the projectile
+        hit_callback is called.
+
+        :param level_number: The number of the level to actuate Projectiles in.
+        :type int:
+
+        Example::
+
+            mygame.actuate_projectiles(1)
+
+        .. note:: This method only move Projectiles when their actuator state is
+            RUNNING. If it is PAUSED or STOPPED, the Projectile is not moved.
+        """
+        if self.state == Constants.RUNNING:
+            if type(level_number) is int:
+                if level_number in self._boards.keys():
+                    board = self._boards[level_number]["board"]
+                    for proj in self._boards[level_number]["projectiles"]:
+                        if proj.actuator.state == Constants.RUNNING:
+                            if proj.range > 0:
+                                init_position = proj.pos
+                                direction = proj.actuator.next_move()
+                                board.move(
+                                    proj, direction,
+                                    proj.step
+                                )
+                                proj.range -= proj.step
+                                # If range was positive and position did not change
+                                # it means something is blocking the projectile path
+                                # in other words: we detected a collision.
+                                if proj.pos == init_position:
+                                    if proj.is_aoe:
+                                        # AoE is easy, just return everything in range
+                                        proj.hit(self.neighbors(proj.aoe_radius, proj))
+                                    else:
+                                        # directional hit requires us to get the item
+                                        # that blocked our path
+                                        proj.hit([BoardItemVoid()])
+                                        new_x = None
+                                        new_y = None
+                                        if direction == Constants.UP:
+                                            new_x = proj.pos[0] - proj.step
+                                            new_y = proj.pos[1]
+                                        elif direction == Constants.DOWN:
+                                            new_x = proj.pos[0] + proj.step
+                                            new_y = proj.pos[1]
+                                        elif direction == Constants.LEFT:
+                                            new_x = proj.pos[0]
+                                            new_y = proj.pos[1] - proj.step
+                                        elif direction == Constants.RIGHT:
+                                            new_x = proj.pos[0]
+                                            new_y = proj.pos[1] + proj.step
+                                        elif direction == Constants.DRUP:
+                                            new_x = proj.pos[0] - proj.step
+                                            new_y = proj.pos[1] + proj.step
+                                        elif direction == Constants.DRDOWN:
+                                            new_x = proj.pos[0] + proj.step
+                                            new_y = proj.pos[1] + proj.step
+                                        elif direction == Constants.DLUP:
+                                            new_x = proj.pos[0] - proj.step
+                                            new_y = proj.pos[1] - proj.step
+                                        elif direction == Constants.DLDOWN:
+                                            new_x = proj.pos[0] + proj.step
+                                            new_y = proj.pos[1] - proj.step
+                                        if(new_x is not None
+                                           and new_y is not None
+                                           and new_x >= 0
+                                           and new_y >= 0
+                                           and new_x < board.size[1]
+                                           and new_y < board.size[0]):
+                                            proj.hit([board.item(new_x, new_y)])
+                            elif proj.range == 0:
+                                if proj.is_aoe:
+                                    proj.hit(self.neighbors(proj.aoe_radius, proj))
+                                else:
+                                    proj.hit([BoardItemVoid()])
+                            else:
+                                self._boards[level_number]["projectiles"].remove(proj)
+                                board.clear_cell(proj.pos[0], proj.pos[1])
+                        elif proj.actuator.state == Constants.STOPPED:
+                            self._boards[level_number]["projectiles"].remove(proj)
+                            board.clear_cell(proj.pos[0], proj.pos[1])
                 else:
                     raise HacInvalidLevelException(
                         f"Impossible to actuate NPCs for this level (level number "
