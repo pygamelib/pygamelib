@@ -208,10 +208,8 @@ class Board():
             raise HacException('SANITY_CHECK_KO',
                                "The board data are not valid.")
 
-    def display_around(self, object, p_row, p_col):
+    def display_around(self, object, row_radius, column_radius):
         """Display only a part of the board.
-
-        .. warning:: THIS FUNCTION IS UNDER ACTIVE DEVELOPMENT. USE IT AT YOUR OWN RISKS
 
         This method behaves like display() but only display a part of the board around
         an object (usually the player).
@@ -221,54 +219,60 @@ class Board():
             # 60 cells horizontally.
             board.display_around(player, 15, 30)
 
-        :param item: an item to move (it has to be a subclass of Movable)
-        :type item: gamelib.Movable.Movable
-        :param direction: a direction from :ref:`constants-module`
-        :type direction: gamelib.Constants
-        :param step: the number of steps to move the item.
-        :type step: int
+        :param object: an item to center the view on (it has to be a subclass
+            of BoardItem)
+        :type object: :class:`~gamelib.BoardItem.BoardItem`
+        :param row_radius: The radius of display in number of rows showed. Remember that
+            it is a radius not a diameter...
+        :type row_radius: int
+        :param column_radius: The radius of display in number of columns showed.
+            Remember that... Well, same thing.
+        :type column_radius: int
 
         It uses the same display algorithm than the regular display() method.
         """
-        # print(self.ui_border_top*len(self._matrix[0]) + self.ui_border_top*2+"\r")
+        # First let's take care of the type checking
+        if not isinstance(object, BoardItem):
+            raise HacInvalidTypeException('Board.display_around: object needs to be'
+                                          ' a BoardItem.')
+        if type(row_radius) is not int or type(column_radius) is not int:
+            raise HacInvalidTypeException('Board.display_around: both row_radius and'
+                                          ' column_radius needs to be int.')
+        # Now if the viewport is greater or equal to the board size, well we just need
+        # a regular display()
+        if self.size[1] <= 2*row_radius and self.size[0] <= 2*column_radius:
+            return self.display()
         row_min_bound = 0
         row_max_bound = self.size[1]
         column_min_bound = 0
         column_max_bound = self.size[0]
         # Row
-        if object.pos[0]-p_row >= 0:
-            row_min_bound = object.pos[0]-p_row
-        if object.pos[0]+p_row < row_max_bound:
-            row_max_bound = object.pos[0]+p_row
+        if object.pos[0]-row_radius >= 0:
+            row_min_bound = object.pos[0]-row_radius
+        if object.pos[0]+row_radius < row_max_bound:
+            row_max_bound = object.pos[0]+row_radius
         # Columns
-        if object.pos[1]-p_row >= 0:
-            column_min_bound = object.pos[1]-p_col
-        if object.pos[1]+p_col < column_max_bound:
-            column_max_bound = object.pos[1]+p_col
+        if object.pos[1]-row_radius >= 0:
+            column_min_bound = object.pos[1]-column_radius
+        if object.pos[1]+column_radius < column_max_bound:
+            column_max_bound = object.pos[1]+column_radius
         # Now adjust boundaries so it looks fine at min and max
         if column_min_bound <= 0:
             column_min_bound = 0
-            column_max_bound = 2*p_col
+            column_max_bound = 2*column_radius
         if column_max_bound >= self.size[0]:
             column_max_bound = self.size[0]
-            if (self.size[0]-2*p_col) >= 0:
-                column_min_bound = self.size[0]-2*p_col
+            if (self.size[0]-2*column_radius) >= 0:
+                column_min_bound = self.size[0]-2*column_radius
         if row_min_bound <= 0:
             row_min_bound = 0
-            row_max_bound = 2*p_row
+            row_max_bound = 2*row_radius
         if row_max_bound >= self.size[1]:
             row_max_bound = self.size[1]
-            if (self.size[1]-2*p_row) >= 0:
-                row_min_bound = self.size[1]-2*p_row
-        # print(f'[debug] row boundaries {row_min_bound},{row_max_bound}')
-        # print(f'[debug] column boundaries {column_min_bound},{column_max_bound}')
-        # print(f'[debug] size: {self.size}')
+            if (self.size[1]-2*row_radius) >= 0:
+                row_min_bound = self.size[1]-2*row_radius
         if row_min_bound == 0:
-            # TODO: We need to handle the case were partial display is used but the map
-            # is actually the same (or smaller) than the viewport.
-            # First, we need to add border character on both sides not just one.
-            # print(self.ui_border_top*(p_col*2) + self.ui_border_top+"\r")
-            print(self.ui_border_top*(p_col*2), end='')
+            print(self.ui_border_top*(column_radius*2), end='')
             if column_min_bound <= 0 or column_max_bound >= self.size[0]:
                 print(self.ui_border_top, end='')
             print("\r")
@@ -284,7 +288,7 @@ class Board():
                 print(self.ui_border_right, end='')
             print('\r')
         if row_max_bound >= self.size[1]:
-            print(self.ui_border_bottom*(p_col*2), end='')
+            print(self.ui_border_bottom*(column_radius*2), end='')
             if column_min_bound <= 0 or column_max_bound >= self.size[0]:
                 print(self.ui_border_bottom, end='')
             print("\r")
