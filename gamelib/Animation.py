@@ -46,14 +46,17 @@ class Animation(object):
                                    refresh_screen=redraw_screen)
     """
     def __init__(self, display_time=0.05, auto_replay=True, frames=None,
-                 animated_object=None, refresh_screen=None):
+                 animated_object=None, refresh_screen=None, initial_index=None):
         self.state = RUNNING
         self.display_time = display_time
         self.auto_replay = auto_replay
         if frames is None:
             frames = []
         self.frames = frames
-        self._frame_index = 0
+        if initial_index is None:
+            self._frame_index = 0
+        else:
+            self._frame_index = initial_index
         self.animated_object = animated_object
         self.refresh_screen = refresh_screen
 
