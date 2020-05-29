@@ -219,7 +219,9 @@ def whale_behavior():
                             g.add_npc(
                                 1,
                                 NPC(
-                                    model=Sprites.OCTOPUS,
+                                    model=Utils.Back.BLUE
+                                    + Sprites.OCTOPUS
+                                    + Utils.Style.RESET_ALL,
                                     name="Swimming Octopus (Left)",
                                     type="swimming_octopus",
                                 ),
@@ -232,7 +234,9 @@ def whale_behavior():
                             g.add_npc(
                                 1,
                                 NPC(
-                                    model=Sprites.OCTOPUS,
+                                    model=Utils.Back.BLUE
+                                    + Sprites.OCTOPUS
+                                    + Utils.Style.RESET_ALL,
                                     name="Swimming Octopus (Right)",
                                     type="swimming_octopus",
                                 ),
