@@ -4,7 +4,7 @@ patterns.
 """
 
 from gamelib.Actuators.Actuator import Actuator
-from gamelib.Constants import RUNNING
+from gamelib.Constants import RUNNING, RIGHT
 import random
 
 
@@ -138,3 +138,37 @@ class PatrolActuator(PathActuator):
                 self.index = 0
                 self.path = self.path.reverse()
             return move
+
+
+class UnidirectionalActuator(Actuator):
+    """A class that implements a single movement.
+
+    The unidirectional actuator is a subclass of
+    :class:`~gamelib.Actuators.Actuator.Actuator`.
+    It is simply implementing a mono directional movement. It is primarily target at
+    projectiles.
+
+    :param direction: A single direction from the Constants module.
+    :type direction: int
+    """
+    def __init__(self, direction=RIGHT):
+        if direction is None:
+            direction = RIGHT
+        super().__init__()
+        self.direction = direction
+
+    def next_move(self):
+        """Return the direction.
+
+        The movement is always direction if state is RUNNING,
+        otherwise it returns None.
+
+        :return: The next movement
+        :rtype: int | None
+
+        Example::
+
+            unidirectional_actuator.next_move()
+        """
+        if self.state == RUNNING:
+            return self.direction

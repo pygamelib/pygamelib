@@ -5,7 +5,7 @@ It can potentially hold more movement related classes.
 from gamelib.BoardItem import BoardItem
 from gamelib.HacExceptions import HacInvalidTypeException, HacException
 from gamelib.Animation import Animation
-from gamelib.Actuators.SimpleActuators import RandomActuator
+from gamelib.Actuators.SimpleActuators import UnidirectionalActuator
 import gamelib.Constants as Constants
 
 
@@ -143,7 +143,7 @@ class Projectile(Movable):
         self.hit_model = hit_model
         self.hit_callback = hit_callback
         self.callback_parameters = args
-        self.actuator = RandomActuator(moveset=[direction])
+        self.actuator = UnidirectionalActuator(direction=direction)
         self.is_aoe = is_aoe
         self.aoe_radius = aoe_radius
 
@@ -221,7 +221,7 @@ class Projectile(Movable):
         self.model = self.directional_model(direction)
         self.animation = self.directional_animation(direction)
         self.direction = direction
-        self.actuator = RandomActuator(moveset=[direction])
+        self.actuator = UnidirectionalActuator(direction=direction)
 
     def hit(self, objects):
         """A method that is called when the projectile hit something.
