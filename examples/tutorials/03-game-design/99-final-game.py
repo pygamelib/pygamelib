@@ -623,8 +623,8 @@ while run:
             # Warn the player
             print(
                 Utils.red_bright(
-                    f"You have been saved by the Scroll of Wisdom, be careful next time"
-                    f" you will die!"
+                    "You have been saved by the Scroll of Wisdom, be careful next time"
+                    " you will die!"
                 )
             )
             # And consume the scroll in the process

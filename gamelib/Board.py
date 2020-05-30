@@ -84,13 +84,13 @@ class Board():
         self.init_board()
 
     def __str__(self):
-        return (f"----------------\n"
-                "Board name: {self.name}\n"
-                "Board size: {self.size}\n"
-                "Borders: '{self.ui_border_left}','{self.ui_border_right}','"
-                "{self.ui_border_top}','{self.ui_border_bottom}',\n"
-                "Board void cell: '{self.ui_board_void_cell}'\n"
-                "Player starting position: {self.player_starting_position}\n"
+        return ("----------------\n"
+                f"Board name: {self.name}\n"
+                f"Board size: {self.size}\n"
+                f"Borders: '{self.ui_border_left}','{self.ui_border_right}','"
+                f"{self.ui_border_top}','{self.ui_border_bottom}',\n"
+                f"Board void cell: '{self.ui_board_void_cell}'\n"
+                f"Player starting position: {self.player_starting_position}\n"
                 "----------------")
 
     def init_board(self):

@@ -701,12 +701,12 @@ class Game:
                             item.animation.next_frame()
                 else:
                     raise HacInvalidLevelException(
-                        f"Impossible to animate items for this level (level number "
+                        "Impossible to animate items for this level (level number "
                         f"{level_number} is not associated with any board)."
                     )
             else:
                 raise HacInvalidTypeException(
-                    f"In animate_items(level_number) the level_number must be an int."
+                    "In animate_items(level_number) the level_number must be an int."
                 )
 
     def display_player_stats(
