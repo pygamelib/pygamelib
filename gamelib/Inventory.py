@@ -27,9 +27,10 @@ class Inventory:
 
     """
 
-    def __init__(self, max_size=10):
+    def __init__(self, max_size=10, parent=None):
         self.max_size = max_size
         self.__items = {}
+        self.parent = parent
 
     def __str__(self):
         s = "=============\n"

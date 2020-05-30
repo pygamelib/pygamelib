@@ -59,10 +59,11 @@ class Board():
         self.ui_border_bottom = '-'
         self.ui_board_void_cell = ' '
         self.DISPLAY_SIZE_WARNINGS = True
+        self.parent = None
         # Setting class parameters
         for item in ['name', 'size', 'ui_border_bottom', 'ui_border_top',
                      'ui_border_left', 'ui_border_right', 'ui_board_void_cell',
-                     'player_starting_position', 'DISPLAY_SIZE_WARNINGS']:
+                     'player_starting_position', 'DISPLAY_SIZE_WARNINGS', 'parent']:
             if item in kwargs:
                 setattr(self, item, kwargs[item])
         # if ui_borders is set then set all borders to that value
@@ -102,7 +103,7 @@ class Board():
             myboard.init_board()
         """
 
-        self._matrix = [[BoardItemVoid(model=self.ui_board_void_cell)
+        self._matrix = [[BoardItemVoid(model=self.ui_board_void_cell, parent=self)
                         for i in range(0, self.size[0], 1)]
                         for j in range(0, self.size[1], 1)]
 
@@ -121,7 +122,7 @@ class Board():
             myboard.init_cell(2,3)
         """
         self._matrix[row][column] = BoardItemVoid(
-            model=self.ui_board_void_cell)
+            model=self.ui_board_void_cell, parent=self)
 
     def check_sanity(self):
         """Check the board sanity.
@@ -359,11 +360,10 @@ class Board():
                         and existing_item.restorable()
                         and existing_item.overlappable()):
                     item._overlapping = self._matrix[row][column]
-                # if (isinstance(self._matrix[row][column], Immovable)
-                #         and self._matrix[row][column].restorable()
-                #         and self._matrix[row][column].overlappable()):
-                #     item._overlapping = self._matrix[row][column]
+                # Place the item on the board
                 self._matrix[row][column] = item
+                # Take ownership of the item
+                item.parent = self
                 item.store_position(row, column)
                 if isinstance(item, Movable):
                     self._movables.add(item)

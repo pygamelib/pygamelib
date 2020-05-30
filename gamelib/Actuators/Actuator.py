@@ -14,9 +14,9 @@ class Actuator():
     By default, all actuators are considered movement actuators. So the base class only
     require next_move() to be implemented.
     """
-    def __init__(self):
+    def __init__(self, parent):
         """
-        The constructor does not take any parameters.
+        The constructor take only one (positional) parameter: the parent object.
 
         .. important:: The default state of ALL actuators is RUNNING. If you want your
             actuator to be in a different state (PAUSED for example), you have to do it
@@ -24,6 +24,7 @@ class Actuator():
         """
         self.type = None
         self.state = RUNNING
+        self.parent = parent
 
     def start(self):
         """Set the actuator state to RUNNING.
@@ -71,11 +72,12 @@ class Behavioral(Actuator):
     method.
     The actual actions are left to the actuator that implements Behavioral.
     """
-    def __init__(self):
+    def __init__(self, parent):
         """
-        The constructor simply construct an Actuator.
+        The constructor simply construct an Actuator. It takes on positional paraneter:
+        the parent object.
         """
-        Actuator.__init__(self)
+        Actuator.__init__(self, parent)
 
     def next_action(self):
         """

@@ -27,6 +27,7 @@ class BoardItem:
         self.pos = [None, None]
         self.model = "*"
         self.animation = None
+        self.parent = None
         # Setting class parameters
         for item in ["name", "type", "pos", "model", "parent"]:
             if item in kwargs:

@@ -44,5 +44,5 @@ setuptools.setup(
         'Release Notes':
             'https://astro.hyrul.es/news/hac-game-lib-v1.0.1-release-notes.html'
     },
-    python_requires='>=3',
+    python_requires='>=3.6',
 )

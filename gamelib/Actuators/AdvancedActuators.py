@@ -25,17 +25,26 @@ class PathFinder(Behavioral):
 
     :param game: A reference to the instanciated game engine.
     :type game: gamelib.Game.Game
-    :param actuated_object: The object to actuate.
+    :param actuated_object: The object to actuate. Deprecated in favor of parent.
+        Only kept for backward compatibility.
     :type actuated_object: gamelib.BoardItem.BoardItem
+    :param parent: The parent object to actuate.
+    :type parent: gamelib.BoardItem.BoardItem
     :param circle_waypoints: If True the next_waypoint()
         method is going to circle between the waypoints
         (when the last is visited, go back to the first)
     :type circle_waypoints: bool
 
     """
-    def __init__(self, game=None, actuated_object=None, circle_waypoints=True):
-        super().__init__()
-        self.actuated_object = actuated_object
+    def __init__(self, game=None, actuated_object=None, circle_waypoints=True,
+                 parent=None):
+        if actuated_object is not None and parent is None:
+            self.actuated_object = actuated_object
+            self.parent = actuated_object
+        elif parent is not None:
+            self.actuated_object = parent
+            self.parent = parent
+        super().__init__(self.parent)
         self.destination = (None, None)
         self.game = game
         self._current_path = []

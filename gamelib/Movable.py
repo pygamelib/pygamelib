@@ -129,11 +129,11 @@ class Projectile(Movable):
     def __init__(self, name='projectile', direction=Constants.RIGHT, step=1,
                  range=5, model='\U00002301', movement_animation=None,
                  hit_animation=None, hit_model=None, hit_callback=None, is_aoe=False,
-                 aoe_radius=0, *args):
+                 aoe_radius=0, parent=None, *args):
         if range % step != 0:
             raise HacException('incorrect_range_step', 'range must be a factor of step'
                                ' in Projectile')
-        Movable.__init__(self, model=model, step=step, name=name)
+        Movable.__init__(self, model=model, step=step, name=name, parent=parent)
         self.direction = direction
         self.range = range
         self.movement_animation = movement_animation
@@ -146,6 +146,7 @@ class Projectile(Movable):
         self.actuator = UnidirectionalActuator(direction=direction)
         self.is_aoe = is_aoe
         self.aoe_radius = aoe_radius
+        self.parent = parent
 
     def add_directional_animation(self, direction, animation):
         if type(direction) is not int:

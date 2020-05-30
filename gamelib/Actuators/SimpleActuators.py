@@ -17,11 +17,13 @@ class RandomActuator(Actuator):
 
     :param moveset: A list of movements.
     :type moveset: list
+    :param parent: The parent object to actuate.
+    :type parent: gamelib.BoardItem.BoardItem
     """
-    def __init__(self, moveset=None):
+    def __init__(self, moveset=None, parent=None):
         if moveset is None:
             moveset = []
-        super().__init__()
+        super().__init__(parent)
         self.moveset = moveset
 
     def next_move(self):
@@ -53,11 +55,13 @@ class PathActuator(Actuator):
 
     :param path: A list of paths.
     :type path: list
+    :param parent: The parent object to actuate.
+    :type parent: gamelib.BoardItem.BoardItem
     """
-    def __init__(self, path=None):
+    def __init__(self, path=None, parent=None):
         if path is None:
             path = []
-        super().__init__()
+        super().__init__(parent)
         self.path = path
         self.index = 0
 
@@ -150,11 +154,13 @@ class UnidirectionalActuator(Actuator):
 
     :param direction: A single direction from the Constants module.
     :type direction: int
+    :param parent: The parent object to actuate.
+    :type parent: gamelib.BoardItem.BoardItem
     """
-    def __init__(self, direction=RIGHT):
+    def __init__(self, direction=RIGHT, parent=None):
         if direction is None:
             direction = RIGHT
-        super().__init__()
+        super().__init__(parent)
         self.direction = direction
 
     def next_move(self):

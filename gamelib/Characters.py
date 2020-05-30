@@ -88,7 +88,7 @@ class Player(Movable, Character):
         if "inventory" in kwargs.keys():
             self.inventory = kwargs["inventory"]
         else:
-            self.inventory = Inventory()
+            self.inventory = Inventory(parent=self)
 
     def pickable(self):
         """This method returns False (a player is obviously not pickable).
