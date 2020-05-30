@@ -177,12 +177,12 @@ portal1.set_overlappable(False)
 portal1.action = change_current_level
 portal1.action_parameters = [game, 1]
 
-life_heart = GenericActionableStructure(model=sprite_heart)
+life_heart = GenericActionableStructure(model=sprite_heart, name='life_100')
 life_heart.set_overlappable(True)
 life_heart.action = add_hp
 life_heart.action_parameters = [game, 100]
 
-life_heart_minor = GenericActionableStructure(model=sprite_heart_minor)
+life_heart_minor = GenericActionableStructure(model=sprite_heart_minor, name='life_25')
 life_heart_minor.set_overlappable(True)
 life_heart_minor.action = add_hp
 life_heart_minor.action_parameters = [game, 25]

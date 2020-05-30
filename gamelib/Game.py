@@ -281,9 +281,12 @@ class Game:
         """
         if type(level_number) is int:
             if isinstance(board, Board):
+                # Add the board to our list
                 self._boards[level_number] = {"board": board,
                                               "npcs": [],
                                               "projectiles": []}
+                # Taking ownership
+                board.parent = self
             else:
                 raise HacInvalidTypeException(
                     "The board paramater must be a gamelib.Board.Board() object."
@@ -347,6 +350,9 @@ class Game:
                     "Game.player is undefined. We cannot change level without a player."
                     " Please set player in your Game object: mygame.player = Player()",
                 )
+            # If it's not already the case, taking ownership of player
+            if self.player.parent != self:
+                self.player.parent = self
             if level_number in self._boards.keys():
                 if self.player.pos[0] is not None or self.player.pos[1] is not None:
                     self._boards[self.current_level]["board"].clear_cell(
