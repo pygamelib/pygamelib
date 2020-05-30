@@ -117,6 +117,7 @@ class Projectile(Movable):
         Game object to send a list of all objects in that radius.
     :type aoe_radius: int
     :param args: extra parameters to pass to hit_callback.
+    :param parent: The parent object (usually a Board object or some sort of BoardItem).
 
     .. important:: The effects of a Projectile are determined by the callback. No
         callback == no effect!

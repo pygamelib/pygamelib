@@ -17,6 +17,7 @@ class Inventory:
 
     :param max_size: The maximum size of the inventory. Deafult value: 10.
     :type max_size: int
+    :param parent: The parent object (usually a BoardItem).
 
     .. note:: You can print() the inventory. This is mostly useful for debug as you want
         to have a better display in your game.

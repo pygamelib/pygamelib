@@ -47,6 +47,8 @@ class Board():
         option is going to be the model of the BoardItemVoid
         (see :class:`gamelib.BoardItem.BoardItemVoid`)
     :type ui_board_void_cell: str
+    :param parent: The parent object (usually the Game object).
+    :type parent: :class:`~gamelib.Game.Game`
     """
 
     def __init__(self, **kwargs):

@@ -19,6 +19,7 @@ class BoardItem:
     :param model: The model to use to display this item on the Board. Be mindful of the
         space it will require. Default value is '*'.
     :type model: str
+    :param parent: The parent object of the board item. Usually a Board or Game object.
     """
 
     def __init__(self, **kwargs):

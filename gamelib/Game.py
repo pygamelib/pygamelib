@@ -39,6 +39,13 @@ class Game:
     :type menu: dict
     :param current_level: The current level.
     :type current_level: int
+    :param enable_partial_display: A boolean to tell the Game object to enable or not
+        partial display of boards. Default: False.
+    :type enable_partial_display: bool
+    :param partial_display_viewport: A 2 int elements array that gives the **radius**
+        of the partial display in number of row and column. Please see
+        :func:`~gamelib.Board.Board.display_around()`.
+    :type partial_display_viewport: list
 
     .. note:: The game object has an object_library member that is always an empty array
         except just after loading a board. In this case, if the board have a "library"
@@ -49,18 +56,21 @@ class Game:
 
     .. note:: The constructor of Game takes care of initializing the terminal to
         properly render the colors on Windows.
+    
+    .. important:: The Game object automatically assumes ownership over the Player.
 
     """
 
-    def __init__(self, name="Game", boards={}, menu={}, current_level=None):
+    def __init__(self, name="Game", boards={}, menu={}, current_level=None,
+                 enable_partial_display=False, partial_display_viewport=None):
         self.name = name
         self._boards = boards
         self._menu = menu
         self.current_level = current_level
         self.player = None
         self.state = Constants.RUNNING
-        self.enable_partial_display = False
-        self.partial_display_viewport = None
+        self.enable_partial_display = enable_partial_display
+        self.partial_display_viewport = partial_display_viewport
         self._config_parsers = None
         self._configuration = None
         self.object_library = []

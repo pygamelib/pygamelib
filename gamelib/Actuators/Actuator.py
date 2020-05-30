@@ -13,6 +13,9 @@ class Actuator():
 
     By default, all actuators are considered movement actuators. So the base class only
     require next_move() to be implemented.
+
+    :param parent: the item parent.
+
     """
     def __init__(self, parent):
         """
@@ -71,6 +74,9 @@ class Behavioral(Actuator):
     The behavioral actuator is inheriting from Actuator and is adding a next_action()
     method.
     The actual actions are left to the actuator that implements Behavioral.
+
+    :param parent: the item parent.
+
     """
     def __init__(self, parent):
         """
