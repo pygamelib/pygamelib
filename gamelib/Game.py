@@ -56,7 +56,7 @@ class Game:
 
     .. note:: The constructor of Game takes care of initializing the terminal to
         properly render the colors on Windows.
-    
+
     .. important:: The Game object automatically assumes ownership over the Player.
 
     """
