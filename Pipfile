@@ -11,7 +11,7 @@ ipython = "*"
 [packages]
 colorama = ">=0.3.8"
 readchar = ">=2.0.0"
-configparser = ">=3.7.3"
+appdirs = ">=1.4.4"
 
 [requires]
 python_version = "3.7"
