@@ -43,7 +43,7 @@ setuptools.setup(
         "Guides & Tutorials": "https://astro.hyrul.es/guides/hac-game-lib/",
         "Source": "https://github.com/arnauddupuis/hac-game-lib",
         "Tracker": "https://github.com/arnauddupuis/hac-game-lib/issues",
-        "Release Notes": "https://astro.hyrul.es/news/hac-game-lib-v1.0.1-release-notes.html",
+        "Release Notes": "https://astro.hyrul.es/news/hac-game-lib-v1.0.1-release-notes.html",  # noqa: E501
     },
     python_requires=">=3.7",
 )
