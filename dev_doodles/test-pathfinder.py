@@ -34,7 +34,7 @@ def redraw():
 
 # Destination (24,24) is the center of the labyrinth
 dest_row = 24
-dest_col = 24
+dest_col = 26
 
 if len(sys.argv) > 1:
     dest_row = int(sys.argv[1])
@@ -71,8 +71,9 @@ g.current_board().place_item(wall, 5, 25)
 
 # 43,28 43,34 39,34 39,40 44,40 44,28
 patroller = NPC(model=Sprites.ALIEN, name='patroller')
-patroller.actuator = PathFinder(game=g, actuated_object=patroller)
-g.add_npc(1, patroller, 42, 28)
+patroller.actuator = PathFinder(game=g, actuated_object=patroller,
+                                circle_waypoints=True)
+g.add_npc(1, patroller, 43, 29)
 patroller.actuator.set_destination(43, 29)
 patroller.actuator.add_waypoint(43, 29)
 patroller.actuator.add_waypoint(43, 34)
@@ -123,3 +124,5 @@ while nm != Constants.NO_DIR:
     g.animate_items(1)
     redraw()
     time.sleep(0.1)
+
+print("That's all folks!")
