@@ -14,6 +14,7 @@ Hyrule Astronomy Club - hac-game-lib - documentation
    immovable
    inventory
    movable
+   graphics
    sprites
    structures
    utils
