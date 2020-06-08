@@ -15,12 +15,11 @@ from blessings import Terminal
 from playsound import playsound
 from copy import deepcopy
 
+SFX_DIR = "/home/arnaud/Code/Python/hac-n-rogue/sound/sfx/"
+
 
 def fireball_callback(projectile, objects, *args):
-    _thread.start_new_thread(
-        playsound,
-        ("/home/arnaud/Code/Python/hac-n-rogue/sound/sfx/fireball-explosion.wav",),
-    )
+    _thread.start_new_thread(playsound, (SFX_DIR + "fireball-explosion.wav",))
     if len(objects) == 0:
         return None
     if isinstance(objects[0], BoardItemVoid):
@@ -31,9 +30,7 @@ def fireball_callback(projectile, objects, *args):
 
 
 def zap_callback(projectile, objects, *args):
-    _thread.start_new_thread(
-        playsound, ("/home/arnaud/Code/Python/hac-n-rogue/sound/sfx/spell-02.wav",)
-    )
+    _thread.start_new_thread(playsound, (SFX_DIR + "spell-02.wav",))
     if len(objects) == 0:
         return None
     if isinstance(objects[0], BoardItemVoid):
@@ -145,10 +142,7 @@ def ui_threaded():
             g.player.mp += 0.1
         for o in g.current_board().get_movables():
             if isinstance(o, NPC) and o.hp <= 0:
-                _thread.start_new_thread(
-                    playsound,
-                    ("/home/arnaud/Code/Python/hac-n-rogue/sound/sfx/goblin-00.wav",),
-                )
+                _thread.start_new_thread(playsound, (SFX_DIR + "goblin-00.wav",))
                 g.remove_npc(1, o)
         redraw_screen()
         g.actuate_npcs(1)
@@ -352,18 +346,10 @@ while True:
                 g.add_projectile(1, spell, g.player.pos[0], g.player.pos[1] + 1)
 
             if current_spell_template == fireball_template:
-                _thread.start_new_thread(
-                    playsound,
-                    ("/home/arnaud/Code/Python/hac-n-rogue/sound/sfx/fireball.wav",),
-                )
+                _thread.start_new_thread(playsound, (SFX_DIR + "fireball.wav",))
                 g.player.mp -= 4
             elif current_spell_template == zap_template:
-                _thread.start_new_thread(
-                    playsound,
-                    (
-                        "/home/arnaud/Code/Python/hac-n-rogue/sound/sfx/dizzy-bolt-spell.wav",
-                    ),
-                )
+                _thread.start_new_thread(playsound, (SFX_DIR + "dizzy-bolt-spell.wav",))
                 g.player.mp -= 3
     elif key == Utils.key.UP:
         if last_direction == Constants.UP:
