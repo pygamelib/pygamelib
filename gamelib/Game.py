@@ -13,7 +13,6 @@ import gamelib.Constants as Constants
 import gamelib.Utils as Utils
 import random
 import json
-from configparser import ConfigParser
 
 """
 The Game.py module has only one class: Game. It is what could be called the game engine.
@@ -61,8 +60,15 @@ class Game:
 
     """
 
-    def __init__(self, name="Game", boards={}, menu={}, current_level=None,
-                 enable_partial_display=False, partial_display_viewport=None):
+    def __init__(
+        self,
+        name="Game",
+        boards={},
+        menu={},
+        current_level=None,
+        enable_partial_display=False,
+        partial_display_viewport=None,
+    ):
         self.name = name
         self._boards = boards
         self._menu = menu
@@ -71,8 +77,9 @@ class Game:
         self.state = Constants.RUNNING
         self.enable_partial_display = enable_partial_display
         self.partial_display_viewport = partial_display_viewport
-        self._config_parsers = None
+        self._config = None
         self._configuration = None
+        self._configuration_internals = None
         self.object_library = []
         Utils.init_term_colors()
 
@@ -242,7 +249,7 @@ class Game:
         """
         Utils.clear_screen()
 
-    def load_config(self, filename, section="main", defaults={}):
+    def load_config(self, filename, section="main"):
         """
         Load a configuration file from the disk.
         The configuration file must respect the INI syntax.
@@ -251,26 +258,110 @@ class Game:
         :param filename: The filename to load. does not check for existence.
         :type filename: str
         :param section: The section to put the read config file into. This allow for
-            multiple files for multiple purpose.
+            multiple files for multiple purpose. Section is a human readable unique
+            identifier.
         :type section: str
-        :param defaults: The default value for each variable in the config file
-            (or not). If your config file uses sections, your defaults needs to
-            represent that.
-        :type defaults: dict
+        :raise FileNotFoundError: If filename is not found on the disk.
+        :raise json.decoder.JSONDecodeError: If filename could not be decoded as JSON.
+        :returns: The parsed data.
+        :rtype: dict
 
-        See https://docs.python.org/3/library/configparser.html for more information
-        on that.
+        .. warning:: **breaking changes:** before v1.1.0 that method use to load file
+            using the configparser module. This have been dumped in favor of json files.
+            Since that methods was apparently not used, there is no backward
+            compatibility.
 
         Example::
 
-            mygame.load_config('game_controls.ini','game_control')
+            mygame.load_config('game_controls.json','game_control')
 
         """
-        if self._config_parsers is None:
-            self._config_parsers = {}
-        if section not in self._config_parsers.keys():
-            self._config_parsers[section] = ConfigParser()
-        self._config_parsers[section].read(filename)
+        if self._configuration is None:
+            self._configuration = {}
+        if self._configuration_internals is None:
+            self._configuration_internals = {}
+
+        if section not in self._configuration_internals:
+            self._configuration_internals[section] = {}
+
+        with open(filename) as config_file:
+            config_content = json.load(config_file)
+            if section not in self._configuration.keys():
+                self._configuration[section] = config_content
+                self._configuration_internals[section]["loaded_from"] = filename
+                return config_content
+
+    def config(self, section="main"):
+        """Get the content of a previously loaded configuration section.
+
+        :param section: The name of the section.
+        :type section: str
+
+        Example::
+
+            if mygame.config('main')['hgl-version-required'] < 10100:
+                print('The hac-game-lib version 1.1.0 or greater is required.')
+                exit()
+        """
+        if section in self._configuration:
+            return self._configuration[section]
+
+    def create_config(self, section):
+        """Initialize a new config section.
+
+        The new section is a dictionary.
+
+        :param section: The name of the new section.
+        :type section: str
+
+        Example::
+
+            if mygame.config('high_scores') is None:
+                mygame.create_config('high_scores')
+            mygame.config('high_scores')['first_place'] = mygame.player.name
+        """
+        if self._configuration is None:
+            self._configuration = {}
+        if self._configuration_internals is None:
+            self._configuration_internals = {}
+        self._configuration[section] = {}
+        self._configuration_internals[section] = {}
+
+    def save_config(self, section=None, filename=None, append=False):
+        """
+        Save a configuration section.
+        :param section: The name of the section to save on disk.
+        :type section: str
+        :param filename: The file to write in. If not provided it will write in the file
+            that was used to load the given section. If section was not loaded from a
+            file, save will raise an exception.
+        :type filename: str
+        :param append: Do we need to append to the file or replace the content
+            (True = append, False = replace)
+        :type append: bool
+
+        Example::
+
+            mygame.save_config('game_controls', 'data/game_controls.json')
+        """
+        if section is None:
+            raise HacInvalidTypeException("Game.save_board: section cannot be None.")
+        elif section not in self._configuration:
+            raise HacException("unknown section", f"section {section} does not exists.")
+        if (
+            filename is None
+            and "loaded_from" not in self._configuration_internals[section]
+        ):
+            raise HacInvalidTypeException(
+                "filename cannot be None if section is new or was loaded manually."
+            )
+        elif filename is None:
+            filename = self._configuration_internals[section]["loaded_from"]
+        mode = "w"
+        if append:
+            mode = "a"
+        with open(filename, mode) as file:
+            json.dump(self._configuration[section], file)
 
     def add_board(self, level_number, board):
         """Add a board for the level number.
@@ -292,9 +383,11 @@ class Game:
         if type(level_number) is int:
             if isinstance(board, Board):
                 # Add the board to our list
-                self._boards[level_number] = {"board": board,
-                                              "npcs": [],
-                                              "projectiles": []}
+                self._boards[level_number] = {
+                    "board": board,
+                    "npcs": [],
+                    "projectiles": [],
+                }
                 # Taking ownership
                 board.parent = self
             else:
@@ -524,27 +617,31 @@ class Game:
         if type(level_number) is int:
             if isinstance(projectile, Projectile):
                 if row is None or column is None:
-                    raise HacInvalidTypeException('In Game.add_projectile neither row'
-                                                  ' nor column can be None.'
-                                                  )
+                    raise HacInvalidTypeException(
+                        "In Game.add_projectile neither row nor column can be None."
+                    )
                 if type(row) is int:
                     if type(column) is int:
                         # If we're trying to send a projectile out of the board's bounds
                         # We do nothing and return.
-                        if (row >= self._boards[level_number]["board"].size[1]
-                           or column >= self._boards[level_number]["board"].size[0]
-                           or row < 0
-                           or column < 0):
+                        if (
+                            row >= self._boards[level_number]["board"].size[1]
+                            or column >= self._boards[level_number]["board"].size[0]
+                            or row < 0
+                            or column < 0
+                        ):
                             return
                         # If there is something were we should put the projectile,
                         # then we consider it an immediate hit.
-                        check_object = self._boards[level_number]["board"].item(row,
-                                                                                column)
+                        check_object = self._boards[level_number]["board"].item(
+                            row, column
+                        )
                         if not isinstance(check_object, BoardItemVoid):
                             if projectile.is_aoe:
                                 # AoE is easy, just return everything in range
-                                projectile.hit(self.neighbors(projectile.aoe_radius,
-                                                              check_object))
+                                projectile.hit(
+                                    self.neighbors(projectile.aoe_radius, check_object)
+                                )
                                 return
                             else:
                                 projectile.hit([check_object])
@@ -555,9 +652,9 @@ class Game:
                             )
                         if projectile.step is None:
                             projectile.step = 1
-                        self._boards[level_number]["board"].place_item(projectile,
-                                                                       row,
-                                                                       column)
+                        self._boards[level_number]["board"].place_item(
+                            projectile, row, column
+                        )
                         self._boards[level_number]["projectiles"].append(projectile)
                     else:
                         raise HacInvalidTypeException("column must be an int.")
@@ -617,10 +714,7 @@ class Game:
                             if proj.range > 0:
                                 init_position = proj.pos
                                 direction = proj.actuator.next_move()
-                                board.move(
-                                    proj, direction,
-                                    proj.step
-                                )
+                                board.move(proj, direction, proj.step)
                                 proj.range -= proj.step
                                 # If range was positive and position did not change
                                 # it means something is blocking the projectile path
@@ -659,12 +753,14 @@ class Game:
                                         elif direction == Constants.DLDOWN:
                                             new_x = proj.pos[0] + proj.step
                                             new_y = proj.pos[1] - proj.step
-                                        if(new_x is not None
-                                           and new_y is not None
-                                           and new_x >= 0
-                                           and new_y >= 0
-                                           and new_x < board.size[1]
-                                           and new_y < board.size[0]):
+                                        if (
+                                            new_x is not None
+                                            and new_y is not None
+                                            and new_x >= 0
+                                            and new_y >= 0
+                                            and new_x < board.size[1]
+                                            and new_y < board.size[0]
+                                        ):
                                             proj.hit([board.item(new_x, new_y)])
                             elif proj.range == 0:
                                 if proj.is_aoe:
@@ -781,13 +877,17 @@ class Game:
             # This will call Game.current_board().display()
             mygame.display()
         """
-        if(self.enable_partial_display
-           and self.partial_display_viewport is not None
-           and type(self.partial_display_viewport) is list):
+        if (
+            self.enable_partial_display
+            and self.partial_display_viewport is not None
+            and type(self.partial_display_viewport) is list
+        ):
             # display_around(self, object, p_row, p_col)
-            self.current_board().display_around(self.player,
-                                                self.partial_display_viewport[0],
-                                                self.partial_display_viewport[1])
+            self.current_board().display_around(
+                self.player,
+                self.partial_display_viewport[0],
+                self.partial_display_viewport[1],
+            )
         else:
             self.current_board().display()
 
@@ -824,8 +924,10 @@ class Game:
                     continue
                 true_x = object.pos[0] + x
                 true_y = object.pos[1] + y
-                if (true_x < self.current_board().size[1] and
-                    true_y < self.current_board().size[0]) and not isinstance(
+                if (
+                    true_x < self.current_board().size[1]
+                    and true_y < self.current_board().size[0]
+                ) and not isinstance(
                     self.current_board().item(true_x, true_y), BoardItemVoid
                 ):
                     return_array.append(self.current_board().item(true_x, true_y))
@@ -1011,9 +1113,9 @@ class Game:
 
                     else:
                         Utils.warn(
-                            f'while loading the board in {filename}, at coordinates '
+                            f"while loading the board in {filename}, at coordinates "
                             f'[{pos_x},{pos_y}] there is an entry without "object" '
-                            'attribute. NOT LOADED.'
+                            "attribute. NOT LOADED."
                         )
         return local_board
 
