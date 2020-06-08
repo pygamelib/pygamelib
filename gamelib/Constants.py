@@ -36,7 +36,7 @@ Actions states (for Actuators for example):
 """
 
 # Main version
-HAC_GAME_LIB_VERSION = "1.0.1"
+HAC_GAME_LIB_VERSION = "1.1.0"
 
 # Directions
 NO_DIR = 10000000
