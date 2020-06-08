@@ -56,8 +56,8 @@ def title_screen(g):
     key = None
     while current_state == "title":
         g.clear_screen()
-        for l in logo:
-            print(l, end="\r")
+        for logo_line in logo:
+            print(logo_line, end="\r")
         print("\r")
         print(Utils.blue(f"{' '*int(term_res/2-10)}Welcome {g.player.name}!\r"))
         for i in range(0, len(title_screen_menu)):
