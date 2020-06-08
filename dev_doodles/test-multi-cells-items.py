@@ -5,19 +5,11 @@ import gamelib.Utils as Utils
 import gamelib.Constants as Constants
 
 g = Game()
-g.player = Player(model=u'\u232C')
+g.player = Player(model="\u232C")
 
-b = Board(size=[80,50])
-mod_right = [
-        [u"\u25E3", " "],
-        [u"\u25A2", u"\u25D7"],
-        [u"\u25E4", " "]
-    ]
-mod_left = [
-        [u"\u25E2"],
-        [u"\u25D6", u"\u25A2"],
-        [u"\u25E2"]
-    ]
+b = Board(size=[80, 50])
+mod_right = [["\u25E3", " "], ["\u25A2", "\u25D7"], ["\u25E4", " "]]
+mod_left = [["\u25E2"], ["\u25D6", "\u25A2"], ["\u25E2"]]
 mi = Vehicle(model=mod_right)
 
 g.add_board(1, b)
@@ -37,10 +29,10 @@ while True:
     elif key == Utils.key.RIGHT:
         # mi.update_model(mod_right)
         g.current_board().move(mi, Constants.RIGHT, 1)
-    elif key == 'q':
+    elif key == "q":
         break
     g.clear_screen()
     g.display_board()
-    print(f'Multi item width={mi.width()} height={mi.height()}')
+    print(f"Multi item width={mi.width()} height={mi.height()}")
 
     key = Utils.get_key()

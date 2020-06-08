@@ -16,13 +16,13 @@ def draw_path(p):
     for (r, c) in p:
         if r != g.player.pos[0] or c != g.player.pos[1]:
             g.current_board().place_item(
-                Door(model=Utils.RED_SQUARE, type='path_marker'), r, c,
+                Door(model=Utils.RED_SQUARE, type="path_marker"), r, c
             )
 
 
 def reset_drawn_path():
     global g
-    for i in g.current_board().get_immovables(type='path_marker'):
+    for i in g.current_board().get_immovables(type="path_marker"):
         g.current_board().place_item(BoardItemVoid(), i.pos[0], i.pos[1])
 
 
@@ -43,9 +43,9 @@ if len(sys.argv) > 2:
     dest_col = int(sys.argv[2])
 
 g = Game()
-b = g.load_board('hac-maps/Maze.json', 1)
+b = g.load_board("hac-maps/Maze.json", 1)
 
-g.player = Player(name='The Mighty Wizard', model=Sprites.MAGE)
+g.player = Player(name="The Mighty Wizard", model=Sprites.MAGE)
 g.change_level(1)
 g.actuate_npcs(1)
 
@@ -70,9 +70,10 @@ wall.animation.add_frame(Sprites.BANKNOTE_WINGS)
 g.current_board().place_item(wall, 5, 25)
 
 # 43,28 43,34 39,34 39,40 44,40 44,28
-patroller = NPC(model=Sprites.ALIEN, name='patroller')
-patroller.actuator = PathFinder(game=g, actuated_object=patroller,
-                                circle_waypoints=True)
+patroller = NPC(model=Sprites.ALIEN, name="patroller")
+patroller.actuator = PathFinder(
+    game=g, actuated_object=patroller, circle_waypoints=True
+)
 g.add_npc(1, patroller, 43, 29)
 patroller.actuator.set_destination(43, 29)
 patroller.actuator.add_waypoint(43, 29)
@@ -82,7 +83,7 @@ patroller.actuator.add_waypoint(39, 40)
 patroller.actuator.add_waypoint(44, 40)
 patroller.actuator.add_waypoint(44, 28)
 patroller.animation = Animation(
-    animated_object=patroller, refresh_screen=redraw, display_time=0.5,
+    animated_object=patroller, refresh_screen=redraw, display_time=0.5
 )
 # patroller.animation.add_frame('--')
 # patroller.animation.add_frame(' |')
