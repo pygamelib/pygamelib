@@ -985,117 +985,12 @@ class Game:
         local_board.init_board()
         # Then add board to the game
         self.add_board(lvl_number, local_board)
-        # Define an internal function to transform directions string into constants
-
-        def _string_to_constant(s):
-            if type(s) is int:
-                return s
-            elif s == "UP":
-                return Constants.UP
-            elif s == "DOWN":
-                return Constants.DOWN
-            elif s == "RIGHT":
-                return Constants.RIGHT
-            elif s == "LEFT":
-                return Constants.LEFT
-            elif s == "DRUP":
-                return Constants.DRUP
-            elif s == "DRDOWN":
-                return Constants.DRDOWN
-            elif s == "DLDOWN":
-                return Constants.DLDOWN
-            elif s == "DLUP":
-                return Constants.DLUP
-
-        def _ref2obj(ref):
-            obj_keys = ref.keys()
-            local_object = BoardItemVoid()
-            if "Wall" in ref["object"]:
-                local_object = Structures.Wall()
-            elif "Treasure" in ref["object"]:
-                local_object = Structures.Treasure()
-                if "value" in obj_keys:
-                    local_object.value = ref["value"]
-                if "size" in obj_keys:
-                    local_object._size = ref["size"]
-            elif "GenericStructure" in ref["object"]:
-                local_object = Structures.GenericStructure()
-                if "value" in obj_keys:
-                    local_object.value = ref["value"]
-                if "size" in obj_keys:
-                    local_object._size = ref["size"]
-                if "pickable" in obj_keys:
-                    local_object.set_pickable(ref["pickable"])
-                if "overlappable" in obj_keys:
-                    local_object.set_overlappable(ref["overlappable"])
-            elif "Door" in ref["object"]:
-                local_object = Structures.Door()
-                if "value" in obj_keys:
-                    local_object.value = ref["value"]
-                if "size" in obj_keys:
-                    local_object._size = ref["size"]
-                if "pickable" in obj_keys:
-                    local_object.set_pickable(ref["pickable"])
-                if "overlappable" in obj_keys:
-                    local_object.set_overlappable(ref["overlappable"])
-                if "restorable" in obj_keys:
-                    local_object.set_restorable(ref["restorable"])
-            elif "GenericActionableStructure" in ref["object"]:
-                local_object = Structures.GenericActionableStructure()
-                if "value" in obj_keys:
-                    local_object.value = ref["value"]
-                if "size" in obj_keys:
-                    local_object._size = ref["size"]
-                if "pickable" in obj_keys:
-                    local_object.set_pickable(ref["pickable"])
-                if "overlappable" in obj_keys:
-                    local_object.set_overlappable(ref["overlappable"])
-            elif "NPC" in ref["object"]:
-                local_object = NPC()
-                if "value" in obj_keys:
-                    local_object.value = ref["value"]
-                if "size" in obj_keys:
-                    local_object._size = ref["size"]
-                if "hp" in obj_keys:
-                    local_object.hp = ref["hp"]
-                if "max_hp" in obj_keys:
-                    local_object.max_hp = ref["max_hp"]
-                if "step" in obj_keys:
-                    local_object.step = ref["step"]
-                if "remaining_lives" in obj_keys:
-                    local_object.remaining_lives = ref["remaining_lives"]
-                if "attack_power" in obj_keys:
-                    local_object.attack_power = ref["attack_power"]
-                if "actuator" in obj_keys:
-                    if "RandomActuator" in ref["actuator"]["type"]:
-                        local_object.actuator = RandomActuator(moveset=[])
-                        if "moveset" in ref["actuator"].keys():
-                            for m in ref["actuator"]["moveset"]:
-                                local_object.actuator.moveset.append(
-                                    _string_to_constant(m)
-                                )
-                    elif "PathActuator" in ref["actuator"]["type"]:
-                        local_object.actuator = PathActuator(path=[])
-                        if "path" in ref["actuator"].keys():
-                            for m in ref["actuator"]["path"]:
-                                local_object.actuator.path.append(
-                                    _string_to_constant(m)
-                                )
-            # Now what remains is what is common to all BoardItem
-            if not isinstance(local_object, BoardItemVoid):
-                if "name" in obj_keys:
-                    local_object.name = ref["name"]
-                if "model" in obj_keys:
-                    local_object.model = ref["model"]
-                if "type" in obj_keys:
-                    local_object.type = ref["type"]
-            return local_object
 
         # Now load the library if any
         if "library" in data_keys:
             self.object_library = []
             for e in data["library"]:
-                self.object_library.append(_ref2obj(e))
+                self.object_library.append(Game._ref2obj(e))
         # Now let's place the good stuff on the board
         if "map_data" in data_keys:
             for pos_x in data["map_data"].keys():
@@ -1105,7 +1000,7 @@ class Game:
                     ref = data["map_data"][pos_x][pos_y]
                     obj_keys = ref.keys()
                     if "object" in obj_keys:
-                        o = _ref2obj(ref)
+                        o = Game._ref2obj(ref)
                         if not isinstance(o, NPC) and not isinstance(o, BoardItemVoid):
                             local_board.place_item(o, x, y)
                         elif isinstance(o, NPC):
@@ -1166,57 +1061,10 @@ class Game:
         data["size"] = local_board.size
         data["map_data"] = {}
 
-        def _obj2ref(obj):
-            ref = {
-                "object": str(obj.__class__),
-                "name": obj.name,
-                "pos": obj.pos,
-                "model": obj.model,
-                "type": obj.type,
-            }
-
-            if isinstance(obj, Structures.Wall):
-                ref["size"] = obj.size()
-            elif isinstance(obj, Structures.Treasure):
-                ref["value"] = obj.value
-                ref["size"] = obj.size()
-            elif isinstance(obj, Structures.GenericActionableStructure) or isinstance(
-                obj, Structures.GenericStructure
-            ):
-                ref["value"] = obj.value
-                ref["size"] = obj.size()
-                ref["overlappable"] = obj.overlappable()
-                ref["pickable"] = obj.pickable()
-                ref["restorable"] = obj.restorable()
-            elif isinstance(obj, Structures.Door):
-                ref["value"] = obj.value
-                ref["size"] = obj.size()
-                ref["overlappable"] = obj.overlappable()
-                ref["pickable"] = obj.pickable()
-                ref["restorable"] = obj.restorable()
-            elif isinstance(obj, NPC):
-                ref["hp"] = obj.hp
-                ref["max_hp"] = obj.max_hp
-                ref["step"] = obj.step
-                ref["remaining_lives"] = obj.remaining_lives
-                ref["attack_power"] = obj.attack_power
-                if obj.actuator is not None:
-                    if isinstance(obj.actuator, RandomActuator):
-                        ref["actuator"] = {
-                            "type": "RandomActuator",
-                            "moveset": obj.actuator.moveset,
-                        }
-                    elif isinstance(obj.actuator, PathActuator):
-                        ref["actuator"] = {
-                            "type": "PathActuator",
-                            "path": obj.actuator.path,
-                        }
-            return ref
-
         if len(self.object_library) > 0:
             data["library"] = []
             for o in self.object_library:
-                data["library"].append(_obj2ref(o))
+                data["library"].append(Game._obj2ref(o))
 
         # Now we need to run through all the cells to store
         # anything that is not a BoardItemVoid
@@ -1227,7 +1075,7 @@ class Game:
                     if str(y.pos[0]) not in data["map_data"].keys():
                         data["map_data"][str(y.pos[0])] = {}
 
-                    data["map_data"][str(y.pos[0])][str(y.pos[1])] = _obj2ref(y)
+                    data["map_data"][str(y.pos[0])][str(y.pos[1])] = Game._obj2ref(y)
         with open(filename, "w") as f:
             json.dump(data, f)
 
@@ -1260,3 +1108,159 @@ class Game:
             mygame.stop()
         """
         self.state = Constants.STOPPED
+
+    # Here are some utility functions not really meant to be used outside of the Game
+    # object itself.
+    @staticmethod
+    def _obj2ref(obj):
+        ref = {
+            "object": str(obj.__class__),
+            "name": obj.name,
+            "pos": obj.pos,
+            "model": obj.model,
+            "type": obj.type,
+        }
+
+        if isinstance(obj, Structures.Wall):
+            ref["size"] = obj.size()
+        elif isinstance(obj, Structures.Treasure):
+            ref["value"] = obj.value
+            ref["size"] = obj.size()
+        elif isinstance(obj, Structures.GenericActionableStructure) or isinstance(
+            obj, Structures.GenericStructure
+        ):
+            ref["value"] = obj.value
+            ref["size"] = obj.size()
+            ref["overlappable"] = obj.overlappable()
+            ref["pickable"] = obj.pickable()
+            ref["restorable"] = obj.restorable()
+        elif isinstance(obj, Structures.Door):
+            ref["value"] = obj.value
+            ref["size"] = obj.size()
+            ref["overlappable"] = obj.overlappable()
+            ref["pickable"] = obj.pickable()
+            ref["restorable"] = obj.restorable()
+        elif isinstance(obj, NPC):
+            ref["hp"] = obj.hp
+            ref["max_hp"] = obj.max_hp
+            ref["step"] = obj.step
+            ref["remaining_lives"] = obj.remaining_lives
+            ref["attack_power"] = obj.attack_power
+            if obj.actuator is not None:
+                if isinstance(obj.actuator, RandomActuator):
+                    ref["actuator"] = {
+                        "type": "RandomActuator",
+                        "moveset": obj.actuator.moveset,
+                    }
+                elif isinstance(obj.actuator, PathActuator):
+                    ref["actuator"] = {
+                        "type": "PathActuator",
+                        "path": obj.actuator.path,
+                    }
+        return ref
+
+    @staticmethod
+    def _string_to_constant(s):
+        if type(s) is int:
+            return s
+        elif s == "UP":
+            return Constants.UP
+        elif s == "DOWN":
+            return Constants.DOWN
+        elif s == "RIGHT":
+            return Constants.RIGHT
+        elif s == "LEFT":
+            return Constants.LEFT
+        elif s == "DRUP":
+            return Constants.DRUP
+        elif s == "DRDOWN":
+            return Constants.DRDOWN
+        elif s == "DLDOWN":
+            return Constants.DLDOWN
+        elif s == "DLUP":
+            return Constants.DLUP
+
+    @staticmethod
+    def _ref2obj(ref):
+        obj_keys = ref.keys()
+        local_object = BoardItemVoid()
+        if "Wall" in ref["object"]:
+            local_object = Structures.Wall()
+        elif "Treasure" in ref["object"]:
+            local_object = Structures.Treasure()
+            if "value" in obj_keys:
+                local_object.value = ref["value"]
+            if "size" in obj_keys:
+                local_object._size = ref["size"]
+        elif "GenericStructure" in ref["object"]:
+            local_object = Structures.GenericStructure()
+            if "value" in obj_keys:
+                local_object.value = ref["value"]
+            if "size" in obj_keys:
+                local_object._size = ref["size"]
+            if "pickable" in obj_keys:
+                local_object.set_pickable(ref["pickable"])
+            if "overlappable" in obj_keys:
+                local_object.set_overlappable(ref["overlappable"])
+        elif "Door" in ref["object"]:
+            local_object = Structures.Door()
+            if "value" in obj_keys:
+                local_object.value = ref["value"]
+            if "size" in obj_keys:
+                local_object._size = ref["size"]
+            if "pickable" in obj_keys:
+                local_object.set_pickable(ref["pickable"])
+            if "overlappable" in obj_keys:
+                local_object.set_overlappable(ref["overlappable"])
+            if "restorable" in obj_keys:
+                local_object.set_restorable(ref["restorable"])
+        elif "GenericActionableStructure" in ref["object"]:
+            local_object = Structures.GenericActionableStructure()
+            if "value" in obj_keys:
+                local_object.value = ref["value"]
+            if "size" in obj_keys:
+                local_object._size = ref["size"]
+            if "pickable" in obj_keys:
+                local_object.set_pickable(ref["pickable"])
+            if "overlappable" in obj_keys:
+                local_object.set_overlappable(ref["overlappable"])
+        elif "NPC" in ref["object"]:
+            local_object = NPC()
+            if "value" in obj_keys:
+                local_object.value = ref["value"]
+            if "size" in obj_keys:
+                local_object._size = ref["size"]
+            if "hp" in obj_keys:
+                local_object.hp = ref["hp"]
+            if "max_hp" in obj_keys:
+                local_object.max_hp = ref["max_hp"]
+            if "step" in obj_keys:
+                local_object.step = ref["step"]
+            if "remaining_lives" in obj_keys:
+                local_object.remaining_lives = ref["remaining_lives"]
+            if "attack_power" in obj_keys:
+                local_object.attack_power = ref["attack_power"]
+            if "actuator" in obj_keys:
+                if "RandomActuator" in ref["actuator"]["type"]:
+                    local_object.actuator = RandomActuator(moveset=[])
+                    if "moveset" in ref["actuator"].keys():
+                        for m in ref["actuator"]["moveset"]:
+                            local_object.actuator.moveset.append(
+                                Game._string_to_constant(m)
+                            )
+                elif "PathActuator" in ref["actuator"]["type"]:
+                    local_object.actuator = PathActuator(path=[])
+                    if "path" in ref["actuator"].keys():
+                        for m in ref["actuator"]["path"]:
+                            local_object.actuator.path.append(
+                                Game._string_to_constant(m)
+                            )
+        # Now what remains is what is common to all BoardItem
+        if not isinstance(local_object, BoardItemVoid):
+            if "name" in obj_keys:
+                local_object.name = ref["name"]
+            if "model" in obj_keys:
+                local_object.model = ref["model"]
+            if "type" in obj_keys:
+                local_object.type = ref["type"]
+        return local_object

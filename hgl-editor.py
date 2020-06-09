@@ -17,12 +17,12 @@ from gamelib.BoardItem import BoardItemVoid
 # Global variables
 is_modified = False
 edit_mode = True
-menu_mode = "full"
 dbg_messages = []
 info_messages = []
 warn_messages = []
 base_config_dir = os.path.join(os.path.expanduser("~"), ".hac-game-lib")
 config_dir = os.path.join(base_config_dir, "config")
+editor_config_dir = os.path.join(config_dir, "editor")
 default_map_dir = os.path.join(base_config_dir, "editor", "maps")
 viewport_height = 10
 viewport_width = 30
@@ -557,9 +557,26 @@ def create_board_wizard():
     game.clear_screen()
     print(Utils.blue_bright("\t\tNew board"))
     print("First we need some information on your new board:")
-    name = str(input("Name: "))
-    width = int(input_digit("Width (in number of cells): "))
-    height = int(input_digit("Height (in number of cells): "))
+    name, width, height = None, None, None
+    if game.config("settings")["last_used_board_parameters"]["name"] is not None:
+        name = game.config("settings")["last_used_board_parameters"]["name"]
+    else:
+        name = "New Board"
+    name = str(input(f"Name (default: {name}): ")) or name
+    if game.config("settings")["last_used_board_parameters"]["width"] is not None:
+        width = game.config("settings")["last_used_board_parameters"]["width"]
+    else:
+        width = 20
+    width = int(
+        input_digit(f"Width (in number of cells) (default: {width}): ") or width
+    )
+    if game.config("settings")["last_used_board_parameters"]["height"] is not None:
+        height = game.config("settings")["last_used_board_parametersheight"]
+    else:
+        height = 20
+    height = int(
+        input_digit(f"Height (in number of cells) (default: {height}): ") or height
+    )
     game.add_board(
         1,
         Board(
@@ -571,15 +588,31 @@ def create_board_wizard():
     )
     is_modified = True
     current_file = os.path.join(default_map_dir, name.replace(" ", "_") + ".json")
+    game.config("settings")["last_used_board_parameters"] = {
+        "name": name,
+        "width": width,
+        "height": height,
+    }
 
 
 def first_use():
     global config_dir
+    global editor_config_dir
     global base_config_dir
     global default_map_dir
+    global game
     print(Utils.yellow_bright("Configuration wizard (fresh install or update)"))
-    os.makedirs(config_dir)
-    os.makedirs(os.path.join(base_config_dir, "editor", "maps"))
+    print(
+        "You may see that wizard because hgl-editor was updated with new settings.\n"
+        "Please check that everything is fine (your previous values are showned as "
+        "default values)\n"
+    )
+    if not os.path.exists(config_dir):
+        os.makedirs(config_dir)
+    if not os.path.exists(os.path.join(base_config_dir, "editor", "maps")):
+        os.makedirs(os.path.join(base_config_dir, "editor", "maps"))
+    if not os.path.exists(editor_config_dir):
+        os.makedirs(editor_config_dir)
     print(
         "We need to set up the default directory where we are going to save maps.",
         f"Default is {default_map_dir}",
@@ -597,6 +630,19 @@ def first_use():
     if not os.path.exists(os.path.join(config_dir, "directories.json")):
         with open(os.path.join(config_dir, "directories.json"), "w") as fp:
             fp.write(f'["{default_map_dir}","hac-maps","maps"]')
+    if not os.path.exists(os.path.join(editor_config_dir, "settings.json")):
+        game.create_config("settings")
+        game.config("settings")["directories"] = [default_map_dir, "hac-maps", "maps"]
+        game.config("settings")["config_file_version"] = 10100
+        game.config("settings")["enable_partial_display"] = True
+        game.config("settings")["partial_display_viewport"] = [10, 30]
+        game.config("settings")["menu_mode"] = "full"
+        game.config("settings")["last_used_board_parameters"] = {
+            "name": None,
+            "width": None,
+            "height": None,
+        }
+        game.config("settings")["object_library"] = []
 
 
 # Main program
@@ -623,8 +669,22 @@ while True:
         or not os.path.isdir(config_dir)
         or not os.path.exists(base_config_dir)
         or not os.path.isdir(base_config_dir)
+        or not os.path.isdir(editor_config_dir)
+        or not os.path.exists(os.path.join(editor_config_dir, "settings.json"))
     ):
         first_use()
+    else:
+        game.load_config(os.path.join(editor_config_dir, "settings.json"), "settings")
+        viewport_height = game.config("settings")["partial_display_viewport"][0]
+        viewport_width = game.config("settings")["partial_display_viewport"][1]
+        viewport_board.size = [viewport_width * 2, viewport_height * 2]
+        viewport_board.init_board()
+        # The objects library is stored as a list of references. We need to convert that
+        # before using the objects.
+        objlib = []
+        for ref in game.config("settings")["object_library"]:
+            objlib.append(Game._ref2obj(ref))
+        game.config("settings")["object_library"] = objlib
     print("Looking for existing maps in selected directories...", end="")
     default_map_dir = None
     with open(os.path.join(config_dir, "directories.json")) as paths:
@@ -680,7 +740,7 @@ while True:
     elif choice.isdigit() and int(choice) < len(hmaps):
         current_file = hmaps[int(choice)]
         board = game.load_board(hmaps[int(choice)], 1)
-        if board.size[0] >= 50 or board.size[1] >= 50:
+        if board.size[0] >= viewport_height or board.size[1] >= viewport_width:
             game.enable_partial_display = True
             game.partial_display_viewport = [viewport_height, viewport_width]
         else:
@@ -691,6 +751,9 @@ game.change_level(1)
 
 if len(game.object_library) > 0:
     object_history += game.object_library
+    for i in game.object_library:
+        if i not in game.config("settings")["object_library"]:
+            game.config("settings")["object_library"].append(i)
 
 # Build the menus
 i = 0
@@ -709,7 +772,9 @@ for sp in dir(Sprites):
         )
         i += 1
 
-game.add_menu_entry("main", None, "\n=== Menu (" + menu_mode + ") ===")
+game.add_menu_entry(
+    "main", None, "\n=== Menu (" + game.config("settings")["menu_mode"] + ") ==="
+)
 game.add_menu_entry(
     "main", Utils.white_bright("Space"), "Switch between edit/delete mode"
 )
@@ -798,17 +863,24 @@ while True:
                 if not os.path.exists("hac-maps") or not os.path.isdir("hac-maps"):
                     os.makedirs("hac-maps")
                 game.object_library = object_history
+                for o in object_history:
+                    if o not in game.config("settings")["object_library"]:
+                        game.config("settings")["object_library"].append(o)
                 game.save_board(1, current_file)
         break
     elif key == "S":
         save_current_board()
         info_messages.append("Board saved")
     elif key == "m":
-        if menu_mode == "full":
-            menu_mode = "hidden"
+        if game.config("settings")["menu_mode"] == "full":
+            game.config("settings")["menu_mode"] = "hidden"
         else:
-            menu_mode = "full"
-        game.update_menu_entry("main", None, "\n=== Menu (" + menu_mode + ") ===")
+            game.config("settings")["menu_mode"] = "full"
+        game.update_menu_entry(
+            "main",
+            None,
+            "\n=== Menu (" + game.config("settings")["menu_mode"] + ") ===",
+        )
     elif current_menu == "main":
         if key == Utils.key.UP:
             game.move_player(Constants.UP, 1)
@@ -969,6 +1041,8 @@ while True:
         viewport_board.size = [viewport_width * 2, viewport_height * 2]
         viewport_board.init_board()
         game.partial_display_viewport = [viewport_height, viewport_width]
+        game.config("settings")["partial_display_viewport"][0] = viewport_height
+        game.config("settings")["partial_display_viewport"][1] = viewport_width
 
     # Print the screen and interface
     game.clear_screen()
@@ -993,7 +1067,9 @@ while True:
             cnt += 1
         print("")
         print(f"Current item: {current_object.model}")
-    if not (current_menu == "main" and menu_mode == "hidden"):
+    if not (
+        current_menu == "main" and game.config("settings")["menu_mode"] == "hidden"
+    ):
         game.display_menu(current_menu, Constants.ORIENTATION_VERTICAL, 15)
     for m in dbg_messages:
         Utils.debug(m)
@@ -1005,3 +1081,14 @@ while True:
         key = input("Enter your choice (and hit ENTER): ")
     else:
         key = Utils.get_key()
+
+# Before saving we need to transform the object library into reference that json can
+# understand
+reflib = []
+for o in game.config("settings")["object_library"]:
+    reflib.append(Game._obj2ref(o))
+game.config("settings")["object_library"] = reflib
+# Let's also save the partial display viewport
+game.config("settings")["partial_display_viewport"][0] = viewport_height
+game.config("settings")["partial_display_viewport"][1] = viewport_width
+game.save_config("settings", os.path.join(editor_config_dir, "settings.json"))
