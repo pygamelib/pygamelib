@@ -298,7 +298,7 @@ class Board:
         if object.pos[0] + row_radius < row_max_bound:
             row_max_bound = object.pos[0] + row_radius
         # Columns
-        if object.pos[1] - row_radius >= 0:
+        if object.pos[1] - column_radius >= 0:
             column_min_bound = object.pos[1] - column_radius
         if object.pos[1] + column_radius < column_max_bound:
             column_max_bound = object.pos[1] + column_radius
@@ -318,8 +318,15 @@ class Board:
             if (self.size[1] - 2 * row_radius) >= 0:
                 row_min_bound = self.size[1] - 2 * row_radius
         if row_min_bound == 0:
-            print(self.ui_border_top * (column_radius * 2), end="")
-            if column_min_bound <= 0 or column_max_bound >= self.size[0]:
+            bt_size = column_radius * 2
+            if bt_size >= self.size[0]:
+                bt_size = self.size[0]
+                if object.pos[1] - column_radius > 0:
+                    bt_size = self.size[0] - (object.pos[1] - column_radius)
+            print(self.ui_border_top * bt_size, end="")
+            if column_min_bound <= 0 and column_max_bound >= self.size[0]:
+                print(self.ui_border_top * 2, end="")
+            elif column_min_bound <= 0 or column_max_bound >= self.size[0]:
                 print(self.ui_border_top, end="")
             print("\r")
         for row in self._matrix[row_min_bound:row_max_bound]:
@@ -333,8 +340,15 @@ class Board:
                 print(self.ui_border_right, end="")
             print("\r")
         if row_max_bound >= self.size[1]:
-            print(self.ui_border_bottom * (column_radius * 2), end="")
-            if column_min_bound <= 0 or column_max_bound >= self.size[0]:
+            bb_size = column_radius * 2
+            if bb_size >= self.size[0]:
+                bb_size = self.size[0]
+                if object.pos[1] - column_radius > 0:
+                    bb_size = self.size[0] - (object.pos[1] - column_radius)
+            print(self.ui_border_bottom * bb_size, end="")
+            if column_min_bound <= 0 and column_max_bound >= self.size[0]:
+                print(self.ui_border_bottom * 2, end="")
+            elif column_min_bound <= 0 or column_max_bound >= self.size[0]:
                 print(self.ui_border_bottom, end="")
             print("\r")
 
