@@ -7,7 +7,11 @@ from gamelib.Board import Board
 from gamelib.BoardItem import BoardItemVoid
 from gamelib.Characters import NPC, Player
 from gamelib.Movable import Projectile
-from gamelib.Actuators.SimpleActuators import RandomActuator, PathActuator
+from gamelib.Actuators.SimpleActuators import (
+    RandomActuator,
+    PathActuator,
+    PatrolActuator,
+)
 import gamelib.Structures as Structures
 import gamelib.Constants as Constants
 import gamelib.Utils as Utils
@@ -345,7 +349,7 @@ class Game:
             mygame.save_config('game_controls', 'data/game_controls.json')
         """
         if section is None:
-            raise HacInvalidTypeException("Game.save_board: section cannot be None.")
+            raise HacInvalidTypeException("Game.save_config: section cannot be None.")
         elif section not in self._configuration:
             raise HacException("unknown section", f"section {section} does not exists.")
         if (
@@ -1152,6 +1156,11 @@ class Game:
                         "type": "RandomActuator",
                         "moveset": obj.actuator.moveset,
                     }
+                elif isinstance(obj.actuator, PatrolActuator):
+                    ref["actuator"] = {
+                        "type": "PatrolActuator",
+                        "path": obj.actuator.path,
+                    }
                 elif isinstance(obj.actuator, PathActuator):
                     ref["actuator"] = {
                         "type": "PathActuator",
@@ -1250,6 +1259,13 @@ class Game:
                             )
                 elif "PathActuator" in ref["actuator"]["type"]:
                     local_object.actuator = PathActuator(path=[])
+                    if "path" in ref["actuator"].keys():
+                        for m in ref["actuator"]["path"]:
+                            local_object.actuator.path.append(
+                                Game._string_to_constant(m)
+                            )
+                elif "PatrolActuator" in ref["actuator"]["type"]:
+                    local_object.actuator = PatrolActuator(path=[])
                     if "path" in ref["actuator"].keys():
                         for m in ref["actuator"]["path"]:
                             local_object.actuator.path.append(
