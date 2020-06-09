@@ -2,7 +2,6 @@
 
 import os
 import uuid
-import json
 from copy import deepcopy
 import gamelib.Utils as Utils
 import gamelib.Constants as Constants
@@ -541,9 +540,6 @@ def save_current_board():
     global game
     global object_history
     global is_modified
-    # This should be deprecated and use the default directory.
-    # if not os.path.exists('hac-maps') or not os.path.isdir('hac-maps'):
-    #     os.makedirs('hac-maps')
     game.object_library = object_history
     game.save_board(1, current_file)
     is_modified = False
@@ -687,36 +683,29 @@ while True:
         game.config("settings")["object_library"] = objlib
     print("Looking for existing maps in selected directories...", end="")
     default_map_dir = None
-    with open(os.path.join(config_dir, "directories.json")) as paths:
-        hmaps = []
-        try:
-            directories = json.load(paths)
-            for directory in directories:
-                # files = [f'{directory}/{f}' for f in os.listdir(directory)]
-                # hmaps += files
-                test_dir = os.path.join(base_config_dir, directory)
-                if os.path.exists(test_dir):
-                    directory = test_dir
-                    # Utils.debug(f"Setting directory to: {directory}")
-                if os.path.exists(directory):
-                    if default_map_dir is None:
-                        default_map_dir = directory
-                    for f in os.listdir(directory):
-                        if os.path.isabs(f):
-                            hmaps.append(f)
-                        else:
-                            if os.path.exists(f):
-                                hmaps.append(f)
-                            elif os.path.exists(os.path.join(directory, f)):
-                                hmaps.append(os.path.join(directory, f))
-            if len(hmaps) > 0:
-                print(Utils.green("OK"))
-            else:
-                print(Utils.red_bright("KO"))
-        except FileNotFoundError:
-            print(Utils.red_bright("KO"))
-        except json.decoder.JSONDecodeError:
-            print(Utils.blue_bright("Initialized"))
+    hmaps = []
+    for directory in game.config("settings")["directories"]:
+        # files = [f'{directory}/{f}' for f in os.listdir(directory)]
+        # hmaps += files
+        test_dir = os.path.join(base_config_dir, directory)
+        if os.path.exists(test_dir):
+            directory = test_dir
+            # Utils.debug(f"Setting directory to: {directory}")
+        if os.path.exists(directory):
+            if default_map_dir is None:
+                default_map_dir = directory
+            for f in os.listdir(directory):
+                if os.path.isabs(f):
+                    hmaps.append(f)
+                else:
+                    if os.path.exists(f):
+                        hmaps.append(f)
+                    elif os.path.exists(os.path.join(directory, f)):
+                        hmaps.append(os.path.join(directory, f))
+    if len(hmaps) > 0:
+        print(Utils.green("OK"))
+    else:
+        print(Utils.red_bright("KO"))
 
     if len(hmaps) > 0:
         map_num = 0
