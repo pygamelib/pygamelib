@@ -4,7 +4,7 @@ patterns.
 """
 
 from gamelib.Actuators.Actuator import Actuator
-from gamelib.Constants import RUNNING, RIGHT
+from gamelib import Constants
 import random
 
 
@@ -20,6 +20,7 @@ class RandomActuator(Actuator):
     :param parent: The parent object to actuate.
     :type parent: gamelib.BoardItem.BoardItem
     """
+
     def __init__(self, moveset=None, parent=None):
         if moveset is None:
             moveset = []
@@ -39,7 +40,7 @@ class RandomActuator(Actuator):
 
             randomactuator.next_move()
         """
-        if self.state == RUNNING:
+        if self.state == Constants.RUNNING:
             return random.choice(self.moveset)
 
 
@@ -58,6 +59,7 @@ class PathActuator(Actuator):
     :param parent: The parent object to actuate.
     :type parent: gamelib.BoardItem.BoardItem
     """
+
     def __init__(self, path=None, parent=None):
         if path is None:
             path = []
@@ -80,7 +82,7 @@ class PathActuator(Actuator):
 
             pathactuator.next_move()
         """
-        if self.state == RUNNING:
+        if self.state == Constants.RUNNING:
             move = self.path[self.index]
             self.index += 1
             if self.index == len(self.path):
@@ -115,7 +117,7 @@ class PatrolActuator(PathActuator):
     If they both are same then, index is set to value zero and the move is
     returned back.
 
-    :param path: A list of paths.
+    :param path: A list of directions.
     :type path: list
     """
 
@@ -135,12 +137,29 @@ class PatrolActuator(PathActuator):
 
             patrolactuator.next_move()
         """
-        if self.state == RUNNING:
+        if self.state == Constants.RUNNING:
             move = self.path[self.index]
             self.index += 1
             if self.index == len(self.path):
                 self.index = 0
-                self.path = self.path.reverse()
+                self.path.reverse()
+                for i in range(0, len(self.path)):
+                    if self.path[i] == Constants.UP:
+                        self.path[i] = Constants.DOWN
+                    elif self.path[i] == Constants.DOWN:
+                        self.path[i] = Constants.UP
+                    elif self.path[i] == Constants.LEFT:
+                        self.path[i] = Constants.RIGHT
+                    elif self.path[i] == Constants.RIGHT:
+                        self.path[i] = Constants.LEFT
+                    elif self.path[i] == Constants.DLDOWN:
+                        self.path[i] = Constants.DRUP
+                    elif self.path[i] == Constants.DLUP:
+                        self.path[i] = Constants.DRDOWN
+                    elif self.path[i] == Constants.DRDOWN:
+                        self.path[i] = Constants.DLUP
+                    elif self.path[i] == Constants.DRUP:
+                        self.path[i] = Constants.DLDOWN
             return move
 
 
@@ -157,9 +176,10 @@ class UnidirectionalActuator(Actuator):
     :param parent: The parent object to actuate.
     :type parent: gamelib.BoardItem.BoardItem
     """
-    def __init__(self, direction=RIGHT, parent=None):
+
+    def __init__(self, direction=Constants.RIGHT, parent=None):
         if direction is None:
-            direction = RIGHT
+            direction = Constants.RIGHT
         super().__init__(parent)
         self.direction = direction
 
@@ -176,5 +196,5 @@ class UnidirectionalActuator(Actuator):
 
             unidirectional_actuator.next_move()
         """
-        if self.state == RUNNING:
+        if self.state == Constants.RUNNING:
             return self.direction
