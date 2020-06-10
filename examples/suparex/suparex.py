@@ -216,17 +216,17 @@ def refresh_screen(g):
             f"Level: {g.current_level}{status}"
         )
     print("\r")
-    print(
-        f"Remaining traps: {g.current_board().available_traps} Scorers: "
-        f"{g.current_board().treasures['scorers']['count']}/"
-        f"{g.current_board().treasures['scorers']['placed']} "
-        f"Timers: {g.current_board().treasures['timers']['count']}/"
-        f"{g.current_board().treasures['timers']['placed']} 1UP: "
-        f"{g.current_board().treasures['1UP']['count']}/"
-        f"{g.current_board().treasures['1UP']['placed']}  Diamond: "
-        f"{g.current_board().treasures['diamond']['count']}/"
-        f"{g.current_board().treasures['diamond']['placed']}\r"
-    )
+    # print(
+    #     f"Remaining traps: {g.current_board().available_traps} Scorers: "
+    #     f"{g.current_board().treasures['scorers']['count']}/"
+    #     f"{g.current_board().treasures['scorers']['placed']} "
+    #     f"Timers: {g.current_board().treasures['timers']['count']}/"
+    #     f"{g.current_board().treasures['timers']['placed']} 1UP: "
+    #     f"{g.current_board().treasures['1UP']['count']}/"
+    #     f"{g.current_board().treasures['1UP']['placed']}  Diamond: "
+    #     f"{g.current_board().treasures['diamond']['count']}/"
+    #     f"{g.current_board().treasures['diamond']['placed']}\r"
+    # )
     g.display_board()
 
 
@@ -375,12 +375,12 @@ def ui_threaded(g):
             for iname in g.player.inventory.items_name():
                 item = g.player.inventory.get_item(iname)
                 if item.type == "treasure.scorers":
-                    g.score += item.value
+                    g.score += int(item.value)
                 elif item.type == "treasure.timers":
-                    g.timer += item.value
+                    g.timer += int(item.value)
                 elif item.type == "treasure.diamond":
                     g.timer += item.value
-                    g.score += item.value
+                    g.score += int(item.value)
                 elif item.type == "treasure.1UP":
                     g.player.remaining_lives += 1
             g.player.inventory.empty()
@@ -420,7 +420,6 @@ def change_level(params):
 
 
 def make_platform(b, row, column):
-    print("Making a new platform")
     psize = random.randint(2, 10)
     plateform = []
     tmp_game = Game()
@@ -541,7 +540,7 @@ def generate_trap(b, row, column):
                 + Graphics.Style.RESET_ALL,
                 type="trap.hfire",
             )
-            trap.fire_timer = random.uniform(1.0, 2.0)
+            trap.fire_timer = random.uniform(1.0, 4.0)
             b.place_item(trap, row, column)
             if isinstance(b.item(row, column - 1), BoardItemVoid):
                 trap.fdir = Constants.LEFT
@@ -813,8 +812,9 @@ while current_state != "eop":
                 # the player goes.
                 g.timer += 1 / g.current_level
                 # On the other end, the player gains more points the further he goes
-                g.score += (g.player.pos[1] - g.player.last_x) - 1 / (
-                    g.player.pos[1] - g.player.last_x
+                g.score += int(
+                    (g.player.pos[1] - g.player.last_x)
+                    - 1 / (g.player.pos[1] - g.player.last_x)
                 )
             g.player.last_x = g.player.pos[1]
             if key == Utils.key.LEFT:
