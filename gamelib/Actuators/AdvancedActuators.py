@@ -36,8 +36,10 @@ class PathFinder(Behavioral):
     :type circle_waypoints: bool
 
     """
-    def __init__(self, game=None, actuated_object=None, circle_waypoints=True,
-                 parent=None):
+
+    def __init__(
+        self, game=None, actuated_object=None, circle_waypoints=True, parent=None
+    ):
         if actuated_object is not None and parent is None:
             self.actuated_object = actuated_object
             self.parent = actuated_object
@@ -98,31 +100,25 @@ class PathFinder(Behavioral):
         """
         if self.actuated_object is None:
             raise HacException(
-                'actuated_object is not defined',
-                'PathFinder.actuated_object has to be defined.'
+                "actuated_object is not defined",
+                "PathFinder.actuated_object has to be defined.",
             )
         if not isinstance(self.actuated_object, Movable):
             raise HacException(
-                'actuated_object not a Movable object',
-                'PathFinder.actuated_object has to be an instance \
-                of a Movable object.'
+                "actuated_object not a Movable object",
+                "PathFinder.actuated_object has to be an instance \
+                of a Movable object.",
             )
         if self.destination is None:
             raise HacException(
-                'destination is not defined',
-                'PathFinder.destination has to be defined.'
+                "destination is not defined",
+                "PathFinder.destination has to be defined.",
             )
 
-        queue = collections.deque([[
-                (
-                    self.actuated_object.pos[0],
-                    self.actuated_object.pos[1]
-                )
-            ]])
-        seen = set([(
-            self.actuated_object.pos[0],
-            self.actuated_object.pos[1]
-        )])
+        queue = collections.deque(
+            [[(self.actuated_object.pos[0], self.actuated_object.pos[1])]]
+        )
+        seen = set([(self.actuated_object.pos[0], self.actuated_object.pos[1])])
         while queue:
             path = queue.popleft()
             x, y = path[-1]
@@ -132,11 +128,13 @@ class PathFinder(Behavioral):
                 # real one untouched for our own needs.
                 return path.copy()
             # r = row c = column
-            for r, c in ((x+1, y), (x-1, y), (x, y+1), (x, y-1)):
-                if (0 <= c < self.game.current_board().size[0]
-                        and 0 <= r < self.game.current_board().size[1]
-                        and self.game.current_board().item(r, c).overlappable()
-                        and (r, c) not in seen):
+            for r, c in ((x + 1, y), (x - 1, y), (x, y + 1), (x, y - 1)):
+                if (
+                    0 <= c < self.game.current_board().size[0]
+                    and 0 <= r < self.game.current_board().size[1]
+                    and self.game.current_board().item(r, c).overlappable()
+                    and (r, c) not in seen
+                ):
                     queue.append(path + [(r, c)])
                     seen.add((r, c))
         return []
@@ -208,9 +206,10 @@ class PathFinder(Behavioral):
 
         # If path is empty and actuated_object is not at destination,
         # try to find a path to destination
-        if (len(self._current_path) == 0
-                and (self.actuated_object.pos[0] != self.destination[0]
-                     or self.actuated_object.pos[1] != self.destination[1])):
+        if len(self._current_path) == 0 and (
+            self.actuated_object.pos[0] != self.destination[0]
+            or self.actuated_object.pos[1] != self.destination[1]
+        ):
             self.find_path()
 
         # If path is still empty return NO_DIR (destination is unreachable or
@@ -218,8 +217,10 @@ class PathFinder(Behavioral):
         if len(self._current_path) == 0:
             # First we check if we already are at current waypoint
             (cwr, cwc) = self.current_waypoint()
-            if (self.actuated_object.pos[0] == cwr
-                    and self.actuated_object.pos[1] == cwc):
+            if (
+                self.actuated_object.pos[0] == cwr
+                and self.actuated_object.pos[1] == cwc
+            ):
                 # If so, we get the next waypoint
                 (r, c) = self.next_waypoint()
                 # If there are no more waypoints, then we return NO_DIR
@@ -239,8 +240,10 @@ class PathFinder(Behavioral):
         next_position = self._current_path.pop(0)
         # If actuated object is already there check if the path is empty, if so
         # return NO_DIR, else get the next position from the path.
-        if (next_position[0] == self.actuated_object.pos[0]
-                and next_position[1] == self.actuated_object.pos[1]):
+        if (
+            next_position[0] == self.actuated_object.pos[0]
+            and next_position[1] == self.actuated_object.pos[1]
+        ):
             if len(self._current_path) == 0:
                 return Constants.NO_DIR
             next_position = self._current_path.pop(0)
@@ -287,6 +290,9 @@ class PathFinder(Behavioral):
         Waypoints are used one after the other on a FIFO basis
         (First In, First Out).
 
+        If not destination (i.e destination == (None, None)) have been set yet, that
+        method sets it.
+
         :param row: The "row" part of the waypoint's coordinate.
         :type row: int
         :param column: The "column" part of the waypoint's coordinate.
@@ -301,15 +307,12 @@ class PathFinder(Behavioral):
 
         """
         if type(row) is not int:
-            raise HacInvalidTypeException(
-                                         '"row" is not an integer. It must be.'
-            )
+            raise HacInvalidTypeException('"row" is not an integer. It must be.')
         if type(column) is not int:
-            raise HacInvalidTypeException(
-                                         '"column" is not an integer.\
-                                         It must be.'
-            )
+            raise HacInvalidTypeException('"column" is not an integer. It must be.')
         self.waypoints.append((row, column))
+        if self.destination == (None, None):
+            self.destination = (row, column)
 
     def clear_waypoints(self):
         """Empty the waypoints stack.
@@ -389,14 +392,12 @@ class PathFinder(Behavioral):
             method()
         """
         if type(row) is not int:
-            raise HacInvalidTypeException(
-                                        '"row" is not an integer. It must be.'
-                                        )
+            raise HacInvalidTypeException('"row" is not an integer. It must be.')
         if type(column) is not int:
             raise HacInvalidTypeException(
-                                        '"column" is not an integer.\
+                '"column" is not an integer.\
                                          It must be.'
-                                        )
+            )
         try:
             idx = self.waypoints.index((row, column))
             self.waypoints.pop(idx)
