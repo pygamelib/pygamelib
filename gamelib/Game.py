@@ -12,6 +12,7 @@ from gamelib.Actuators.SimpleActuators import (
     PathActuator,
     PatrolActuator,
 )
+from gamelib.Actuators.AdvancedActuators import PathFinder
 import gamelib.Structures as Structures
 import gamelib.Constants as Constants
 import gamelib.Utils as Utils
@@ -1009,6 +1010,9 @@ class Game:
                             local_board.place_item(o, x, y)
                         elif isinstance(o, NPC):
                             self.add_npc(lvl_number, o, x, y)
+                            if isinstance(o.actuator, PathFinder):
+                                o.actuator.game = self
+                                o.actuator.add_waypoint(x, y)
 
                     else:
                         Utils.warn(
@@ -1166,6 +1170,12 @@ class Game:
                         "type": "PathActuator",
                         "path": obj.actuator.path,
                     }
+                elif isinstance(obj.actuator, PathFinder):
+                    ref["actuator"] = {
+                        "type": "PathFinder",
+                        "waypoints": obj.actuator.waypoints,
+                        "circle_waypoints": obj.actuator.circle_waypoints,
+                    }
         return ref
 
     @staticmethod
@@ -1271,6 +1281,15 @@ class Game:
                             local_object.actuator.path.append(
                                 Game._string_to_constant(m)
                             )
+                elif "PathFinder" in ref["actuator"]["type"]:
+                    local_object.actuator = PathFinder(game=Game(), parent=local_object)
+                    if "circle_waypoints" in ref["actuator"].keys():
+                        local_object.actuator.circle_waypoints = ref["actuator"][
+                            "circle_waypoints"
+                        ]
+                    if "waypoints" in ref["actuator"].keys():
+                        for m in ref["actuator"]["waypoints"]:
+                            local_object.actuator.add_waypoint(m[0], m[1])
         # Now what remains is what is common to all BoardItem
         if not isinstance(local_object, BoardItemVoid):
             if "name" in obj_keys:

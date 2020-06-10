@@ -7,7 +7,8 @@ import gamelib.Utils as Utils
 import gamelib.Constants as Constants
 import gamelib.Structures as Structures
 import gamelib.Sprites as Sprites
-import gamelib.Actuators.SimpleActuators as SimpleActuators
+from gamelib.Actuators import SimpleActuators
+from gamelib.Actuators import AdvancedActuators
 from gamelib.Game import Game
 from gamelib.Characters import Player, NPC
 from gamelib.Board import Board
@@ -28,14 +29,20 @@ viewport_width = 30
 
 
 # Functions definition
-def place_and_go(object, x, y, direction):
+def place_and_go(obj, x, y, direction):
     global is_modified
     global game
+    global current_menu
     initial_position = game.player.pos
     game.move_player(direction, 1)
     if initial_position != game.player.pos:
-        game.current_board().place_item(deepcopy(object), x, y)
+        game.current_board().place_item(deepcopy(obj), x, y)
         is_modified = True
+        if isinstance(obj, NPC) and isinstance(
+            obj.actuator, AdvancedActuators.PathFinder
+        ):
+            current_menu = "waypoint_edition"
+        return game.current_board().item(x, y)
 
 
 def clear_and_go(direction):
@@ -271,6 +278,11 @@ def create_wizard():
         )
         print("1 - Randomly chosen from a preset of directions")
         print("2 - Following a predetermined path")
+        print("3 - Following a predetermined path back and forth")
+        print(
+            "4 - Automatically finding it's way from one point to another (no"
+            " pre-determined path, you will set the points on the map)."
+        )
         r = Utils.get_key()
         if r == "1":
             new_object.actuator = SimpleActuators.RandomActuator(moveset=[])
@@ -322,8 +334,12 @@ def create_wizard():
             else:
                 Utils.warn(f'"{r}" is not a valid choice. Movement set is now empty.')
                 new_object.actuator.moveset = []
-        elif r == "2":
-            new_object.actuator = SimpleActuators.PathActuator(path=[])
+        elif r == "2" or r == "3":
+            if r == "2":
+                new_object.actuator = SimpleActuators.PathActuator(path=[])
+            elif r == "3":
+                print("[debug] PATROL")
+                new_object.actuator = SimpleActuators.PatrolActuator(path=[])
             print("Great, so what path this NPC should take:")
             print("1 - UP/DOWN patrol")
             print("2 - DOWN/UP patrol")
@@ -426,7 +442,19 @@ def create_wizard():
             else:
                 Utils.warn(f'"{r}" is not a valid choice. Path is now empty.')
                 new_object.actuator.path = []
-
+        elif r == "4":
+            new_object.actuator = AdvancedActuators.PathFinder(
+                parent=new_object, circle_waypoints=True
+            )
+            print(
+                "Do you want the NPC to go through your way points once and stop or"
+                " to cycle through all of them infinitely ?"
+            )
+            print("1 - Cycle once")
+            print("2 - Cycle infinitely (default value)")
+            r = Utils.get_key()
+            if r == "1":
+                new_object.actuator.circle_waypoints = False
         return new_object
     elif key == "2":
         while True:
@@ -647,6 +675,7 @@ current_file = ""
 game.player = Player(model="[]")
 key = "None"
 current_object = BoardItemVoid(model="None")
+current_object_instance = BoardItemVoid(model="None")
 object_history = []
 viewport_board = Board(
     name="Viewport testing board",
@@ -835,6 +864,9 @@ game.add_menu_entry(
     "viewport", Utils.white_bright("\u2190"), "Decrease the number of columns displayed"
 )
 game.add_menu_entry("viewport", "B", "Go back to the main menu")
+game.add_menu_entry("waypoint_edition", "j/i/k/l", "Place a waypoint")
+game.add_menu_entry("waypoint_edition", "d", "Delete a waypoint")
+game.add_menu_entry("waypoint_edition", "B", "Finish waypoints edition")
 while True:
     # Empty the messages
     dbg_messages = []
@@ -880,19 +912,19 @@ while True:
         elif key == Utils.key.RIGHT:
             game.move_player(Constants.RIGHT, 1)
         elif key == "k" and edit_mode:
-            place_and_go(
+            current_object_instance = place_and_go(
                 current_object, game.player.pos[0], game.player.pos[1], Constants.DOWN
             )
         elif key == "i" and edit_mode:
-            place_and_go(
+            current_object_instance = place_and_go(
                 current_object, game.player.pos[0], game.player.pos[1], Constants.UP
             )
         elif key == "j" and edit_mode:
-            place_and_go(
+            current_object_instance = place_and_go(
                 current_object, game.player.pos[0], game.player.pos[1], Constants.LEFT
             )
         elif key == "l" and edit_mode:
-            place_and_go(
+            current_object_instance = place_and_go(
                 current_object, game.player.pos[0], game.player.pos[1], Constants.RIGHT
             )
         elif key == "k" and not edit_mode:
@@ -1032,6 +1064,82 @@ while True:
         game.partial_display_viewport = [viewport_height, viewport_width]
         game.config("settings")["partial_display_viewport"][0] = viewport_height
         game.config("settings")["partial_display_viewport"][1] = viewport_width
+    elif current_menu == "waypoint_edition":
+        game.player.model = Utils.green_bright("[]")
+        initial_position = game.player.pos
+        # I'm lazy so I just go for the bazooka option
+        for o in game.current_board().get_immovables(type="waypoint_marker"):
+            game.current_board().clear_cell(o.pos[0], o.pos[1])
+        for wp in current_object_instance.actuator.waypoints:
+            game.current_board().place_item(
+                Structures.Door(model=Utils.GREEN_SQUARE, type="waypoint_marker"),
+                wp[0],
+                wp[1],
+            )
+        if key == "B":
+            current_menu = "main"
+            game.player.model = "[]"
+            for o in game.current_board().get_immovables(type="waypoint_marker"):
+                game.current_board().clear_cell(o.pos[0], o.pos[1])
+        elif key == Utils.key.UP:
+            game.move_player(Constants.UP, 1)
+        elif key == Utils.key.DOWN:
+            game.move_player(Constants.DOWN, 1)
+        elif key == Utils.key.LEFT:
+            game.move_player(Constants.LEFT, 1)
+        elif key == Utils.key.RIGHT:
+            game.move_player(Constants.RIGHT, 1)
+        elif key == "k" and edit_mode:
+            place_and_go(
+                Structures.Door(model=Utils.GREEN_SQUARE, type="waypoint_marker"),
+                game.player.pos[0],
+                game.player.pos[1],
+                Constants.DOWN,
+            )
+            if initial_position != game.player.pos:
+                current_object_instance.actuator.add_waypoint(
+                    initial_position[0], initial_position[1]
+                )
+        elif key == "i" and edit_mode:
+            place_and_go(
+                Structures.Door(model=Utils.GREEN_SQUARE, type="waypoint_marker"),
+                game.player.pos[0],
+                game.player.pos[1],
+                Constants.UP,
+            )
+            if initial_position != game.player.pos:
+                current_object_instance.actuator.add_waypoint(
+                    initial_position[0], initial_position[1]
+                )
+        elif key == "j" and edit_mode:
+            place_and_go(
+                Structures.Door(model=Utils.GREEN_SQUARE, type="waypoint_marker"),
+                game.player.pos[0],
+                game.player.pos[1],
+                Constants.LEFT,
+            )
+            if initial_position != game.player.pos:
+                current_object_instance.actuator.add_waypoint(
+                    initial_position[0], initial_position[1]
+                )
+        elif key == "l" and edit_mode:
+            place_and_go(
+                Structures.Door(model=Utils.GREEN_SQUARE, type="waypoint_marker"),
+                game.player.pos[0],
+                game.player.pos[1],
+                Constants.RIGHT,
+            )
+            if initial_position != game.player.pos:
+                current_object_instance.actuator.add_waypoint(
+                    initial_position[0], initial_position[1]
+                )
+        elif key == "d":
+            try:
+                current_object.actuator.remove_waypoint(
+                    game.player.pos[0], game.player.pos[1]
+                )
+            except ValueError:
+                print("There is no waypoint here.")
 
     # Print the screen and interface
     game.clear_screen()
