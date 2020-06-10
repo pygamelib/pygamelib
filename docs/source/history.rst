@@ -6,7 +6,7 @@ History
 1.0.1 (2020-05-17)
 ~~~~~~~~~~~~~~~~~~~
 
-* Fix a huge default save directory issue (see bellow) in hgl-editor.
+* Fix a huge default save directory issue (see complete announcement) in hgl-editor.
 * Fix lots of strings in hgl-editor.
 * Fix a type issue in the Inventory class for the not_enough_space exception.
 * Improve Board.display() performances by 15% (average).
