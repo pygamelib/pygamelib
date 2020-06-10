@@ -313,13 +313,13 @@ def ui_threaded(g):
                     trap.fire_timer = 1.5
         if g.player.pos[0] == g.current_board().size[1] - 1:
             g.timer = 0.0
-        if round(g.timer, 1) == 0.0:
+        if round(g.timer, 1) <= 0.0:
             g.player.model = bg_color + Graphics.Sprites.SKULL + Utils.Style.RESET_ALL
             g.player.remaining_lives -= 1
             refresh_screen(g)
         if (
             g.player.pos[0] == g.current_board().size[1] - 1 and g.player.dy == 0
-        ) or round(g.timer, 1) == 0.0:
+        ) or round(g.timer, 1) <= 0.0:
             if g.player.remaining_lives == 0:
                 g.stop()
                 g.config("settings")["hiscores"].append([g.player.name, g.score])
