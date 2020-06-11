@@ -1,4 +1,7 @@
 """
+
+.. Important:: The Graphics module was introduced in version 1.1.0.
+
 The Graphics module hold many variables that aims at simplifying the use of
 unicode characters in the game development process.
 
