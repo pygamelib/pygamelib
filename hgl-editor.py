@@ -338,7 +338,6 @@ def create_wizard():
             if r == "2":
                 new_object.actuator = SimpleActuators.PathActuator(path=[])
             elif r == "3":
-                print("[debug] PATROL")
                 new_object.actuator = SimpleActuators.PatrolActuator(path=[])
             print("Great, so what path this NPC should take:")
             print("1 - UP/DOWN patrol")
@@ -1135,7 +1134,7 @@ while True:
                 )
         elif key == "d":
             try:
-                current_object.actuator.remove_waypoint(
+                current_object_instance.actuator.remove_waypoint(
                     game.player.pos[0], game.player.pos[1]
                 )
             except ValueError:
