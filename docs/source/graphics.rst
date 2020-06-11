@@ -1,7 +1,7 @@
 .. _graphics-module:
 
-Gaphics
-=======
+Graphics
+========
 
 .. automodule:: gamelib.Assets.Graphics
     :members:
