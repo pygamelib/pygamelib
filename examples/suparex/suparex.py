@@ -287,30 +287,58 @@ def ui_threaded(g):
         sleep(0.1)
         if g.state == Constants.RUNNING:
             g.timer -= 0.1
-            for trap in g.current_board().get_immovables(type="trap.hfire"):
-                trap.fire_timer -= 0.1
-                if trap.fire_timer <= 0.0:
-                    proj = Projectile(
-                        model=bg_color
-                        + Utils.yellow_bright("\U00002301\U00002301")
-                        + Graphics.Style.RESET_ALL,
-                        name="zap",
-                        range=5,
-                        hit_model=bg_color
-                        + Graphics.Sprites.HIGH_VOLTAGE
-                        + Graphics.Style.RESET_ALL,
-                        hit_callback=zap_callback,
-                    )
-                    proj.set_direction(trap.fdir)
-                    if trap.fdir == Constants.RIGHT:
-                        g.add_projectile(
-                            g.current_level, proj, trap.pos[0], trap.pos[1] + 1
+            for trap in g.current_board().get_immovables(type="trap."):
+                if (
+                    trap.pos[1] > g.player.pos[1] + g.partial_display_viewport[1] + 5
+                    or trap.pos[1] < g.player.pos[1] - g.partial_display_viewport[1] - 5
+                ):
+                    continue
+                if trap.type == "trap.hfire":
+                    trap.fire_timer -= 0.1
+                    if trap.fire_timer <= 0.0:
+                        proj = Projectile(
+                            model=bg_color
+                            + Utils.yellow_bright("\U00002301\U00002301")
+                            + Graphics.Style.RESET_ALL,
+                            name="zap",
+                            range=5,
+                            hit_model=bg_color
+                            + Graphics.Sprites.HIGH_VOLTAGE
+                            + Graphics.Style.RESET_ALL,
+                            hit_callback=zap_callback,
                         )
-                    else:
-                        g.add_projectile(
-                            g.current_level, proj, trap.pos[0], trap.pos[1] - 1
+                        proj.set_direction(trap.fdir)
+                        if trap.fdir == Constants.RIGHT:
+                            g.add_projectile(
+                                g.current_level, proj, trap.pos[0], trap.pos[1] + 1
+                            )
+                        else:
+                            g.add_projectile(
+                                g.current_level, proj, trap.pos[0], trap.pos[1] - 1
+                            )
+                        trap.fire_timer = 1.5
+                elif trap.type == "trap.vfire":
+                    trap.fire_timer -= 0.1
+                    if trap.fire_timer <= 0.0:
+                        proj = Projectile(
+                            model=bg_color
+                            + Graphics.Sprites.BOMB
+                            + Graphics.Style.RESET_ALL,
+                            name="boom",
+                            range=2,
+                            hit_model=bg_color
+                            + Graphics.Sprites.COLLISION
+                            + Graphics.Style.RESET_ALL,
+                            hit_callback=zap_callback,
+                            is_aoe=True,
+                            aoe_radius=1,
                         )
-                    trap.fire_timer = 1.5
+                        proj.set_direction(trap.fdir)
+                        # Right now if the player sits on it, it does nothing.
+                        g.add_projectile(
+                            g.current_level, proj, trap.pos[0] - 1, trap.pos[1]
+                        )
+                        trap.fire_timer = 2.5
         if g.player.pos[0] == g.current_board().size[1] - 1:
             g.timer = 0.0
         if round(g.timer, 1) <= 0.0:
@@ -532,20 +560,34 @@ def generate_trap(b, row, column):
     if b.available_traps > 0:
         chance = int(b.max_traps_number / b.size[0] * 100)
         if random.randint(0, 100) >= 100 - chance:
-            trap = Wall(
-                model=bg_color
-                + traps_color
-                + Graphics.Blocks.QUADRANT_UPPER_LEFT_AND_LOWER_RIGHT
-                + Graphics.Blocks.QUADRANT_UPPER_RIGHT_AND_LOWER_LEFT
-                + Graphics.Style.RESET_ALL,
-                type="trap.hfire",
-            )
-            trap.fire_timer = random.uniform(1.0, 4.0)
-            b.place_item(trap, row, column)
-            if isinstance(b.item(row, column - 1), BoardItemVoid):
-                trap.fdir = Constants.LEFT
+            if random.choice([True, False]):
+                trap = Wall(
+                    model=bg_color
+                    + traps_color
+                    + Graphics.Blocks.QUADRANT_UPPER_LEFT_AND_LOWER_RIGHT
+                    + Graphics.Blocks.QUADRANT_UPPER_RIGHT_AND_LOWER_LEFT
+                    + Graphics.Style.RESET_ALL,
+                    type="trap.hfire",
+                )
+                trap.fire_timer = random.uniform(1.0, 4.0)
+                b.place_item(trap, row, column)
+                if isinstance(b.item(row, column - 1), BoardItemVoid):
+                    trap.fdir = Constants.LEFT
+                else:
+                    trap.fdir = Constants.RIGHT
             else:
-                trap.fdir = Constants.RIGHT
+                trap = Wall(
+                    model=bg_color
+                    + Utils.red_bright(
+                        Graphics.Blocks.QUADRANT_UPPER_RIGHT_AND_LOWER_LEFT_AND_LOWER_RIGHT  # noqa E501
+                        + Graphics.Blocks.QUADRANT_UPPER_LEFT_AND_LOWER_LEFT_AND_LOWER_RIGHT  # noqa E501
+                    )
+                    + Graphics.Style.RESET_ALL,
+                    type="trap.vfire",
+                )
+                trap.fire_timer = random.uniform(2.0, 6.0)
+                b.place_item(trap, row, column)
+                trap.fdir = Constants.UP
             b.available_traps -= 1
 
 
