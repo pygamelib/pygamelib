@@ -3,6 +3,35 @@
 History
 -------
 
+1.1.0 (2020-06-12)
+~~~~~~~~~~~~~~~~~~
+
+* Fix many issues with strings all across the library.
+* Fix many issues with variables interpolation in exceptions.
+* Fix a bug in Game.load_board() that was causing corruptions.
+* Fix multiple typos in the documentation.
+* Fix an issue with the user directory in hgl-editor
+* Fix many issues with the PatrolActuator.
+* **New feature:** partial display (dynamically display only a part of a board)
+* **New feature:** new mono directional actuator.
+* **New feature:** projectiles (can be sent and completely managed by the game object)
+* **New feature:** new assets module to hold many non core submodules.
+* **New feature:** Assets.Graphics that add thousands of glyphs (including emojis) to
+  the current capacities of the library.
+* **New feature:** Add support for PatrolActuator in hgl-editor.
+* **New feature:** Add support for PathFinder actuator in hgl-editor.
+* **New feature:** Add an object parent system.
+* **New feature:** Add a configuration system to hgl-editor.
+* *Improvement*: Add full configuration features to the Game object.
+* *Improvement*: Add a new example in the form of a full procedural generation platform
+  game (see examples/suparex).
+* *Improvement*: Improved performances particularly around the features that relies on
+  Board.place_item(). Up to 70 times faster.
+* *Improvement*: It is now possible to specify the first frame index in Animation.
+* *Improvement*: Formatted all the code with black.
+* *Improvement*: PathFinder.add_waypoint() now sets the destination if it wasn't set
+  before.
+
 1.0.1 (2020-05-17)
 ~~~~~~~~~~~~~~~~~~~
 
