@@ -335,6 +335,7 @@ class Game:
     def save_config(self, section=None, filename=None, append=False):
         """
         Save a configuration section.
+
         :param section: The name of the section to save on disk.
         :type section: str
         :param filename: The file to write in. If not provided it will write in the file

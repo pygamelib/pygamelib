@@ -1,5 +1,12 @@
 """
 This module contains the base classes for both playable and non playable characters.
+
+.. autosummary::
+   :toctree: .
+
+    Character
+    NPC
+    Player
 """
 
 from gamelib.Movable import Movable

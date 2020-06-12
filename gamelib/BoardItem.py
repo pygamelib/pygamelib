@@ -1,4 +1,10 @@
 """This module contains the basic board items classes (regular and void items).
+
+.. autosummary::
+   :toctree: .
+
+   BoardItem
+   BoardItemVoid
 """
 
 

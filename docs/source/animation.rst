@@ -5,3 +5,4 @@ Animation
 
 .. automodule:: gamelib.Animation
     :members:
+    :show-inheritance:

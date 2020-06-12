@@ -1,5 +1,11 @@
 """This module contains the Movable class.
 It can potentially hold more movement related classes.
+
+.. autosummary::
+   :toctree: .
+
+   Movable
+   Projectile
 """
 
 from gamelib.BoardItem import BoardItem
@@ -28,12 +34,13 @@ class Movable(BoardItem):
     object while a movable occupy its position. The Board then restore the
     overlapped object. You should let the Board class take care of that.
     """
+
     def __init__(self, **kwargs):
         BoardItem.__init__(self, **kwargs)
-        if 'step' not in kwargs.keys():
+        if "step" not in kwargs.keys():
             self.step = 1
         else:
-            self.step = kwargs['step']
+            self.step = kwargs["step"]
         self._overlapping = None
         self._overlapping_buffer = None
 
@@ -127,13 +134,28 @@ class Projectile(Movable):
         method()
 
     """
-    def __init__(self, name='projectile', direction=Constants.RIGHT, step=1,
-                 range=5, model='\U00002301', movement_animation=None,
-                 hit_animation=None, hit_model=None, hit_callback=None, is_aoe=False,
-                 aoe_radius=0, parent=None, *args):
+
+    def __init__(
+        self,
+        name="projectile",
+        direction=Constants.RIGHT,
+        step=1,
+        range=5,
+        model="\U00002301",
+        movement_animation=None,
+        hit_animation=None,
+        hit_model=None,
+        hit_callback=None,
+        is_aoe=False,
+        aoe_radius=0,
+        parent=None,
+        *args
+    ):
         if range % step != 0:
-            raise HacException('incorrect_range_step', 'range must be a factor of step'
-                               ' in Projectile')
+            raise HacException(
+                "incorrect_range_step",
+                "range must be a factor of step" " in Projectile",
+            )
         Movable.__init__(self, model=model, step=step, name=name, parent=parent)
         self.direction = direction
         self.range = range
@@ -151,23 +173,26 @@ class Projectile(Movable):
 
     def add_directional_animation(self, direction, animation):
         if type(direction) is not int:
-            raise HacInvalidTypeException('Projectile.add_directional_animation '
-                                          'requires an int from the Constants module as'
-                                          'direction.'
-                                          )
+            raise HacInvalidTypeException(
+                "Projectile.add_directional_animation "
+                "requires an int from the Constants module as"
+                "direction."
+            )
         if not isinstance(animation, Animation):
-            raise HacInvalidTypeException('Projectile.add_directional_animation '
-                                          'requires a gamelib.Animation.Animation as '
-                                          'animation'
-                                          )
+            raise HacInvalidTypeException(
+                "Projectile.add_directional_animation "
+                "requires a gamelib.Animation.Animation as "
+                "animation"
+            )
         self._directional_animations[direction] = animation
 
     def directional_animation(self, direction):
         if type(direction) is not int:
-            raise HacInvalidTypeException('Projectile.add_directional_animation '
-                                          'requires an int from the Constants module as'
-                                          'direction.'
-                                          )
+            raise HacInvalidTypeException(
+                "Projectile.add_directional_animation "
+                "requires an int from the Constants module as"
+                "direction."
+            )
         if direction in self._directional_animations:
             return self._directional_animations[direction]
         elif self.movement_animation is not None:
@@ -177,30 +202,33 @@ class Projectile(Movable):
 
     def remove_directional_animation(self, direction):
         if type(direction) is not int:
-            raise HacInvalidTypeException('Projectile.add_directional_animation '
-                                          'requires an int from the Constants module as'
-                                          'direction.'
-                                          )
-        del(self._directional_animations[direction])
+            raise HacInvalidTypeException(
+                "Projectile.add_directional_animation "
+                "requires an int from the Constants module as"
+                "direction."
+            )
+        del self._directional_animations[direction]
 
     def add_directional_model(self, direction, model):
         if type(direction) is not int:
-            raise HacInvalidTypeException('Projectile.add_directional_model '
-                                          'requires an int from the Constants module as'
-                                          'direction.'
-                                          )
+            raise HacInvalidTypeException(
+                "Projectile.add_directional_model "
+                "requires an int from the Constants module as"
+                "direction."
+            )
         if type(model) is not str:
-            raise HacInvalidTypeException('Projectile.add_directional_model '
-                                          'requires a string as model.'
-                                          )
+            raise HacInvalidTypeException(
+                "Projectile.add_directional_model " "requires a string as model."
+            )
         self._directional_models[direction] = model
 
     def directional_model(self, direction):
         if type(direction) is not int:
-            raise HacInvalidTypeException('Projectile.add_directional_model '
-                                          'requires an int from the Constants module as'
-                                          'direction.'
-                                          )
+            raise HacInvalidTypeException(
+                "Projectile.add_directional_model "
+                "requires an int from the Constants module as"
+                "direction."
+            )
         if direction in self._directional_models:
             return self._directional_models[direction]
         else:
@@ -208,18 +236,20 @@ class Projectile(Movable):
 
     def remove_directional_model(self, direction):
         if type(direction) is not int:
-            raise HacInvalidTypeException('Projectile.add_directional_model '
-                                          'requires an int from the Constants module as'
-                                          'direction.'
-                                          )
-        del(self._directional_models[direction])
+            raise HacInvalidTypeException(
+                "Projectile.add_directional_model "
+                "requires an int from the Constants module as"
+                "direction."
+            )
+        del self._directional_models[direction]
 
     def set_direction(self, direction):
         if type(direction) is not int:
-            raise HacInvalidTypeException('Projectile.set_direction '
-                                          'requires an int from the Constants module as'
-                                          'direction.'
-                                          )
+            raise HacInvalidTypeException(
+                "Projectile.set_direction "
+                "requires an int from the Constants module as"
+                "direction."
+            )
         self.model = self.directional_model(direction)
         self.animation = self.directional_animation(direction)
         self.direction = direction

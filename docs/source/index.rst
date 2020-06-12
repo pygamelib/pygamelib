@@ -2,7 +2,6 @@ Hyrule Astronomy Club - hac-game-lib - documentation
 ====================================================
 
 .. toctree::
-   :maxdepth: 3
    :caption: Contents:
 
    board
