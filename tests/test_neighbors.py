@@ -10,7 +10,9 @@ def readable_board_item(boarditem):
 
 
 def readable_board_items(board_item_list):
-    return "["+", ".join([readable_board_item(item) for item in board_item_list])+"]"
+    return (
+        "[" + ", ".join([readable_board_item(item) for item in board_item_list]) + "]"
+    )
 
 
 class GameNeighborTestCase(unittest.TestCase):
@@ -18,7 +20,7 @@ class GameNeighborTestCase(unittest.TestCase):
         super().setUp()
         self.game = Game()
         self.board = self.game.load_board("hac-maps/kneighbors.json", 1)
-        self.game.player = Player(name='player')
+        self.game.player = Player(name="player")
         self.game.change_level(1)
         self.tree26 = self.board.item(2, 6)
         self.treasure38 = self.board.item(3, 8)
@@ -46,13 +48,18 @@ class GameNeighborTestCase(unittest.TestCase):
             with self.subTest(str(pos)):
                 self.game.player.pos = pos
                 actual_board_items = self.game.neighbors()
-                assertion_message = " ".join([
-                    readable_board_items(expected_board_items),
-                    "!=",
-                    readable_board_items(actual_board_items)
-                ])
-                self.assertSetEqual(set(expected_board_items), set(actual_board_items),
-                                    assertion_message)
+                assertion_message = " ".join(
+                    [
+                        readable_board_items(expected_board_items),
+                        "!=",
+                        readable_board_items(actual_board_items),
+                    ]
+                )
+                self.assertSetEqual(
+                    set(expected_board_items),
+                    set(actual_board_items),
+                    assertion_message,
+                )
 
     def test_npc_neighbors(self):
         def move_player_next_to_npc77():
