@@ -50,9 +50,17 @@ class Animation(object):
         item.animation = Animation(display_time=0.1, parent=item,
                                    refresh_screen=redraw_screen)
     """
-    def __init__(self, display_time=0.05, auto_replay=True, frames=None,
-                 animated_object=None, refresh_screen=None, initial_index=None,
-                 parent=None):
+
+    def __init__(
+        self,
+        display_time=0.05,
+        auto_replay=True,
+        frames=None,
+        animated_object=None,
+        refresh_screen=None,
+        initial_index=None,
+        parent=None,
+    ):
         self.state = RUNNING
         self.display_time = display_time
         self.auto_replay = auto_replay
@@ -121,9 +129,7 @@ class Animation(object):
             item.animation.add_frame(Sprite.ALIEN_MONSTER)
         """
         if type(frame) is not str:
-            raise HacInvalidTypeException(
-                'The "frame" parameter must be a string.'
-                )
+            raise HacInvalidTypeException('The "frame" parameter must be a string.')
         self.frames.append(frame)
 
     def search_frame(self, frame):
@@ -146,9 +152,7 @@ class Animation(object):
 
         """
         if type(frame) is not str:
-            raise HacInvalidTypeException(
-                'The "frame" parameter must be a string.'
-            )
+            raise HacInvalidTypeException('The "frame" parameter must be a string.')
         return self.frames.index(frame)
 
     def remove_frame(self, index):
@@ -173,9 +177,7 @@ class Animation(object):
 
         """
         if type(index) is not int:
-            raise HacInvalidTypeException(
-                'The "index" parameter must be an int.'
-            )
+            raise HacInvalidTypeException('The "index" parameter must be an int.')
         if index <= self._frame_index and self._frame_index > 0:
             self._frame_index -= 1
         return self.frames.pop(index)
@@ -218,7 +220,7 @@ class Animation(object):
         """
         if not isinstance(self.parent, BoardItem):
             raise HacInvalidTypeException(
-                'The parent needs to be a sub class of BoardItem.'
+                "The parent needs to be a sub class of BoardItem."
             )
         if self.state == RUNNING:
             self._frame_index += 1
@@ -261,12 +263,12 @@ class Animation(object):
             return False
         if self.refresh_screen is None or not callable(self.refresh_screen):
             raise HacInvalidTypeException(
-                'The refresh_screen parameter needs to be a callback '
-                'function reference.'
+                "The refresh_screen parameter needs to be a callback "
+                "function reference."
             )
         if not isinstance(self.parent, BoardItem):
             raise HacInvalidTypeException(
-                'The parent needs to be a sub class of BoardItem.'
+                "The parent needs to be a sub class of BoardItem."
             )
         for f in self.frames:
             self.parent.model = f
