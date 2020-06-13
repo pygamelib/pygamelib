@@ -872,10 +872,10 @@ while current_state != "eop":
                     # Jump
                     g.player.max_y = g.player.pos[0] - 3
                     g.player.dy = 1
-            elif key == "Q":
+            elif key == "X":
                 g.stop()
                 break
-            elif key in "awsd":
+            elif key in "zqawsd":
                 projectile = Projectile(
                     name="treeball",
                     direction=Constants.RIGHT,
@@ -888,7 +888,7 @@ while current_state != "eop":
                 )
                 row = g.player.pos[0]
                 column = g.player.pos[1] + 1
-                if key == "w":
+                if key == "w" or key == "z":
                     projectile.set_direction(Constants.UP)
                     row = g.player.pos[0] - 1
                     column = g.player.pos[1]
@@ -896,7 +896,7 @@ while current_state != "eop":
                     projectile.set_direction(Constants.DOWN)
                     row = g.player.pos[0] + 1
                     column = g.player.pos[1]
-                elif key == "a":
+                elif key == "a" or "q":
                     projectile.set_direction(Constants.LEFT)
                     row = g.player.pos[0]
                     column = g.player.pos[1] - 1
