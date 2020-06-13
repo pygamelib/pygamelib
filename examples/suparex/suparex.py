@@ -875,7 +875,7 @@ while current_state != "eop":
             elif key == "X":
                 g.stop()
                 break
-            elif key in "zqawsd":
+            elif key in "awsdzq":
                 projectile = Projectile(
                     name="treeball",
                     direction=Constants.RIGHT,
@@ -896,7 +896,7 @@ while current_state != "eop":
                     projectile.set_direction(Constants.DOWN)
                     row = g.player.pos[0] + 1
                     column = g.player.pos[1]
-                elif key == "a" or "q":
+                elif key == "a" or key == "q":
                     projectile.set_direction(Constants.LEFT)
                     row = g.player.pos[0]
                     column = g.player.pos[1] - 1
