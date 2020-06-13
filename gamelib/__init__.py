@@ -5,4 +5,4 @@ It is developped with young kids and total beginners in mind and tries to provid
 advanced mechanics to fuel the growth of the learning developers.
 """
 
-name = 'hac-game-lib'
+name = "hac-game-lib"

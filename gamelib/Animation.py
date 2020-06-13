@@ -10,7 +10,7 @@ import time
 class Animation(object):
     """
     The Animation class is used to give the ability to have more than one model
-    for a BoardItem. An BoardItem can have an animation and all of them that
+    for a BoardItem. A BoardItem can have an animation and all of them that
     are available to the Game object can be animated through
     Game.animate_items(lvl_number).
     To benefit from that, BoardItem.animation must be set explicitely.
@@ -27,8 +27,13 @@ class Animation(object):
     :type auto_replay: bool
     :param frames: an array of "frames" (string)
     :type frames: array[str]
-    :param animated_object: The object to animate.
+    :param animated_object: The object to animate. This parameter is deprecated.
+        Please use parent instead. It is only kept for backward compatibility.
+        The parent parameter always takes precedence over this one.
     :type animated_object: :class:`~gamelib.BoardItem.BoardItem`
+    :param parent: The parent object. It is also the object to animate.
+        Important: We cannot animate anything else that BoardItems and subclasses.
+    :type parent: :class:`~gamelib.BoardItem.BoardItem`
     :param refresh_screen: The callback function that controls the redrawing of
         the screen. This function reference should come from the main game.
     :type refresh_screen: function
@@ -42,19 +47,38 @@ class Animation(object):
         item = BoardItem(model=Sprite.ALIEN, name='Friendly Alien')
         # By default BoardItem does not have any animation, we have to
         # explicitely create one
-        item.animation = Animation(display_time=0.1, animated_object=item,
+        item.animation = Animation(display_time=0.1, parent=item,
                                    refresh_screen=redraw_screen)
     """
-    def __init__(self, display_time=0.05, auto_replay=True, frames=None,
-                 animated_object=None, refresh_screen=None):
+
+    def __init__(
+        self,
+        display_time=0.05,
+        auto_replay=True,
+        frames=None,
+        animated_object=None,
+        refresh_screen=None,
+        initial_index=None,
+        parent=None,
+    ):
         self.state = RUNNING
         self.display_time = display_time
         self.auto_replay = auto_replay
         if frames is None:
             frames = []
         self.frames = frames
-        self._frame_index = 0
-        self.animated_object = animated_object
+        if initial_index is None:
+            self._frame_index = 0
+            self._initial_index = 0
+        else:
+            self._frame_index = initial_index
+            self._initial_index = initial_index
+        if animated_object is not None and parent is None:
+            self.parent = animated_object
+            self.animated_object = animated_object
+        elif parent is not None:
+            self.parent = parent
+            self.animated_object = parent
         self.refresh_screen = refresh_screen
 
     def start(self):
@@ -105,9 +129,7 @@ class Animation(object):
             item.animation.add_frame(Sprite.ALIEN_MONSTER)
         """
         if type(frame) is not str:
-            raise HacInvalidTypeException(
-                'The "frame" parameter must be a string.'
-                )
+            raise HacInvalidTypeException('The "frame" parameter must be a string.')
         self.frames.append(frame)
 
     def search_frame(self, frame):
@@ -130,9 +152,7 @@ class Animation(object):
 
         """
         if type(frame) is not str:
-            raise HacInvalidTypeException(
-                'The "frame" parameter must be a string.'
-            )
+            raise HacInvalidTypeException('The "frame" parameter must be a string.')
         return self.frames.index(frame)
 
     def remove_frame(self, index):
@@ -157,9 +177,7 @@ class Animation(object):
 
         """
         if type(index) is not int:
-            raise HacInvalidTypeException(
-                'The "index" parameter must be an int.'
-            )
+            raise HacInvalidTypeException('The "index" parameter must be an int.')
         if index <= self._frame_index and self._frame_index > 0:
             self._frame_index -= 1
         return self.frames.pop(index)
@@ -171,7 +189,7 @@ class Animation(object):
 
             item.animation.reset()
         """
-        self._frame_index = 0
+        self._frame_index = self._initial_index
 
     def current_frame(self):
         """Return the current frame.
@@ -183,15 +201,15 @@ class Animation(object):
         return self.frames[self._frame_index]
 
     def next_frame(self):
-        """Update the animated_object.model with the next frame of the animation.
+        """Update the parent.model with the next frame of the animation.
 
         That method takes care of automatically replaying the animation if the
         last frame is reached if the state is RUNNING.
 
-        If the the state is PAUSED it still update the animated_object.model
+        If the the state is PAUSED it still update the parent.model
         and returning the current frame. It does NOT actually go to next frame.
 
-        If animated_object is not a sub class of
+        If parent is not a sub class of
         :class:`~gamelib.BoardItem.BoardItem` an exception is raised.
 
         :raise: :class:`~gamelib.HacExceptions.HacInvalidTypeException`
@@ -200,9 +218,9 @@ class Animation(object):
 
             item.animation.next_frame()
         """
-        if not isinstance(self.animated_object, BoardItem):
+        if not isinstance(self.parent, BoardItem):
             raise HacInvalidTypeException(
-                'The animated_object needs to be a sub class of BoardItem.'
+                "The parent needs to be a sub class of BoardItem."
             )
         if self.state == RUNNING:
             self._frame_index += 1
@@ -211,10 +229,10 @@ class Animation(object):
                     self.reset()
                 else:
                     self._frame_index = len(self.frames) - 1
-            self.animated_object.model = self.frames[self._frame_index]
+            self.parent.model = self.frames[self._frame_index]
             return self.frames[self._frame_index]
         elif self.state == PAUSED:
-            self.animated_object.model = self.frames[self._frame_index]
+            self.parent.model = self.frames[self._frame_index]
             return self.frames[self._frame_index]
         # By default Python will return None for the STOPPED case.
         # This is debatable: why shouldn't we do the same thing
@@ -229,7 +247,7 @@ class Animation(object):
         If the the state is PAUSED or STOPPED, the animation does not play and
         the method return False.
 
-        If animated_object is not a sub class of
+        If parent is not a sub class of
         :class:`~gamelib.BoardItem.BoardItem` an exception is raised.
 
         If screen_refresh is not defined or is not a function an exception
@@ -245,15 +263,15 @@ class Animation(object):
             return False
         if self.refresh_screen is None or not callable(self.refresh_screen):
             raise HacInvalidTypeException(
-                'The refresh_screen parameter needs to be a callback '
-                'function reference.'
+                "The refresh_screen parameter needs to be a callback "
+                "function reference."
             )
-        if not isinstance(self.animated_object, BoardItem):
+        if not isinstance(self.parent, BoardItem):
             raise HacInvalidTypeException(
-                'The animated_object needs to be a sub class of BoardItem.'
+                "The parent needs to be a sub class of BoardItem."
             )
         for f in self.frames:
-            self.animated_object.model = f
+            self.parent.model = f
             self.refresh_screen()
             time.sleep(self.display_time)
         return True

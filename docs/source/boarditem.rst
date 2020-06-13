@@ -5,3 +5,4 @@ BoardItem
 
 .. automodule:: gamelib.BoardItem
     :members:
+    :show-inheritance:

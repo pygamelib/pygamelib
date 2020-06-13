@@ -1,0 +1,13 @@
+{
+    "config_file_version" : 10100,
+    "directories": ["hac-maps"],
+    "enable_partial_display" : true,
+    "partial_display_viewport" : [10, 30],
+    "menu_mode" : "display",
+    "last_board" : "/home/arnaud/Code/Games/hgl-editor/random-dungeon-4412.json",
+    "last_used_board_parameters" : {
+        "name" : "test board",
+        "width" : 120,
+        "height" : 90
+    }
+}

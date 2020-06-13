@@ -4,7 +4,7 @@ patterns.
 """
 
 from gamelib.Actuators.Actuator import Actuator
-from gamelib.Constants import RUNNING
+from gamelib import Constants
 import random
 
 
@@ -17,11 +17,14 @@ class RandomActuator(Actuator):
 
     :param moveset: A list of movements.
     :type moveset: list
+    :param parent: The parent object to actuate.
+    :type parent: gamelib.BoardItem.BoardItem
     """
-    def __init__(self, moveset=None):
+
+    def __init__(self, moveset=None, parent=None):
         if moveset is None:
             moveset = []
-        super().__init__()
+        super().__init__(parent)
         self.moveset = moveset
 
     def next_move(self):
@@ -37,7 +40,7 @@ class RandomActuator(Actuator):
 
             randomactuator.next_move()
         """
-        if self.state == RUNNING:
+        if self.state == Constants.RUNNING:
             return random.choice(self.moveset)
 
 
@@ -53,11 +56,14 @@ class PathActuator(Actuator):
 
     :param path: A list of paths.
     :type path: list
+    :param parent: The parent object to actuate.
+    :type parent: gamelib.BoardItem.BoardItem
     """
-    def __init__(self, path=None):
+
+    def __init__(self, path=None, parent=None):
         if path is None:
             path = []
-        super().__init__()
+        super().__init__(parent)
         self.path = path
         self.index = 0
 
@@ -76,7 +82,7 @@ class PathActuator(Actuator):
 
             pathactuator.next_move()
         """
-        if self.state == RUNNING:
+        if self.state == Constants.RUNNING:
             move = self.path[self.index]
             self.index += 1
             if self.index == len(self.path):
@@ -111,7 +117,7 @@ class PatrolActuator(PathActuator):
     If they both are same then, index is set to value zero and the move is
     returned back.
 
-    :param path: A list of paths.
+    :param path: A list of directions.
     :type path: list
     """
 
@@ -131,10 +137,64 @@ class PatrolActuator(PathActuator):
 
             patrolactuator.next_move()
         """
-        if self.state == RUNNING:
+        if self.state == Constants.RUNNING:
             move = self.path[self.index]
             self.index += 1
             if self.index == len(self.path):
                 self.index = 0
-                self.path = self.path.reverse()
+                self.path.reverse()
+                for i in range(0, len(self.path)):
+                    if self.path[i] == Constants.UP:
+                        self.path[i] = Constants.DOWN
+                    elif self.path[i] == Constants.DOWN:
+                        self.path[i] = Constants.UP
+                    elif self.path[i] == Constants.LEFT:
+                        self.path[i] = Constants.RIGHT
+                    elif self.path[i] == Constants.RIGHT:
+                        self.path[i] = Constants.LEFT
+                    elif self.path[i] == Constants.DLDOWN:
+                        self.path[i] = Constants.DRUP
+                    elif self.path[i] == Constants.DLUP:
+                        self.path[i] = Constants.DRDOWN
+                    elif self.path[i] == Constants.DRDOWN:
+                        self.path[i] = Constants.DLUP
+                    elif self.path[i] == Constants.DRUP:
+                        self.path[i] = Constants.DLDOWN
             return move
+
+
+class UnidirectionalActuator(Actuator):
+    """A class that implements a single movement.
+
+    The unidirectional actuator is a subclass of
+    :class:`~gamelib.Actuators.Actuator.Actuator`.
+    It is simply implementing a mono directional movement. It is primarily target at
+    projectiles.
+
+    :param direction: A single direction from the Constants module.
+    :type direction: int
+    :param parent: The parent object to actuate.
+    :type parent: gamelib.BoardItem.BoardItem
+    """
+
+    def __init__(self, direction=Constants.RIGHT, parent=None):
+        if direction is None:
+            direction = Constants.RIGHT
+        super().__init__(parent)
+        self.direction = direction
+
+    def next_move(self):
+        """Return the direction.
+
+        The movement is always direction if state is RUNNING,
+        otherwise it returns None.
+
+        :return: The next movement
+        :rtype: int | None
+
+        Example::
+
+            unidirectional_actuator.next_move()
+        """
+        if self.state == Constants.RUNNING:
+            return self.direction

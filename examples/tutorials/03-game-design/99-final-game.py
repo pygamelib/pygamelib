@@ -219,7 +219,9 @@ def whale_behavior():
                             g.add_npc(
                                 1,
                                 NPC(
-                                    model=Sprites.OCTOPUS,
+                                    model=Utils.Back.BLUE
+                                    + Sprites.OCTOPUS
+                                    + Utils.Style.RESET_ALL,
                                     name="Swimming Octopus (Left)",
                                     type="swimming_octopus",
                                 ),
@@ -232,7 +234,9 @@ def whale_behavior():
                             g.add_npc(
                                 1,
                                 NPC(
-                                    model=Sprites.OCTOPUS,
+                                    model=Utils.Back.BLUE
+                                    + Sprites.OCTOPUS
+                                    + Utils.Style.RESET_ALL,
                                     name="Swimming Octopus (Right)",
                                     type="swimming_octopus",
                                 ),
@@ -619,8 +623,8 @@ while run:
             # Warn the player
             print(
                 Utils.red_bright(
-                    f"You have been saved by the Scroll of Wisdom, be careful next time"
-                    f" you will die!"
+                    "You have been saved by the Scroll of Wisdom, be careful next time"
+                    " you will die!"
                 )
             )
             # And consume the scroll in the process

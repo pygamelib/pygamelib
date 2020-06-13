@@ -1,4 +1,10 @@
 """This module contains the Immovable and Actionable classes.
+
+.. autosummary::
+   :toctree: .
+
+   Immovable
+   Actionable
 """
 
 from gamelib.BoardItem import BoardItem
@@ -12,12 +18,13 @@ class Immovable(BoardItem):
     However it does not implement BoardItem.pickable() or
     BoardItem.overlappable()
     """
+
     def __init__(self, **kwargs):
         BoardItem.__init__(self, **kwargs)
-        if 'size' not in kwargs.keys():
+        if "size" not in kwargs.keys():
             self._size = 0
         else:
-            self._size = kwargs['size']
+            self._size = kwargs["size"]
 
     def can_move(self):
         """ Return the capability of moving of an item.
@@ -73,19 +80,20 @@ class Actionable(Immovable):
         :class:`~gamelib.Structures.GenericActionableStructure`
         for more details.
     """
+
     def __init__(self, **kwargs):
-        if 'action' not in kwargs.keys():
+        if "action" not in kwargs.keys():
             self.action = None
         else:
-            self.action = kwargs['action']
-        if 'action_parameters' not in kwargs.keys():
-            kwargs['action_parameters'] = []
+            self.action = kwargs["action"]
+        if "action_parameters" not in kwargs.keys():
+            kwargs["action_parameters"] = []
         else:
-            self.action_parameters = kwargs['action_parameters']
-        if 'perm' not in kwargs.keys():
+            self.action_parameters = kwargs["action_parameters"]
+        if "perm" not in kwargs.keys():
             self.perm = Constants.PLAYER_AUTHORIZED
         else:
-            self.perm = kwargs['perm']
+            self.perm = kwargs["perm"]
         Immovable.__init__(self, **kwargs)
 
     def activate(self):

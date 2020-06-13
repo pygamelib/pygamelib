@@ -1,5 +1,12 @@
 """
 This module contains the base classes for both playable and non playable characters.
+
+.. autosummary::
+   :toctree: .
+
+    Character
+    NPC
+    Player
 """
 
 from gamelib.Movable import Movable
@@ -88,7 +95,7 @@ class Player(Movable, Character):
         if "inventory" in kwargs.keys():
             self.inventory = kwargs["inventory"]
         else:
-            self.inventory = Inventory()
+            self.inventory = Inventory(parent=self)
 
     def pickable(self):
         """This method returns False (a player is obviously not pickable).
@@ -123,12 +130,12 @@ class NPC(Movable, Character):
         * :class:`gamelib.BoardItem.BoardItem`
 
     :param actuator: An actuator, it can be any class but it need to implement
-        gamelibe.Actuator.Actuator.
+        gamelib.Actuator.Actuator.
     :type actuator: gamelib.Actuators.Actuator
 
     Example::
 
-        mynpc = NPC(name='Idiot McStupid', type='dumb_ennemy')
+        mynpc = NPC(name='Idiot McStupid', type='dumb_enemy')
         mynpc.step = 1
         mynpc.actuator = RandomActuator()
     """

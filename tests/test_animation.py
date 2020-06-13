@@ -11,14 +11,14 @@ class TestAnimation(unittest.TestCase):
     def test_create_animation(self):
         self.item = NPC(model="-o-", name="Dancer")
         self.animation = Animation(
-            animated_object=self.item, refresh_screen=self.redraw, display_time=0.5
+            parent=self.item, refresh_screen=self.redraw, display_time=0.5
         )
-        self.assertEqual(self.item.name, self.animation.animated_object.name)
+        self.assertEqual(self.item.name, self.animation.parent.name)
 
     def test_start(self):
         self.item = NPC(model="-o-", name="Dancer")
         self.animation = Animation(
-            animated_object=self.item, refresh_screen=self.redraw, display_time=0.5
+            parent=self.item, refresh_screen=self.redraw, display_time=0.5
         )
         self.animation.start()
         self.assertEqual(self.animation.state, Constants.RUNNING)
@@ -26,7 +26,7 @@ class TestAnimation(unittest.TestCase):
     def test_pause(self):
         self.item = NPC(model="-o-", name="Dancer")
         self.animation = Animation(
-            animated_object=self.item, refresh_screen=self.redraw, display_time=0.5
+            parent=self.item, refresh_screen=self.redraw, display_time=0.5
         )
         self.animation.pause()
         self.assertEqual(self.animation.state, Constants.PAUSED)
@@ -34,7 +34,7 @@ class TestAnimation(unittest.TestCase):
     def test_stop(self):
         self.item = NPC(model="-o-", name="Dancer")
         self.animation = Animation(
-            animated_object=self.item, refresh_screen=self.redraw, display_time=0.5
+            parent=self.item, refresh_screen=self.redraw, display_time=0.5
         )
         self.animation.stop()
         self.assertEqual(self.animation.state, Constants.STOPPED)
@@ -42,7 +42,7 @@ class TestAnimation(unittest.TestCase):
     def test_add_frame(self):
         self.item = NPC(model="-o-", name="Dancer")
         self.animation = Animation(
-            animated_object=self.item, refresh_screen=self.redraw, display_time=0.5
+            parent=self.item, refresh_screen=self.redraw, display_time=0.5
         )
         self.animation.add_frame("\\o-")
         with self.assertRaises(Exception) as context:
@@ -52,7 +52,7 @@ class TestAnimation(unittest.TestCase):
     def test_search_frame(self):
         self.item = NPC(model="-o-", name="Dancer")
         self.animation = Animation(
-            animated_object=self.item, refresh_screen=self.redraw, display_time=0.5
+            parent=self.item, refresh_screen=self.redraw, display_time=0.5
         )
         self.animation.add_frame("-o-")
         self.animation.add_frame("\\o-")
@@ -66,7 +66,7 @@ class TestAnimation(unittest.TestCase):
     def test_remove_frame(self):
         self.item = NPC(model="-o-", name="Dancer")
         self.animation = Animation(
-            animated_object=self.item, refresh_screen=self.redraw, display_time=0.5
+            parent=self.item, refresh_screen=self.redraw, display_time=0.5
         )
         self.animation.add_frame("-o-")
         self.animation.add_frame("\\o-")
@@ -87,7 +87,7 @@ class TestAnimation(unittest.TestCase):
     def test_current_frame(self):
         self.item = NPC(model="-o-", name="Dancer")
         self.animation = Animation(
-            animated_object=self.item, refresh_screen=self.redraw, display_time=0.5
+            parent=self.item, refresh_screen=self.redraw, display_time=0.5
         )
         self.animation.add_frame("-o-")
         self.animation.add_frame("\\o-")
@@ -100,7 +100,7 @@ class TestAnimation(unittest.TestCase):
     def test_next_frame(self):
         self.item = NPC(model="-o-", name="Dancer")
         self.animation = Animation(
-            animated_object=self.item, refresh_screen=self.redraw, display_time=0.5
+            parent=self.item, refresh_screen=self.redraw, display_time=0.5
         )
         self.animation.add_frame("-o-")
         self.animation.add_frame("\\o-")
@@ -111,7 +111,7 @@ class TestAnimation(unittest.TestCase):
         self.assertEqual(self.animation.next_frame(), "\\o-")
         self.animation.stop()
         self.assertIsNone(self.animation.next_frame())
-        self.animation.animated_object = "This is going to break!"
+        self.animation.parent = "This is going to break!"
         with self.assertRaises(Exception) as context:
             self.animation.next_frame()
         self.assertTrue(
@@ -121,7 +121,7 @@ class TestAnimation(unittest.TestCase):
     def test_play_all(self):
         self.item = NPC(model="-o-", name="Dancer")
         self.animation = Animation(
-            animated_object=self.item, refresh_screen=self.redraw, display_time=0.5
+            parent=self.item, refresh_screen=self.redraw, display_time=0.5
         )
         self.animation.add_frame("-o-")
         self.animation.add_frame("\\o-")
@@ -133,7 +133,7 @@ class TestAnimation(unittest.TestCase):
         self.animation.stop()
         self.assertFalse(self.animation.play_all())
         self.animation = Animation(
-            animated_object="breaking", refresh_screen=self.redraw, display_time=0.5
+            parent="breaking", refresh_screen=self.redraw, display_time=0.5
         )
         with self.assertRaises(Exception) as context:
             self.animation.play_all()
@@ -142,7 +142,7 @@ class TestAnimation(unittest.TestCase):
         )
 
         self.animation = Animation(
-            animated_object=self.item, refresh_screen="breaking", display_time=0.5
+            parent=self.item, refresh_screen="breaking", display_time=0.5
         )
         with self.assertRaises(Exception) as context:
             self.animation.play_all()

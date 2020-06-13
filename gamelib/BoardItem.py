@@ -1,4 +1,10 @@
 """This module contains the basic board items classes (regular and void items).
+
+.. autosummary::
+   :toctree: .
+
+   BoardItem
+   BoardItemVoid
 """
 
 
@@ -19,6 +25,7 @@ class BoardItem:
     :param model: The model to use to display this item on the Board. Be mindful of the
         space it will require. Default value is '*'.
     :type model: str
+    :param parent: The parent object of the board item. Usually a Board or Game object.
     """
 
     def __init__(self, **kwargs):
@@ -27,8 +34,9 @@ class BoardItem:
         self.pos = [None, None]
         self.model = "*"
         self.animation = None
+        self.parent = None
         # Setting class parameters
-        for item in ["name", "type", "pos", "model"]:
+        for item in ["name", "type", "pos", "model", "parent"]:
             if item in kwargs:
                 setattr(self, item, kwargs[item])
 

@@ -17,6 +17,7 @@ class Inventory:
 
     :param max_size: The maximum size of the inventory. Deafult value: 10.
     :type max_size: int
+    :param parent: The parent object (usually a BoardItem).
 
     .. note:: You can print() the inventory. This is mostly useful for debug as you want
         to have a better display in your game.
@@ -27,9 +28,10 @@ class Inventory:
 
     """
 
-    def __init__(self, max_size=10):
+    def __init__(self, max_size=10, parent=None):
         self.max_size = max_size
         self.__items = {}
+        self.parent = parent
 
     def __str__(self):
         s = "=============\n"
@@ -52,10 +54,11 @@ class Inventory:
         """Add an item to the inventory.
 
         This method will add an item to the inventory unless:
+
          * it is not an instance of :class:`~gamelib.BoardItem.BoardItem`,
          * you try to add an item that is not pickable,
          * there is no more space left in the inventory (i.e: the cumulated size of the
-            inventory + your item.size is greater than the inventory max_size)
+           inventory + your item.size is greater than the inventory max_size)
 
         :param item: the item you want to add
         :type item: :class:`~gamelib.BoardItem.BoardItem`
@@ -133,6 +136,15 @@ class Inventory:
                 val += self.__items[k].size()
         return val
 
+    def empty(self):
+        """Empty the inventory
+        Example::
+
+            if inventory.size() > 0:
+                inventory.empty()
+        """
+        self.__items = {}
+
     def value(self):
         """
         Return the cumulated value of the inventory.
@@ -143,7 +155,7 @@ class Inventory:
 
         Example::
 
-            if inventory,value() >= 10:
+            if inventory.value() >= 10:
                 print('Victory!')
                 break
         """

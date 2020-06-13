@@ -3,10 +3,12 @@ It is the base class for all levels.
 """
 
 from gamelib.Utils import warn
-from gamelib.HacExceptions import (HacException,
-                                   HacOutOfBoardBoundException,
-                                   HacInvalidTypeException,
-                                   HacObjectIsNotMovableException)
+from gamelib.HacExceptions import (
+    HacException,
+    HacOutOfBoardBoundException,
+    HacInvalidTypeException,
+    HacObjectIsNotMovableException,
+)
 from gamelib.BoardItem import BoardItem, BoardItemVoid
 from gamelib.Movable import Movable
 from gamelib.Immovable import Immovable, Actionable
@@ -14,7 +16,7 @@ from gamelib.Characters import Player, NPC
 import gamelib.Constants as Constants
 
 
-class Board():
+class Board:
     """A class that represent a game board.
 
     The board is being represented by a square matrix.
@@ -47,29 +49,48 @@ class Board():
         option is going to be the model of the BoardItemVoid
         (see :class:`gamelib.BoardItem.BoardItemVoid`)
     :type ui_board_void_cell: str
+    :param parent: The parent object (usually the Game object).
+    :type parent: :class:`~gamelib.Game.Game`
+    :param DISPLAY_SIZE_WARNINGS: A boolean to show or hide the warning about boards
+        bigger than 80 rows and columns.
+    :type DISPLAY_SIZE_WARNINGS: bool
     """
 
     def __init__(self, **kwargs):
         self.name = "Board"
         self.size = [10, 10]
         self.player_starting_position = [0, 0]
-        self.ui_border_left = '|'
-        self.ui_border_right = '|'
-        self.ui_border_top = '-'
-        self.ui_border_bottom = '-'
-        self.ui_board_void_cell = ' '
+        self.ui_border_left = "|"
+        self.ui_border_right = "|"
+        self.ui_border_top = "-"
+        self.ui_border_bottom = "-"
+        self.ui_board_void_cell = " "
         self.DISPLAY_SIZE_WARNINGS = True
+        self.parent = None
         # Setting class parameters
-        for item in ['name', 'size', 'ui_border_bottom', 'ui_border_top',
-                     'ui_border_left', 'ui_border_right', 'ui_board_void_cell',
-                     'player_starting_position', 'DISPLAY_SIZE_WARNINGS']:
+        for item in [
+            "name",
+            "size",
+            "ui_border_bottom",
+            "ui_border_top",
+            "ui_border_left",
+            "ui_border_right",
+            "ui_board_void_cell",
+            "player_starting_position",
+            "DISPLAY_SIZE_WARNINGS",
+            "parent",
+        ]:
             if item in kwargs:
                 setattr(self, item, kwargs[item])
         # if ui_borders is set then set all borders to that value
-        if 'ui_borders' in kwargs.keys():
-            for item in ['ui_border_bottom', 'ui_border_top', 'ui_border_left',
-                         'ui_border_right']:
-                setattr(self, item, kwargs['ui_borders'])
+        if "ui_borders" in kwargs.keys():
+            for item in [
+                "ui_border_bottom",
+                "ui_border_top",
+                "ui_border_left",
+                "ui_border_right",
+            ]:
+                setattr(self, item, kwargs["ui_borders"])
         # Now checking for board's data sanity
         try:
             self.check_sanity()
@@ -77,20 +98,22 @@ class Board():
             raise error
 
         # Init the list of movable and immovable objects
-        self._movables = []
-        self._immovables = []
+        self._movables = set()
+        self._immovables = set()
         # If sanity check passed then, initialize the board
         self.init_board()
 
     def __str__(self):
-        return (f"----------------\n"
-                "Board name: {self.name}\n"
-                "Board size: {self.size}\n"
-                "Borders: '{self.ui_border_left}','{self.ui_border_right}','"
-                "{self.ui_border_top}','{self.ui_border_bottom}',\n"
-                "Board void cell: '{self.ui_board_void_cell}'\n"
-                "Player starting position: {self.player_starting_position}\n"
-                "----------------")
+        return (
+            "----------------\n"
+            f"Board name: {self.name}\n"
+            f"Board size: {self.size}\n"
+            f"Borders: '{self.ui_border_left}','{self.ui_border_right}','"
+            f"{self.ui_border_top}','{self.ui_border_bottom}',\n"
+            f"Board void cell: '{self.ui_board_void_cell}'\n"
+            f"Player starting position: {self.player_starting_position}\n"
+            "----------------"
+        )
 
     def init_board(self):
         """
@@ -102,9 +125,13 @@ class Board():
             myboard.init_board()
         """
 
-        self._matrix = [[BoardItemVoid(model=self.ui_board_void_cell)
-                        for i in range(0, self.size[0], 1)]
-                        for j in range(0, self.size[1], 1)]
+        self._matrix = [
+            [
+                BoardItemVoid(model=self.ui_board_void_cell, parent=self)
+                for i in range(0, self.size[0], 1)
+            ]
+            for j in range(0, self.size[1], 1)
+        ]
 
     def init_cell(self, row, column):
         """
@@ -121,7 +148,8 @@ class Board():
             myboard.init_cell(2,3)
         """
         self._matrix[row][column] = BoardItemVoid(
-            model=self.ui_board_void_cell)
+            model=self.ui_board_void_cell, parent=self
+        )
 
     def check_sanity(self):
         """Check the board sanity.
@@ -132,72 +160,88 @@ class Board():
         if type(self.size) is list:
             sanity_check += 1
         else:
-            raise HacException('SANITY_CHECK_KO', ("The 'size' parameter must"
-                                                   " be a list."))
+            raise HacException(
+                "SANITY_CHECK_KO", ("The 'size' parameter must be a list.")
+            )
         if len(self.size) == 2:
             sanity_check += 1
         else:
-            raise HacException('SANITY_CHECK_KO', ("The 'size' parameter must"
-                                                   " be a list of 2 elements."))
+            raise HacException(
+                "SANITY_CHECK_KO",
+                ("The 'size' parameter must be a list of 2 elements."),
+            )
         if type(self.size[0]) is int:
             sanity_check += 1
         else:
-            raise HacException('SANITY_CHECK_KO',
-                               ("The first element of the "
-                                "'size' list must be an integer."))
+            raise HacException(
+                "SANITY_CHECK_KO",
+                ("The first element of the 'size' list must be an integer."),
+            )
         if type(self.size[1]) is int:
             sanity_check += 1
         else:
-            raise HacException('SANITY_CHECK_KO',
-                               ("The second element of the 'size' "
-                                "list must be an integer."))
+            raise HacException(
+                "SANITY_CHECK_KO",
+                ("The second element of the 'size' list must be an integer."),
+            )
         if type(self.name) is str:
             sanity_check += 1
         else:
-            raise HacException('SANITY_CHECK_KO',
-                               "The 'name' parameter must be a string.")
+            raise HacException(
+                "SANITY_CHECK_KO", "The 'name' parameter must be a string."
+            )
         if type(self.ui_border_bottom) is str:
             sanity_check += 1
         else:
-            raise HacException('SANITY_CHECK_KO',
-                               ("The 'ui_border_bottom' parameter "
-                                "must be a string."))
+            raise HacException(
+                "SANITY_CHECK_KO",
+                ("The 'ui_border_bottom' parameter must be a string."),
+            )
         if type(self.ui_border_top) is str:
             sanity_check += 1
         else:
-            raise HacException('SANITY_CHECK_KO',
-                               ("The 'ui_border_top' parameter must "
-                                "be a string."))
+            raise HacException(
+                "SANITY_CHECK_KO", ("The 'ui_border_top' parameter must be a string.")
+            )
         if type(self.ui_border_left) is str:
             sanity_check += 1
         else:
-            raise HacException('SANITY_CHECK_KO',
-                               ("The 'ui_border_left' parameter must "
-                                "be a string."))
+            raise HacException(
+                "SANITY_CHECK_KO", ("The 'ui_border_left' parameter must be a string.")
+            )
         if type(self.ui_border_right) is str:
             sanity_check += 1
         else:
-            raise HacException('SANITY_CHECK_KO',
-                               ("The 'ui_border_right' parameter must "
-                                "be a string."))
+            raise HacException(
+                "SANITY_CHECK_KO", ("The 'ui_border_right' parameter must be a string.")
+            )
         if type(self.ui_board_void_cell) is str:
             sanity_check += 1
         else:
-            raise HacException('SANITY_CHECK_KO',
-                               ("The 'ui_board_void_cell' parameter must "
-                                "be a string."))
+            raise HacException(
+                "SANITY_CHECK_KO",
+                ("The 'ui_board_void_cell' parameter must be a string."),
+            )
 
         if self.size[0] > 80:
             if self.DISPLAY_SIZE_WARNINGS:
-                warn((f"The first dimension of your board is {self.size[0]}. "
-                     "It is a good practice to keep it at a maximum of 80 for "
-                      "compatibility with older terminals."))
+                warn(
+                    (
+                        f"The first dimension of your board is {self.size[0]}. "
+                        "It is a good practice to keep it at a maximum of 80 for "
+                        "compatibility with older terminals."
+                    )
+                )
 
         if self.size[1] > 80:
             if self.DISPLAY_SIZE_WARNINGS:
-                warn((f"The second dimension of your board is {self.size[1]}. "
-                     "It is a good practice to keep it at a maximum of 80 for "
-                      "compatibility with older terminals."))
+                warn(
+                    (
+                        f"The second dimension of your board is {self.size[1]}. "
+                        "It is a good practice to keep it at a maximum of 80 for "
+                        "compatibility with older terminals."
+                    )
+                )
 
         # If all sanity check clears return True else raise a general error.
         # I have no idea how the general error could ever occur but...
@@ -205,74 +249,108 @@ class Board():
         if sanity_check == 10:
             return True
         else:
-            raise HacException('SANITY_CHECK_KO',
-                               "The board data are not valid.")
+            raise HacException("SANITY_CHECK_KO", "The board data are not valid.")
 
-    def _wip_display_around(self, object, p_row, p_col):
+    def display_around(self, object, row_radius, column_radius):
         """Display only a part of the board.
-
-        .. warning:: THIS FUNCTION IS UNDER ACTIVE DEVELOPMENT. USE IT AT YOUR OWN RISKS
 
         This method behaves like display() but only display a part of the board around
         an object (usually the player).
         Example::
 
-            board.display_around(player,30,60)
+            # This will display only a total of 30 cells vertically and
+            # 60 cells horizontally.
+            board.display_around(player, 15, 30)
 
-        :param item: an item to move (it has to be a subclass of Movable)
-        :type item: gamelib.Movable.Movable
-        :param direction: a direction from :ref:`constants-module`
-        :type direction: gamelib.Constants
-        :param step: the number of steps to move the item.
-        :type step: int
+        :param object: an item to center the view on (it has to be a subclass
+            of BoardItem)
+        :type object: :class:`~gamelib.BoardItem.BoardItem`
+        :param row_radius: The radius of display in number of rows showed. Remember that
+            it is a radius not a diameter...
+        :type row_radius: int
+        :param column_radius: The radius of display in number of columns showed.
+            Remember that... Well, same thing.
+        :type column_radius: int
+
         It uses the same display algorithm than the regular display() method.
         """
-        # print(self.ui_border_top*len(self._matrix[0]) + self.ui_border_top*2+"\r")
+        # First let's take care of the type checking
+        if not isinstance(object, BoardItem):
+            raise HacInvalidTypeException(
+                "Board.display_around: object needs to be a BoardItem."
+            )
+        if type(row_radius) is not int or type(column_radius) is not int:
+            raise HacInvalidTypeException(
+                "Board.display_around: both row_radius and"
+                " column_radius needs to be int."
+            )
+        # Now if the viewport is greater or equal to the board size, well we just need
+        # a regular display()
+        if self.size[1] <= 2 * row_radius and self.size[0] <= 2 * column_radius:
+            return self.display()
         row_min_bound = 0
-        row_max_bound = self.size[0]
+        row_max_bound = self.size[1]
         column_min_bound = 0
-        column_max_bound = self.size[1]
+        column_max_bound = self.size[0]
         # Row
-        if object.pos[0]-p_row >= 0:
-            row_min_bound = object.pos[0]-p_row
-        if object.pos[0]+p_row < row_max_bound:
-            row_max_bound = object.pos[0]+p_row
+        if object.pos[0] - row_radius >= 0:
+            row_min_bound = object.pos[0] - row_radius
+        if object.pos[0] + row_radius < row_max_bound:
+            row_max_bound = object.pos[0] + row_radius
         # Columns
-        if object.pos[1]-p_row >= 0:
-            column_min_bound = object.pos[1]-p_col
-        if object.pos[1]+p_col < column_max_bound:
-            column_max_bound = object.pos[1]+p_col
+        if object.pos[1] - column_radius >= 0:
+            column_min_bound = object.pos[1] - column_radius
+        if object.pos[1] + column_radius < column_max_bound:
+            column_max_bound = object.pos[1] + column_radius
         # Now adjust boundaries so it looks fine at min and max
         if column_min_bound <= 0:
             column_min_bound = 0
-            column_max_bound = 2*p_col
-        if column_max_bound >= self.size[1]:
-            column_max_bound = self.size[1]
-            column_min_bound = self.size[1]-2*p_col
+            column_max_bound = 2 * column_radius
+        if column_max_bound >= self.size[0]:
+            column_max_bound = self.size[0]
+            if (self.size[0] - 2 * column_radius) >= 0:
+                column_min_bound = self.size[0] - 2 * column_radius
         if row_min_bound <= 0:
             row_min_bound = 0
-            row_max_bound = 2*p_row
-        if row_max_bound >= self.size[0]:
-            row_max_bound = self.size[0]
-            row_min_bound = self.size[0]-2*p_row
-        print(f'[debug] row boundaries {row_min_bound},{row_max_bound}')
-        print(f'[debug] column boundaries {column_min_bound},{column_max_bound}')
-        print(f'[debug] size: {self.size}')
+            row_max_bound = 2 * row_radius
+        if row_max_bound >= self.size[1]:
+            row_max_bound = self.size[1]
+            if (self.size[1] - 2 * row_radius) >= 0:
+                row_min_bound = self.size[1] - 2 * row_radius
         if row_min_bound == 0:
-            print(self.ui_border_top*(p_col*2) + self.ui_border_top+"\r")
+            bt_size = column_radius * 2
+            if bt_size >= self.size[0]:
+                bt_size = self.size[0]
+                if object.pos[1] - column_radius > 0:
+                    bt_size = self.size[0] - (object.pos[1] - column_radius)
+            print(self.ui_border_top * bt_size, end="")
+            if column_min_bound <= 0 and column_max_bound >= self.size[0]:
+                print(self.ui_border_top * 2, end="")
+            elif column_min_bound <= 0 or column_max_bound >= self.size[0]:
+                print(self.ui_border_top, end="")
+            print("\r")
         for row in self._matrix[row_min_bound:row_max_bound]:
             if column_min_bound == 0:
-                print(self.ui_border_left, end='')
+                print(self.ui_border_left, end="")
             for y in row[column_min_bound:column_max_bound]:
-                if (isinstance(y, BoardItemVoid)
-                        and y.model != self.ui_board_void_cell):
+                if isinstance(y, BoardItemVoid) and y.model != self.ui_board_void_cell:
                     y.model = self.ui_board_void_cell
-                print(y, end='')
-            if column_max_bound == self.size[1]:
-                print(self.ui_border_right, end='')
-            print('\r')
-        if row_max_bound == self.size[0]:
-            print(self.ui_border_bottom*(p_col*2) + self.ui_border_bottom+"\r")
+                print(y, end="")
+            if column_max_bound >= self.size[0]:
+                print(self.ui_border_right, end="")
+            print("\r")
+        if row_max_bound >= self.size[1]:
+            bb_size = column_radius * 2
+            if bb_size >= self.size[0]:
+                bb_size = self.size[0]
+                if object.pos[1] - column_radius > 0:
+                    bb_size = self.size[0] - (object.pos[1] - column_radius)
+            print(self.ui_border_bottom * bb_size, end="")
+            if column_min_bound <= 0 and column_max_bound >= self.size[0]:
+                print(self.ui_border_bottom * 2, end="")
+            elif column_min_bound <= 0 or column_max_bound >= self.size[0]:
+                print(self.ui_border_bottom, end="")
+            print("\r")
 
     def display(self):
         """Display the entire board.
@@ -284,54 +362,34 @@ class Board():
         BoardItem.model. If you want to override this behavior you have
         to subclass BoardItem.
         """
-        # border_top = ''
-        # border_bottom = ''
-        # for x in self._matrix[0]:
-        #     border_bottom += self.ui_border_bottom
-        #     border_top += self.ui_border_top
-        # border_bottom += self.ui_border_bottom*len(self._matrix[0]) \
-        #     + self.ui_border_bottom*2
-        # border_top += self.ui_border_top*len(self._matrix[0]) + self.ui_border_top*2
-        # print(border_top+"\r")
-        print(self.ui_border_top*len(self._matrix[0]) + self.ui_border_top*2+"\r")
-        for x in self._matrix:
-            print(self.ui_border_left, end='')
-            for y in x:
-                if (isinstance(y, BoardItemVoid)
-                        and y.model != self.ui_board_void_cell):
-                    y.model = self.ui_board_void_cell
-                print(y, end='')
+        print(
+            "".join(
+                [
+                    self.ui_border_top * len(self._matrix[0]),
+                    self.ui_border_top * 2,
+                    "\r",
+                ]
+            )
+        )
+        for row in self._matrix:
+            print(self.ui_border_left, end="")
+            for column in row:
+                if (
+                    isinstance(column, BoardItemVoid)
+                    and column.model != self.ui_board_void_cell
+                ):
+                    column.model = self.ui_board_void_cell
+                print(column, end="")
             print(self.ui_border_right + "\r")
-        # print(border_bottom + "\r")
-        print(self.ui_border_bottom*len(self._matrix[0]) + self.ui_border_bottom*2+"\r")
-
-    def display_old(self):
-        """Display the board.
-
-        This method display the Board (as in print()), taking care of
-        displaying the boarders, and everything inside.
-
-        It uses the __str__ method of the item, which by default is
-        BoardItem.model. If you want to override this behavior you have
-        to subclass BoardItem.
-        """
-        border_top = ''
-        border_bottom = ''
-        for x in self._matrix[0]:
-            border_bottom += self.ui_border_bottom
-            border_top += self.ui_border_top
-        border_bottom += self.ui_border_bottom*2
-        border_top += self.ui_border_top*2
-        print(border_top+"\r")
-        for x in self._matrix:
-            print(self.ui_border_left, end='')
-            for y in x:
-                if (isinstance(y, BoardItemVoid)
-                        and y.model != self.ui_board_void_cell):
-                    y.model = self.ui_board_void_cell
-                print(y, end='')
-            print(self.ui_border_right + "\r")
-        print(border_bottom + "\r")
+        print(
+            "".join(
+                [
+                    self.ui_border_bottom * len(self._matrix[0]),
+                    self.ui_border_bottom * 2,
+                    "\r",
+                ]
+            )
+        )
 
     def item(self, row, column):
         """
@@ -347,10 +405,12 @@ class Board():
             return self._matrix[row][column]
         else:
             raise HacOutOfBoardBoundException(
-                  (f"There is no item at coordinates [{row},{column}] "
-                   "because it's out of the board boundaries "
-                   "({self.size[0]}x{self.size[1]}).")
-                  )
+                (
+                    f"There is no item at coordinates [{row},{column}] "
+                    "because it's out of the board boundaries "
+                    f"({self.size[0]}x{self.size[1]})."
+                )
+            )
 
     def place_item(self, item, row, column):
         """
@@ -371,27 +431,31 @@ class Board():
                 # If we are about to place the item on a overlappable and
                 # restorable we store it to be restored
                 # when the Movable will move.
-                if (isinstance(self._matrix[row][column], Immovable)
-                        and self._matrix[row][column].restorable()
-                        and self._matrix[row][column].overlappable()):
+                existing_item = self._matrix[row][column]
+                if (
+                    isinstance(existing_item, Immovable)
+                    and existing_item.restorable()
+                    and existing_item.overlappable()
+                ):
                     item._overlapping = self._matrix[row][column]
+                # Place the item on the board
                 self._matrix[row][column] = item
+                # Take ownership of the item
+                item.parent = self
                 item.store_position(row, column)
-                if (isinstance(item, Movable)
-                        and item not in self._movables):
-                    self._movables.append(item)
-                elif (isinstance(item, Immovable)
-                        and item not in self._immovables):
-                    self._immovables.append(item)
+                if isinstance(item, Movable):
+                    self._movables.add(item)
+                elif isinstance(item, Immovable):
+                    self._immovables.add(item)
             else:
                 raise HacInvalidTypeException(
-                    "The item passed in argument is "
-                    "not a subclass of BoardItem")
+                    "The item passed in argument is not a subclass of BoardItem"
+                )
         else:
             raise HacOutOfBoardBoundException(
-                f"There is no item at coordinates [{row},{column}] because "
-                "it's out of the board boundaries "
-                "({self.size[0]}x{self.size[1]}).")
+                f"Cannot place item at coordinates [{row},{column}] because "
+                f"it's out of the board boundaries ({self.size[0]}x{self.size[1]})."
+            )
 
     def move(self, item, direction, step):
         """
@@ -466,48 +530,71 @@ class Board():
             elif direction == Constants.DLDOWN:
                 new_x = item.pos[0] + step
                 new_y = item.pos[1] - step
-            if (new_x is not None
-                    and new_y is not None
-                    and new_x >= 0
-                    and new_y >= 0
-                    and new_x < self.size[1]
-                    and new_y < self.size[0]
-                    and self._matrix[new_x][new_y].overlappable()):
+            if (
+                new_x is not None
+                and new_y is not None
+                and new_x >= 0
+                and new_y >= 0
+                and new_x < self.size[1]
+                and new_y < self.size[0]
+                and self._matrix[new_x][new_y].overlappable()
+            ):
                 # If we are here, it means the cell we are going to already
                 # has an overlappable item, so let's save it for
                 # later restoration
-                if (not isinstance(self._matrix[new_x][new_y], BoardItemVoid)
-                        and isinstance(self._matrix[new_x][new_y], Immovable)
-                        and self._matrix[new_x][new_y].restorable()):
+                if (
+                    not isinstance(self._matrix[new_x][new_y], BoardItemVoid)
+                    and isinstance(self._matrix[new_x][new_y], Immovable)
+                    and self._matrix[new_x][new_y].restorable()
+                ):
                     if item._overlapping is None:
                         item._overlapping = self._matrix[new_x][new_y]
                     else:
                         item._overlapping_buffer = self._matrix[new_x][new_y]
 
                 if isinstance(self._matrix[new_x][new_y], Actionable):
-                    if ((isinstance(item, Player) and
-                            ((self._matrix[new_x][new_y].perm ==
-                                Constants.PLAYER_AUTHORIZED)
-                                or (self._matrix[new_x][new_y].perm ==
-                                    Constants.ALL_PLAYABLE_AUTHORIZED)))
-                        or (isinstance(item, NPC) and
-                            ((self._matrix[new_x][new_y].perm ==
-                                Constants.NPC_AUTHORIZED)
-                            or (self._matrix[new_x][new_y].perm ==
-                                Constants.ALL_PLAYABLE_AUTHORIZED)))):
+                    if (
+                        isinstance(item, Player)
+                        and (
+                            (
+                                self._matrix[new_x][new_y].perm
+                                == Constants.PLAYER_AUTHORIZED
+                            )
+                            or (
+                                self._matrix[new_x][new_y].perm
+                                == Constants.ALL_PLAYABLE_AUTHORIZED
+                            )
+                        )
+                    ) or (
+                        isinstance(item, NPC)
+                        and (
+                            (
+                                self._matrix[new_x][new_y].perm
+                                == Constants.NPC_AUTHORIZED
+                            )
+                            or (
+                                self._matrix[new_x][new_y].perm
+                                == Constants.ALL_PLAYABLE_AUTHORIZED
+                            )
+                        )
+                    ):
                         self._matrix[new_x][new_y].activate()
                         # Here instead of just placing a BoardItemVoid on
                         # the departure position we first make sure there
                         # is no _overlapping object to restore.
-                        if (item._overlapping is not None
-                                and isinstance(item._overlapping, Immovable)
-                                and item._overlapping.restorable()
-                                and (item._overlapping.pos[0] != new_x or
-                                     item._overlapping.pos[1] != new_y)):
+                        if (
+                            item._overlapping is not None
+                            and isinstance(item._overlapping, Immovable)
+                            and item._overlapping.restorable()
+                            and (
+                                item._overlapping.pos[0] != new_x
+                                or item._overlapping.pos[1] != new_y
+                            )
+                        ):
                             self.place_item(
                                 item._overlapping,
                                 item._overlapping.pos[0],
-                                item._overlapping.pos[1]
+                                item._overlapping.pos[1],
                             )
                             if item._overlapping_buffer is not None:
                                 item._overlapping = item._overlapping_buffer
@@ -518,21 +605,25 @@ class Board():
                             self.place_item(
                                 BoardItemVoid(model=self.ui_board_void_cell),
                                 item.pos[0],
-                                item.pos[1]
+                                item.pos[1],
                             )
                         self.place_item(item, new_x, new_y)
                 else:
                     # if there is an overlapped item, restore it.
                     # Else just move
-                    if (item._overlapping is not None
-                            and isinstance(item._overlapping, Immovable)
-                            and item._overlapping.restorable()
-                            and (item._overlapping.pos[0] != new_x
-                                 or item._overlapping.pos[1] != new_y)):
+                    if (
+                        item._overlapping is not None
+                        and isinstance(item._overlapping, Immovable)
+                        and item._overlapping.restorable()
+                        and (
+                            item._overlapping.pos[0] != new_x
+                            or item._overlapping.pos[1] != new_y
+                        )
+                    ):
                         self.place_item(
                             item._overlapping,
                             item._overlapping.pos[0],
-                            item._overlapping.pos[1]
+                            item._overlapping.pos[1],
                         )
                         if item._overlapping_buffer is not None:
                             item._overlapping = item._overlapping_buffer
@@ -543,57 +634,82 @@ class Board():
                         self.place_item(
                             BoardItemVoid(model=self.ui_board_void_cell),
                             item.pos[0],
-                            item.pos[1]
+                            item.pos[1],
                         )
                     self.place_item(item, new_x, new_y)
-            elif (new_x is not None and new_y is not None
-                    and new_x >= 0 and new_y >= 0 and new_x < self.size[1]
-                    and new_y < self.size[0]
-                    and self._matrix[new_x][new_y].pickable()):
+            elif (
+                new_x is not None
+                and new_y is not None
+                and new_x >= 0
+                and new_y >= 0
+                and new_x < self.size[1]
+                and new_y < self.size[0]
+                and self._matrix[new_x][new_y].pickable()
+            ):
                 if isinstance(item, Movable) and item.has_inventory():
                     item.inventory.add_item(self._matrix[new_x][new_y])
                     # Here instead of just placing a BoardItemVoid on the
                     # departure position we first make sure there is no
                     # _overlapping object to restore.
-                    if (item._overlapping is not None
-                            and isinstance(item._overlapping, Immovable)
-                            and item._overlapping.restorable()
-                            and (item._overlapping.pos[0] != new_x
-                                 or item._overlapping.pos[1] != new_y)):
+                    if (
+                        item._overlapping is not None
+                        and isinstance(item._overlapping, Immovable)
+                        and item._overlapping.restorable()
+                        and (
+                            item._overlapping.pos[0] != new_x
+                            or item._overlapping.pos[1] != new_y
+                        )
+                    ):
                         self.place_item(
                             item._overlapping,
                             item._overlapping.pos[0],
-                            item._overlapping.pos[1]
+                            item._overlapping.pos[1],
                         )
                         item._overlapping = None
                     else:
                         self.place_item(
                             BoardItemVoid(model=self.ui_board_void_cell),
                             item.pos[0],
-                            item.pos[1]
+                            item.pos[1],
                         )
                     self.place_item(item, new_x, new_y)
-            elif (new_x is not None and new_y is not None
-                    and new_x >= 0 and new_y >= 0
-                    and new_x < self.size[1] and new_y < self.size[0]
-                    and isinstance(self._matrix[new_x][new_y], Actionable)):
-                if ((isinstance(item, Player)
-                        and ((self._matrix[new_x][new_y].perm ==
-                              Constants.PLAYER_AUTHORIZED)
-                             or (self._matrix[new_x][new_y].perm ==
-                                 Constants.ALL_PLAYABLE_AUTHORIZED)))
-                    or (isinstance(item, NPC)
-                        and ((self._matrix[new_x][new_y].perm ==
-                              Constants.NPC_AUTHORIZED)
-                             or (self._matrix[new_x][new_y].perm ==
-                                 Constants.ALL_PLAYABLE_AUTHORIZED)))):
+            elif (
+                new_x is not None
+                and new_y is not None
+                and new_x >= 0
+                and new_y >= 0
+                and new_x < self.size[1]
+                and new_y < self.size[0]
+                and isinstance(self._matrix[new_x][new_y], Actionable)
+            ):
+                if (
+                    isinstance(item, Player)
+                    and (
+                        (self._matrix[new_x][new_y].perm == Constants.PLAYER_AUTHORIZED)
+                        or (
+                            self._matrix[new_x][new_y].perm
+                            == Constants.ALL_PLAYABLE_AUTHORIZED
+                        )
+                    )
+                ) or (
+                    isinstance(item, NPC)
+                    and (
+                        (self._matrix[new_x][new_y].perm == Constants.NPC_AUTHORIZED)
+                        or (
+                            self._matrix[new_x][new_y].perm
+                            == Constants.ALL_PLAYABLE_AUTHORIZED
+                        )
+                    )
+                ):
                     self._matrix[new_x][new_y].activate()
         else:
             raise HacObjectIsNotMovableException(
-                (f"Item '{item.name}' at position [{item.pos[0]}, "
-                 "{item.pos[1]}] is not a subclass of Movable, "
-                 "therefor it cannot be moved.")
+                (
+                    f"Item '{item.name}' at position [{item.pos[0]}, "
+                    f"{item.pos[1]}] is not a subclass of Movable, "
+                    f"therefor it cannot be moved."
                 )
+            )
 
     def clear_cell(self, row, column):
         """Clear cell (row, column)
@@ -615,15 +731,18 @@ class Board():
 
         """
         if self._matrix[row][column] in self._movables:
-            index = self._movables.index(self._matrix[row][column])
-            del(self._movables[index])
+            self._movables.discard(self._matrix[row][column])
         elif self._matrix[row][column] in self._immovables:
-            index = self._immovables.index(self._matrix[row][column])
-            del(self._immovables[index])
+            self._immovables.discard(self._matrix[row][column])
+        self._matrix[row][column] = None
+        # if self._matrix[row][column] in self._movables:
+        #     index = self._movables.index(self._matrix[row][column])
+        #     del(self._movables[index])
+        # elif self._matrix[row][column] in self._immovables:
+        #     index = self._immovables.index(self._matrix[row][column])
+        #     del(self._immovables[index])
         self.place_item(
-            BoardItemVoid(model=self.ui_board_void_cell, name='void_cell'),
-            row,
-            column
+            BoardItemVoid(model=self.ui_board_void_cell, name="void_cell"), row, column
         )
 
     def get_movables(self, **kwargs):
@@ -655,7 +774,7 @@ class Board():
                     retvals.append(item)
             return retvals
         else:
-            return self._movables
+            return list(self._movables)
 
     def get_immovables(self, **kwargs):
         """Return a list of all the Immovable objects in the Board.
@@ -689,4 +808,4 @@ class Board():
                     retvals.append(item)
             return retvals
         else:
-            return self._immovables
+            return list(self._immovables)

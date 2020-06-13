@@ -6,6 +6,10 @@ Development Leads
 -----------------
 
 * Arnaud Dupuis (`@arnauddupuis`_)
+
+Top Contributors
+----------------
+
 * Kalil de Lima (`@kaozdl`_)
 
 Contributors
