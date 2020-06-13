@@ -93,11 +93,11 @@ def title_screen(g):
                     "The "
                     + term.bold_underline("space")
                     + " key is for jump. You can move while jumping.\n\n"
-                    + term.bold_underline("a/w/s/d")
+                    + term.bold_underline("w(z)/a(q)/s/d")
                     + " keys are for shooting seeds that sprouts trees.\n"
-                    "        Sprouted trees can be used as platforms but:\n"
-                    "          - You can only have 2 trees at the same time.\n"
-                    "          - Shooting a seed cost you 3 secondes of time!\n"
+                    "              Sprouted trees can be used as platforms but:\n"
+                    "               - You can only have 2 trees at the same time.\n"
+                    "               - Shooting a seed cost you 3 secondes of time!\n"
                     "\nRunning forward earn you some time (depending on difficulty).\n"
                     "\nYour goal is to reach the end of a level as quickly as "
                     "possible without falling into radioactive wastes.\n"
