@@ -16,6 +16,7 @@ from blessings import Terminal
 import _thread
 import random
 import math
+import simpleaudio as sa
 
 gravity_speed = 1
 gravity_friction = 1.5
@@ -44,6 +45,16 @@ brick_colors = [
     "\033[48;5;94m",
     "\033[48;5;136m",
 ]
+
+# Sound effects
+jump_wave_obj = sa.WaveObject.from_wave_file(os.path.join("sfx", "panda-jump.wav"))
+hit_wave_obj = sa.WaveObject.from_wave_file(os.path.join("sfx", "hit.wav"))
+boom_wave_obj = sa.WaveObject.from_wave_file(os.path.join("sfx", "boom.wav"))
+zap_wave_obj = sa.WaveObject.from_wave_file(os.path.join("sfx", "zap.wav"))
+trap_shoot_wave_obj = sa.WaveObject.from_wave_file(
+    os.path.join("sfx", "trap-shoot.wav")
+)
+pickup_wave_obj = sa.WaveObject.from_wave_file(os.path.join("sfx", "pickup.wav"))
 
 
 def block_color():
@@ -288,6 +299,7 @@ def ui_threaded(g):
         if g.state == Constants.RUNNING:
             g.timer -= 0.1
             for trap in g.current_board().get_immovables(type="trap."):
+                # Only actually fire for traps that are on screen or close
                 if (
                     trap.pos[1] > g.player.pos[1] + g.partial_display_viewport[1] + 5
                     or trap.pos[1] < g.player.pos[1] - g.partial_display_viewport[1] - 5
@@ -308,6 +320,7 @@ def ui_threaded(g):
                             hit_callback=zap_callback,
                         )
                         proj.set_direction(trap.fdir)
+                        trap_shoot_wave_obj.play()
                         if trap.fdir == Constants.RIGHT:
                             g.add_projectile(
                                 g.current_level, proj, trap.pos[0], trap.pos[1] + 1
@@ -329,11 +342,12 @@ def ui_threaded(g):
                             hit_model=bg_color
                             + Graphics.Sprites.COLLISION
                             + Graphics.Style.RESET_ALL,
-                            hit_callback=zap_callback,
+                            hit_callback=boom_callback,
                             is_aoe=True,
                             aoe_radius=1,
                         )
                         proj.set_direction(trap.fdir)
+                        trap_shoot_wave_obj.play()
                         # Right now if the player sits on it, it does nothing.
                         g.add_projectile(
                             g.current_level, proj, trap.pos[0] - 1, trap.pos[1]
@@ -764,6 +778,14 @@ def sprout(p, *args):
 
 
 def zap_callback(p, collidings, *args):
+    zap_wave_obj.play()
+    if len(collidings) > 0:
+        if g.player in collidings:
+            g.timer -= 5.0
+
+
+def boom_callback(p, collidings, *args):
+    boom_wave_obj.play()
     if len(collidings) > 0:
         if g.player in collidings:
             g.timer -= 5.0
@@ -870,6 +892,8 @@ while current_state != "eop":
             elif key == Utils.key.SPACE:
                 if g.player.dy == 0 and len(g.neighbors(1, g.player)) > 0:
                     # Jump
+                    # Start with sound
+                    jump_wave_obj.play()
                     g.player.max_y = g.player.pos[0] - 3
                     g.player.dy = 1
             elif key == "X":
@@ -900,6 +924,7 @@ while current_state != "eop":
                     projectile.set_direction(Constants.LEFT)
                     row = g.player.pos[0]
                     column = g.player.pos[1] - 1
+                hit_wave_obj.play()
                 g.add_projectile(g.current_level, projectile, row, column)
                 g.timer -= projectile.range
             elif key == "p":
