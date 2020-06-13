@@ -11,7 +11,7 @@ import gamelib.Constants as Constants
 import gamelib.Utils as Utils
 import _thread
 import time
-from blessings import Terminal
+from blessed import Terminal
 from playsound import playsound
 from copy import deepcopy
 

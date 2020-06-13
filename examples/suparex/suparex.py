@@ -12,7 +12,7 @@ from gamelib import Constants
 from gamelib import Utils
 from gamelib.Movable import Projectile
 from time import sleep
-from blessings import Terminal
+from blessed import Terminal
 import _thread
 import random
 import math
