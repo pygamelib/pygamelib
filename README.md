@@ -3,12 +3,12 @@
 ![Mac OS: Ok](https://img.shields.io/badge/Mac%20OS-Ok-green.svg "Mac OS: Ok")
 [![GPLv3 license](https://img.shields.io/badge/License-GPLv3-blue.svg)](http://perso.crans.org/besson/LICENSE.html)
 [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](http://makeapullrequest.com)
-[![Documentation Status](https://readthedocs.org/projects/hac-game-lib/badge/?version=latest)](http://hac-game-lib.readthedocs.io/?badge=latest)
+[![Documentation Status](https://readthedocs.org/projects/hac-game-lib/badge/?version=latest)](https://hac-game-lib.readthedocs.io/en/latest/?badge=latest)
 [![CII Best Practices](https://bestpractices.coreinfrastructure.org/projects/2849/badge)](https://bestpractices.coreinfrastructure.org/projects/2849)
 [![CircleCI](https://circleci.com/gh/arnauddupuis/hac-game-lib.svg?style=svg)](https://circleci.com/gh/arnauddupuis/hac-game-lib)
 
 # hac-game-lib
-Hyrule Astronomy Club - base library for a game development
+Hyrule Astronomy Club Game Library- base library for a game development
 
 ## Introduction
 
@@ -37,8 +37,8 @@ The base game makes use of:
 * RandomActuator (NPCs in level 2) and PathActuator (NPCs in level 1) (from gamelib.Actuators.SimpleActuators)
 
 For more up to date examples, have a look at:
- * examples/suparex/ a platform game with procedural level generation
- * examples/tutorials/03-game-design for a more "dungeon-y" turn by turn experience.
+ * [examples/suparex/](examples/suparex/) a platform game with procedural level generation
+ * [examples/tutorials/03-game-design/](examples/tutorials/03-game-design/) for a more "dungeon-y" turn by turn experience.
 
 Here is a poorly done gif of Suparex:
 ![Suparex animation](https://raw.githubusercontent.com/arnauddupuis/hac-game-lib/master/images/suparex-720.gif "suparex.py")
@@ -46,13 +46,23 @@ Here is a poorly done gif of Suparex:
 ## Strong points
 
 Hopefully you'll find the hac-game-lib to have a lot of strong points:
- * It is **simple** : it requires very limited Python knowledge to start coding games.
+ * It is **simple**. It requires very limited Python knowledge to start coding games.
  * Yet **powerful** offering more advanced programmers a *lot* of possibilities.
  * The possibilities **scale up with the students** offering basic feature and default values "good enough" for beginners and lots of tunning opportunities for the advanced coders.
  * Lots of stuff are available **by default**. Any idea how long it would take a beginner to display only a part of a board? 1 second with the hac-game-lib, probably slightly more if they had to do it by hand ;)
- * **Terminal based** : no graphics card dependencies, cross platform, and a framework that stimulate imagination and creativity.
+ * It is **Terminal based**. This means no graphics card dependencies, cross platform, and a framework that stimulate imagination and creativity.
 
-## Requirements
+## Installation (recommended)
+
+The easiest way to install a stable version is to use [pypi](https://pypi.org/project/hac-game-lib/):
+
+```bash
+pip3 install hac-game-lib
+```
+
+It will pull all dependencies 
+
+## Installation from sources and requirements
 
 ### Python
 
@@ -102,4 +112,4 @@ pipenv shell
 There is tons of limitations but for the most important ones: 
 * Only one player is supported.
 * There is little protections against messing up with the internal. This is *on purpose*, I want the kids to learn to use the API not mess up with the internals of every single class.
-* It's pure Python (it's slow)
+* It's pure Python (it's slow).
