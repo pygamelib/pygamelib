@@ -131,7 +131,15 @@ class Projectile(Movable):
 
     Example::
 
-        method()
+        fireball = Projectile(
+                                name="fireball",
+                                model=Utils.red_bright(black_circle),
+                                hit_model=Sprites.EXPLOSION,
+                            )
+        fireball.set_direction(Constants.RIGHT)
+        my_game.add_projectile(1, fireball,
+                               my_game.player.pos[0], my_game.player.pos[1] + 1)
+
 
     """
 
@@ -172,6 +180,17 @@ class Projectile(Movable):
         self.parent = parent
 
     def add_directional_animation(self, direction, animation):
+        """Add an animation for a specific direction.
+
+        :param direction: A direction from the Constants module.
+        :type direction: int
+        :param animation: The animation for the direction
+        :type animation: :class:`~gamelib.Animation.Animation`
+
+        Example::
+
+            fireball.add_directional_animation(Constants.UP, updward_animation)
+        """
         if type(direction) is not int:
             raise HacInvalidTypeException(
                 "Projectile.add_directional_animation "
@@ -187,6 +206,17 @@ class Projectile(Movable):
         self._directional_animations[direction] = animation
 
     def directional_animation(self, direction):
+        """Return the animation for a specific direction.
+
+        :param direction: A direction from the Constants module.
+        :type direction: int
+        :rtype: :class:`~gamelib.Animation.Animation`
+
+        Example::
+
+            # No more animation for the UP direction
+            fireball.directional_animation(Constants.UP)
+        """
         if type(direction) is not int:
             raise HacInvalidTypeException(
                 "Projectile.add_directional_animation "
@@ -201,6 +231,16 @@ class Projectile(Movable):
             return self.animation
 
     def remove_directional_animation(self, direction):
+        """Remove an animation for a specific direction.
+
+        :param direction: A direction from the Constants module.
+        :type direction: int
+
+        Example::
+
+            # No more animation for the UP direction
+            fireball.remove_directional_animation(Constants.UP)
+        """
         if type(direction) is not int:
             raise HacInvalidTypeException(
                 "Projectile.add_directional_animation "
@@ -210,6 +250,17 @@ class Projectile(Movable):
         del self._directional_animations[direction]
 
     def add_directional_model(self, direction, model):
+        """Add an model for a specific direction.
+
+        :param direction: A direction from the Constants module.
+        :type direction: int
+        :param model: The model for the direction
+        :type model: str
+
+        Example::
+
+            fireball.add_directional_animation(Constants.UP, updward_animation)
+        """
         if type(direction) is not int:
             raise HacInvalidTypeException(
                 "Projectile.add_directional_model "
@@ -223,6 +274,16 @@ class Projectile(Movable):
         self._directional_models[direction] = model
 
     def directional_model(self, direction):
+        """Return the model for a specific direction.
+
+        :param direction: A direction from the Constants module.
+        :type direction: int
+        :rtype: str
+
+        Example::
+
+            fireball.directional_model(Constants.UP)
+        """
         if type(direction) is not int:
             raise HacInvalidTypeException(
                 "Projectile.add_directional_model "
@@ -235,6 +296,15 @@ class Projectile(Movable):
             return self.model
 
     def remove_directional_model(self, direction):
+        """Remove the model for a specific direction.
+
+        :param direction: A direction from the Constants module.
+        :type direction: int
+
+        Example::
+
+            fireball.directional_model(Constants.UP)
+        """
         if type(direction) is not int:
             raise HacInvalidTypeException(
                 "Projectile.add_directional_model "
@@ -244,6 +314,19 @@ class Projectile(Movable):
         del self._directional_models[direction]
 
     def set_direction(self, direction):
+        """Set the direction of a projectile
+
+        This method will set a UnidirectionalActuator with the direction.
+        It will also take care of updating the model and animation for the given
+        direction if they are specified.
+
+        :param direction: A direction from the Constants module.
+        :type direction: int
+
+        Example::
+
+            fireball.set_direction(Constants.UP)
+        """
         if type(direction) is not int:
             raise HacInvalidTypeException(
                 "Projectile.set_direction "

@@ -1,14 +1,13 @@
+import examples_includes  # noqa: F401
 from gamelib.Game import Game
 from gamelib.Characters import Player
 from gamelib.Animation import Animation
 from gamelib.Board import Board
 from gamelib.Movable import Projectile
 from gamelib.Structures import Wall
-from gamelib.Actuators.SimpleActuators import UnidirectionalActuator
 import gamelib.Sprites as Sprites
 import gamelib.Utils as Utils
 import gamelib.Constants as Constants
-import gamelib.Assets.Graphics as Graphics
 
 
 def manage_fireballs():
@@ -45,7 +44,7 @@ b = Board(
     size=[20, 20],
     player_starting_position=[5, 5],
 )
-wall = Wall(model=Graphics.WALL)
+wall = Wall(model=Sprites.WALL)
 b.place_item(wall, 1, 6)
 g = Game()
 g.add_board(1, b)
@@ -75,24 +74,11 @@ while True:
         g.partial_display_viewport = viewport
     if key == " ":
         if g.player.mp >= 4:
-            # fireball = NPC(model=Utils.red_bright(black_circle), name='fireball')
-            # fireball.actuator = RandomActuator(moveset=[Constants.RIGHT])
-            # fireball.animation = Animation(auto_replay=True,
-            #                             animated_object=fireball,
-            #                             refresh_screen=None,
-            #                             display_time=0.5)
-            # fireball.animation.add_frame(Utils.red_bright(black_circle))
-            # fireball.animation.add_frame(Utils.red_bright(circle_jot))
-            # fireball.range = 7
-            # g.add_npc(1, fireball, g.player.pos[0], g.player.pos[1]+1)
-            # throw_fireball = True
-
             fireball = Projectile(
                 name="fireball",
                 model=Utils.red_bright(black_circle),
-                hit_model=Graphics.EXPLOSION,
+                hit_model=Sprites.EXPLOSION,
             )
-            fireball.actuator = UnidirectionalActuator(direction=Constants.RIGHT)
             fireball.animation = Animation(
                 auto_replay=True,
                 animated_object=fireball,
@@ -123,7 +109,6 @@ while True:
     print(f"Player position {g.player.pos}")
     for f in g.current_board().get_movables():
         print(f"{f.name} position {f.pos}")
-    print(projectile)
     if throw_fireball:
         print(f"{g.player.model} FIREBALL!!!")
         throw_fireball = False
@@ -133,5 +118,4 @@ while True:
         g.player.mp += 1
     else:
         g.player.mp = 20
-
     key = Utils.get_key()
