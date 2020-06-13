@@ -12,6 +12,7 @@ ipython = "*"
 colorama = ">=0.3.8"
 readchar = ">=2.0.0"
 appdirs = ">=1.4.4"
+blessings = ">=1.12.0"
 
 [requires]
 python_version = "3.7"
