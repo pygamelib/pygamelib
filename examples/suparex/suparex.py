@@ -147,6 +147,7 @@ def title_screen(g):
                 g.player.model = (
                     bg_color + Graphics.Sprites.PANDA + Graphics.Style.RESET_ALL
                 )
+                g.clear_screen()
                 change_level([g])
             elif menu_index == 2:
                 g.clear_screen()
@@ -196,7 +197,8 @@ def load_logo():
 
 
 def refresh_screen(g):
-    g.clear_screen()
+    # g.clear_screen()
+    print(term.home)
     # print(
     #     f"Player: {g.player.pos} size[1]: {g.current_board().size[1]} player max_y: "
     #     f"{int(g.player.max_y)} player dy: {g.player.dy} "
