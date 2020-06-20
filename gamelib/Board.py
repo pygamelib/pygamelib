@@ -9,7 +9,7 @@ from gamelib.HacExceptions import (
     HacInvalidTypeException,
     HacObjectIsNotMovableException,
 )
-from gamelib.BoardItem import BoardItem, BoardItemVoid
+from gamelib.BoardItem import BoardItem, BoardItemVoid, BoardMultiItem
 from gamelib.Movable import Movable
 from gamelib.Immovable import Immovable, Actionable
 from gamelib.Characters import Player, NPC
@@ -67,6 +67,10 @@ class Board:
         self.ui_board_void_cell = " "
         self.DISPLAY_SIZE_WARNINGS = True
         self.parent = None
+        # The overlapped matrix is used as an invisible layer were overlapped
+        # restorable items are parked momentarily (until the cell they were on
+        # is free again).
+        self._overlapped_matrix = []
         # Setting class parameters
         for item in [
             "name",
@@ -401,7 +405,7 @@ class Board:
         :raise HacOutOfBoardBoundException: if row or column are
             out of bound.
         """
-        if row < self.size[0] and column < self.size[0]:
+        if row < self.size[1] and column < self.size[0]:
             return self._matrix[row][column]
         else:
             raise HacOutOfBoardBoundException(
@@ -427,7 +431,13 @@ class Board:
             the extend of it.
         """
         if row < self.size[1] and column < self.size[0]:
-            if isinstance(item, BoardItem):
+            if isinstance(item, BoardMultiItem):
+                print(f"Multi item found: {item.name}")
+                for ir in range(0, item.dimension[1]):
+                    for ic in range(0, item.dimension[0]):
+                        if not isinstance(item.item(ir, ic), BoardItemVoid):
+                            self.place_item(item.item(ir, ic), row + ir, column + ic)
+            elif isinstance(item, BoardItem):
                 # If we are about to place the item on a overlappable and
                 # restorable we store it to be restored
                 # when the Movable will move.
@@ -437,6 +447,9 @@ class Board:
                     and existing_item.restorable()
                     and existing_item.overlappable()
                 ):
+                    print(
+                        f"saving overlapping item at {row},{column} ({self._matrix[row][column].name}) in {item.name}"
+                    )
                     item._overlapping = self._matrix[row][column]
                 # Place the item on the board
                 self._matrix[row][column] = item
@@ -530,6 +543,7 @@ class Board:
             elif direction == Constants.DLDOWN:
                 new_x = item.pos[0] + step
                 new_y = item.pos[1] - step
+            print(f"About to test {type(self._matrix[new_x][new_y])}")
             if (
                 new_x is not None
                 and new_y is not None

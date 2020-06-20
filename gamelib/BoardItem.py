@@ -6,6 +6,8 @@
    BoardItem
    BoardItemVoid
 """
+import gamelib.Rendering
+from gamelib.HacExceptions import HacOutOfBoardBoundException
 
 
 class BoardItem:
@@ -146,3 +148,53 @@ class BoardItemVoid(BoardItem):
         :return: True
         """
         return True
+
+
+class BoardMultiItem(BoardItem):
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self.name = "Board Multi Item"
+        self.type = "multi_item"
+        self.sprite = gamelib.Rendering.Sprite()
+        self.void_char = None
+        self._item_matrix = []
+        self.hit_box = []
+        self.base_item_type = BoardItem
+        for item in ["sprite", "dimension", "void_char", "base_item_type"]:
+            if item in kwargs:
+                setattr(self, item, kwargs[item])
+        # Size is used for something else in BoardItem. Let's use dimension
+        self.dimension = self.sprite.dimension()
+        for row in range(0, self.dimension[1]):
+            self._item_matrix.append([])
+            for col in range(0, self.dimension[0]):
+                if (
+                    self.void_char is not None
+                    and self.sprite.sprixel(row, col) == self.void_char
+                ):
+                    self._item_matrix[row].append(BoardItemVoid())
+                else:
+                    self._item_matrix[row].append(self.base_item_type(**kwargs))
+                    self._item_matrix[row][col].name = f"{self.name}_{row}_{col}"
+                    self._item_matrix[row][col].model = self.sprite.sprixel(row, col)
+
+    def item(self, row, column):
+        """
+        Return the item at the row, column position if within
+        sprite's boundaries.
+
+        :rtype: gamelib.BoardItem.BoardItem
+
+        :raise HacOutOfBoardBoundException: if row or column are
+            out of bound.
+        """
+        if row < self.dimension[1] and column < self.dimension[0]:
+            return self._item_matrix[row][column]
+        else:
+            raise HacOutOfBoardBoundException(
+                (
+                    f"There is no item at coordinates [{row},{column}] "
+                    "because it's out of the board multi item boundaries "
+                    f"({self.size[0]}x{self.size[1]})."
+                )
+            )
