@@ -15,6 +15,6 @@ appdirs = ">=1.4.4"
 blessed = ">=1.17.0"
 
 [requires]
-python_version = "3.7"
+python_version = "3.6"
 
 # Please update the .legacy/requirements.txt with new dependencies added here.
