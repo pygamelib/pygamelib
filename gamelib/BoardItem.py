@@ -6,7 +6,7 @@
    BoardItem
    BoardItemVoid
 """
-import gamelib.Rendering
+from gamelib.GFX import Core
 from gamelib.HacExceptions import HacOutOfBoardBoundException
 
 
@@ -28,6 +28,12 @@ class BoardItem:
         space it will require. Default value is '*'.
     :type model: str
     :param parent: The parent object of the board item. Usually a Board or Game object.
+
+    ..important:: Starting with version 1.2.0 and introduction of complex items,
+       BoardItems have a dimension. That dimension **CANNOT** be set. It is always 1x1.
+       This is because a BoardItem always takes 1 cell, whatever it's actual number of
+       characters. Python does not really provide a way to prevent changing that member
+       but if you do, you'll break rendering. You have been warned.
     """
 
     def __init__(self, **kwargs):
@@ -37,16 +43,21 @@ class BoardItem:
         self.model = "*"
         self.animation = None
         self.parent = None
+        self.sprixel = None
+        self.dimension = [1, 1]
         # Setting class parameters
-        for item in ["name", "type", "pos", "model", "parent"]:
+        for item in ["name", "type", "pos", "model", "parent", "sprixel"]:
             if item in kwargs:
                 setattr(self, item, kwargs[item])
 
     def __str__(self):
-        return self.model
+        if self.sprixel is not None:
+            return self.sprixel.__repr__()
+        else:
+            return self.model
 
     def __repr__(self):
-        return self.model
+        return self.__str__()
 
     def display(self):
         """
@@ -88,6 +99,79 @@ class BoardItem:
             item.store_position(3,4)
         """
         self.pos = [row, column]
+
+    def position_as_vector(self):
+        """Returns the current item position as a Vector2D
+
+        :returns: The position as a 2D vector
+        :rtype: :class:`~gamelib.GFX.Core.Vector2D`
+
+        Example::
+
+            gravity = Vector2D(9.81, 0)
+            next_position = item.position_as_vector() + gravity.unit()
+        """
+        return Core.Vector2D(self.pos[0], self.pos[1])
+
+    def row(self):
+        """Convenience method to get the current stored row of the item.
+
+        This is absolutely equivalent to access to item.pos[0].
+
+        :return: The row coordinate
+        :rtype: int
+
+        Example::
+
+            if item.row() != item.pos[0]:
+                print('Something extremely unlikely just happened...')
+        """
+        return self.pos[0]
+
+    def column(self):
+        """Convenience method to get the current stored column of the item.
+
+        This is absolutely equivalent to access to item.pos[1].
+
+        :return: The column coordinate
+        :rtype: int
+
+        Example::
+
+            if item.column() != item.pos[1]:
+                print('Something extremely unlikely just happened...')
+        """
+        return self.pos[1]
+
+    def width(self):
+        """Convenience method to get the width of the item.
+
+        This is absolutely equivalent to access to item.dimension[0].
+
+        :return: The width
+        :rtype: int
+
+        Example::
+
+            if item.width() > board.width():
+                print('The item is too big for the board.')
+        """
+        return self.dimension[0]
+
+    def height(self):
+        """Convenience method to get the height of the item.
+
+        This is absolutely equivalent to access to item.dimension[1].
+
+        :return: The height
+        :rtype: int
+
+        Example::
+
+            if item.height() > board.height():
+                print('The item is too big for the board.')
+        """
+        return self.dimension[1]
 
     def can_move(self):
         """
@@ -150,33 +234,45 @@ class BoardItemVoid(BoardItem):
         return True
 
 
-class BoardMultiItem(BoardItem):
+class BoardComplexItem(BoardItem):
     def __init__(self, **kwargs):
-        super().__init__(**kwargs)
+        self.__kwargs = kwargs
         self.name = "Board Multi Item"
         self.type = "multi_item"
-        self.sprite = gamelib.Rendering.Sprite()
-        self.void_char = None
+        super().__init__(**kwargs)
+        self.sprite = Core.Sprite()
+        self.null_sprixel = None
+        self.dimension = None
         self._item_matrix = []
+        # Not sure about that one
         self.hit_box = []
         self.base_item_type = BoardItem
-        for item in ["sprite", "dimension", "void_char", "base_item_type"]:
+        for item in ["sprite", "dimension", "null_sprixel", "base_item_type"]:
             if item in kwargs:
                 setattr(self, item, kwargs[item])
         # Size is used for something else in BoardItem. Let's use dimension
-        self.dimension = self.sprite.dimension()
+        if self.dimension is None:
+            self.dimension = self.sprite.dimension()
+        self.update_sprite()
+
+    def update_sprite(self):
+        self._item_matrix = []
         for row in range(0, self.dimension[1]):
             self._item_matrix.append([])
             for col in range(0, self.dimension[0]):
                 if (
-                    self.void_char is not None
-                    and self.sprite.sprixel(row, col) == self.void_char
+                    self.null_sprixel is not None
+                    and self.sprite.sprixel(row, col) == self.null_sprixel
                 ):
                     self._item_matrix[row].append(BoardItemVoid())
                 else:
-                    self._item_matrix[row].append(self.base_item_type(**kwargs))
+                    self._item_matrix[row].append(self.base_item_type(**self.__kwargs))
                     self._item_matrix[row][col].name = f"{self.name}_{row}_{col}"
-                    self._item_matrix[row][col].model = self.sprite.sprixel(row, col)
+                    self._item_matrix[row][col].model = self.sprite.sprixel(
+                        row, col
+                    ).model
+                    self._item_matrix[row][col].sprixel = self.sprite.sprixel(row, col)
+                    self._item_matrix[row][col].parent = self
 
     def item(self, row, column):
         """

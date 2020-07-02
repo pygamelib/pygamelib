@@ -9,10 +9,11 @@ from gamelib.HacExceptions import (
     HacInvalidTypeException,
     HacObjectIsNotMovableException,
 )
-from gamelib.BoardItem import BoardItem, BoardItemVoid, BoardMultiItem
+from gamelib.BoardItem import BoardItem, BoardItemVoid, BoardComplexItem
 from gamelib.Movable import Movable
 from gamelib.Immovable import Immovable, Actionable
 from gamelib.Characters import Player, NPC
+from gamelib.GFX import Core
 import gamelib.Constants as Constants
 
 
@@ -65,6 +66,7 @@ class Board:
         self.ui_border_top = "-"
         self.ui_border_bottom = "-"
         self.ui_board_void_cell = " "
+        self.ui_board_void_cell_sprixel = None
         self.DISPLAY_SIZE_WARNINGS = True
         self.parent = None
         # The overlapped matrix is used as an invisible layer were overlapped
@@ -80,6 +82,7 @@ class Board:
             "ui_border_left",
             "ui_border_right",
             "ui_board_void_cell",
+            "ui_board_void_cell_sprixel",
             "player_starting_position",
             "DISPLAY_SIZE_WARNINGS",
             "parent",
@@ -128,14 +131,51 @@ class Board:
 
             myboard.init_board()
         """
-
-        self._matrix = [
-            [
-                BoardItemVoid(model=self.ui_board_void_cell, parent=self)
-                for i in range(0, self.size[0], 1)
+        if self.ui_board_void_cell_sprixel is not None and isinstance(
+            self.ui_board_void_cell_sprixel, Core.Sprixel
+        ):
+            self._matrix = [
+                [
+                    BoardItemVoid(sprixel=self.ui_board_void_cell_sprixel, parent=self)
+                    for i in range(0, self.size[0], 1)
+                ]
+                for j in range(0, self.size[1], 1)
             ]
-            for j in range(0, self.size[1], 1)
+        else:
+            self._matrix = [
+                [
+                    BoardItemVoid(model=self.ui_board_void_cell, parent=self)
+                    for i in range(0, self.size[0], 1)
+                ]
+                for j in range(0, self.size[1], 1)
+            ]
+        self._overlapped_matrix = [
+            [None for i in range(0, self.size[0], 1)] for j in range(0, self.size[1], 1)
         ]
+
+    def generate_void_cell(self):
+        """This method return a void cell.
+
+        If ui_board_void_cell_sprixel is defined it uses it, otherwise use
+        ui_board_void_cell to generate the void item.
+
+        :return: A void board item
+        :rtype: :class:`~gamelib.BoardItem.BoardItemVoid`
+
+        Example::
+
+            board.generate_void_cell()
+        """
+        if self.ui_board_void_cell_sprixel is not None and isinstance(
+            self.ui_board_void_cell_sprixel, Core.Sprixel
+        ):
+            return BoardItemVoid(
+                sprixel=self.ui_board_void_cell_sprixel,
+                model=self.ui_board_void_cell_sprixel.model,
+                parent=self,
+            )
+        else:
+            return BoardItemVoid(model=self.ui_board_void_cell, parent=self)
 
     def init_cell(self, row, column):
         """
@@ -151,9 +191,7 @@ class Board:
 
             myboard.init_cell(2,3)
         """
-        self._matrix[row][column] = BoardItemVoid(
-            model=self.ui_board_void_cell, parent=self
-        )
+        self._matrix[row][column] = self.generate_void_cell()
 
     def check_sanity(self):
         """Check the board sanity.
@@ -226,7 +264,19 @@ class Board:
                 "SANITY_CHECK_KO",
                 ("The 'ui_board_void_cell' parameter must be a string."),
             )
-
+        if self.ui_board_void_cell_sprixel is not None and isinstance(
+            self.ui_board_void_cell, Core.Sprixel
+        ):
+            sanity_check += 1
+        elif self.ui_board_void_cell_sprixel is not None and not isinstance(
+            self.ui_board_void_cell_sprixel, Core.Sprixel
+        ):
+            raise HacException(
+                "SANITY_CHECK_KO",
+                ("The 'ui_board_void_cell_sprixel' parameter must be a Sprixel."),
+            )
+        else:
+            sanity_check += 1
         if self.size[0] > 80:
             if self.DISPLAY_SIZE_WARNINGS:
                 warn(
@@ -250,10 +300,40 @@ class Board:
         # If all sanity check clears return True else raise a general error.
         # I have no idea how the general error could ever occur but...
         # better safe than sorry!
-        if sanity_check == 10:
+        if sanity_check == 11:
             return True
         else:
             raise HacException("SANITY_CHECK_KO", "The board data are not valid.")
+
+    def width(self):
+        """A convenience method to get the width of the Board.
+
+        It is absolutely equivalent to access to board.size[0].
+
+        :return: The width of the board.
+        :rtype: int
+
+        Example::
+
+            if board.size[0] != board.width():
+                print('Houston, we have a problem...')
+        """
+        return self.size[0]
+
+    def height(self):
+        """A convenience method to get the height of the Board.
+
+        It is absolutely equivalent to access to board.size[1].
+
+        :return: The height of the board.
+        :rtype: int
+
+        Example::
+
+            if board.size[1] != board.height():
+                print('Houston, we have a problem...')
+        """
+        return self.size[1]
 
     def display_around(self, object, row_radius, column_radius):
         """Display only a part of the board.
@@ -292,20 +372,31 @@ class Board:
         # a regular display()
         if self.size[1] <= 2 * row_radius and self.size[0] <= 2 * column_radius:
             return self.display()
+        if self.size[0] <= 2 * column_radius:
+            column_radius = round(self.size[0] / 2)
+        if self.size[1] <= 2 * row_radius:
+            row_radius = round(self.size[1] / 2)
         row_min_bound = 0
         row_max_bound = self.size[1]
         column_min_bound = 0
         column_max_bound = self.size[0]
+        # Here we account for the dimension of the complex item to center the viewport
+        # on it.
+        pos_row = object.pos[0]
+        pos_col = object.pos[1]
+        if isinstance(object, BoardComplexItem):
+            pos_row = object.pos[0] + int(object.height() / 2)
+            pos_col = object.pos[1] + int(object.width() / 2)
         # Row
-        if object.pos[0] - row_radius >= 0:
-            row_min_bound = object.pos[0] - row_radius
-        if object.pos[0] + row_radius < row_max_bound:
-            row_max_bound = object.pos[0] + row_radius
+        if pos_row - row_radius >= 0:
+            row_min_bound = pos_row - row_radius
+        if pos_row + row_radius < row_max_bound:
+            row_max_bound = pos_row + row_radius
         # Columns
-        if object.pos[1] - column_radius >= 0:
-            column_min_bound = object.pos[1] - column_radius
-        if object.pos[1] + column_radius < column_max_bound:
-            column_max_bound = object.pos[1] + column_radius
+        if pos_col - column_radius >= 0:
+            column_min_bound = pos_col - column_radius
+        if pos_col + column_radius < column_max_bound:
+            column_max_bound = pos_col + column_radius
         # Now adjust boundaries so it looks fine at min and max
         if column_min_bound <= 0:
             column_min_bound = 0
@@ -325,8 +416,8 @@ class Board:
             bt_size = column_radius * 2
             if bt_size >= self.size[0]:
                 bt_size = self.size[0]
-                if object.pos[1] - column_radius > 0:
-                    bt_size = self.size[0] - (object.pos[1] - column_radius)
+                if pos_col - column_radius > 0:
+                    bt_size = self.size[0] - (pos_col - column_radius)
             print(self.ui_border_top * bt_size, end="")
             if column_min_bound <= 0 and column_max_bound >= self.size[0]:
                 print(self.ui_border_top * 2, end="")
@@ -339,6 +430,7 @@ class Board:
             for y in row[column_min_bound:column_max_bound]:
                 if isinstance(y, BoardItemVoid) and y.model != self.ui_board_void_cell:
                     y.model = self.ui_board_void_cell
+                    y.sprixel = self.ui_board_void_cell_sprixel
                 print(y, end="")
             if column_max_bound >= self.size[0]:
                 print(self.ui_border_right, end="")
@@ -347,8 +439,8 @@ class Board:
             bb_size = column_radius * 2
             if bb_size >= self.size[0]:
                 bb_size = self.size[0]
-                if object.pos[1] - column_radius > 0:
-                    bb_size = self.size[0] - (object.pos[1] - column_radius)
+                if pos_col - column_radius > 0:
+                    bb_size = self.size[0] - (pos_col - column_radius)
             print(self.ui_border_bottom * bb_size, end="")
             if column_min_bound <= 0 and column_max_bound >= self.size[0]:
                 print(self.ui_border_bottom * 2, end="")
@@ -366,6 +458,22 @@ class Board:
         BoardItem.model. If you want to override this behavior you have
         to subclass BoardItem.
         """
+        # # Debug: print the overlapped matrix
+        # for row in self._overlapped_matrix:
+        #     print(self.ui_border_left, end="")
+        #     for column in row:
+        #         if (
+        #             isinstance(column, BoardItemVoid)
+        #             and column.model != self.ui_board_void_cell
+        #         ):
+        #             column.model = self.ui_board_void_cell
+        #         elif column is None:
+        #             print(" ", end="")
+        #         else:
+        #             print(column, end="\x1b[0m")
+        #     print(self.ui_border_right + "\x1b[0m\r")
+        # print("\x1b[0m")
+        # # eod
         print(
             "".join(
                 [
@@ -382,7 +490,11 @@ class Board:
                     isinstance(column, BoardItemVoid)
                     and column.model != self.ui_board_void_cell
                 ):
-                    column.model = self.ui_board_void_cell
+                    if isinstance(self.ui_board_void_cell, Core.Sprixel):
+                        column.sprixel = self.ui_board_void_cell_sprixel
+                        column.model = self.ui_board_void_cell_sprixel.model
+                    else:
+                        column.model = self.ui_board_void_cell
                 print(column, end="")
             print(self.ui_border_right + "\r")
         print(
@@ -431,12 +543,12 @@ class Board:
             the extend of it.
         """
         if row < self.size[1] and column < self.size[0]:
-            if isinstance(item, BoardMultiItem):
-                print(f"Multi item found: {item.name}")
+            if isinstance(item, BoardComplexItem):
                 for ir in range(0, item.dimension[1]):
                     for ic in range(0, item.dimension[0]):
                         if not isinstance(item.item(ir, ic), BoardItemVoid):
                             self.place_item(item.item(ir, ic), row + ir, column + ic)
+                item.store_position(row, column)
             elif isinstance(item, BoardItem):
                 # If we are about to place the item on a overlappable and
                 # restorable we store it to be restored
@@ -447,19 +559,24 @@ class Board:
                     and existing_item.restorable()
                     and existing_item.overlappable()
                 ):
-                    print(
-                        f"saving overlapping item at {row},{column} ({self._matrix[row][column].name}) in {item.name}"
-                    )
-                    item._overlapping = self._matrix[row][column]
+                    # Let's save the item on the hidden layer
+                    self._overlapped_matrix[row][column] = self._matrix[row][column]
                 # Place the item on the board
                 self._matrix[row][column] = item
-                # Take ownership of the item
-                item.parent = self
+                # Take ownership of the item (if item doesn't have parent)
+                if item.parent is None:
+                    item.parent = self
                 item.store_position(row, column)
                 if isinstance(item, Movable):
-                    self._movables.add(item)
+                    if isinstance(item.parent, BoardComplexItem):
+                        self._movables.add(item.parent)
+                    else:
+                        self._movables.add(item)
                 elif isinstance(item, Immovable):
-                    self._immovables.add(item)
+                    if isinstance(item.parent, BoardComplexItem):
+                        self._immovables.add(item.parent)
+                    else:
+                        self._immovables.add(item)
             else:
                 raise HacInvalidTypeException(
                     "The item passed in argument is not a subclass of BoardItem"
@@ -470,7 +587,86 @@ class Board:
                 f"it's out of the board boundaries ({self.size[0]}x{self.size[1]})."
             )
 
-    def move(self, item, direction, step):
+    def move_complex(self, item, direction, step=1):
+        if isinstance(item, Movable) and item.can_move():
+            vect2d = (None, None)
+            if isinstance(direction, Core.Vector2D):
+                vect2d = (direction.row, direction.column)
+            else:
+                if direction == Constants.UP:
+                    vect2d = (-step, 0)
+                elif direction == Constants.DOWN:
+                    vect2d = (+step, 0)
+                elif direction == Constants.LEFT:
+                    vect2d = (0, -step)
+                elif direction == Constants.RIGHT:
+                    vect2d = (0, +step)
+                elif direction == Constants.DRUP:
+                    vect2d = (-step, +step)
+                elif direction == Constants.DRDOWN:
+                    vect2d = (+step, +step)
+                elif direction == Constants.DLUP:
+                    vect2d = (-step, -step)
+                elif direction == Constants.DLDOWN:
+                    vect2d = (+step, -step)
+
+            # This is just a PoC, we need to actually move things instead of swapping the
+            # buffers. We need to check for everything else also.
+            if (
+                vect2d[0] is not None
+                and vect2d[1] is not None
+                and item.pos[0] + vect2d[0] >= 0
+                and item.pos[1] + vect2d[1] >= 0
+                and (item.pos[0] + vect2d[0] + item.height() - 1) < self.size[1]
+                and (item.pos[1] + vect2d[1] + item.width() - 1) < self.size[0]
+            ):
+                for row in range(0, item.dimension[1], 1):
+                    for col in range(0, item.dimension[0], 1):
+                        if (
+                            self._overlapped_matrix[item.pos[0] + row][
+                                item.pos[1] + col
+                            ]
+                            is not None
+                        ):
+                            self.place_item(
+                                self._overlapped_matrix[item.pos[0] + row][
+                                    item.pos[1] + col
+                                ],
+                                item.pos[0] + row,
+                                item.pos[1] + col,
+                            )
+                            self._overlapped_matrix[item.pos[0] + row][
+                                item.pos[1] + col
+                            ] = None
+                self.place_item(item, item.pos[0] + vect2d[0], item.pos[1] + vect2d[1])
+        else:
+            raise HacObjectIsNotMovableException(
+                (
+                    f"Item '{item.name}' at position [{item.pos[0]}, "
+                    f"{item.pos[1]}] is not a subclass of Movable, "
+                    f"therefor it cannot be moved."
+                )
+            )
+
+    def move(self, item, direction, step=1):
+        """
+        Board.move() is a routing function. It does 2 things:
+
+         1 - If the direction is a :class:`~gamelib.GFX.Core.Vector2D`, round the values
+            to the nearest integer (as move works with entire board cells).
+         2 - route toward the right moving function depending if the item is complex or
+            not.
+        """
+        if isinstance(direction, Core.Vector2D):
+            # If direction is a vector, round the numbers to the next integer.
+            direction.row = round(direction.row)
+            direction.column = round(direction.column)
+        if isinstance(item, BoardComplexItem):
+            return self.move_complex(item, direction, step)
+        else:
+            return self.move_simple(item, direction, step)
+
+    def move_simple(self, item, direction, step=1):
         """
         Move an item in the specified direction for a number of steps.
 
@@ -498,15 +694,6 @@ class Board:
             item). If the movable item is over an overlappable item, the
             overlapped item is restored.
 
-        .. note:: It could be interesting here, instead of relying on storing
-            the overlapping item in a property of a Movable
-            (:class:`gamelib.Movable.Movable`) object, to have another dimension
-            on the board matrix to push and pop objects on a cell. Only the first
-            item would be rendered and it would avoid the complicated and error
-            prone logic in this method. If anyone feel up to the challenge,
-            `PR are welcome ;-)
-            <https://github.com/arnauddupuis/hac-game-lib/pulls>`_.
-
         .. todo:: check all types!
 
         """
@@ -517,65 +704,57 @@ class Board:
             # step), direction must be a direction contant from the
             # gamelib.Constants module')
 
-            new_x = None
-            new_y = None
-            if direction == Constants.UP:
-                new_x = item.pos[0] - step
-                new_y = item.pos[1]
-            elif direction == Constants.DOWN:
-                new_x = item.pos[0] + step
-                new_y = item.pos[1]
-            elif direction == Constants.LEFT:
-                new_x = item.pos[0]
-                new_y = item.pos[1] - step
-            elif direction == Constants.RIGHT:
-                new_x = item.pos[0]
-                new_y = item.pos[1] + step
-            elif direction == Constants.DRUP:
-                new_x = item.pos[0] - step
-                new_y = item.pos[1] + step
-            elif direction == Constants.DRDOWN:
-                new_x = item.pos[0] + step
-                new_y = item.pos[1] + step
-            elif direction == Constants.DLUP:
-                new_x = item.pos[0] - step
-                new_y = item.pos[1] - step
-            elif direction == Constants.DLDOWN:
-                new_x = item.pos[0] + step
-                new_y = item.pos[1] - step
-            print(f"About to test {type(self._matrix[new_x][new_y])}")
+            new_row = None
+            new_column = None
+            if isinstance(direction, Core.Vector2D):
+                new_row = item.pos[0] + direction.row
+                new_column = item.pos[1] + direction.column
+            else:
+                if direction == Constants.UP:
+                    new_row = item.pos[0] - step
+                    new_column = item.pos[1]
+                elif direction == Constants.DOWN:
+                    new_row = item.pos[0] + step
+                    new_column = item.pos[1]
+                elif direction == Constants.LEFT:
+                    new_row = item.pos[0]
+                    new_column = item.pos[1] - step
+                elif direction == Constants.RIGHT:
+                    new_row = item.pos[0]
+                    new_column = item.pos[1] + step
+                elif direction == Constants.DRUP:
+                    new_row = item.pos[0] - step
+                    new_column = item.pos[1] + step
+                elif direction == Constants.DRDOWN:
+                    new_row = item.pos[0] + step
+                    new_column = item.pos[1] + step
+                elif direction == Constants.DLUP:
+                    new_row = item.pos[0] - step
+                    new_column = item.pos[1] - step
+                elif direction == Constants.DLDOWN:
+                    new_row = item.pos[0] + step
+                    new_column = item.pos[1] - step
+            # First of all we check if the new coordinates are within the board
             if (
-                new_x is not None
-                and new_y is not None
-                and new_x >= 0
-                and new_y >= 0
-                and new_x < self.size[1]
-                and new_y < self.size[0]
-                and self._matrix[new_x][new_y].overlappable()
+                new_row is not None
+                and new_column is not None
+                and new_row >= 0
+                and new_column >= 0
+                and new_row < self.size[1]
+                and new_column < self.size[0]
             ):
-                # If we are here, it means the cell we are going to already
-                # has an overlappable item, so let's save it for
-                # later restoration
-                if (
-                    not isinstance(self._matrix[new_x][new_y], BoardItemVoid)
-                    and isinstance(self._matrix[new_x][new_y], Immovable)
-                    and self._matrix[new_x][new_y].restorable()
-                ):
-                    if item._overlapping is None:
-                        item._overlapping = self._matrix[new_x][new_y]
-                    else:
-                        item._overlapping_buffer = self._matrix[new_x][new_y]
-
-                if isinstance(self._matrix[new_x][new_y], Actionable):
+                # Then, we check if the item is actionable and if so, if the item
+                # is allowed to activate it.
+                if isinstance(self._matrix[new_row][new_column], Actionable):
                     if (
                         isinstance(item, Player)
                         and (
                             (
-                                self._matrix[new_x][new_y].perm
+                                self._matrix[new_row][new_column].perm
                                 == Constants.PLAYER_AUTHORIZED
                             )
                             or (
-                                self._matrix[new_x][new_y].perm
+                                self._matrix[new_row][new_column].perm
                                 == Constants.ALL_PLAYABLE_AUTHORIZED
                             )
                         )
@@ -583,139 +762,71 @@ class Board:
                         isinstance(item, NPC)
                         and (
                             (
-                                self._matrix[new_x][new_y].perm
+                                self._matrix[new_row][new_column].perm
                                 == Constants.NPC_AUTHORIZED
                             )
                             or (
-                                self._matrix[new_x][new_y].perm
+                                self._matrix[new_row][new_column].perm
                                 == Constants.ALL_PLAYABLE_AUTHORIZED
                             )
                         )
                     ):
-                        self._matrix[new_x][new_y].activate()
-                        # Here instead of just placing a BoardItemVoid on
-                        # the departure position we first make sure there
-                        # is no _overlapping object to restore.
-                        if (
-                            item._overlapping is not None
-                            and isinstance(item._overlapping, Immovable)
-                            and item._overlapping.restorable()
-                            and (
-                                item._overlapping.pos[0] != new_x
-                                or item._overlapping.pos[1] != new_y
-                            )
-                        ):
-                            self.place_item(
-                                item._overlapping,
-                                item._overlapping.pos[0],
-                                item._overlapping.pos[1],
-                            )
-                            if item._overlapping_buffer is not None:
-                                item._overlapping = item._overlapping_buffer
-                                item._overlapping_buffer = None
-                            else:
-                                item._overlapping = None
-                        else:
-                            self.place_item(
-                                BoardItemVoid(model=self.ui_board_void_cell),
-                                item.pos[0],
-                                item.pos[1],
-                            )
-                        self.place_item(item, new_x, new_y)
-                else:
-                    # if there is an overlapped item, restore it.
-                    # Else just move
-                    if (
-                        item._overlapping is not None
-                        and isinstance(item._overlapping, Immovable)
-                        and item._overlapping.restorable()
-                        and (
-                            item._overlapping.pos[0] != new_x
-                            or item._overlapping.pos[1] != new_y
-                        )
-                    ):
-                        self.place_item(
-                            item._overlapping,
-                            item._overlapping.pos[0],
-                            item._overlapping.pos[1],
-                        )
-                        if item._overlapping_buffer is not None:
-                            item._overlapping = item._overlapping_buffer
-                            item._overlapping_buffer = None
-                        else:
-                            item._overlapping = None
-                    else:
-                        self.place_item(
-                            BoardItemVoid(model=self.ui_board_void_cell),
-                            item.pos[0],
-                            item.pos[1],
-                        )
-                    self.place_item(item, new_x, new_y)
-            elif (
-                new_x is not None
-                and new_y is not None
-                and new_x >= 0
-                and new_y >= 0
-                and new_x < self.size[1]
-                and new_y < self.size[0]
-                and self._matrix[new_x][new_y].pickable()
-            ):
-                if isinstance(item, Movable) and item.has_inventory():
-                    item.inventory.add_item(self._matrix[new_x][new_y])
-                    # Here instead of just placing a BoardItemVoid on the
-                    # departure position we first make sure there is no
-                    # _overlapping object to restore.
-                    if (
-                        item._overlapping is not None
-                        and isinstance(item._overlapping, Immovable)
-                        and item._overlapping.restorable()
-                        and (
-                            item._overlapping.pos[0] != new_x
-                            or item._overlapping.pos[1] != new_y
-                        )
-                    ):
-                        self.place_item(
-                            item._overlapping,
-                            item._overlapping.pos[0],
-                            item._overlapping.pos[1],
-                        )
-                        item._overlapping = None
-                    else:
-                        self.place_item(
-                            BoardItemVoid(model=self.ui_board_void_cell),
-                            item.pos[0],
-                            item.pos[1],
-                        )
-                    self.place_item(item, new_x, new_y)
-            elif (
-                new_x is not None
-                and new_y is not None
-                and new_x >= 0
-                and new_y >= 0
-                and new_x < self.size[1]
-                and new_y < self.size[0]
-                and isinstance(self._matrix[new_x][new_y], Actionable)
-            ):
+                        self._matrix[new_row][new_column].activate()
+                # Now we check if the destination contains a pickable item.
+                # Note: I'm not sure why I decided that pickables were not overlapable.
                 if (
-                    isinstance(item, Player)
-                    and (
-                        (self._matrix[new_x][new_y].perm == Constants.PLAYER_AUTHORIZED)
-                        or (
-                            self._matrix[new_x][new_y].perm
-                            == Constants.ALL_PLAYABLE_AUTHORIZED
-                        )
-                    )
-                ) or (
-                    isinstance(item, NPC)
-                    and (
-                        (self._matrix[new_x][new_y].perm == Constants.NPC_AUTHORIZED)
-                        or (
-                            self._matrix[new_x][new_y].perm
-                            == Constants.ALL_PLAYABLE_AUTHORIZED
-                        )
-                    )
+                    not self._matrix[new_row][new_column].overlappable()
+                    and self._matrix[new_row][new_column].pickable()
+                    and isinstance(item, Movable)
+                    and item.has_inventory()
                 ):
-                    self._matrix[new_x][new_y].activate()
+                    # Put the item in the inventory
+                    item.inventory.add_item(self._matrix[new_row][new_column])
+                    # And then clear the cell (this is usefull for the next one)
+                    self.clear_cell(new_row, new_column)
+                # Finally we check if the destination is overlappable
+                if self._matrix[new_row][new_column].overlappable():
+                    # And if it is, we check if the destination is restorable
+                    if (
+                        not isinstance(self._matrix[new_row][new_column], BoardItemVoid)
+                        and isinstance(self._matrix[new_row][new_column], Immovable)
+                        and self._matrix[new_row][new_column].restorable()
+                    ):
+                        # If so, we save the item on the hidden layer
+                        self._overlapped_matrix[new_row][new_column] = self._matrix[
+                            new_row
+                        ][new_column]
+                    if (
+                        item.sprixel is not None
+                        and self._matrix[new_row][new_column].sprixel is not None
+                    ):
+                        item.sprixel.bg_color = self._matrix[new_row][
+                            new_column
+                        ].sprixel.bg_color
+                    # Finally instead of just placing a BoardItemVoid on
+                    # the departure position we first make sure there
+                    # is no overlapping object to restore.
+                    overlapped_item = self._overlapped_matrix[item.pos[0]][item.pos[1]]
+                    if (
+                        overlapped_item is not None
+                        and isinstance(overlapped_item, Immovable)
+                        and overlapped_item.restorable()
+                        and (
+                            overlapped_item.pos[0] != new_row
+                            or overlapped_item.pos[1] != new_column
+                        )
+                    ):
+                        self.place_item(
+                            overlapped_item,
+                            overlapped_item.pos[0],
+                            overlapped_item.pos[1],
+                        )
+                        self._overlapped_matrix[item.pos[0]][item.pos[1]] = None
+                    else:
+                        self.place_item(
+                            self.generate_void_cell(), item.pos[0], item.pos[1],
+                        )
+                    self.place_item(item, new_row, new_column)
         else:
             raise HacObjectIsNotMovableException(
                 (
@@ -743,21 +854,25 @@ class Board:
         .. WARNING:: This method does not check the content before,
             it *will* overwrite the content.
 
+        .. Important:: This method test if something is left on the overlapped layer.
+           If so, it restore what was overlapped instead of creating a new void item.
+
         """
         if self._matrix[row][column] in self._movables:
             self._movables.discard(self._matrix[row][column])
         elif self._matrix[row][column] in self._immovables:
             self._immovables.discard(self._matrix[row][column])
         self._matrix[row][column] = None
-        # if self._matrix[row][column] in self._movables:
-        #     index = self._movables.index(self._matrix[row][column])
-        #     del(self._movables[index])
-        # elif self._matrix[row][column] in self._immovables:
-        #     index = self._immovables.index(self._matrix[row][column])
-        #     del(self._immovables[index])
-        self.place_item(
-            BoardItemVoid(model=self.ui_board_void_cell, name="void_cell"), row, column
-        )
+        # self.place_item(
+        #     BoardItemVoid(model=self.ui_board_void_cell, name="void_cell"),
+        #     row,
+        #     column,
+        # )
+        if self._overlapped_matrix[row][column] is not None:
+            self._matrix[row][column] = self._overlapped_matrix[row][column]
+            self._overlapped_matrix[row][column] = None
+        else:
+            self.init_cell(row, column)
 
     def get_movables(self, **kwargs):
         """Return a list of all the Movable objects in the Board.
