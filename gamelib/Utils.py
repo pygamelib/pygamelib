@@ -8,6 +8,7 @@ import colorama.ansi
 from readchar import readkey, key  # noqa: F401
 import subprocess
 import sys
+import math
 
 WHITE_RECT = Back.WHITE + " " + Style.RESET_ALL
 BLUE_RECT = Back.BLUE + " " + Style.RESET_ALL
@@ -64,6 +65,75 @@ And finally an example of composition of rectangles to make different colored sq
  * YELLOW_CYAN_SQUARE = YELLOW_RECT+CYAN_RECT
 
 """
+
+
+def intersect(row1, column1, width1, height1, row2, column2, width2, height2):
+    """This function check if 2 rectangles intersect.
+
+    The 2 rectangles are defined by their positions (row, column) and dimension (width
+    and height).
+
+    :param row1: The row of the first rectangle
+    :type row1: int
+    :param column1: The column of the first rectangle
+    :type column1: int
+    :param width1: The width of the first rectangle
+    :type width1: int
+    :param height1: The height of the first rectangle
+    :type height1: int
+    :param row2: The row of the second rectangle
+    :type row2: int
+    :param column2: The column of the second rectangle
+    :type row2: int
+    :param width2: The width of the second rectangle
+    :type width2: int
+    :param height2: The height of the second rectangle
+    :type height2: int
+    :returns: A boolean, True if the rectangles intersect False, otherwise.
+
+    Example::
+
+        if intersect(projectile.row(), projectile.column(), projectile.width(),
+           projectile.height(), bady.row(), bady.column(), bady.width(), bady.height()):
+           projectile.hit([bady])
+    """
+    # Shortcut: if they are at the same position they obviously intersect
+    if row1 == row2 and column1 == column2:
+        return True
+    return (
+        max(row1, row1 + height1 - 1) >= min(row2, row2 + height2 - 1)
+        and min(row1, row1 + height1 - 1) <= max(row2, row2 + height2 - 1)
+        and max(column1, column1 + width1 - 1) >= min(column2, column2 + width2 - 1)
+        and min(column1, column1 + width1 - 1) <= max(column2, column2 + width2 - 1)
+    )
+
+
+def distance(row1, column1, row2, column2):
+    """Return the euclidian distance between to points.
+
+    Points are identified by their row and column.
+    If you want the distance in number of cells, you need to round the result (see
+    example).
+
+    :param row1: the row number (coordinate) of the first point.
+    :type row1: int
+    :param column1: the column number (coordinate) of the first point.
+    :type column1: int
+    :param row2: the row number (coordinate) of the second point.
+    :type row2: int
+    :param column2: the column number (coordinate) of the second point.
+    :type column2: int
+    :return: The distance between the 2 points.
+    :rtype: float
+
+    Example::
+
+        distance = round(Utils.distance(player.row(),
+                                        player.column(),
+                                        npc.row(),
+                                        npc.column()))
+    """
+    return math.sqrt((column2 - column1) ** 2 + (row2 - row1) ** 2)
 
 
 def get_key():
