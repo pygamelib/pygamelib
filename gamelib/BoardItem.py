@@ -188,7 +188,7 @@ class BoardItem:
             )
         else:
             raise HacInvalidTypeException(
-                f"BoardItem.collides_with require a BoardItem as parameter."
+                "BoardItem.collides_with require a BoardItem as parameter."
             )
 
     def can_move(self):
