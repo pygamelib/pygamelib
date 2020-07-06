@@ -11,6 +11,7 @@ This module contains the base classes for both playable and non playable charact
 
 from gamelib.Movable import Movable
 from gamelib.Inventory import Inventory
+from gamelib.BoardItem import BoardComplexItem
 
 
 class Character:
@@ -78,6 +79,13 @@ class Player(Movable, Character):
     It accepts all the parameters from :class:`~gamelib.Characters.Character` and is a
     :class:`~gamelib.Movable.Movable`.
 
+    This class sets a couple of variables to default values:
+
+     * max_hp : 100
+     * hp : 100
+     * remaining_lives : 3
+     * attack_power : 10
+
     .. note:: If no inventory is passed as parameter a default one is created.
     """
 
@@ -114,6 +122,12 @@ class Player(Movable, Character):
             that class and re-implement overlappable().
         """
         return False
+
+
+class ComplexPlayer(Player, BoardComplexItem):
+    def __init__(self, **kwargs):
+        Player.__init__(self, **kwargs)
+        BoardComplexItem.__init__(self, **kwargs)
 
 
 class NPC(Movable, Character):
@@ -211,3 +225,9 @@ class NPC(Movable, Character):
                 print("No pickpocketing XP for us today :(")
         """
         return False
+
+
+class ComplexNPC(NPC, BoardComplexItem):
+    def __init__(self, **kwargs):
+        NPC.__init__(self, **kwargs)
+        BoardComplexItem.__init__(self, **kwargs)
