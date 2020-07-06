@@ -175,6 +175,17 @@ class BoardItem:
         return self.dimension[1]
 
     def collides_with(self, other):
+        """Tells if this item collides with another item.
+
+        :param other: The item you want to check for collision.
+        :type other: :class:`~gamelib.BoardItem.BoardItem`
+        :rtype: bool
+
+        Example::
+
+            if projectile.collides_with(game.player):
+                game.player.hp -= 5
+        """
         if isinstance(other, BoardItem):
             return gamelib.Utils.intersect(
                 self.pos[0],
@@ -189,6 +200,28 @@ class BoardItem:
         else:
             raise HacInvalidTypeException(
                 "BoardItem.collides_with require a BoardItem as parameter."
+            )
+
+    def distance_to(self, other):
+        """Calculates the distance with an item.
+
+        :param other: The item you want to calculate the distance to.
+        :type other: :class:`~gamelib.BoardItem.BoardItem`
+        :return: The distance between this item and the other.
+        :rtype: float
+
+        Example::
+
+            if npc.distance_to(game.player) <= 2.0:
+                npc.seek_and_destroy = True
+        """
+        if isinstance(other, BoardItem):
+            return gamelib.Utils.distance(
+                self.pos[0], self.pos[1], other.pos[0], other.pos[1],
+            )
+        else:
+            raise HacInvalidTypeException(
+                "BoardItem.distance_to require a BoardItem as parameter."
             )
 
     def can_move(self):
