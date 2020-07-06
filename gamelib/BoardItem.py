@@ -7,7 +7,8 @@
    BoardItemVoid
 """
 from gamelib.GFX import Core
-from gamelib.HacExceptions import HacOutOfBoardBoundException
+from gamelib.HacExceptions import HacOutOfBoardBoundException, HacInvalidTypeException
+import gamelib.Utils
 
 
 class BoardItem:
@@ -173,6 +174,23 @@ class BoardItem:
         """
         return self.dimension[1]
 
+    def collides_with(self, other):
+        if isinstance(other, BoardItem):
+            return gamelib.Utils.intersect(
+                self.pos[0],
+                self.pos[1],
+                self.dimension[0],
+                self.dimension[1],
+                other.pos[0],
+                other.pos[1],
+                other.dimension[0],
+                other.dimension[1],
+            )
+        else:
+            raise HacInvalidTypeException(
+                f"BoardItem.collides_with require a BoardItem as parameter."
+            )
+
     def can_move(self):
         """
         This is a virtual method that must be implemented in deriving classes.
@@ -234,6 +252,53 @@ class BoardItemVoid(BoardItem):
         return True
 
 
+class BoardItemComplexComponent(BoardItem):
+    """The default component of a complex item.
+
+    It is literrally just a BoardItem but is subclassed for easier identification.
+
+    It is however scanning its parent for the item's basic properties (overlappable,
+    restorable, etc.)
+
+    A component can never be pickable by itself.
+    """
+
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        if hasattr(self, "parent") and self.parent is not None:
+            if hasattr(self.parent, "restorable") and callable(self.parent.restorable):
+                self.__restorable = self.parent.restorable
+            else:
+                self.__restorable = False
+            if hasattr(self.parent, "overlappable") and callable(
+                self.parent.overlappable
+            ):
+                self.__overlappable = self.parent.overlappable
+            else:
+                self.__overlappable = False
+            if hasattr(self.parent, "can_move") and callable(self.parent.can_move):
+                self.__can_move = self.parent.can_move
+            else:
+                self.__can_move = False
+        else:
+            self.__restorable = False
+            self.__overlappable = False
+            self.__can_move = False
+        self.__pickable = False
+
+    def restorable(self):
+        return self.__restorable
+
+    def overlappable(self):
+        return self.__overlappable
+
+    def can_move(self):
+        return self.__can_move
+
+    def pickable(self):
+        return self.__pickable
+
+
 class BoardComplexItem(BoardItem):
     def __init__(self, **kwargs):
         self.__kwargs = kwargs
@@ -246,7 +311,7 @@ class BoardComplexItem(BoardItem):
         self._item_matrix = []
         # Not sure about that one
         self.hit_box = []
-        self.base_item_type = BoardItem
+        self.base_item_type = BoardItemComplexComponent
         for item in ["sprite", "dimension", "null_sprixel", "base_item_type"]:
             if item in kwargs:
                 setattr(self, item, kwargs[item])
