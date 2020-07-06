@@ -1,3 +1,4 @@
+import examples_includes  # noqa F401
 from gamelib.Game import Game
 from gamelib.Characters import Player
 from gamelib.Board import Board

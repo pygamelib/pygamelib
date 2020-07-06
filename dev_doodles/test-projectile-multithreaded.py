@@ -1,3 +1,4 @@
+import examples_includes  # noqa F401
 from gamelib.Game import Game
 from gamelib.Characters import Player, NPC
 from gamelib.BoardItem import BoardItemVoid
@@ -15,7 +16,7 @@ from blessed import Terminal
 from playsound import playsound
 from copy import deepcopy
 
-SFX_DIR = "/home/arnaud/Code/Python/hac-n-rogue/sound/sfx/"
+SFX_DIR = "sfx/"
 
 
 def fireball_callback(projectile, objects, *args):
@@ -92,7 +93,7 @@ def redraw_screen():
             + Graphics.BoxDrawings.LIGHT_VERTICAL
             + Utils.red_bright("-")
             + color_prefix
-            + Graphics.Sprites.COLLISION
+            + Graphics.Models.COLLISION
             + Graphics.BoxDrawings.LIGHT_VERTICAL
             + "\n\r"
             + Graphics.BoxDrawings.LIGHT_ARC_UP_AND_RIGHT
@@ -118,7 +119,7 @@ def redraw_screen():
             color_prefix
             + Graphics.BoxDrawings.LIGHT_VERTICAL
             + " "
-            + Graphics.Sprites.HIGH_VOLTAGE
+            + Graphics.Models.HIGH_VOLTAGE
             + Graphics.BoxDrawings.LIGHT_VERTICAL
         )
     with terminal.location(5, b.size[1] + 8):
@@ -158,12 +159,12 @@ b = Board(
     size=[20, 20],
     player_starting_position=[5, 5],
 )
-wall = Wall(model=Graphics.Sprites.BRICK)
+wall = Wall(model=Graphics.Models.BRICK)
 b.place_item(wall, 1, 6)
 b.place_item(wall, 5, 10)
 g = Game()
 g.add_board(1, b)
-g.player = Player(model=Graphics.Sprites.MAGE)
+g.player = Player(model=Graphics.Models.MAGE)
 g.player.level = 1
 g.player.mp = 20
 g.player.max_mp = 20
@@ -172,7 +173,7 @@ g.add_npc(
     1,
     NPC(
         name="Bob Soontobedead",
-        model=Graphics.Sprites.SKULL,
+        model=Graphics.Models.SKULL,
         hp=10,
         actuator=RandomActuator(moveset=[Constants.NO_DIR]),
     ),
@@ -183,7 +184,7 @@ g.add_npc(
     1,
     NPC(
         name="Bob Soontobedead II",
-        model=Graphics.Sprites.SKULL,
+        model=Graphics.Models.SKULL,
         hp=10,
         actuator=RandomActuator(moveset=[Constants.NO_DIR]),
     ),
@@ -194,7 +195,7 @@ g.add_npc(
     1,
     NPC(
         name="Bob Soontobedead III",
-        model=Graphics.Sprites.SKULL,
+        model=Graphics.Models.SKULL,
         hp=10,
         actuator=RandomActuator(moveset=[Constants.NO_DIR]),
     ),
@@ -205,7 +206,7 @@ g.add_npc(
     1,
     NPC(
         name="Mover",
-        model=Graphics.Sprites.ZOMBIE,
+        model=Graphics.Models.ZOMBIE,
         hp=10,
         actuator=RandomActuator(
             moveset=[Constants.UP, Constants.DOWN, Constants.LEFT, Constants.RIGHT]
@@ -235,7 +236,7 @@ fireball_template = Projectile(
     model=Utils.red_bright(f"~{black_circle}"),
     name="fireball",
     range=7,
-    hit_model=Graphics.Sprites.COLLISION,
+    hit_model=Graphics.Models.COLLISION,
     hit_animation=None,
     hit_callback=fireball_callback,
     step=1,
@@ -246,7 +247,7 @@ zap_template = Projectile(
     model=Utils.yellow_bright("\U00002301\U00002301"),
     name="zap",
     range=8,
-    hit_model=Graphics.Sprites.HIGH_VOLTAGE,
+    hit_model=Graphics.Models.HIGH_VOLTAGE,
     hit_callback=zap_callback,
 )
 # Left

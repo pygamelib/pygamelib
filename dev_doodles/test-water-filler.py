@@ -66,7 +66,7 @@ def flood_filler(g, b, r, c):
 # Using the Game object just to load the board easily
 g = Game()
 b = g.load_board("/home/arnaud/Code/Games/hgl-editor/Filler.json", 1)
-g.player = Player(model=Graphics.Sprites.MAGE)
+g.player = Player(model=Graphics.Models.MAGE)
 g.change_level(1)
 # We need the player out of our way
 g.move_player(Constants.LEFT, 5)
