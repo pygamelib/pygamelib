@@ -1,6 +1,7 @@
 import gamelib.HacExceptions
 from math import sqrt
 from gamelib import Constants
+from gamelib.Assets import Graphics
 
 
 class Sprixel(object):
@@ -13,6 +14,9 @@ class Sprixel(object):
         self.model = model
         self.bg_color = bg_color
         self.fg_color = fg_color
+        self.is_bg_transparent = False
+        if bg_color is None or bg_color == "":
+            self.is_bg_transparent = True
 
     def __repr__(self):
         return f"{self.bg_color}{self.fg_color}{self.model}\x1b[0m"
@@ -117,69 +121,85 @@ class Sprixel(object):
                 f"A Sprixel.fg_color must be a string. {value} is not a string."
             )
 
-    @staticmethod
-    def black_rect():
-        return Sprixel(" ", "\x1b[40m")
+    def serialize(self):
+        """Serialize a Sprixel into a dictionary.
 
-    @staticmethod
-    def black_square():
-        return Sprixel("  ", "\x1b[40m")
+        :returns: The class as a  dictionary
+        :rtype: dict
 
-    @staticmethod
-    def white_rect():
-        return Sprixel(" ", "\x1b[47m")
+        Example::
 
-    @staticmethod
-    def white_square():
-        return Sprixel("  ", "\x1b[47m")
+            json.dump( sprixel.serialize() )
+        """
+        return {
+            "model": self.model,
+            "bg_color": self.bg_color,
+            "fg_color": self.fg_color,
+        }
 
-    @staticmethod
-    def red_rect():
-        return Sprixel(" ", "\x1b[41m")
+    @classmethod
+    def black_rect(cls):
+        return cls(" ", "\x1b[40m")
 
-    @staticmethod
-    def red_square():
-        return Sprixel("  ", "\x1b[41m")
+    @classmethod
+    def black_square(cls):
+        return cls("  ", "\x1b[40m")
 
-    @staticmethod
-    def green_rect():
-        return Sprixel(" ", "\x1b[42m")
+    @classmethod
+    def white_rect(cls):
+        return cls(" ", "\x1b[47m")
 
-    @staticmethod
-    def green_square():
-        return Sprixel("  ", "\x1b[42m")
+    @classmethod
+    def white_square(cls):
+        return cls("  ", "\x1b[47m")
 
-    @staticmethod
-    def blue_rect():
-        return Sprixel(" ", "\x1b[44m")
+    @classmethod
+    def red_rect(cls):
+        return cls(" ", "\x1b[41m")
 
-    @staticmethod
-    def blue_square():
-        return Sprixel("  ", "\x1b[44m")
+    @classmethod
+    def red_square(cls):
+        return cls("  ", "\x1b[41m")
 
-    @staticmethod
-    def cyan_rect():
-        return Sprixel(" ", "\x1b[46m")
+    @classmethod
+    def green_rect(cls):
+        return cls(" ", "\x1b[42m")
 
-    @staticmethod
-    def cyan_square():
-        return Sprixel("  ", "\x1b[46m")
+    @classmethod
+    def green_square(cls):
+        return cls("  ", "\x1b[42m")
 
-    @staticmethod
-    def magenta_rect():
-        return Sprixel(" ", "\x1b[45m")
+    @classmethod
+    def blue_rect(cls):
+        return cls(" ", "\x1b[44m")
 
-    @staticmethod
-    def magenta_square():
-        return Sprixel("  ", "\x1b[45m")
+    @classmethod
+    def blue_square(cls):
+        return cls("  ", "\x1b[44m")
 
-    @staticmethod
-    def yellow_rect():
-        return Sprixel(" ", "\x1b[43m")
+    @classmethod
+    def cyan_rect(cls):
+        return cls(" ", "\x1b[46m")
 
-    @staticmethod
-    def yellow_square():
-        return Sprixel("  ", "\x1b[43m")
+    @classmethod
+    def cyan_square(cls):
+        return cls("  ", "\x1b[46m")
+
+    @classmethod
+    def magenta_rect(cls):
+        return cls(" ", "\x1b[45m")
+
+    @classmethod
+    def magenta_square(cls):
+        return cls("  ", "\x1b[45m")
+
+    @classmethod
+    def yellow_rect(cls):
+        return cls(" ", "\x1b[43m")
+
+    @classmethod
+    def yellow_square(cls):
+        return cls("  ", "\x1b[43m")
 
 
 class Sprite(object):
@@ -199,9 +219,7 @@ class Sprite(object):
                     self._sprixels[row].append(sprixels[row][column])
 
         else:
-            self._sprixels = [
-                [default_sprixel for i in range(0, size[1])] for i in range(0, size[0])
-            ]
+            self.empty()
 
     def __repr__(self):
         string = []
@@ -214,8 +232,8 @@ class Sprite(object):
 
     def empty(self):
         self._sprixels = [
-            [self.default_sprixel for i in range(0, self.size[1])]
-            for j in range(0, self.size[0])
+            [self.default_sprixel for i in range(0, self.size[0])]
+            for j in range(0, self.size[1])
         ]
 
     def sprixel(self, row=0, column=None):
@@ -237,7 +255,7 @@ class Sprite(object):
         new_sprite = cls(default_sprixel=default_sprixel)
         with open(filename, "r") as sprite_file:
             sprixels_list = []
-            line_count = 0
+            height = 0
             max_width = 0
             while True:
                 line = sprite_file.readline()
@@ -247,19 +265,17 @@ class Sprite(object):
                 sprixels_list.append([])
                 for s in line.rstrip().split("▄"):
                     if s != "\x1b[0m":
-                        sprixels_list[line_count].append(
-                            Sprixel.from_ansi(f"{s}▄\x1b[0m")
-                        )
+                        sprixels_list[height].append(Sprixel.from_ansi(f"{s}▄\x1b[0m"))
                         width += 1
                 if width > max_width:
                     max_width = width
-                line_count += 1
+                height += 1
             for row in range(0, len(sprixels_list)):
                 if len(sprixels_list[row]) < max_width:
                     for column in range(len(sprixels_list[row]), max_width):
                         sprixels_list[row].append(default_sprixel)
             new_sprite._sprixels = sprixels_list
-            new_sprite.size = [max_width, line_count]
+            new_sprite.size = [max_width, height]
         return new_sprite
 
     def flip_horizontally(self):
@@ -269,34 +285,31 @@ class Sprite(object):
             default_sprixel=self.default_sprixel,
             parent=self.parent,
         )
-        new_sprixels = [
-            [None for i in range(0, self.size[1])] for j in range(0, self.size[0])
-        ]
         nc = 0
         # Flipping horizontally is just a symmetry vs a vertical axis
         for col in range(self.size[0] - 1, -1, -1):
             for row in range(0, self.size[1]):
-                new_sprixels[row][nc] = self._sprixels[row][col]
+                new_sprite.set_sprixel(row, nc, self._sprixels[row][col])
             nc += 1
-        new_sprite._sprixels = new_sprixels
         return new_sprite
 
     def flip_vertically(self):
+        # If the sprite was created from an image using climage using ▄ as a delimiter
+        # this function is going to flip the delimiter too and replace ▄ by ▀.
         new_sprite = Sprite(
             size=self.size,
             sprixels=None,
             default_sprixel=self.default_sprixel,
             parent=self.parent,
         )
-        # new_sprixels = [
-        #     [None for i in range(0, self.size[1])] for j in range(0, self.size[0])
-        # ]
         nr = 0
         for row in range(self.size[1] - 1, -1, -1):
             for col in range(0, self.size[0]):
-                new_sprite.set_sprixel(nr, col, self._sprixels[row][col])
+                new_sprix = self._sprixels[row][col]
+                if new_sprix.model == Graphics.Blocks.LOWER_HALF_BLOCK:
+                    new_sprix.model = Graphics.Blocks.UPPER_HALF_BLOCK
+                new_sprite.set_sprixel(nr, col, new_sprix)
             nr += 1
-        # new_sprite._sprixels = new_sprixels
         return new_sprite
 
     def dimension(self):
@@ -311,7 +324,8 @@ class Sprite(object):
             if width > max_width:
                 max_width = width
             height += 1
-        return [max_width, height]
+        self.size = [max_width, height]
+        return self.size
 
 
 class Vector2D:
