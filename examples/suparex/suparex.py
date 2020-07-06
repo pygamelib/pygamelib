@@ -11,7 +11,7 @@ from gamelib.Structures import GenericActionableStructure, Treasure
 from gamelib import Constants
 from gamelib import Utils
 from gamelib.Movable import Projectile
-from time import sleep
+from time import sleep, process_time
 from blessed import Terminal
 import _thread
 import random
@@ -45,6 +45,8 @@ brick_colors = [
     "\033[48;5;94m",
     "\033[48;5;136m",
 ]
+fps = {"last": process_time(), "count": 0, "sum": 0}
+
 
 # Sound effects
 jump_wave_obj = sa.WaveObject.from_wave_file(os.path.join("sfx", "panda-jump.wav"))
@@ -117,18 +119,18 @@ def title_screen(g):
                     "It is up to you to try your luck and trick the game or respawn "
                     "safely. You have 3 lives to complete your run.\n"
                     "\nAt the end of a level look for the portal to the next level. "
-                    "It looks like a cyclone: " + Graphics.Sprites.CYCLONE + "\n"
+                    "It looks like a cyclone: " + Graphics.Models.CYCLONE + "\n"
                     "\nTo increase your score, just move forward! The higher the level"
                     " the higher the score. Difficulty also inscrease as you earn less"
                     " time.\n"
                     "\nOh... there's also treasures that gives you time and/or points "
                     "and traps that takes times or score (or your life...)\n"
                     "\n\nGOOD LUCK PANDA!!\n\n"
-                    + Graphics.Sprites.WARNING
+                    + Graphics.Models.WARNING
                     + " This game relies on emojis for its "
                     "user interface. If you don't see a panda face between the "
                     "parenthesis ("
-                    + Graphics.Sprites.PANDA
+                    + Graphics.Models.PANDA
                     + "), it means that your terminal fonts do NOT support "
                     "emojis. This game won't display correctly. Try other fonts.\n\n"
                 )
@@ -145,7 +147,7 @@ def title_screen(g):
                 g.player.remaining_lives = 3
                 # Then reset the player model in case he died
                 g.player.model = (
-                    bg_color + Graphics.Sprites.PANDA + Graphics.Style.RESET_ALL
+                    bg_color + Graphics.Models.PANDA + Graphics.Style.RESET_ALL
                 )
                 g.clear_screen()
                 change_level([g])
@@ -164,11 +166,11 @@ def title_screen(g):
                 ):
                     extra = ""
                     if ranking == 1:
-                        extra = Graphics.Sprites.FIRST_PLACE_MEDAL
+                        extra = Graphics.Models.FIRST_PLACE_MEDAL
                     elif ranking == 2:
-                        extra = Graphics.Sprites.SECOND_PLACE_MEDAL
+                        extra = Graphics.Models.SECOND_PLACE_MEDAL
                     elif ranking == 3:
-                        extra = Graphics.Sprites.THIRD_PLACE_MEDAL
+                        extra = Graphics.Models.THIRD_PLACE_MEDAL
                     print(f"{' '*int(term_res/2-10)}{el[0]} : {el[1]} {extra}")
                     ranking += 1
                 input("\n\nHit the ENTER key to return to the main menu.\n")
@@ -197,6 +199,7 @@ def load_logo():
 
 
 def refresh_screen(g):
+    global fps
     # g.clear_screen()
     print(term.home)
     # print(
@@ -207,16 +210,16 @@ def refresh_screen(g):
     # print("\r")
     print(
         f"Score: {Utils.blue_bright(str(g.score))}{' '*12}"
-        f"{g.player.remaining_lives*Graphics.Sprites.PANDA}\r"
+        f"{g.player.remaining_lives*Graphics.Models.PANDA}\r"
     )
     # print("\r")
     status = ""
     if g.state == Constants.PAUSED:
         status = (
             " " * 5
-            + Graphics.Sprites.PAUSE_BUTTON
+            + Graphics.Models.PAUSE_BUTTON
             + " GAME PAUSED"
-            + Graphics.Sprites.PAUSE_BUTTON
+            + Graphics.Models.PAUSE_BUTTON
         )
     if g.timer >= 10:
         print(
@@ -229,6 +232,11 @@ def refresh_screen(g):
             f"Level: {g.current_level}{status}"
         )
     print("\r")
+    current = 1 / (process_time() - fps["last"])
+    fps["count"] += 1
+    fps["sum"] += current
+    print(f"FPS: {current:2.2f} Average: {fps['sum']/fps['count']:2.2f}\r")
+    fps["last"] = process_time()
     # print(
     #     f"Remaining traps: {g.current_board().available_traps} Scorers: "
     #     f"{g.current_board().treasures['scorers']['count']}/"
@@ -317,7 +325,7 @@ def ui_threaded(g):
                             name="zap",
                             range=5,
                             hit_model=bg_color
-                            + Graphics.Sprites.HIGH_VOLTAGE
+                            + Graphics.Models.HIGH_VOLTAGE
                             + Graphics.Style.RESET_ALL,
                             hit_callback=zap_callback,
                         )
@@ -337,12 +345,12 @@ def ui_threaded(g):
                     if trap.fire_timer <= 0.0:
                         proj = Projectile(
                             model=bg_color
-                            + Graphics.Sprites.BOMB
+                            + Graphics.Models.BOMB
                             + Graphics.Style.RESET_ALL,
                             name="boom",
                             range=2,
                             hit_model=bg_color
-                            + Graphics.Sprites.COLLISION
+                            + Graphics.Models.COLLISION
                             + Graphics.Style.RESET_ALL,
                             hit_callback=boom_callback,
                             is_aoe=True,
@@ -358,7 +366,7 @@ def ui_threaded(g):
         if g.player.pos[0] == g.current_board().size[1] - 1:
             g.timer = 0.0
         if round(g.timer, 1) <= 0.0:
-            g.player.model = bg_color + Graphics.Sprites.SKULL + Utils.Style.RESET_ALL
+            g.player.model = bg_color + Graphics.Models.SKULL + Utils.Style.RESET_ALL
             g.player.remaining_lives -= 1
             refresh_screen(g)
         if (
@@ -378,7 +386,7 @@ def ui_threaded(g):
                 g.current_board().clear_cell(g.player.pos[0], g.player.pos[1])
                 potential_respawns = g.neighbors(2, g.player)
                 g.player.model = (
-                    bg_color + Graphics.Sprites.PANDA + Graphics.Style.RESET_ALL
+                    bg_color + Graphics.Models.PANDA + Graphics.Style.RESET_ALL
                 )
                 for o in potential_respawns:
                     if o.type == "platform":
@@ -439,7 +447,7 @@ def change_level(params):
         player_starting_position=[25, 0],
         DISPLAY_SIZE_WARNINGS=False,
     )
-    board.ui_border_bottom = Graphics.Sprites.RADIOACTIVE + " "
+    board.ui_border_bottom = Graphics.Models.RADIOACTIVE + " "
     board.sprouted_count = 0
     # Let's use a nice curve to increase the trap number.
     board.available_traps = int(10 + 10 * g.current_level * 0.2)
@@ -522,7 +530,7 @@ def generate_treasure(b, row, column):
             b.place_item(
                 Treasure(
                     model=bg_color
-                    + Graphics.Sprites.TANABATA_TREE
+                    + Graphics.Models.TANABATA_TREE
                     + Graphics.Style.RESET_ALL,
                     value=25,
                     type="treasure.scorers",
@@ -534,7 +542,7 @@ def generate_treasure(b, row, column):
             b.place_item(
                 Treasure(
                     model=bg_color
-                    + Graphics.Sprites.HOURGLASS_NOT_DONE
+                    + Graphics.Models.HOURGLASS_NOT_DONE
                     + Graphics.Style.RESET_ALL,
                     value=15,
                     type="treasure.timers",
@@ -546,7 +554,7 @@ def generate_treasure(b, row, column):
             b.place_item(
                 Treasure(
                     model=bg_color
-                    + Graphics.Sprites.GEM_STONE
+                    + Graphics.Models.GEM_STONE
                     + Graphics.Style.RESET_ALL,
                     value=30,
                     type="treasure.diamond",
@@ -558,7 +566,7 @@ def generate_treasure(b, row, column):
             b.place_item(
                 Treasure(
                     model=bg_color
-                    + Graphics.Sprites.HEART_WITH_RIBBON
+                    + Graphics.Models.HEART_WITH_RIBBON
                     + Graphics.Style.RESET_ALL,
                     value=30,
                     type="treasure.1UP",
@@ -676,7 +684,7 @@ def generate_level(g, b):
             gap += 1
     b.place_item(
         GenericActionableStructure(
-            model=bg_color + Graphics.Sprites.CYCLONE + Utils.Style.RESET_ALL,
+            model=bg_color + Graphics.Models.CYCLONE + Utils.Style.RESET_ALL,
             type="exit",
             action=change_level,
             action_parameters=[g],
@@ -767,7 +775,7 @@ def sprout(p, *args):
     #     return None
     if p is not None:
         o = Wall(
-            model=bg_color + Graphics.Sprites.DECIDUOUS_TREE + Utils.Style.RESET_ALL,
+            model=bg_color + Graphics.Models.DECIDUOUS_TREE + Utils.Style.RESET_ALL,
             type="sprouted_trees",
         )
         o.pos = p.pos
@@ -814,7 +822,7 @@ g = Game()
 g.enable_partial_display = True
 g.partial_display_viewport = [10, int(term_res / 4)]
 g.current_level = 0
-g.player = Player(model=bg_color + Graphics.Sprites.PANDA + Graphics.Style.RESET_ALL)
+g.player = Player(model=bg_color + Graphics.Models.PANDA + Graphics.Style.RESET_ALL)
 g.player.name = "Zigomar"
 g.player.max_y = g.player.pos[0]
 g.player.dy = gravity_speed
@@ -908,7 +916,7 @@ while current_state != "eop":
                     range=2,
                     model=Utils.green_bright(bg_color + " *" + Utils.Style.RESET_ALL),
                     hit_model=bg_color
-                    + Graphics.Sprites.DECIDUOUS_TREE
+                    + Graphics.Models.DECIDUOUS_TREE
                     + Utils.Style.RESET_ALL,
                     hit_callback=sprout,
                 )
