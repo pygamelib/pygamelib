@@ -454,9 +454,9 @@ class Board:
         This method display the Board (as in print()), taking care of
         displaying the borders, and everything inside.
 
-        It uses the __str__ method of the item, which by default is
-        BoardItem.model. If you want to override this behavior you have
-        to subclass BoardItem.
+        It uses the __str__ method of the item, which by default uses (in order)
+        BoardItem.sprixel and (if no sprixel is defined) BoardItem.model. If you want to
+        override this behavior you have to subclass BoardItem.
         """
         # # Debug: print the overlapped matrix
         # for row in self._overlapped_matrix:
@@ -561,6 +561,14 @@ class Board:
                 ):
                     # Let's save the item on the hidden layer
                     self._overlapped_matrix[row][column] = self._matrix[row][column]
+                    if (
+                        item.sprixel is not None
+                        and self._overlapped_matrix[row][column].sprixel is not None
+                        and item.sprixel.is_bg_transparent
+                    ):
+                        item.sprixel.bg_color = self._overlapped_matrix[row][
+                            column
+                        ].sprixel.bg_color
                 # Place the item on the board
                 self._matrix[row][column] = item
                 # Take ownership of the item (if item doesn't have parent)
@@ -587,58 +595,103 @@ class Board:
                 f"it's out of the board boundaries ({self.size[0]}x{self.size[1]})."
             )
 
-    def move_complex(self, item, direction, step=1):
+    def _move_complex(self, item, direction, step=1):
         if isinstance(item, Movable) and item.can_move():
-            vect2d = (None, None)
-            if isinstance(direction, Core.Vector2D):
-                vect2d = (direction.row, direction.column)
-            else:
-                if direction == Constants.UP:
-                    vect2d = (-step, 0)
-                elif direction == Constants.DOWN:
-                    vect2d = (+step, 0)
-                elif direction == Constants.LEFT:
-                    vect2d = (0, -step)
-                elif direction == Constants.RIGHT:
-                    vect2d = (0, +step)
-                elif direction == Constants.DRUP:
-                    vect2d = (-step, +step)
-                elif direction == Constants.DRDOWN:
-                    vect2d = (+step, +step)
-                elif direction == Constants.DLUP:
-                    vect2d = (-step, -step)
-                elif direction == Constants.DLDOWN:
-                    vect2d = (+step, -step)
+            # If direction is not a vector, transform into one
+            if not isinstance(direction, Core.Vector2D):
+                direction = Core.Vector2D.from_direction(direction, step)
 
-            # This is just a PoC, we need to actually move things instead of swapping the
-            # buffers. We need to check for everything else also.
+            projected_position = item.position_as_vector() + direction
             if (
-                vect2d[0] is not None
-                and vect2d[1] is not None
-                and item.pos[0] + vect2d[0] >= 0
-                and item.pos[1] + vect2d[1] >= 0
-                and (item.pos[0] + vect2d[0] + item.height() - 1) < self.size[1]
-                and (item.pos[1] + vect2d[1] + item.width() - 1) < self.size[0]
+                projected_position is not None
+                and projected_position.row >= 0
+                and projected_position.column >= 0
+                and (projected_position.row + item.height() - 1) < self.size[1]
+                and (projected_position.column + item.width() - 1) < self.size[0]
             ):
-                for row in range(0, item.dimension[1], 1):
-                    for col in range(0, item.dimension[0], 1):
+                can_draw = True
+                for orow in range(0, item.dimension[1]):
+                    for ocol in range(0, item.dimension[0]):
+                        new_row = projected_position.row + orow
+                        new_column = projected_position.column + ocol
+                        # Check all items within the surface
+                        if isinstance(self._matrix[new_row][new_column], Actionable):
+                            if (
+                                isinstance(item, Player)
+                                and (
+                                    (
+                                        self._matrix[new_row][new_column].perm
+                                        == Constants.PLAYER_AUTHORIZED
+                                    )
+                                    or (
+                                        self._matrix[new_row][new_column].perm
+                                        == Constants.ALL_CHARACTERS_AUTHORIZED
+                                    )
+                                )
+                            ) or (
+                                isinstance(item, NPC)
+                                and (
+                                    (
+                                        self._matrix[new_row][new_column].perm
+                                        == Constants.NPC_AUTHORIZED
+                                    )
+                                    or (
+                                        self._matrix[new_row][new_column].perm
+                                        == Constants.ALL_CHARACTERS_AUTHORIZED
+                                    )
+                                )
+                                or (
+                                    self._matrix[new_row][new_column].perm
+                                    == Constants.ALL_MOVABLE_AUTHORIZED
+                                )
+                            ):
+                                self._matrix[new_row][new_column].activate()
+                        # Now I need to put the rest of the code here...
                         if (
-                            self._overlapped_matrix[item.pos[0] + row][
-                                item.pos[1] + col
-                            ]
-                            is not None
+                            not self._matrix[new_row][new_column].overlappable()
+                            and self._matrix[new_row][new_column].pickable()
+                            and isinstance(item, Movable)
+                            and item.has_inventory()
                         ):
-                            self.place_item(
+                            # Put the item in the inventory
+                            item.inventory.add_item(self._matrix[new_row][new_column])
+                            # And then clear the cell (this is usefull for the next one)
+                            self.clear_cell(new_row, new_column)
+                            # Finally we check if the destination is overlappable
+                        if (
+                            self._matrix[new_row][new_column].parent != item
+                            and not self._matrix[new_row][new_column].overlappable()
+                        ):
+                            can_draw = False
+                            break
+                if can_draw:
+                    for row in range(0, item.dimension[1], 1):
+                        for col in range(0, item.dimension[0], 1):
+                            if (
                                 self._overlapped_matrix[item.pos[0] + row][
                                     item.pos[1] + col
-                                ],
-                                item.pos[0] + row,
-                                item.pos[1] + col,
-                            )
-                            self._overlapped_matrix[item.pos[0] + row][
-                                item.pos[1] + col
-                            ] = None
-                self.place_item(item, item.pos[0] + vect2d[0], item.pos[1] + vect2d[1])
+                                ]
+                                is not None
+                            ):
+                                self.place_item(
+                                    self._overlapped_matrix[item.pos[0] + row][
+                                        item.pos[1] + col
+                                    ],
+                                    item.pos[0] + row,
+                                    item.pos[1] + col,
+                                )
+                                self._overlapped_matrix[item.pos[0] + row][
+                                    item.pos[1] + col
+                                ] = None
+                            # else:
+                            #     self.place_item(
+                            #         self.generate_void_cell(),
+                            #         item.pos[0] + row,
+                            #         item.pos[1] + col,
+                            #     )
+                    self.place_item(
+                        item, projected_position.row, projected_position.column,
+                    )
         else:
             raise HacObjectIsNotMovableException(
                 (
@@ -656,28 +709,12 @@ class Board:
             to the nearest integer (as move works with entire board cells).
          2 - route toward the right moving function depending if the item is complex or
             not.
-        """
-        if isinstance(direction, Core.Vector2D):
-            # If direction is a vector, round the numbers to the next integer.
-            direction.row = round(direction.row)
-            direction.column = round(direction.column)
-        if isinstance(item, BoardComplexItem):
-            return self.move_complex(item, direction, step)
-        else:
-            return self.move_simple(item, direction, step)
-
-    def move_simple(self, item, direction, step=1):
-        """
         Move an item in the specified direction for a number of steps.
-
-        Example::
-
-            board.move(player,Constants.UP,1)
 
         :param item: an item to move (it has to be a subclass of Movable)
         :type item: gamelib.Movable.Movable
         :param direction: a direction from :ref:`constants-module`
-        :type direction: gamelib.Constants
+        :type direction: gamelib.Constants or :class:`~gamelib.GFX.Core.Vector2D`
         :param step: the number of steps to move the item.
         :type step: int
 
@@ -688,15 +725,33 @@ class Board:
         HacObjectIsNotMovableException exception (see
         :class:`gamelib.HacExceptions.HacObjectIsNotMovableException`).
 
+        Example::
+
+            board.move(player,Constants.UP,1)
+
         .. Important:: if the move is successfull, an empty BoardItemVoid
             (see :class:`gamelib.BoardItem.BoardItemVoid`) will be put at the
             departure position (unless the movable item is over an overlappable
             item). If the movable item is over an overlappable item, the
             overlapped item is restored.
 
-        .. todo:: check all types!
+        .. Important:: Also important: If the direction is a
+           :class:`~gamelib.GFX.Core.Vector2D`, the values will be rounded to the
+           nearest integer (as move works with entire board cells). It allows for
+           movement accumulation before actually moving.
 
+        .. todo:: check all types!
         """
+        if isinstance(direction, Core.Vector2D):
+            # If direction is a vector, round the numbers to the next integer.
+            direction.row = round(direction.row)
+            direction.column = round(direction.column)
+        if isinstance(item, BoardComplexItem):
+            return self._move_complex(item, direction, step)
+        else:
+            return self._move_simple(item, direction, step)
+
+    def _move_simple(self, item, direction, step=1):
         if isinstance(item, Movable) and item.can_move():
 
             # if direction not in dir(Constants):
@@ -755,7 +810,7 @@ class Board:
                             )
                             or (
                                 self._matrix[new_row][new_column].perm
-                                == Constants.ALL_PLAYABLE_AUTHORIZED
+                                == Constants.ALL_CHARACTERS_AUTHORIZED
                             )
                         )
                     ) or (
@@ -767,7 +822,7 @@ class Board:
                             )
                             or (
                                 self._matrix[new_row][new_column].perm
-                                == Constants.ALL_PLAYABLE_AUTHORIZED
+                                == Constants.ALL_CHARACTERS_AUTHORIZED
                             )
                         )
                     ):
@@ -799,6 +854,7 @@ class Board:
                     if (
                         item.sprixel is not None
                         and self._matrix[new_row][new_column].sprixel is not None
+                        and item.sprixel.is_bg_transparent
                     ):
                         item.sprixel.bg_color = self._matrix[new_row][
                             new_column
