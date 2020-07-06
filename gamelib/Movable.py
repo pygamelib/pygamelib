@@ -28,11 +28,6 @@ class Movable(BoardItem):
     Thus this class implements BoardItem.can_move().
     However it does not implement BoardItem.pickable() or
     BoardItem.overlappable()
-
-    This class contains a private member called _overlapping.
-    This private member is used to store the reference to an overlappable
-    object while a movable occupy its position. The Board then restore the
-    overlapped object. You should let the Board class take care of that.
     """
 
     def __init__(self, **kwargs):
@@ -41,8 +36,6 @@ class Movable(BoardItem):
             self.step = 1
         else:
             self.step = kwargs["step"]
-        self._overlapping = None
-        self._overlapping_buffer = None
 
     def can_move(self):
         """
@@ -157,7 +150,7 @@ class Projectile(Movable):
         is_aoe=False,
         aoe_radius=0,
         parent=None,
-        *args
+        *args,
     ):
         if range % step != 0:
             raise HacException(
