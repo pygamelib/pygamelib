@@ -19,7 +19,7 @@ INSTALL_PACKAGES = open(requirements_path).read().splitlines()
 
 setuptools.setup(
     name="hac-game-lib",
-    version=Constants.HAC_GAME_LIB_VERSION,
+    version=Constants.PYGAMELIB_VERSION,
     author="Arnaud Dupuis",
     author_email="hyrule.astronomy.club@gmail.com",
     description="A small game development framework for teaching programming.",
@@ -28,12 +28,13 @@ setuptools.setup(
     install_requires=INSTALL_PACKAGES,
     url="https://astro.hyrul.es",
     packages=setuptools.find_packages(),
-    scripts=["hgl-base_game.py", "hgl-editor.py", "hgl-board-tester.py"],
-    keywords=["game", "development", "beginner"],
+    scripts=["hgl-editor.py", "hgl-board-tester.py"],
+    keywords=["game", "development", "beginner", "console", "terminal"],
     classifiers=[
         "Programming Language :: Python :: 3",
         "Programming Language :: Python :: 3.6",
         "Programming Language :: Python :: 3.7",
+        "Programming Language :: Python :: 3.8",
         "Development Status :: 4 - Beta",
         "Environment :: Console",
         "License :: OSI Approved :: GNU General Public License v3 (GPLv3)",
