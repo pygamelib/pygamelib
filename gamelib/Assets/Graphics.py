@@ -485,6 +485,8 @@ class GeometricShapes:
      * BLACK_UPPER_LEFT_TRIANGLE = \U000025E4
      * BLACK_UPPER_RIGHT_TRIANGLE = \U000025E5
      * WHITE_BULLET = \U000025E6
+     * BULLET = \U00002022
+     * RING_OPERATOR = \U00002218
      * SQUARE_WITH_LEFT_HALF_BLACK = \U000025E7
      * SQUARE_WITH_RIGHT_HALF_BLACK = \U000025E8
      * SQUARE_WITH_UPPER_LEFT_DIAGONAL_HALF_BLACK = \U000025E9
@@ -584,6 +586,8 @@ class GeometricShapes:
     BLACK_UPPER_LEFT_TRIANGLE = "\U000025E4"
     BLACK_UPPER_RIGHT_TRIANGLE = "\U000025E5"
     WHITE_BULLET = "\U000025E6"
+    BULLET = "\U00002022"
+    RING_OPERATOR = "\U00002218"
     SQUARE_WITH_LEFT_HALF_BLACK = "\U000025E7"
     SQUARE_WITH_RIGHT_HALF_BLACK = "\U000025E8"
     SQUARE_WITH_UPPER_LEFT_DIAGONAL_HALF_BLACK = "\U000025E9"
@@ -638,11 +642,11 @@ if _exitcode:
     clear_sequence = colorama.ansi.clear_screen()
 
 
-class Sprites:
+class Models:
 
-    """List of sprites (emojis by unicode denomination)
+    """List of models (emojis by unicode denomination)
 
-    Sprites are filtered emojis. This class  does not map the entire specification.
+    Models are filtered emojis. This class  does not map the entire specification.
     It is however a significant improvement over the gamelib.Sprites module (now
     deprecated).
     This class contains 1328 emojis (this is not the full list).
