@@ -70,7 +70,7 @@ The general process to submit a contribution is as follow:
 ### Security issues
 
 If you find a security vulnerability, do NOT open an issue. Email hyrule.astronomy.club+security@gmail.com instead.  
-Let's be honnest here, it is highly unlikely to happen but better safe than sorry.
+Let's be honest here, it is highly unlikely to happen but better safe than sorry.
 
 ### Bug reports
 
