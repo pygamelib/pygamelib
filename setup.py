@@ -1,5 +1,5 @@
 import setuptools
-import gamelib.Constants as Constants
+import pygamelib.constants as constants
 
 try:
     from pipenv.project import Project
@@ -18,8 +18,8 @@ requirements_path = convert_deps_to_pip(pipfile["packages"])
 INSTALL_PACKAGES = open(requirements_path).read().splitlines()
 
 setuptools.setup(
-    name="hac-game-lib",
-    version=Constants.PYGAMELIB_VERSION,
+    name="pygamelib",
+    version=constants.PYGAMELIB_VERSION,
     author="Arnaud Dupuis",
     author_email="hyrule.astronomy.club@gmail.com",
     description="A small game development framework for teaching programming.",
