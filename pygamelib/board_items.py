@@ -127,7 +127,7 @@ class BoardItem:
             gravity = Vector2D(9.81, 0)
             next_position = item.position_as_vector() + gravity.unit()
         """
-        return core.Vector2D(self.pos[0], self.pos[1])
+        return base.Vector2D(self.pos[0], self.pos[1])
 
     def row(self):
         """Convenience method to get the current stored row of the item.

@@ -10,6 +10,7 @@ from blessed import Terminal
 import uuid
 import random
 import json
+import readchar
 
 """
 The game module contains the core classes for a game:
@@ -622,8 +623,8 @@ class Board:
     def _move_complex(self, item, direction, step=1):
         if isinstance(item, board_items.Movable) and item.can_move():
             # If direction is not a vector, transform into one
-            if not isinstance(direction, core.Vector2D):
-                direction = core.Vector2D.from_direction(direction, step)
+            if not isinstance(direction, base.Vector2D):
+                direction = base.Vector2D.from_direction(direction, step)
 
             projected_position = item.position_as_vector() + direction
             if (
@@ -731,7 +732,7 @@ class Board:
         """
         Board.move() is a routing function. It does 2 things:
 
-         1 - If the direction is a :class:`~pygamelib.gfx.core.Vector2D`, round the
+         1 - If the direction is a :class:`~pygamelib.base.Vector2D`, round the
             values to the nearest integer (as move works with entire board cells).
          2 - route toward the right moving function depending if the item is complex or
             not.
@@ -740,7 +741,7 @@ class Board:
         :param item: an item to move (it has to be a subclass of Movable)
         :type item: pygamelib.board_items.Movable
         :param direction: a direction from :ref:`constants-module`
-        :type direction: pygamelib.constants or :class:`~pygamelib.gfx.core.Vector2D`
+        :type direction: pygamelib.constants or :class:`~pygamelib.base.Vector2D`
         :param step: the number of steps to move the item.
         :type step: int
 
@@ -762,13 +763,13 @@ class Board:
             overlapped item is restored.
 
         .. Important:: Also important: If the direction is a
-           :class:`~pygamelib.gfx.core.Vector2D`, the values will be rounded to the
+           :class:`~pygamelib.base.Vector2D`, the values will be rounded to the
            nearest integer (as move works with entire board cells). It allows for
            movement accumulation before actually moving.
 
         .. todo:: check all types!
         """
-        if isinstance(direction, core.Vector2D):
+        if isinstance(direction, base.Vector2D):
             # If direction is a vector, round the numbers to the next integer.
             direction.row = round(direction.row)
             direction.column = round(direction.column)
@@ -787,7 +788,7 @@ class Board:
 
             new_row = None
             new_column = None
-            if isinstance(direction, core.Vector2D):
+            if isinstance(direction, base.Vector2D):
                 new_row = item.pos[0] + direction.row
                 new_column = item.pos[1] + direction.column
             else:
@@ -1271,7 +1272,7 @@ class Game:
 
         .. note:: See `readkey` documentation in `readchar` package.
         """
-        return self.terminal.inkey()
+        return readchar.readkey()
 
     def load_config(self, filename, section="main"):
         """

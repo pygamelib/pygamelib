@@ -10,7 +10,7 @@ patterns.
 """
 import pygamelib.board_items as board_items
 import pygamelib.game as game
-import pygamelib.cConstants as constants
+import pygamelib.constants as constants
 import random
 import collections
 
