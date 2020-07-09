@@ -1,14 +1,14 @@
 ![Linux: Ok](https://img.shields.io/badge/Linux-Ok-green.svg "Linux: Ok")
 ![Windows: Ok](https://img.shields.io/badge/Windows-Ok-green.svg "Windows: Ok")
 ![Mac OS: Ok](https://img.shields.io/badge/Mac%20OS-Ok-green.svg "Mac OS: Ok")
-[![GPLv3 license](https://img.shields.io/badge/License-GPLv3-blue.svg)](http://perso.crans.org/besson/LICENSE.html)
+[![GPLv3 license](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0.txt)
 [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](http://makeapullrequest.com)
 [![Documentation Status](https://readthedocs.org/projects/hac-game-lib/badge/?version=latest)](https://hac-game-lib.readthedocs.io/en/latest/?badge=latest)
 [![CII Best Practices](https://bestpractices.coreinfrastructure.org/projects/2849/badge)](https://bestpractices.coreinfrastructure.org/projects/2849)
 [![CircleCI](https://circleci.com/gh/arnauddupuis/hac-game-lib.svg?style=svg)](https://circleci.com/gh/arnauddupuis/hac-game-lib)
 
-# hac-game-lib
-Hyrule Astronomy Club Game Library- base library for a game development
+# pygamelib
+A (not so) small library for terminal based game development.
 
 ## Introduction
 
