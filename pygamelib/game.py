@@ -2,7 +2,6 @@ import pygamelib.board_items as board_items
 import pygamelib.base as base
 import pygamelib.actuators as actuators
 import pygamelib.gfx.core as core
-import pygamelib.assets.structures as structures
 import pygamelib.constants as constants
 import pygamelib.assets.graphics as graphics
 
@@ -2160,20 +2159,20 @@ class Game:
             "type": obj.type,
         }
 
-        if isinstance(obj, structures.Wall):
+        if isinstance(obj, board_items.Wall):
             ref["inventory_space"] = obj.inventory_space()
-        elif isinstance(obj, structures.Treasure):
+        elif isinstance(obj, board_items.Treasure):
             ref["value"] = obj.value
             ref["inventory_space"] = obj.inventory_space()
-        elif isinstance(obj, structures.GenericActionableStructure) or isinstance(
-            obj, structures.GenericStructure
+        elif isinstance(obj, board_items.GenericActionableStructure) or isinstance(
+            obj, board_items.GenericStructure
         ):
             ref["value"] = obj.value
             ref["inventory_space"] = obj.inventory_space()
             ref["overlappable"] = obj.overlappable()
             ref["pickable"] = obj.pickable()
             ref["restorable"] = obj.restorable()
-        elif isinstance(obj, structures.Door):
+        elif isinstance(obj, board_items.Door):
             ref["value"] = obj.value
             ref["inventory_space"] = obj.inventory_space()
             ref["overlappable"] = obj.overlappable()
@@ -2235,9 +2234,9 @@ class Game:
         obj_keys = ref.keys()
         local_object = board_items.BoardItemVoid()
         if "Wall" in ref["object"]:
-            local_object = structures.Wall()
+            local_object = board_items.Wall()
         elif "Treasure" in ref["object"]:
-            local_object = structures.Treasure()
+            local_object = board_items.Treasure()
             if "value" in obj_keys:
                 local_object.value = ref["value"]
             # size is deprecated in favor of inventory_space.
@@ -2247,7 +2246,7 @@ class Game:
             if "inventory_space" in obj_keys:
                 local_object._inventory_space = ref["inventory_space"]
         elif "GenericStructure" in ref["object"]:
-            local_object = structures.GenericStructure()
+            local_object = board_items.GenericStructure()
             if "value" in obj_keys:
                 local_object.value = ref["value"]
             # size is deprecated in favor of inventory_space.
@@ -2261,7 +2260,7 @@ class Game:
             if "overlappable" in obj_keys:
                 local_object.set_overlappable(ref["overlappable"])
         elif "Door" in ref["object"]:
-            local_object = structures.Door()
+            local_object = board_items.Door()
             if "value" in obj_keys:
                 local_object.value = ref["value"]
             # size is deprecated in favor of inventory_space.
@@ -2277,7 +2276,7 @@ class Game:
             if "restorable" in obj_keys:
                 local_object.set_restorable(ref["restorable"])
         elif "GenericActionableStructure" in ref["object"]:
-            local_object = structures.GenericActionableStructure()
+            local_object = board_items.GenericActionableStructure()
             if "value" in obj_keys:
                 local_object.value = ref["value"]
             # size is deprecated in favor of inventory_space.
