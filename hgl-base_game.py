@@ -5,7 +5,6 @@ import pygamelib.board_items as board_items
 import pygamelib.assets.graphics as graphics
 import pygamelib.constants as cst
 import pygamelib.actuators as actuators
-import pygamelib.assets.structures as structures
 import pygamelib.base as base
 import time
 import sys
@@ -185,29 +184,29 @@ npc1.actuator = actuators.PathActuator(
 game.add_board(1, lvl1)
 game.add_board(2, lvl2)
 
-t = structures.Treasure(model=sprite_treasure, name="Cool treasure", type="gem")
-money_bag = structures.Treasure(model=sprite_treasure2, name="money", value=20)
+t = board_items.Treasure(model=sprite_treasure, name="Cool treasure", type="gem")
+money_bag = board_items.Treasure(model=sprite_treasure2, name="money", value=20)
 
-tree = structures.GenericStructure(model=sprite_tree)
+tree = board_items.GenericStructure(model=sprite_tree)
 tree.set_overlappable(False)
 tree.set_pickable(False)
 
-portal2 = structures.GenericActionableStructure(model=sprite_portal)
+portal2 = board_items.GenericActionableStructure(model=sprite_portal)
 portal2.set_overlappable(False)
 portal2.action = change_current_level
 portal2.action_parameters = [game, 2]
 
-portal1 = structures.GenericActionableStructure(model=sprite_portal)
+portal1 = board_items.GenericActionableStructure(model=sprite_portal)
 portal1.set_overlappable(False)
 portal1.action = change_current_level
 portal1.action_parameters = [game, 1]
 
-life_heart = structures.GenericActionableStructure(model=sprite_heart, name="life_100")
+life_heart = board_items.GenericActionableStructure(model=sprite_heart, name="life_100")
 life_heart.set_overlappable(True)
 life_heart.action = add_hp
 life_heart.action_parameters = [game, 100]
 
-life_heart_minor = structures.GenericActionableStructure(
+life_heart_minor = board_items.GenericActionableStructure(
     model=sprite_heart_minor, name="life_25"
 )
 life_heart_minor.set_overlappable(True)
@@ -217,24 +216,24 @@ life_heart_minor.action_parameters = [game, 25]
 game.player = p
 
 # Adding walls to level 1
-lvl1.place_item(structures.Wall(model=sprite_wall), 2, 3)
-lvl1.place_item(structures.Wall(model=sprite_wall), 2, 2)
-lvl1.place_item(structures.Wall(model=sprite_wall), 2, 1)
-lvl1.place_item(structures.Wall(model=sprite_wall), 2, 0)
-lvl1.place_item(structures.Wall(model=sprite_wall), 3, 3)
-lvl1.place_item(structures.Wall(model=sprite_wall), 4, 3)
-lvl1.place_item(structures.Wall(model=sprite_wall), 5, 3)
-lvl1.place_item(structures.Wall(model=sprite_wall), 6, 3)
-lvl1.place_item(structures.Wall(model=sprite_wall), 6, 2)
-lvl1.place_item(structures.Wall(model=sprite_wall), 6, 1)
-lvl1.place_item(structures.Wall(model=sprite_wall), 7, 1)
-lvl1.place_item(structures.Wall(model=sprite_wall), 8, 1)
-lvl1.place_item(structures.Wall(model=sprite_wall), 8, 3)
-lvl1.place_item(structures.Wall(model=sprite_wall), 9, 3)
-lvl1.place_item(structures.Wall(model=sprite_wall), 10, 3)
-lvl1.place_item(structures.Wall(model=sprite_wall), 10, 2)
-lvl1.place_item(structures.Wall(model=sprite_wall), 10, 1)
-lvl1.place_item(structures.Wall(model=sprite_wall), 10, 0)
+lvl1.place_item(board_items.Wall(model=sprite_wall), 2, 3)
+lvl1.place_item(board_items.Wall(model=sprite_wall), 2, 2)
+lvl1.place_item(board_items.Wall(model=sprite_wall), 2, 1)
+lvl1.place_item(board_items.Wall(model=sprite_wall), 2, 0)
+lvl1.place_item(board_items.Wall(model=sprite_wall), 3, 3)
+lvl1.place_item(board_items.Wall(model=sprite_wall), 4, 3)
+lvl1.place_item(board_items.Wall(model=sprite_wall), 5, 3)
+lvl1.place_item(board_items.Wall(model=sprite_wall), 6, 3)
+lvl1.place_item(board_items.Wall(model=sprite_wall), 6, 2)
+lvl1.place_item(board_items.Wall(model=sprite_wall), 6, 1)
+lvl1.place_item(board_items.Wall(model=sprite_wall), 7, 1)
+lvl1.place_item(board_items.Wall(model=sprite_wall), 8, 1)
+lvl1.place_item(board_items.Wall(model=sprite_wall), 8, 3)
+lvl1.place_item(board_items.Wall(model=sprite_wall), 9, 3)
+lvl1.place_item(board_items.Wall(model=sprite_wall), 10, 3)
+lvl1.place_item(board_items.Wall(model=sprite_wall), 10, 2)
+lvl1.place_item(board_items.Wall(model=sprite_wall), 10, 1)
+lvl1.place_item(board_items.Wall(model=sprite_wall), 10, 0)
 
 # Now adding trees
 for i in range(4, 40, 1):
@@ -246,7 +245,7 @@ for i in range(4, 40, 1):
 
 lvl1.place_item(t, 3, 2)
 lvl1.place_item(
-    structures.Treasure(model=sprite_treasure, name="Cool treasure", type="gem"), 9, 0,
+    board_items.Treasure(model=sprite_treasure, name="Cool treasure", type="gem"), 9, 0,
 )
 lvl1.place_item(portal2, 19, 39)
 lvl1.place_item(life_heart, 15, 10)
@@ -433,7 +432,7 @@ while key != "q":
                     ),
                 )
                 game.player.inventory.add_item(
-                    structures.Treasure(
+                    board_items.Treasure(
                         model=graphics.Models.RAINBOW,
                         value=1000,
                         name="Rainbow Prize",
@@ -456,7 +455,7 @@ while key != "q":
                     )
                 )
                 game.player.inventory.add_item(
-                    structures.Treasure(
+                    board_items.Treasure(
                         model=sprite_npc2,
                         value=-1000,
                         name="Looser poop",
