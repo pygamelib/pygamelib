@@ -9,7 +9,9 @@ from blessed import Terminal
 import uuid
 import random
 import json
-import readchar
+
+# We need to ignore that one as it is used by user to compare keys (i.e Utils.key.UP)
+from readchar import readkey, key  # noqa: F401
 
 """
 The game module contains the core classes for a game:
@@ -1271,7 +1273,7 @@ class Game:
 
         .. note:: See `readkey` documentation in `readchar` package.
         """
-        return readchar.readkey()
+        return readkey()
 
     def load_config(self, filename, section="main"):
         """
@@ -2537,7 +2539,7 @@ class Inventory:
             for item in game.player.inventory.search('mighty'):
                 print(f"This is a mighty item: {item.name}")
         """
-        return [item for key, item in self.__items.items() if query in key]
+        return [item for ikey, item in self.__items.items() if query in ikey]
 
     def get_item(self, name):
         """Return the item corresponding to the name given in argument.
