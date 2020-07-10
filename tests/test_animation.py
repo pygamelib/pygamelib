@@ -1,6 +1,6 @@
-from gamelib.Animation import Animation
-from gamelib.Characters import NPC
-import gamelib.Constants as Constants
+import pygamelib.gfx.core as gfx_core
+import pygamelib.board_items as pgl_board_items
+import pygamelib.constants as pgl_constants
 import unittest
 
 
@@ -9,39 +9,39 @@ class TestAnimation(unittest.TestCase):
         pass
 
     def test_create_animation(self):
-        self.item = NPC(model="-o-", name="Dancer")
-        self.animation = Animation(
+        self.item = pgl_board_items.NPC(model="-o-", name="Dancer")
+        self.animation = gfx_core.Animation(
             parent=self.item, refresh_screen=self.redraw, display_time=0.5
         )
         self.assertEqual(self.item.name, self.animation.parent.name)
 
     def test_start(self):
-        self.item = NPC(model="-o-", name="Dancer")
-        self.animation = Animation(
+        self.item = pgl_board_items.NPC(model="-o-", name="Dancer")
+        self.animation = gfx_core.Animation(
             parent=self.item, refresh_screen=self.redraw, display_time=0.5
         )
         self.animation.start()
-        self.assertEqual(self.animation.state, Constants.RUNNING)
+        self.assertEqual(self.animation.state, pgl_constants.RUNNING)
 
     def test_pause(self):
-        self.item = NPC(model="-o-", name="Dancer")
-        self.animation = Animation(
+        self.item = pgl_board_items.NPC(model="-o-", name="Dancer")
+        self.animation = gfx_core.Animation(
             parent=self.item, refresh_screen=self.redraw, display_time=0.5
         )
         self.animation.pause()
-        self.assertEqual(self.animation.state, Constants.PAUSED)
+        self.assertEqual(self.animation.state, pgl_constants.PAUSED)
 
     def test_stop(self):
-        self.item = NPC(model="-o-", name="Dancer")
-        self.animation = Animation(
+        self.item = pgl_board_items.NPC(model="-o-", name="Dancer")
+        self.animation = gfx_core.Animation(
             parent=self.item, refresh_screen=self.redraw, display_time=0.5
         )
         self.animation.stop()
-        self.assertEqual(self.animation.state, Constants.STOPPED)
+        self.assertEqual(self.animation.state, pgl_constants.STOPPED)
 
     def test_add_frame(self):
-        self.item = NPC(model="-o-", name="Dancer")
-        self.animation = Animation(
+        self.item = pgl_board_items.NPC(model="-o-", name="Dancer")
+        self.animation = gfx_core.Animation(
             parent=self.item, refresh_screen=self.redraw, display_time=0.5
         )
         self.animation.add_frame("\\o-")
@@ -50,8 +50,8 @@ class TestAnimation(unittest.TestCase):
         self.assertTrue("must be a string" in str(context.exception))
 
     def test_search_frame(self):
-        self.item = NPC(model="-o-", name="Dancer")
-        self.animation = Animation(
+        self.item = pgl_board_items.NPC(model="-o-", name="Dancer")
+        self.animation = gfx_core.Animation(
             parent=self.item, refresh_screen=self.redraw, display_time=0.5
         )
         self.animation.add_frame("-o-")
@@ -64,8 +64,8 @@ class TestAnimation(unittest.TestCase):
         self.assertTrue("must be a string" in str(context.exception))
 
     def test_remove_frame(self):
-        self.item = NPC(model="-o-", name="Dancer")
-        self.animation = Animation(
+        self.item = pgl_board_items.NPC(model="-o-", name="Dancer")
+        self.animation = gfx_core.Animation(
             parent=self.item, refresh_screen=self.redraw, display_time=0.5
         )
         self.animation.add_frame("-o-")
@@ -85,8 +85,8 @@ class TestAnimation(unittest.TestCase):
         self.assertEqual(self.animation.next_frame(), "/o/")
 
     def test_current_frame(self):
-        self.item = NPC(model="-o-", name="Dancer")
-        self.animation = Animation(
+        self.item = pgl_board_items.NPC(model="-o-", name="Dancer")
+        self.animation = gfx_core.Animation(
             parent=self.item, refresh_screen=self.redraw, display_time=0.5
         )
         self.animation.add_frame("-o-")
@@ -98,8 +98,8 @@ class TestAnimation(unittest.TestCase):
         self.assertEqual(self.animation.current_frame(), "\\o-")
 
     def test_next_frame(self):
-        self.item = NPC(model="-o-", name="Dancer")
-        self.animation = Animation(
+        self.item = pgl_board_items.NPC(model="-o-", name="Dancer")
+        self.animation = gfx_core.Animation(
             parent=self.item, refresh_screen=self.redraw, display_time=0.5
         )
         self.animation.add_frame("-o-")
@@ -119,8 +119,8 @@ class TestAnimation(unittest.TestCase):
         )
 
     def test_play_all(self):
-        self.item = NPC(model="-o-", name="Dancer")
-        self.animation = Animation(
+        self.item = pgl_board_items.NPC(model="-o-", name="Dancer")
+        self.animation = gfx_core.Animation(
             parent=self.item, refresh_screen=self.redraw, display_time=0.5
         )
         self.animation.add_frame("-o-")
@@ -132,7 +132,7 @@ class TestAnimation(unittest.TestCase):
         self.assertFalse(self.animation.play_all())
         self.animation.stop()
         self.assertFalse(self.animation.play_all())
-        self.animation = Animation(
+        self.animation = gfx_core.Animation(
             parent="breaking", refresh_screen=self.redraw, display_time=0.5
         )
         with self.assertRaises(Exception) as context:
@@ -141,7 +141,7 @@ class TestAnimation(unittest.TestCase):
             "needs to be a sub class of BoardItem" in str(context.exception)
         )
 
-        self.animation = Animation(
+        self.animation = gfx_core.Animation(
             parent=self.item, refresh_screen="breaking", display_time=0.5
         )
         with self.assertRaises(Exception) as context:

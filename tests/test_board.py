@@ -1,19 +1,19 @@
-from gamelib.Board import Board
-from gamelib.BoardItem import BoardItem, BoardItemVoid
-from gamelib.HacExceptions import HacOutOfBoardBoundException
+import pygamelib.game as pgl_game
+import pygamelib.base as pgl_base
+import pygamelib.board_items as pgl_board_items
 import unittest
 
 
 class TestBoard(unittest.TestCase):
     def test_create_board(self):
-        self.board = Board(
+        self.board = pgl_game.Board(
             name="test_board", size=[10, 10], player_starting_position=[5, 5]
         )
         self.assertEqual(self.board.name, "test_board")
 
     def test_sanity_size_is_list(self):
         with self.assertRaises(Exception) as context:
-            self.board = Board(
+            self.board = pgl_game.Board(
                 name="test_board", size="bad", player_starting_position=[5, 5]
             )
 
@@ -21,7 +21,7 @@ class TestBoard(unittest.TestCase):
 
     def test_sanity_size_has_two_elements(self):
         with self.assertRaises(Exception) as context:
-            self.board = Board(
+            self.board = pgl_game.Board(
                 name="test_board", size=["one"], player_starting_position=[5, 5]
             )
 
@@ -29,7 +29,7 @@ class TestBoard(unittest.TestCase):
 
     def test_sanity_size_element_one_int(self):
         with self.assertRaises(Exception) as context:
-            self.board = Board(
+            self.board = pgl_game.Board(
                 name="test_board", size=["one", "two"], player_starting_position=[5, 5]
             )
 
@@ -37,7 +37,7 @@ class TestBoard(unittest.TestCase):
 
     def test_sanity_size_element_two_int(self):
         with self.assertRaises(Exception) as context:
-            self.board = Board(
+            self.board = pgl_game.Board(
                 name="test_board", size=[10, "two"], player_starting_position=[5, 5]
             )
 
@@ -45,64 +45,66 @@ class TestBoard(unittest.TestCase):
 
     def test_sanity_name_string(self):
         with self.assertRaises(Exception) as context:
-            self.board = Board(name=100, size=[10, 10], player_starting_position=[5, 5])
+            self.board = pgl_game.Board(
+                name=100, size=[10, 10], player_starting_position=[5, 5]
+            )
 
         self.assertTrue("must be a string" in str(context.exception))
 
     def test_sanity_ui_border_bottom_string(self):
         with self.assertRaises(Exception) as context:
-            self.board = Board(name=100, size=[10, 10], ui_border_bottom=[])
+            self.board = pgl_game.Board(name=100, size=[10, 10], ui_border_bottom=[])
 
         self.assertTrue("must be a string" in str(context.exception))
 
     def test_sanity_ui_border_top_string(self):
         with self.assertRaises(Exception) as context:
-            self.board = Board(name=100, size=[10, 10], ui_border_top=[])
+            self.board = pgl_game.Board(name=100, size=[10, 10], ui_border_top=[])
 
         self.assertTrue("must be a string" in str(context.exception))
 
     def test_sanity_ui_border_left_string(self):
         with self.assertRaises(Exception) as context:
-            self.board = Board(name=100, size=[10, 10], ui_border_left=[])
+            self.board = pgl_game.Board(name=100, size=[10, 10], ui_border_left=[])
 
         self.assertTrue("must be a string" in str(context.exception))
 
     def test_sanity_ui_border_right_string(self):
         with self.assertRaises(Exception) as context:
-            self.board = Board(name=100, size=[10, 10], ui_border_right=[])
+            self.board = pgl_game.Board(name=100, size=[10, 10], ui_border_right=[])
 
         self.assertTrue("must be a string" in str(context.exception))
 
     def test_sanity_ui_board_void_cell_string(self):
         with self.assertRaises(Exception) as context:
-            self.board = Board(name=100, size=[10, 10], ui_board_void_cell=[])
+            self.board = pgl_game.Board(name=100, size=[10, 10], ui_board_void_cell=[])
 
         self.assertTrue("must be a string" in str(context.exception))
 
     def test_item(self):
-        self.board = Board(
+        self.board = pgl_game.Board(
             name="test_board", size=[10, 10], player_starting_position=[5, 5]
         )
-        self.placed_item = BoardItem()
+        self.placed_item = pgl_board_items.BoardItem()
 
         self.board.place_item(self.placed_item, 1, 1)
         self.returned_item = self.board.item(1, 1)
         self.assertEqual(self.placed_item, self.returned_item)
 
-        with self.assertRaises(HacOutOfBoardBoundException) as excinfo:
+        with self.assertRaises(pgl_base.PglOutOfBoardBoundException) as excinfo:
             self.board.item(15, 15)
         self.assertTrue("out of the board boundaries" in str(excinfo.exception))
 
     def test_clear_cell(self):
-        self.board = Board(
+        self.board = pgl_game.Board(
             name="test_board", size=[10, 10], player_starting_position=[5, 5]
         )
-        self.placed_item = BoardItem()
+        self.placed_item = pgl_board_items.BoardItem()
         self.board.place_item(item=self.placed_item, row=1, column=1)
-        self.assertIsInstance(self.board.item(1, 1), BoardItem)
+        self.assertIsInstance(self.board.item(1, 1), pgl_board_items.BoardItem)
 
         self.board.clear_cell(1, 1)
-        self.assertIsInstance(self.board.item(1, 1), BoardItemVoid)
+        self.assertIsInstance(self.board.item(1, 1), pgl_board_items.BoardItemVoid)
 
 
 if __name__ == "__main__":
