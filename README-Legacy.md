@@ -32,16 +32,15 @@ If you want to install system wide, not just for your current user, remove the -
 
 ## Convert from the hac-game-lib to pygamelib
 
-The files and directories naming are now more "pythonesque", and we used the fact that lower casing all names was going
-to break everything to reduce the proliferation of modules with just one class. We rationalized a bit.
+The files and directories naming are now more aligned with [PEP 8](http://www.python.org/dev/peps/pep-0008/#package-and-module-names) and [PEP 423](https://www.python.org/dev/peps/pep-0423/). 
+We used the fact that renaming and restructuring was going to break everything to reduce the proliferation of modules with just one class. We rationalized a bit.
 
 So without further ado:
 
  * gamelib.Game, gamelib.Board, gamelib.Inventory are now unified into **pygamelib.game**.
  * gamelib.HacExceptions and gamelib.Utils are now unified into **pygamelib.base**. Hac prefix was replaced by Pgl but for convenience mirror classes were added to not break existing games.
- * gamelib.BoardItems, gamelib.Movable, gamelib.Immovable, gamelib.Characters are now unified into **pygamelib.board_items**.
+ * gamelib.BoardItems, gamelib.Movable, gamelib.Immovable, gamelib.Characters and gamelib.Structures are now unified into **pygamelib.board_items**.
  * gamelib.Actuators.Actuator, gamelib.Actuators.SimpleActuators, gamelib.Actuators.AdvancedActuators are now unified into **pygamelib.actuators**.
- * gamelib.Structures was moved to **pygamelib.assets.structures**.
  * gamelib.Sprites was deprecated in favor of gamelib.Assets.Graphics.Sprites and is now removed.
  * gamelib.Assets is now **pygamelib.assets**.
  * gamelib.Assets.Graphics is now **pygamelib.assets.graphics**.
@@ -50,7 +49,8 @@ So without further ado:
 The gamelib.Utils module is the one that is probably going to require the most attention. It is being exploded and removed.
 
  * The colored squares and rectangle are now in pygamelib.assets.graphics with the exact same name.
- * 
+ * The coloring text functions have been moved to a new Text class in pygamelib.base.
+ * the get_key() function was moved to 
 
 There is also new modules and features but please see the release notes of [pygamelib](https://pypi.org/project/pygamelib/).
 
