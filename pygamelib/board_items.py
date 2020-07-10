@@ -50,7 +50,7 @@ class BoardItem:
     :type model: str
     :param parent: The parent object of the board item. Usually a Board or Game object.
 
-    ..important:: Starting with version 1.2.0 and introduction of complex items,
+    .. important:: Starting with version 1.2.0 and introduction of complex items,
        BoardItems have a size. That size **CANNOT** be set. It is always 1x1.
        This is because a BoardItem always takes 1 cell, regardless of its actual number
        of characters. Python does not really provide a way to prevent changing that
@@ -1537,3 +1537,17 @@ class Door(GenericStructure):
             self.set_restorable(True)
         else:
             self.set_restorable(kwargs["restorable"])
+
+
+class Tile(BoardComplexItem):
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+
+    def overlappable(self):
+        return True
+
+    def can_move(self):
+        return False
+
+    def pickable(self):
+        return False

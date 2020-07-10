@@ -6,6 +6,16 @@ This module contains the simple actuators classes.
 Simple actuators are movement related one. They allow for predetermined movements
 patterns.
 
+.. autosummary::
+   :toctree: .
+
+    Actuator
+    Behavioral
+    RandomActuator
+    PathActuator
+    PatrolActuator
+    UnidirectionalActuator
+    PathFinder
 
 """
 import pygamelib.board_items as board_items

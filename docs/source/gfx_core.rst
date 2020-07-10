@@ -1,9 +1,9 @@
-.. _actuators-module:
+.. _gfx_core-module:
 
-actuators
-=========
+core
+====
 
-.. automodule:: pygamelib.actuators
+.. automodule:: pygamelib.gfx.core
     :members:
     :inherited-members:
     :undoc-members:

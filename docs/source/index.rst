@@ -1,24 +1,16 @@
-Hyrule Astronomy Club - hac-game-lib - documentation
-====================================================
+pygamelib - documentation
+=========================
 
 .. toctree::
-   :caption: Contents:
+   :caption: Contents (API reference):
 
-   board
-   boarditem
-   characters
+   actuators
+   assets
+   base
+   board_items
    constants
    game
-   exceptions
-   immovable
-   inventory
-   movable
-   graphics
-   sprites
-   structures
-   utils
-   actuators
-   animation
+   gfx
    authors
    history
 
@@ -40,11 +32,11 @@ Introduction
 ^^^^^^^^^^^^
 
 First of all, his module is
-exclusively compatible with python 3.
+exclusively compatible with python 3.6+ (f-string rules).
 
 The core concept is that it revolve
-around the :ref:`game-module` object,
-the :ref:`board-module` object and the
+around the :class:`~pygamelib.game.Game` object,
+the :class:`~pygamelib.game.Board` object and the
 derivatives of :ref:`boarditem-module`.
 
 Here is an example of what the current version allow to build:

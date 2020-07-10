@@ -1,9 +1,9 @@
-.. _actuators-module:
+.. _gfx_particles-module:
 
-actuators
+particles
 =========
 
-.. automodule:: pygamelib.actuators
+.. automodule:: pygamelib.gfx.particles
     :members:
     :inherited-members:
     :undoc-members:

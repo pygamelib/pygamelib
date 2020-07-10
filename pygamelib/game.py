@@ -1,18 +1,3 @@
-import pygamelib.board_items as board_items
-import pygamelib.base as base
-import pygamelib.actuators as actuators
-import pygamelib.gfx.core as core
-import pygamelib.constants as constants
-import pygamelib.assets.graphics as graphics
-
-from blessed import Terminal
-import uuid
-import random
-import json
-
-# We need to ignore that one as it is used by user to compare keys (i.e Utils.key.UP)
-from readchar import readkey, key  # noqa: F401
-
 """
 The game module contains the core classes for a game:
 
@@ -32,8 +17,21 @@ The Board class is the base class for all levels.
    Board
    Game
    Inventory
-
 """
+import pygamelib.board_items as board_items
+import pygamelib.base as base
+import pygamelib.actuators as actuators
+import pygamelib.gfx.core as core
+import pygamelib.constants as constants
+import pygamelib.assets.graphics as graphics
+
+from blessed import Terminal
+import uuid
+import random
+import json
+
+# We need to ignore that one as it is used by user to compare keys (i.e Utils.key.UP)
+from readchar import readkey, key  # noqa: F401
 
 
 class Board:
@@ -737,6 +735,7 @@ class Board:
             values to the nearest integer (as move works with entire board cells).
          2 - route toward the right moving function depending if the item is complex or
             not.
+
         Move an item in the specified direction for a number of steps.
 
         :param item: an item to move (it has to be a subclass of Movable)
@@ -749,9 +748,8 @@ class Board:
         If the number of steps is greater than the Board, the item will
         be move to the maximum possible position.
 
-        If the item is not a subclass of Movable, an
-        PglObjectIsNotMovableException exception (see
-        :class:`pygamelib.base.PglObjectIsNotMovableException`).
+        If the item is not a subclass of Movable, an PglObjectIsNotMovableException
+        exception (see :class:`pygamelib.base.PglObjectIsNotMovableException`).
 
         Example::
 
@@ -769,6 +767,7 @@ class Board:
            movement accumulation before actually moving.
 
         .. todo:: check all types!
+
         """
         if isinstance(direction, base.Vector2D):
             # If direction is a vector, round the numbers to the next integer.

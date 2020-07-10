@@ -1,8 +1,3 @@
-import pygamelib.constants as constants
-import pygamelib.gfx.core as gfx_core
-import math
-from colorama import Fore, Back, Style, init
-
 """
 The Game.py module has only one class: Game. It is what could be called the game engine.
 It holds a lot of methods that helps taking care of some complex mechanics behind the
@@ -20,16 +15,19 @@ It is the base class for all levels.
 .. autosummary::
    :toctree: .
 
-   Text
-   HacException
-   HacInvalidLevelException
-   HacInvalidTypeException
-   HacObjectIsNotMovableException
-   HacOutOfBoardBoundException
-   Vector2D
    Math
-
+   PglException
+   PglInvalidLevelException
+   PglInvalidTypeException
+   PglObjectIsNotMovableException
+   PglOutOfBoardBoundException
+   Vector2D
+   Text
 """
+import pygamelib.constants as constants
+import pygamelib.gfx.core as gfx_core
+import math
+from colorama import Fore, Back, Style, init
 
 # Initialize terminal colors for colorama.
 init()

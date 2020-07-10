@@ -1,9 +1,9 @@
-.. _actuators-module:
+.. _base-module:
 
-actuators
-=========
+base
+====
 
-.. automodule:: pygamelib.actuators
+.. automodule:: pygamelib.base
     :members:
     :inherited-members:
     :undoc-members:

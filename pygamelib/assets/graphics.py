@@ -7,7 +7,7 @@ The Graphics module contains the following classes:
 .. autosummary::
    :toctree: .
 
-    Sprites
+    Models
     Blocks
     BoxDrawings
     GeometricShapes
@@ -23,7 +23,7 @@ This module also import colorama. All styling features are accessible through:
 
 For convenience, the different entities are scattered in grouping classes:
 
- * All emojis are in the Sprites class.
+ * All emojis are in the Models class.
  * The UI/box drawings are grouped into the BoxDrawings class.
  * The block glyphs are in the Blocks class.
  * The geometric shapes are in the GeometricShapes class.

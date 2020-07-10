@@ -1,9 +1,9 @@
 .. _game-module:
 
-Game
+game
 ====
 
-.. automodule:: gamelib.Game
+.. automodule:: pygamelib.game
     :members:
     :inherited-members:
     :undoc-members:
