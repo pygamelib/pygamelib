@@ -35,15 +35,42 @@ init()
 
 class Text:
     """
+    .. versionadded:: 1.2.0
+
     The Text class is a collection of text formating and display static methods.
+
+    You can either instantiate an object or use the static methods.
+
+    The Text object allow for easy text manipulation through its collection of
+    independent attributes. They help to set the text, its style and the foreground and
+    background colors.
+
+    The Text object can generate a :class:`~pygamelib.gfx.core.Sprite` to represent
+    itself. This is particularly useful to the place text on the game
+    :class:`~pygamelib.game.Board`.
+
+    :param text: The text to manipulate
+    :type text: str
+    :param fg_color: The foreground color for the text.
+    :type fg_color: str
+    :param bg_color: The background color for the text.
+    :type bg_color: str
+    :param style: The style for the text.
+    :type style: str
     """
 
     def __init__(self, text="", fg_color="", bg_color="", style=""):
         self.text = text
+        """The text attribute. It needs to be a str."""
         self.fg_color = fg_color
+        """The fg_color attribute sets the foreground color. It needs to be a str."""
         self.bg_color = bg_color
+        """The bg_color attribute sets the background color. It needs to be a str."""
         self.style = style
+        """The style attribute sets the style of the text. It needs to be a str."""
         self.parent = None
+        """This object's parent. It needs to be a
+        :class:`~pygamelib.board_items.BoardItem`."""
         self._sprite = None
         self._item = None
 
@@ -81,7 +108,7 @@ class Text:
 
         Example::
 
-            Utils.warn("This is a warning.")
+            base.Text.warn("This is a warning.")
         """
         print(Fore.BLACK + Back.YELLOW + "WARNING" + Style.RESET_ALL + ": " + message)
 
@@ -97,7 +124,7 @@ class Text:
 
         Example::
 
-            Utils.fatal("|x_x|")
+            base.Text.fatal("|x_x|")
         """
         print(
             Fore.WHITE
@@ -120,7 +147,7 @@ class Text:
 
         Example::
 
-            Utils.info("This is a very informative message.")
+            base.Text.info("This is a very informative message.")
         """
         print(Fore.WHITE + Back.BLUE + "INFO" + Style.RESET_ALL + ": " + message)
 
@@ -136,7 +163,7 @@ class Text:
 
         Example::
 
-            Utils.debug("This is probably going to success, eventually...")
+            base.Text.debug("This is probably going to success, eventually...")
         """
         print(
             Fore.BLUE
@@ -157,7 +184,7 @@ class Text:
 
         Example::
 
-            Utils.print_white_on_red("This is bright!")
+            base.Text.print_white_on_red("This is bright!")
         """
         print(Fore.WHITE + Back.RED + message + Style.RESET_ALL)
 
@@ -433,6 +460,8 @@ class HacInventoryException(PglInventoryException):
 class Vector2D:
     """A 2D vector class.
 
+    .. versionadded:: 1.2.0
+
     Contrary to the rest of the library Vector2D uses floating point numbers for its
     coordinates/direction/orientation. However since the rest of the library uses
     integers, the numbers are rounded to 2 decimals.
@@ -447,6 +476,12 @@ class Vector2D:
      - y is equivalent to row
 
     Everything else is the same.
+
+    Vectors can be printed and supports basic operations:
+
+     - addition
+     - substraction
+     - multiplication
 
     :param row: The row/y parameter.
     :type row: int
@@ -467,6 +502,9 @@ class Vector2D:
         self.__row = row
         self.__column = column
         self.rounding_precision = 2
+        """The rounding_precision attributes is used when vectors values are calculated
+        and the result rounded for convenience. It can be changed anytime to increase or
+        decrease the precision anytime."""
 
     def __repr__(self):
         return f"{self.__class__.__name__} ({self.__row}, {self.__column})"
@@ -498,6 +536,9 @@ class Vector2D:
 
     @property
     def row(self):
+        """
+        The row component of the vector.
+        """
         return self.__row
 
     @row.setter
@@ -509,6 +550,9 @@ class Vector2D:
 
     @property
     def y(self):
+        """
+        y is an alias for row.
+        """
         return self.row
 
     @y.setter
@@ -517,6 +561,9 @@ class Vector2D:
 
     @property
     def column(self):
+        """
+        The column component of the vector.
+        """
         return self.__column
 
     @column.setter
@@ -530,6 +577,9 @@ class Vector2D:
 
     @property
     def x(self):
+        """
+        x is an alias for column.
+        """
         return self.column
 
     @x.setter
@@ -537,6 +587,16 @@ class Vector2D:
         self.column = value
 
     def length(self):
+        """
+        Returns the length of a vector.
+
+        :rtype: float
+
+        Example::
+
+            if speed.length() == 0.0:
+                print('We are not moving... at all...')
+        """
         return round(
             math.sqrt(self.row ** 2 + self.column ** 2), self.rounding_precision
         )
@@ -593,6 +653,15 @@ class Vector2D:
 
 
 class Math(object):
+    """The math class regroup math features required for game development.
+
+    .. versionadded:: 1.2.0
+
+    For the moment there is only static methods in that class but it will evolve in the
+    future.
+
+    """
+
     def __init__(self):
         super().__init__()
 
@@ -659,7 +728,7 @@ class Math(object):
 
         Example::
 
-            distance = round(Utils.distance(player.row(),
+            distance = round(base.Math.distance(player.row(),
                                             player.column(),
                                             npc.row(),
                                             npc.column()))

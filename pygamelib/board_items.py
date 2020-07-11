@@ -22,6 +22,7 @@
    Door
    GenericStructure
    GenericActionableStructure
+   Tile
 """
 import pygamelib.game as game
 import pygamelib.base as base
@@ -66,6 +67,8 @@ class BoardItem:
         self.parent = None
         self.sprixel = None
         self.size = [1, 1]
+        # We probably need the item to store its own velocity at some point
+        # self.velocity = base.Vector2d(0,0)
         # Setting class parameters
         for item in ["name", "type", "pos", "model", "parent", "sprixel"]:
             if item in kwargs:
@@ -1128,6 +1131,33 @@ class ComplexNPC(NPC, BoardComplexItem):
 
 
 class TextItem(BoardComplexItem):
+    """
+    .. versionadded:: 1.2.0
+
+    The text item is a board item that can contains text. The text can then be
+    manipulated and placed on a :class:`~pygamelib.game.Board`.
+
+    It is overall a :class:`BoardComplexItem` (so it takes all the parameters of that
+    class). The big difference is that the first parameter is the text you want to
+    display.
+
+    The text parameter can be either a regular string or a :class:`~pygamelib.base.Text`
+    object (in case you want formatting and colors).
+
+    :param text: The text you want to display.
+    :type text: str | :class:`~pygamelib.base.Text`
+
+    Example::
+
+        city_name = TextItem('Super City')
+        fancy_city_name = TextItem(text=base.Text('Super City', base.Fore.GREEN,
+            base.Back.BLACK,
+            base.Style.BRIGHT
+        ))
+        my_board.place_item(city_name, 0, 0)
+        my_board.place_item(fancy_city_name, 1, 0)
+    """
+
     def __init__(self, text=None, **kwargs):
         BoardComplexItem.__init__(self, **kwargs)
         if text is not None and not isinstance(text, base.Text) and type(text) is str:
@@ -1147,6 +1177,17 @@ class TextItem(BoardComplexItem):
 
     @property
     def text(self):
+        """The text within the item.
+
+        TextItem.text can be set to either a string or a :class:`~pygamelib.base.Text`
+        object.
+
+        It will always return a :class:`~pygamelib.base.Text` object.
+
+        Internally it translate the text to a :class:`~pygamelib.gfx.core.Sprite` to
+        display it correctly on a :class:`~pygame.game.Board`. If print()-ed it will do
+        so like the :class:`~pygamelib.base.Text` object.
+        """
         return self._text
 
     @text.setter
@@ -1160,6 +1201,7 @@ class TextItem(BoardComplexItem):
                 "TextItem.text must be either a str or a pygamelib.base.Text object."
             )
         self.sprite = self._text.to_sprite()
+        self.update_sprite()
 
 
 class Wall(Immovable):
@@ -1540,14 +1582,47 @@ class Door(GenericStructure):
 
 
 class Tile(BoardComplexItem):
+    """
+    .. versionadded:: 1.2.0
+
+    A Tile is a standard :class:`BoardComplexItem` configured to be overlappable but not
+    pickable. It also cannot move.
+
+    It is particularly useful to display a :class:`~pygamelib.gfx.core.Sprite` on the
+    background or to create terrain.
+
+    Please see :class:`BoardComplexItem` for parameters.
+
+    Example::
+
+        grass_sprite = Sprite.load_from_ansi_file('textures/grass.ans')
+        for pos in grass_positions:
+            outdoor_level.place_item( Tile(sprite=grass_sprite), pos[0], pos[1] )
+    """
+
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
 
     def overlappable(self):
+        """A Tile is overlappable.
+
+        :returns: True
+        :rtype: bool
+        """
         return True
 
     def can_move(self):
+        """A Tile cannot move.
+
+        :returns: False
+        :rtype: bool
+        """
         return False
 
     def pickable(self):
+        """A Tile cannot be picked up.
+
+        :returns: False
+        :rtype: bool
+        """
         return False

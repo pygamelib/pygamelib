@@ -8,3 +8,5 @@ base
     :inherited-members:
     :undoc-members:
     :show-inheritance:
+
+.. autoattribute:: pygamelib.base
