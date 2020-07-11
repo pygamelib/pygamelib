@@ -1,5 +1,5 @@
 import pygamelib.board_items as pgl_board_items
-import pygamelib.game as pgl_game
+import pygamelib.engine as pgl_engine
 import pygamelib.constants as pgl_constants
 import unittest
 
@@ -17,7 +17,7 @@ def readable_board_items(board_item_list):
 class GameNeighborTestCase(unittest.TestCase):
     def setUp(self):
         super().setUp()
-        self.game = pgl_game.Game()
+        self.game = pgl_engine.Game()
         self.board = self.game.load_board("hac-maps/kneighbors.json", 1)
         self.game.player = pgl_board_items.Player(name="player")
         self.game.change_level(1)

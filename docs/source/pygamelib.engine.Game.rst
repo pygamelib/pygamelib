@@ -1,7 +1,7 @@
-pygamelib.game.Game
-===================
+pygamelib.engine.Game
+=====================
 
-.. currentmodule:: pygamelib.game
+.. currentmodule:: pygamelib.engine
 
 .. autoclass:: Game
 

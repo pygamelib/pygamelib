@@ -1,9 +1,9 @@
-.. _game-module:
+.. _engine-module:
 
-game
-====
+engine
+======
 
-.. automodule:: pygamelib.game
+.. automodule:: pygamelib.engine
     :members:
     :inherited-members:
     :undoc-members:

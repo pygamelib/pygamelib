@@ -19,8 +19,8 @@ patterns.
 
 """
 import pygamelib.board_items as board_items
-import pygamelib.game as game
 import pygamelib.constants as constants
+import pygamelib.base as base
 import random
 import collections
 
@@ -321,7 +321,7 @@ class PathFinder(Behavioral):
     The constructor takes the following parameters:
 
     :param game: A reference to the instanciated game engine.
-    :type game: pygamelib.game.Game
+    :type game: pygamelib.engine.Game
     :param actuated_object: The object to actuate. Deprecated in favor of parent.
         Only kept for backward compatibility.
     :type actuated_object: pygamelib.board_items.BoardItem
@@ -358,7 +358,7 @@ class PathFinder(Behavioral):
         :type row: int
         :param column: "column" coordinate on the board grid
         :type column: int
-        :raises HacInvalidTypeException: if row or column are not int.
+        :raises PglInvalidTypeException: if row or column are not int.
 
         Example::
 
@@ -367,7 +367,7 @@ class PathFinder(Behavioral):
             )
         """
         if type(row) is not int or type(column) is not int:
-            raise game.HacInvalidTypeException(
+            raise base.PglInvalidTypeException(
                 "In Actuator.PathFinder.set_destination(x,y) both x and y must be "
                 "integer."
             )
@@ -396,18 +396,18 @@ class PathFinder(Behavioral):
 
         """
         if self.actuated_object is None:
-            raise game.HacException(
+            raise base.PglException(
                 "actuated_object is not defined",
                 "PathFinder.actuated_object has to be defined.",
             )
         if not isinstance(self.actuated_object, board_items.Movable):
-            raise game.HacException(
+            raise base.PglException(
                 "actuated_object not a Movable object",
                 "PathFinder.actuated_object has to be an instance \
                 of a Movable object.",
             )
         if self.destination is None:
-            raise game.HacException(
+            raise base.PglException(
                 "destination is not defined",
                 "PathFinder.destination has to be defined.",
             )
@@ -594,7 +594,7 @@ class PathFinder(Behavioral):
         :type row: int
         :param column: The "column" part of the waypoint's coordinate.
         :type row: int
-        :raise HacInvalidTypeException: If any of the parameters is not an int.
+        :raise PglInvalidTypeException: If any of the parameters is not an int.
 
         Example::
 
@@ -604,9 +604,9 @@ class PathFinder(Behavioral):
 
         """
         if type(row) is not int:
-            raise game.HacInvalidTypeException('"row" is not an integer. It must be.')
+            raise base.PglInvalidTypeException('"row" is not an integer. It must be.')
         if type(column) is not int:
-            raise game.HacInvalidTypeException(
+            raise base.PglInvalidTypeException(
                 '"column" is not an integer. It must be.'
             )
         self.waypoints.append((row, column))
@@ -677,13 +677,13 @@ class PathFinder(Behavioral):
 
         If the waypoint cannot be found, it raises a ValueError exception.
         If the row and column parameters are not int, an
-        HacInvalidTypeException is raised.
+        PglInvalidTypeException is raised.
 
         :param row: The "row" part of the waypoint's coordinate.
         :type row: int
         :param column: The "column" part of the waypoint's coordinate.
         :type row: int
-        :raise HacInvalidTypeException: If any of the parameters is not an int.
+        :raise PglInvalidTypeException: If any of the parameters is not an int.
         :raise ValueError: If the waypoint is not found in the stack.
 
         Example::
@@ -691,9 +691,9 @@ class PathFinder(Behavioral):
             method()
         """
         if type(row) is not int:
-            raise game.HacInvalidTypeException('"row" is not an integer. It must be.')
+            raise base.PglInvalidTypeException('"row" is not an integer. It must be.')
         if type(column) is not int:
-            raise game.HacInvalidTypeException(
+            raise base.PglInvalidTypeException(
                 '"column" is not an integer. It must be.'
             )
         try:

@@ -9,7 +9,7 @@ pygamelib - documentation
    base
    board_items
    constants
-   game
+   engine
    gfx
    authors
    history
@@ -35,8 +35,8 @@ First of all, his module is
 exclusively compatible with python 3.6+ (f-string rules).
 
 The core concept is that it revolve
-around the :class:`~pygamelib.game.Game` object,
-the :class:`~pygamelib.game.Board` object and the
+around the :class:`~pygamelib.engine.Game` object,
+the :class:`~pygamelib.engine.Board` object and the
 derivatives of :ref:`boarditem-module`.
 
 Here is an example of what the current version allow to build:

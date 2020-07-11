@@ -1,7 +1,7 @@
-pygamelib.game.Inventory
-========================
+pygamelib.engine.Inventory
+==========================
 
-.. currentmodule:: pygamelib.game
+.. currentmodule:: pygamelib.engine
 
 .. autoclass:: Inventory
 

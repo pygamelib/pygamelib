@@ -24,7 +24,7 @@
    GenericActionableStructure
    Tile
 """
-import pygamelib.game as game
+import pygamelib.engine as engine
 import pygamelib.base as base
 import pygamelib.gfx.core as core
 import pygamelib.constants as constants
@@ -113,9 +113,9 @@ class BoardItem:
         The stored position is used for consistency and quick access to the self
         postion. It is a redundant information and might not be synchronized.
 
-        :param row: the row of the item in the :class:`~pygamelib.game.Board`.
+        :param row: the row of the item in the :class:`~pygamelib.engine.Board`.
         :type row: int
-        :param column: the column of the item in the :class:`~pygamelib.game.Board`.
+        :param column: the column of the item in the :class:`~pygamelib.engine.Board`.
         :type column: int
 
         Example::
@@ -277,7 +277,7 @@ class BoardItem:
         This is a virtual method that must be implemented in deriving class.
         This method has to return an integer.
         This represent the size of the BoardItem for the
-        :class:`~pygamelib.game.Inventory`. It is used for example to evaluate
+        :class:`~pygamelib.engine.Inventory`. It is used for example to evaluate
         the space taken in the inventory.
 
         .. important:: That abstract function was called size() before version 1.2.0.
@@ -841,7 +841,7 @@ class Immovable(BoardItem):
 
     def inventory_space(self):
         """Return the size of the Immovable Item for the
-        :class:`~pygamelib.game.Inventory`.
+        :class:`~pygamelib.engine.Inventory`.
 
         :return: The size of the item.
         :rtype: int
@@ -904,7 +904,7 @@ class Actionable(Immovable):
         This function is calling the action function with the
         action_parameters.
 
-        Usually it's automatically called by :meth:`~pygamelib.game.Board.move`
+        Usually it's automatically called by :meth:`~pygamelib.engine.Board.move`
         when a Player or NPC (see :mod:`~pygamelib.board_items`)
         """
         if self.action is not None:
@@ -938,7 +938,7 @@ class Character:
     :type strength: int
 
     These characteristics are here to be used by the game logic but very few of them are
-    actually used by the Game (`pygamelib.game`) engine.
+    actually used by the Game (`pygamelib.engine`) engine.
 
 
     """
@@ -1000,7 +1000,7 @@ class Player(Movable, Character):
         if "inventory" in kwargs.keys():
             self.inventory = kwargs["inventory"]
         else:
-            self.inventory = game.Inventory(parent=self)
+            self.inventory = engine.Inventory(parent=self)
 
     def pickable(self):
         """This method returns False (a player is obviously not pickable).
@@ -1135,7 +1135,7 @@ class TextItem(BoardComplexItem):
     .. versionadded:: 1.2.0
 
     The text item is a board item that can contains text. The text can then be
-    manipulated and placed on a :class:`~pygamelib.game.Board`.
+    manipulated and placed on a :class:`~pygamelib.engine.Board`.
 
     It is overall a :class:`BoardComplexItem` (so it takes all the parameters of that
     class). The big difference is that the first parameter is the text you want to
@@ -1185,8 +1185,8 @@ class TextItem(BoardComplexItem):
         It will always return a :class:`~pygamelib.base.Text` object.
 
         Internally it translate the text to a :class:`~pygamelib.gfx.core.Sprite` to
-        display it correctly on a :class:`~pygame.game.Board`. If print()-ed it will do
-        so like the :class:`~pygamelib.base.Text` object.
+        display it correctly on a :class:`~pygamelib.engine.Board`. If print()-ed it
+        will do so like the :class:`~pygamelib.base.Text` object.
         """
         return self._text
 
@@ -1447,7 +1447,7 @@ class Treasure(Immovable):
     :param value: The value of the treasure, it is usually used to calculate the score.
     :type value: int
     :param inventory_space: The space occupied by the treasure. It is used by
-        :class:`~pygamelib.game.Inventory` as a measure of space. If the treasure's
+        :class:`~pygamelib.engine.Inventory` as a measure of space. If the treasure's
         size exceed the Inventory size (or the cumulated size of all items + the
         treasure exceed the inventory max_size()) the
         :class:`~pygamelib.base.Inventory` will refuse to add the treasure.
@@ -1482,8 +1482,8 @@ class Treasure(Immovable):
         """ This represent the capacity for a Treasure to be picked-up by player or NPC.
 
         A treasure is obviously pickable by the player and potentially NPCs.
-        :class:`~pygamelib.game.Board` puts the Treasure in the
-        :class:`~pygamelib.game.Inventory` if the picker implements has_inventory()
+        :class:`~pygamelib.engine.Board` puts the Treasure in the
+        :class:`~pygamelib.engine.Inventory` if the picker implements has_inventory()
 
         :return: True
         :rtype: bool

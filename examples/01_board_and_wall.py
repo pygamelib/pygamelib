@@ -1,7 +1,7 @@
 import examples_includes  # noqa: F401
 
 # First let's import the game module. It holds Board, Game and Inventory.
-import pygamelib.game as game
+import pygamelib.engine as engine
 
 # Then some graphics to display nice colored squares.
 import pygamelib.assets.graphics as graphics
@@ -12,7 +12,7 @@ import pygamelib.board_items as board_items
 # First let's create a Board that uses squares as delimiters
 # Borders are going to be white squares
 # Cells with nothing inside are going to be black squares
-myboard = game.Board(
+myboard = engine.Board(
     name="A demo board",
     size=[40, 20],
     ui_border_left=graphics.WHITE_SQUARE,

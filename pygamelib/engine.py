@@ -68,7 +68,7 @@ class Board:
         (see :class:`pygamelib.board_items.BoardItemVoid`)
     :type ui_board_void_cell: str
     :param parent: The parent object (usually the Game object).
-    :type parent: :class:`~pygamelib.game.Game`
+    :type parent: :class:`~pygamelib.engine.Game`
     :param DISPLAY_SIZE_WARNINGS: A boolean to show or hide the warning about boards
         bigger than 80 rows and columns.
     :type DISPLAY_SIZE_WARNINGS: bool
@@ -1028,7 +1028,7 @@ class Game:
     """A class that serve as a game engine.
 
     This object is the central system that allow the management of a game. It holds
-    boards (see :class:`pygamelib.game.Board`), associate it to level, takes care of
+    boards (see :class:`pygamelib.engine.Board`), associate it to level, takes care of
     level changing, etc.
 
     :param name: The Game name.
@@ -1046,7 +1046,7 @@ class Game:
     :type enable_partial_display: bool
     :param partial_display_viewport: A 2 int elements array that gives the **radius**
         of the partial display in number of row and column. Please see
-        :func:`~pygamelib.game.Board.display_around()`.
+        :func:`~pygamelib.engine.Board.display_around()`.
     :type partial_display_viewport: list
 
     .. note:: The game object has an object_library member that is always an empty array
@@ -1396,7 +1396,8 @@ class Game:
     def add_board(self, level_number, board):
         """Add a board for the level number.
 
-        This method associate a Board (:class:`pygamelib.game.Board`) to a level number.
+        This method associate a Board (:class:`pygamelib.engine.Board`) to a level
+        number.
 
         Example::
 
@@ -1405,7 +1406,7 @@ class Game:
         :param level_number: the level number to associate the board to.
         :type level_number: int
         :param board: a Board object corresponding to the level number.
-        :type board: pygamelib.game.Board
+        :type board: pygamelib.engine.Board
 
         :raises PglInvalidTypeException: If either of these parameters are not of the
             correct type.
@@ -1422,7 +1423,7 @@ class Game:
                 board.parent = self
             else:
                 raise base.PglInvalidTypeException(
-                    "The board paramater must be a pygamelib.game.Board() object."
+                    "The board paramater must be a pygamelib.engine.Board() object."
                 )
         else:
             raise base.PglInvalidTypeException("The level number must be an int.")
@@ -1981,7 +1982,7 @@ class Game:
         :type filename: str
         :param lvl_number: The level number to associate the board to. Default is 0.
         :type lvl_number: int
-        :returns: a newly created board (see :class:`pygamelib.game.Board`)
+        :returns: a newly created board (see :class:`pygamelib.engine.Board`)
 
         Example::
 
@@ -2372,7 +2373,7 @@ class Inventory:
     .. note:: You can print() the inventory. This is mostly useful for debug as you want
         to have a better display in your game.
 
-    .. warning:: The :class:`~pygamelib.game.Game` engine and
+    .. warning:: The :class:`~pygamelib.engine.Game` engine and
         :class:`~pygamelib.board_items.Player` takes care to initiate an inventory for
         the player, you don't need to do it.
 

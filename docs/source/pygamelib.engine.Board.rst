@@ -1,7 +1,7 @@
-pygamelib.game.Board
-====================
+pygamelib.engine.Board
+======================
 
-.. currentmodule:: pygamelib.game
+.. currentmodule:: pygamelib.engine
 
 .. autoclass:: Board
 

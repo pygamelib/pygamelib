@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-import pygamelib.game as pgame
+import pygamelib.engine as pgl_engine
 import pygamelib.board_items as board_items
 import pygamelib.assets.graphics as graphics
 import pygamelib.constants as cst
@@ -13,8 +13,8 @@ import random
 sprite_mode = "nosprite"
 
 sprite_player = {
-    "left": base.Text.red_bright("-|"),
-    "right": base.Text.red_bright("|-"),
+    "left": base.Text.cyan_bright("-|"),
+    "right": base.Text.cyan_bright("|-"),
 }
 sprite_npc = None
 sprite_npc2 = None
@@ -127,7 +127,7 @@ def add_hp(params):
             game.player.hp += nb_hp
 
 
-lvl1 = pgame.Board(
+lvl1 = pgl_engine.Board(
     name="Level_1",
     size=[40, 20],
     ui_border_left=graphics.WHITE_SQUARE,
@@ -137,7 +137,7 @@ lvl1 = pgame.Board(
     ui_board_void_cell=graphics.BLACK_SQUARE,
     player_starting_position=[10, 20],
 )
-lvl2 = pgame.Board(
+lvl2 = pgl_engine.Board(
     name="Level_2",
     size=[40, 20],
     ui_border_left=graphics.WHITE_SQUARE,
@@ -148,7 +148,7 @@ lvl2 = pgame.Board(
     player_starting_position=[0, 0],
 )
 
-game = pgame.Game(name="HAC Game")
+game = pgl_engine.Game(name="HAC Game")
 p = board_items.Player(model=sprite_player["right"], name="Nazbrok")
 npc1 = board_items.NPC(model=sprite_npc, name="Bad guy 1", step=1)
 # Test of the PathActuator

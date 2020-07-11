@@ -47,7 +47,7 @@ class Text:
 
     The Text object can generate a :class:`~pygamelib.gfx.core.Sprite` to represent
     itself. This is particularly useful to the place text on the game
-    :class:`~pygamelib.game.Board`.
+    :class:`~pygamelib.engine.Board`.
 
     :param text: The text to manipulate
     :type text: str
