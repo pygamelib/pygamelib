@@ -1,7 +1,7 @@
 .. _graphics-module:
 
-assets.graphics
-===============
+graphics
+========
 
 .. automodule:: pygamelib.assets.graphics
     :members:
