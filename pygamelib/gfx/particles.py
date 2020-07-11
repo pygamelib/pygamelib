@@ -2,6 +2,7 @@ import pygamelib.gfx.core as gfx_core
 import pygamelib.board_items as board_items
 import pygamelib.assets.graphics as graphics
 import pygamelib.constants as constants
+import pygamelib.base as base
 
 import random
 import uuid
@@ -20,8 +21,23 @@ class BaseParticle(board_items.Movable):
             self.sprixel.fg_color = kwargs["fg_color"]
         if "model" in kwargs:
             self.sprixel.model = kwargs["model"]
-        self.directions = [constants.UP, constants.DLUP, constants.DRUP]
+        self.directions = [
+            base.Vector2D.from_direction(constants.UP, 1),
+            base.Vector2D.from_direction(constants.DLUP, 1),
+            base.Vector2D.from_direction(constants.DRUP, 1),
+        ]
         self.ttl = 5
+        if "velocity" in kwargs and isinstance(kwargs["velocity"], base.Vector2D):
+            self.velocity = kwargs["velocity"]
+        else:
+            self.velocity = base.Vector2D()
+        if "acceleration" in kwargs and isinstance(
+            kwargs["acceleration"], base.Vector2D
+        ):
+            self.acceleration = kwargs["acceleration"]
+        else:
+            self.acceleration = base.Vector2D()
+
         for item in ["ttl", "sprixel", "name", "type", "directions"]:
             if item in kwargs:
                 setattr(self, item, kwargs[item])
