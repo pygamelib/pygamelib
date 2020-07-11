@@ -221,7 +221,7 @@ class BoardItem:
                 other.size[1],
             )
         else:
-            raise base.HacInvalidTypeException(
+            raise base.PglInvalidTypeException(
                 "BoardItem.collides_with require a BoardItem as parameter."
             )
 
@@ -243,7 +243,7 @@ class BoardItem:
                 self.pos[0], self.pos[1], other.pos[0], other.pos[1],
             )
         else:
-            raise base.HacInvalidTypeException(
+            raise base.PglInvalidTypeException(
                 "BoardItem.distance_to require a BoardItem as parameter."
             )
 
@@ -409,13 +409,13 @@ class BoardComplexItem(BoardItem):
 
         :rtype: pygamelib.board_items.BoardItem
 
-        :raise HacOutOfBoardBoundException: if row or column are
+        :raise PglOutOfBoardBoundException: if row or column are
             out of bound.
         """
         if row < self.size[1] and column < self.size[0]:
             return self._item_matrix[row][column]
         else:
-            raise base.HacOutOfBoardBoundException(
+            raise base.PglOutOfBoardBoundException(
                 (
                     f"There is no item at coordinates [{row},{column}] "
                     "because it's out of the board multi item boundaries "
@@ -562,7 +562,7 @@ class Projectile(Movable):
         *args,
     ):
         if range % step != 0:
-            raise base.HacException(
+            raise base.PglException(
                 "incorrect_range_step",
                 "range must be a factor of step" " in Projectile",
             )
@@ -594,13 +594,13 @@ class Projectile(Movable):
             fireball.add_directional_animation(constants.UP, constants.UP, animation)
         """
         if type(direction) is not int:
-            raise base.HacInvalidTypeException(
+            raise base.PglInvalidTypeException(
                 "Projectile.add_directional_animation "
                 "requires an int from the constants module as"
                 "direction."
             )
         if not isinstance(animation, gfx_core.Animation):
-            raise base.HacInvalidTypeException(
+            raise base.PglInvalidTypeException(
                 "Projectile.add_directional_animation "
                 "requires a pygamelib.gfx.core.Animation as "
                 "animation"
@@ -620,7 +620,7 @@ class Projectile(Movable):
             fireball.directional_animation(constants.UP)
         """
         if type(direction) is not int:
-            raise base.HacInvalidTypeException(
+            raise base.PglInvalidTypeException(
                 "Projectile.add_directional_animation "
                 "requires an int from the constants module as"
                 "direction."
@@ -644,7 +644,7 @@ class Projectile(Movable):
             fireball.remove_directional_animation(constants.UP)
         """
         if type(direction) is not int:
-            raise base.HacInvalidTypeException(
+            raise base.PglInvalidTypeException(
                 "Projectile.add_directional_animation "
                 "requires an int from the constants module as"
                 "direction."
@@ -664,13 +664,13 @@ class Projectile(Movable):
             fireball.add_directional_animation(constants.UP, updward_animation)
         """
         if type(direction) is not int:
-            raise base.HacInvalidTypeException(
+            raise base.PglInvalidTypeException(
                 "Projectile.add_directional_model "
                 "requires an int from the constants module as"
                 "direction."
             )
         if type(model) is not str:
-            raise base.HacInvalidTypeException(
+            raise base.PglInvalidTypeException(
                 "Projectile.add_directional_model " "requires a string as model."
             )
         self._directional_models[direction] = model
@@ -687,7 +687,7 @@ class Projectile(Movable):
             fireball.directional_model(constants.UP)
         """
         if type(direction) is not int:
-            raise base.HacInvalidTypeException(
+            raise base.PglInvalidTypeException(
                 "Projectile.add_directional_model "
                 "requires an int from the constants module as"
                 "direction."
@@ -708,7 +708,7 @@ class Projectile(Movable):
             fireball.directional_model(constants.UP)
         """
         if type(direction) is not int:
-            raise base.HacInvalidTypeException(
+            raise base.PglInvalidTypeException(
                 "Projectile.add_directional_model "
                 "requires an int from the constants module as"
                 "direction."
@@ -730,7 +730,7 @@ class Projectile(Movable):
             fireball.set_direction(constants.UP)
         """
         if type(direction) is not int:
-            raise base.HacInvalidTypeException(
+            raise base.PglInvalidTypeException(
                 "Projectile.set_direction "
                 "requires an int from the constants module as"
                 "direction."
@@ -1414,7 +1414,7 @@ class GenericStructure(Immovable):
         if type(val) is bool:
             self.__is_restorable = val
         else:
-            raise base.HacInvalidTypeException(
+            raise base.PglInvalidTypeException(
                 "set_restorable(bool) takes a boolean as paramater."
             )
 

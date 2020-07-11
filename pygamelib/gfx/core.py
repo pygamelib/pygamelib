@@ -103,7 +103,7 @@ class Sprixel(object):
         if type(value) is str:
             self.__model = value
         else:
-            raise base.HacInvalidTypeException(
+            raise base.PglInvalidTypeException(
                 f"A Sprixel.model must be a string. {value} is not a string."
             )
 
@@ -116,7 +116,7 @@ class Sprixel(object):
         if type(value) is str or "FormattingString" in str(type(value)):
             self.__bg_color = value
         else:
-            raise base.HacInvalidTypeException(
+            raise base.PglInvalidTypeException(
                 f"A Sprixel.bg_color must be a string. {value} is not a string."
             )
 
@@ -129,7 +129,7 @@ class Sprixel(object):
         if type(value) is str or "FormattingString" in str(type(value)):
             self.__fg_color = value
         else:
-            raise base.HacInvalidTypeException(
+            raise base.PglInvalidTypeException(
                 f"A Sprixel.fg_color must be a string. {value} is not a string."
             )
 
@@ -461,7 +461,7 @@ class Animation(object):
 
         :param frame: The frame to add to the animation.
         :type frame: str
-        :raise: :class:`base.HacInvalidTypeException`
+        :raise: :class:`pygamelib.base.PglInvalidTypeException`
 
         Example::
 
@@ -469,7 +469,7 @@ class Animation(object):
             item.animation.add_frame(Sprite.ALIEN_MONSTER)
         """
         if type(frame) is not str:
-            raise base.HacInvalidTypeException(
+            raise base.PglInvalidTypeException(
                 'The "frame" parameter must be a string.'
             )
         self.frames.append(frame)
@@ -484,7 +484,7 @@ class Animation(object):
         :param frame: The frame to find.
         :type frame: str
         :rtype: int
-        :raise: :class:`~pygamelib.base.HacInvalidTypeException`
+        :raise: :class:`~pygamelib.base.PglInvalidTypeException`
 
         Example::
 
@@ -494,7 +494,7 @@ class Animation(object):
 
         """
         if type(frame) is not str:
-            raise base.HacInvalidTypeException(
+            raise base.PglInvalidTypeException(
                 'The "frame" parameter must be a string.'
             )
         return self.frames.index(frame)
@@ -511,7 +511,7 @@ class Animation(object):
         :param index: The index of the frame to remove.
         :type index: int
         :rtype: str
-        :raise: IndexError, HacInvalidTypeException
+        :raise: IndexError, PglInvalidTypeException
 
         Example::
 
@@ -521,7 +521,7 @@ class Animation(object):
 
         """
         if type(index) is not int:
-            raise base.HacInvalidTypeException('The "index" parameter must be an int.')
+            raise base.PglInvalidTypeException('The "index" parameter must be an int.')
         if index <= self._frame_index and self._frame_index > 0:
             self._frame_index -= 1
         return self.frames.pop(index)
@@ -556,14 +556,14 @@ class Animation(object):
         If parent is not a sub class of
         :class:`~gamelib.BoardItem.BoardItem` an exception is raised.
 
-        :raise: :class:`~pygamelib.base.HacInvalidTypeException`
+        :raise: :class:`~pygamelib.base.PglInvalidTypeException`
 
         Example::
 
             item.animation.next_frame()
         """
         if not isinstance(self.parent, board_items.BoardItem):
-            raise base.HacInvalidTypeException(
+            raise base.PglInvalidTypeException(
                 "The parent needs to be a sub class of BoardItem."
             )
         if self.state == constants.RUNNING:
@@ -597,7 +597,7 @@ class Animation(object):
         If screen_refresh is not defined or is not a function an exception
         is raised.
 
-        :raise: :class:`~pygamelib.base.HacInvalidTypeException`
+        :raise: :class:`~pygamelib.base.PglInvalidTypeException`
 
         Example::
 
@@ -606,12 +606,12 @@ class Animation(object):
         if self.state == constants.PAUSED or self.state == constants.STOPPED:
             return False
         if self.refresh_screen is None or not callable(self.refresh_screen):
-            raise base.HacInvalidTypeException(
+            raise base.PglInvalidTypeException(
                 "The refresh_screen parameter needs to be a callback "
                 "function reference."
             )
         if not isinstance(self.parent, board_items.BoardItem):
-            raise base.HacInvalidTypeException(
+            raise base.PglInvalidTypeException(
                 "The parent needs to be a sub class of BoardItem."
             )
         for f in self.frames:
