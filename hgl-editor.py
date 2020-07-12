@@ -594,7 +594,7 @@ def create_board_wizard():
         input_digit(f"Width (in number of cells) (default: {width}): ") or width
     )
     if game.config("settings")["last_used_board_parameters"]["height"] is not None:
-        height = game.config("settings")["last_used_board_parametersheight"]
+        height = game.config("settings")["last_used_board_parameters"]["height"]
     else:
         height = 20
     height = int(
