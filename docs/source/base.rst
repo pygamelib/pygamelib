@@ -9,4 +9,4 @@ base
     :undoc-members:
     :show-inheritance:
 
-.. autoattribute:: pygamelib.base
+.. autoattribute:: pygamelib.base.Text

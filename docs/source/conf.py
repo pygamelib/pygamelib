@@ -18,18 +18,18 @@ import sys
 sys.path.insert(0, os.path.abspath("."))
 sys.path.insert(1, os.path.abspath(".."))
 sys.path.insert(2, os.path.abspath("../.."))
+# sys.path.insert(2, os.path.abspath("../../.."))
 import pygamelib.constants as CST  # noqa: F402, F541, E402
 
 # -- Project information -----------------------------------------------------
 
 project = "pygamelib"
-copyright = "2019, Arnaud Dupuis"
+copyright = "2019-2020, Arnaud Dupuis"
 author = "Arnaud Dupuis"
 
 # The short X.Y version
 version = ""
 # The full version, including alpha/beta/rc tags
-# release = '2019.3a1'
 release = CST.PYGAMELIB_VERSION
 
 # -- General configuration ---------------------------------------------------

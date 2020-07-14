@@ -4,7 +4,7 @@
 # You can set these variables from the command line.
 SPHINXOPTS    =
 SPHINXBUILD   = sphinx-build-3
-SPHINXPROJ    = hac-game-lib
+SPHINXPROJ    = pygamelib
 SOURCEDIR     = source
 BUILDDIR      = build
 
