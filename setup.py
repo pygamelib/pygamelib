@@ -45,5 +45,5 @@ setuptools.setup(
         "Tracker": "https://github.com/arnauddupuis/hac-game-lib/issues",
         "Release Notes": "https://astro.hyrul.es/news/hac-game-lib-v1.1.0-release-notes.html",  # noqa: E501
     },
-    python_requires=">=3.7",
+    python_requires=">=3.6",
 )
