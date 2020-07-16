@@ -2,6 +2,11 @@
 
 History
 -------
+1.1.1 (2020-07-15)
+~~~~~~~~~~~~~~~~~~
+
+* Fix a bug in hgl-editor: when using previously recorded parameters to create a board the editor was crashing.
+* *Improvement*: Automatically enable partial display and map bigger than 40x40.
 
 1.1.0 (2020-06-12)
 ~~~~~~~~~~~~~~~~~~
