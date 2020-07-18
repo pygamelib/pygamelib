@@ -26,7 +26,7 @@ class BaseParticle(board_items.Movable):
             base.Vector2D.from_direction(constants.DLUP, 1),
             base.Vector2D.from_direction(constants.DRUP, 1),
         ]
-        self.ttl = 5
+        self.lifespan = 5
         if "velocity" in kwargs and isinstance(kwargs["velocity"], base.Vector2D):
             self.velocity = kwargs["velocity"]
         else:
@@ -38,7 +38,7 @@ class BaseParticle(board_items.Movable):
         else:
             self.acceleration = base.Vector2D()
 
-        for item in ["ttl", "sprixel", "name", "type", "directions"]:
+        for item in ["lifespan", "sprixel", "name", "type", "directions"]:
             if item in kwargs:
                 setattr(self, item, kwargs[item])
 
