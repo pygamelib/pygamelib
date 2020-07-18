@@ -594,7 +594,7 @@ def create_board_wizard():
         input_digit(f"Width (in number of cells) (default: {width}): ") or width
     )
     if game.config("settings")["last_used_board_parameters"]["height"] is not None:
-        height = game.config("settings")["last_used_board_parametersheight"]
+        height = game.config("settings")["last_used_board_parameters"]["height"]
     else:
         height = 20
     height = int(
@@ -616,6 +616,9 @@ def create_board_wizard():
         "width": width,
         "height": height,
     }
+    if game.get_board(1).size[0] > 20 or game.get_board(1).size[1] > 20:
+        game.enable_partial_display = True
+        game.partial_display_viewport = [10, 10]
 
 
 def first_use():

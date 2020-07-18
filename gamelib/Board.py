@@ -401,7 +401,7 @@ class Board:
         :raise HacOutOfBoardBoundException: if row or column are
             out of bound.
         """
-        if row < self.size[0] and column < self.size[0]:
+        if row < self.size[1] and column < self.size[0]:
             return self._matrix[row][column]
         else:
             raise HacOutOfBoardBoundException(
