@@ -632,7 +632,14 @@ class Screen(object):
         elif "blessed.terminal.Terminal" in str(type(terminal)):
             self.terminal = terminal
         else:
-            raise base.PglException("Screen: terminal must be from the blessed module")
+            raise base.PglException(
+                "Screen: terminal must be from the blessed module\n"
+                "Please install blessed if it is not already installed:\n"
+                "     pip3 install blessed --user"
+                "And instantiate Screen with terminal=blessed.Terminal()"
+                "or let the Game object do it and use mygame.screen to access the "
+                "screen (assuming that mygame is your Game() instance)."
+            )
 
     def clear(self):
         """
@@ -640,3 +647,17 @@ class Screen(object):
         """
         sys.stdout.write(self.terminal.clear)
         sys.stdout.flush()
+
+    def width(self):
+        """
+        This method wraps Terminal.width and return the width of the terminal window in
+        number of characters.
+        """
+        return self.terminal.width
+
+    def height(self):
+        """
+        This method wraps Terminal.height and return the height of the terminal window
+        in number of characters.
+        """
+        return self.terminal.height
