@@ -328,36 +328,36 @@ class BoardItemComplexComponent(BoardItem):
         super().__init__(**kwargs)
         if hasattr(self, "parent") and self.parent is not None:
             if hasattr(self.parent, "restorable") and callable(self.parent.restorable):
-                self.__restorable = self.parent.restorable
+                self.__is_restorable = self.parent.restorable()
             else:
-                self.__restorable = False
+                self.__is_restorable = False
             if hasattr(self.parent, "overlappable") and callable(
                 self.parent.overlappable
             ):
-                self.__overlappable = self.parent.overlappable
+                self.__is_overlappable = self.parent.overlappable()
             else:
-                self.__overlappable = False
+                self.__is_overlappable = False
             if hasattr(self.parent, "can_move") and callable(self.parent.can_move):
-                self.__can_move = self.parent.can_move
+                self.__can_move = self.parent.can_move()
             else:
                 self.__can_move = False
         else:
-            self.__restorable = False
-            self.__overlappable = False
+            self.__is_restorable = False
+            self.__is_overlappable = False
             self.__can_move = False
-        self.__pickable = False
+        self.__is_pickable = False
 
     def restorable(self):
-        return self.__restorable
+        return self.__is_restorable
 
     def overlappable(self):
-        return self.__overlappable
+        return self.__is_overlappable
 
     def can_move(self):
         return self.__can_move
 
     def pickable(self):
-        return self.__pickable
+        return self.__is_pickable
 
 
 class BoardComplexItem(BoardItem):
@@ -379,6 +379,12 @@ class BoardComplexItem(BoardItem):
         if self.size is None:
             self.size = self.sprite.size
         self.update_sprite()
+
+    def __repr__(self):
+        return self.sprite.__repr__()
+
+    def __str__(self):
+        return self.sprite.__str__()
 
     def update_sprite(self):
         self._item_matrix = []
@@ -1581,7 +1587,13 @@ class Door(GenericStructure):
             self.set_restorable(kwargs["restorable"])
 
 
-class Tile(BoardComplexItem):
+class GenericStructureComplexComponent(GenericStructure, BoardItemComplexComponent):
+    def __init__(self, **kwargs):
+        GenericStructure.__init__(self, **kwargs)
+        BoardItemComplexComponent.__init__(self, **kwargs)
+
+
+class Tile(GenericStructure, BoardComplexItem):
     """
     .. versionadded:: 1.2.0
 
@@ -1601,10 +1613,25 @@ class Tile(BoardComplexItem):
     """
 
     def __init__(self, **kwargs):
-        super().__init__(**kwargs)
+        kwargs["parent"] = self
+        kwargs["base_item_type"] = GenericStructureComplexComponent
+        kwargs["overlappable"] = True
+        kwargs["restorable"] = True
+        kwargs["pickable"] = False
+        GenericStructure.__init__(self, **kwargs)
+        # kwargs["base_item_type"] = Door
+        BoardComplexItem.__init__(self, **kwargs)
 
     def overlappable(self):
         """A Tile is overlappable.
+
+        :returns: True
+        :rtype: bool
+        """
+        return True
+
+    def restorable(self):
+        """A Tile is restorable.
 
         :returns: True
         :rtype: bool
