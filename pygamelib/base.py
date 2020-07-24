@@ -35,6 +35,8 @@ init()
 
 class Text:
     """
+    An object to manipulate and display text in multiple contexts.
+
     .. versionadded:: 1.2.0
 
     The Text class is a collection of text formating and display static methods.
@@ -534,6 +536,11 @@ class Vector2D:
                 self.rounding_precision,
             )
 
+    def __eq__(self, other):
+        if other.row == self.__row and other.column == self.__column:
+            return True
+        return False
+
     @property
     def row(self):
         """
@@ -612,6 +619,8 @@ class Vector2D:
             gravity = Vector2D(9.81, 0)
             next_position = item.position_as_vector() + gravity.unit()
         """
+        if self.length() == 0.0:
+            return Vector2D()
         return Vector2D(
             round(self.__row / self.length(), self.rounding_precision),
             round(self.__column / self.length(), self.rounding_precision),
