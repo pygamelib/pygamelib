@@ -693,6 +693,16 @@ class Board:
                 if can_draw:
                     for row in range(0, item.size[1], 1):
                         for col in range(0, item.size[0], 1):
+                            # First erase everything that was drawn
+                            if not isinstance(
+                                item.item(row, col), board_items.BoardItemVoid
+                            ):
+                                self.place_item(
+                                    self.generate_void_cell(),
+                                    item.pos[0] + row,
+                                    item.pos[1] + col,
+                                )
+                            # Then restore overlapped elements
                             if (
                                 self._overlapped_matrix[item.pos[0] + row][
                                     item.pos[1] + col
@@ -709,12 +719,7 @@ class Board:
                                 self._overlapped_matrix[item.pos[0] + row][
                                     item.pos[1] + col
                                 ] = None
-                            # else:
-                            #     self.place_item(
-                            #         self.generate_void_cell(),
-                            #         item.pos[0] + row,
-                            #         item.pos[1] + col,
-                            #     )
+                    # Finally, place the item at its new position
                     self.place_item(
                         item, projected_position.row, projected_position.column,
                     )
@@ -1086,6 +1091,8 @@ class Game:
         self.object_library = []
         self.terminal = Terminal()
         self.screen = core.Screen(self.terminal)
+        # Placeholder: we want to be able to center the screen on any item/position.
+        self.center_screen_on = None
         base.init()
 
     def add_menu_entry(self, category, shortcut, message, data=None):
@@ -1259,7 +1266,8 @@ class Game:
         """
         self.screen.clear()
 
-    def get_key(self):
+    @staticmethod
+    def get_key():
         """Reads the next key-stroke returning it as a string.
 
         Example::
@@ -1875,7 +1883,7 @@ class Game:
         info += "     Score: " + str(self.player.inventory.value())
         print(info)
 
-    def move_player(self, direction, step):
+    def move_player(self, direction, step=1):
         """
         Easy wrapper for Board.move().
 
