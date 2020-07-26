@@ -649,8 +649,10 @@ class Models:
     """List of models (emojis by unicode denomination)
 
     Models are filtered emojis. This class  does not map the entire specification.
-    It is however a significant improvement over the gamelib.Sprites module (now
-    deprecated).
+    
+    Models replaces the previous Sprites class. Renaming that class is necessary with
+    the introduction of a real Sprite class in the GFX module.
+
     This class contains 1328 emojis (this is not the full list).
     All emoji codes come from: https://unicode.org/emoji/charts/full-emoji-list.html
     Additional emojis can be added by codes.

@@ -612,7 +612,7 @@ class Vector2D:
         """Returns a normalized unit vector.
 
         :returns: A unit vector
-        :rtype: :class:`~gamelib.GFX.Core.Vector2D`
+        :rtype: :class:`~pygamelib.base.Vector2D`
 
         Example::
 

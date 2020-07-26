@@ -370,10 +370,10 @@ class Animation(object):
     :param animated_object: The object to animate. This parameter is deprecated.
         Please use parent instead. It is only kept for backward compatibility.
         The parent parameter always takes precedence over this one.
-    :type animated_object: :class:`~gamelib.BoardItem.BoardItem`
+    :type animated_object: :class:`~pygamelib.board_items.BoardItem`
     :param parent: The parent object. It is also the object to animate.
         Important: We cannot animate anything else that BoardItems and subclasses.
-    :type parent: :class:`~gamelib.BoardItem.BoardItem`
+    :type parent: :class:`~pygamelib.board_items.BoardItem`
     :param refresh_screen: The callback function that controls the redrawing of
         the screen. This function reference should come from the main game.
     :type refresh_screen: function
@@ -554,7 +554,7 @@ class Animation(object):
         and returning the current frame. It does NOT actually go to next frame.
 
         If parent is not a sub class of
-        :class:`~gamelib.BoardItem.BoardItem` an exception is raised.
+        :class:`~pygamelib.board_items.BoardItem` an exception is raised.
 
         :raise: :class:`~pygamelib.base.PglInvalidTypeException`
 
@@ -592,7 +592,7 @@ class Animation(object):
         the method return False.
 
         If parent is not a sub class of
-        :class:`~gamelib.BoardItem.BoardItem` an exception is raised.
+        :class:`~pygamelib.board_items.BoardItem` an exception is raised.
 
         If screen_refresh is not defined or is not a function an exception
         is raised.
