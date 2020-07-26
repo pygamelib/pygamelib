@@ -28,13 +28,13 @@ Here is a quick view of what can currently be achieved with that library (base_g
 ![base_game.py animation](https://raw.githubusercontent.com/arnauddupuis/hac-game-lib/master/images/base_game.gif "base_game.py")
 
 The base game makes use of:
-* The main "game engine" (gamelib.Game.Game)
-* Many different types of structures (from gamelib.Structures): Wall (well the walls...), Treasure (gems and money bag), GenericStructure (trees) and GenericActionnableStructure (hearts and portals)
+* The main "game engine" (pygamelib.engine.Game)
+* Many different types of structures (from pygamelib.board_items): Wall (well the walls...), Treasure (gems and money bag), GenericStructure (trees) and GenericActionnableStructure (hearts and portals)
 * Game()'s menu capabilities.
-* Player and NPC (from gamelib.Characters)
-* Inventory (from gamelib.Inventory)
+* Player and NPC (from pygamelib.board_items)
+* Inventory (from pygamelib.engine.Inventory)
 * Player and Inventory stats
-* RandomActuator (NPCs in level 2) and PathActuator (NPCs in level 1) (from gamelib.Actuators.SimpleActuators)
+* RandomActuator (NPCs in level 2) and PathActuator (NPCs in level 1) (from pygamelib.actuators.SimpleActuators)
 
 For more up to date examples, have a look at:
  * [examples/suparex/](examples/suparex/) a platform game with procedural level generation

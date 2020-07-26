@@ -37,7 +37,7 @@ We used the fact that renaming and restructuring was going to break everything t
 
 So without further ado:
 
- * gamelib.Game, gamelib.Board, gamelib.Inventory are now unified into **pygamelib.game**.
+ * gamelib.Game, gamelib.Board, gamelib.Inventory are now unified into **pygamelib.engine**.
  * gamelib.HacExceptions and gamelib.Utils are now unified into **pygamelib.base**. Hac prefix was replaced by Pgl but for convenience mirror classes were added to not break existing games.
  * gamelib.BoardItems, gamelib.Movable, gamelib.Immovable, gamelib.Characters and gamelib.Structures are now unified into **pygamelib.board_items**.
  * gamelib.Actuators.Actuator, gamelib.Actuators.SimpleActuators, gamelib.Actuators.AdvancedActuators are now unified into **pygamelib.actuators**.
