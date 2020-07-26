@@ -1,0 +1,5 @@
+BoardItem.size() -> BoardItem.inventory_space()
+Utils.get_key() -> Game.get_key() and is not static anymore
+Utils colored functions : all in base.Text
+All Structures are moved to board_items.
+Utils.key -> game.key
