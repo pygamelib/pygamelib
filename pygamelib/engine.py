@@ -1493,20 +1493,22 @@ class Game:
                     " Please set player in your Game object: mygame.player = Player()",
                 )
             # If it's not already the case, taking ownership of player
-            if self.player.parent != self:
+            if self.player != constants.NO_PLAYER and self.player.parent != self:
                 self.player.parent = self
             if level_number in self._boards.keys():
-                if self.player.pos[0] is not None or self.player.pos[1] is not None:
+                if self.player != constants.NO_PLAYER and (
+                    self.player.pos[0] is not None or self.player.pos[1] is not None
+                ):
                     self._boards[self.current_level]["board"].clear_cell(
                         self.player.pos[0], self.player.pos[1]
                     )
+                    self._boards[level_number]["board"].place_item(
+                        self.player,
+                        self._boards[level_number]["board"].player_starting_position[0],
+                        self._boards[level_number]["board"].player_starting_position[1],
+                    )
+
                 self.current_level = level_number
-                b = self._boards[self.current_level]["board"]
-                b.place_item(
-                    self.player,
-                    b.player_starting_position[0],
-                    b.player_starting_position[1],
-                )
             else:
                 raise base.PglInvalidLevelException(
                     f"Impossible to change level to an unassociated level (level number"
@@ -1874,7 +1876,7 @@ class Game:
             template of what to display.
 
         """
-        if self.player is None:
+        if self.player is None or self.player == constants.NO_PLAYER:
             return ""
         info = ""
         info += f" {self.player.name}"
@@ -1891,7 +1893,11 @@ class Game:
 
             mygame.move_player(constants.RIGHT,1)
         """
-        if self.state == constants.RUNNING:
+        if (
+            self.state == constants.RUNNING
+            and self.player is not None
+            and self.player != constants.NO_PLAYER
+        ):
             self._boards[self.current_level]["board"].move(self.player, direction, step)
 
     def display_board(self):
@@ -1903,6 +1909,9 @@ class Game:
         correct parameters.
         The partial display will be centered on the player (Game.player).
         Otherwise it will just call Game.current_board().display().
+
+        If the player is not set or is set to constants.NO_PLAYER partial display won't
+        activate automatically.
 
         Example::
 
@@ -1920,6 +1929,8 @@ class Game:
             self.enable_partial_display
             and self.partial_display_viewport is not None
             and type(self.partial_display_viewport) is list
+            and self.player is not None
+            and self.player != constants.NO_PLAYER
         ):
             # display_around(self, object, p_row, p_col)
             self.current_board().display_around(
