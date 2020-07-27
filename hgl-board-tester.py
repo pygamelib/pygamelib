@@ -1,10 +1,9 @@
 #!/usr/bin/env python3
 
-from gamelib.Game import Game
-from gamelib.Characters import Player
-import gamelib.Sprites as Sprites
-import gamelib.Constants as Constants
-import gamelib.Utils as Utils
+import pygamelib.engine as engine
+import pygamelib.board_items as board_items
+import pygamelib.assets.graphics as graphics
+import pygamelib.constants as constants
 import time
 import sys
 
@@ -18,13 +17,18 @@ if len(sys.argv) > 2:
     max_iter = int(sys.argv[2])
 
 
-g = Game()
+g = engine.Game()
 
 b = g.load_board(board_to_load, 1)
 
-print(b)
+if b.width() >= g.screen.width() or b.height() >= g.screen.height():
+    g.enable_partial_display = True
+    g.partial_display_viewport = [
+        int((g.screen.height() - 2) / 2),
+        int((g.screen.width() - 2) / 4),
+    ]
 
-g.player = Player(model=Sprites.FLYING_SAUCER)
+g.player = board_items.Player(model=graphics.Models.FLYING_SAUCER)
 g.player.inventory.max_size = 99999
 g.change_level(1)
 
@@ -34,13 +38,13 @@ key = None
 
 while idx < max_iter or max_iter == 0:
     if key == "w":
-        g.move_player(Constants.UP, 1)
+        g.move_player(constants.UP, 1)
     elif key == "s":
-        g.move_player(Constants.DOWN, 1)
+        g.move_player(constants.DOWN, 1)
     elif key == "a":
-        g.move_player(Constants.LEFT, 1)
+        g.move_player(constants.LEFT, 1)
     elif key == "d":
-        g.move_player(Constants.RIGHT, 1)
+        g.move_player(constants.RIGHT, 1)
     elif key == "q":
         break
     g.clear_screen()
@@ -48,7 +52,7 @@ while idx < max_iter or max_iter == 0:
     g.display_board()
 
     if max_iter == 0:
-        key = Utils.get_key()
+        key = engine.Game.get_key()
     else:
         time.sleep(0.1)
         idx += 1
