@@ -35,6 +35,8 @@ Actions states (for Actuators for example):
  * PAUSED
  * STOPPED
 
+Special constants:
+ * NO_PLAYER: That constant is used to tell the Game object not to manage the player.
 """
 
 # Main version
@@ -70,3 +72,6 @@ ORIENTATION_VERTICAL = 30000100
 RUNNING = 40000001
 PAUSED = 40000010
 STOPPED = 40000011
+
+# Special constants
+NO_PLAYER = 90000001
