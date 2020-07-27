@@ -649,7 +649,7 @@ class Models:
     """List of models (emojis by unicode denomination)
 
     Models are filtered emojis. This class  does not map the entire specification.
-    
+
     Models replaces the previous Sprites class. Renaming that class is necessary with
     the introduction of a real Sprite class in the GFX module.
 
