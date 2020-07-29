@@ -662,7 +662,7 @@ class Vector2D:
 
 
 class Math(object):
-    """The math class regroup math features required for game development.
+    """The math class regroup math functions required for game development.
 
     .. versionadded:: 1.2.0
 
