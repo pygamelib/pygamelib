@@ -1490,18 +1490,19 @@ class Game:
                 raise base.PglException(
                     "undefined_player",
                     "Game.player is undefined. We cannot change level without a player."
-                    " Please set player in your Game object: mygame.player = Player()",
+                    " Please set player in your Game object: mygame.player = Player()"
+                    " or set mygame.player = constants.NO_PLAYER",
                 )
-            # If it's not already the case, taking ownership of player
-            if self.player != constants.NO_PLAYER and self.player.parent != self:
-                self.player.parent = self
             if level_number in self._boards.keys():
-                if self.player != constants.NO_PLAYER and (
-                    self.player.pos[0] is not None or self.player.pos[1] is not None
-                ):
-                    self._boards[self.current_level]["board"].clear_cell(
-                        self.player.pos[0], self.player.pos[1]
-                    )
+                # If player is not None and not NO_PLAYER let's work
+                if self.player != constants.NO_PLAYER:
+                    # If it's not already the case, taking ownership of player
+                    if self.player.parent != self:
+                        self.player.parent = self
+                    if self.player.pos[0] is not None or self.player.pos[1] is not None:
+                        self._boards[self.current_level]["board"].clear_cell(
+                            self.player.pos[0], self.player.pos[1]
+                        )
                     self._boards[level_number]["board"].place_item(
                         self.player,
                         self._boards[level_number]["board"].player_starting_position[0],
