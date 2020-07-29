@@ -1,7 +1,7 @@
 version: 2
 jobs:
   build:
-    working_directory: ~/hac-game-lib
+    working_directory: ~/pygamelib
     docker:
       - image: circleci/python:3.7
         environment:
@@ -19,9 +19,9 @@ jobs:
       - save_cache:
           key: deps10-{{ .Branch }}-{{ checksum "Pipfile.lock" }}
           paths:
-            - '.venv'
-            - '/usr/local/bin'
-            - '/usr/local/lib/python3.7/site-packages'
+            - ".venv"
+            - "/usr/local/bin"
+            - "/usr/local/lib/python3.7/site-packages"
       - run:
           name: Run linting and metrics
           command: |

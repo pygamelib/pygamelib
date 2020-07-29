@@ -41,7 +41,7 @@ derivatives of :ref:`boarditem-module`.
 
 Here is an example of what the current version allow to build:
 
-.. image:: https://raw.githubusercontent.com/arnauddupuis/hac-game-lib/master/images/base_game.gif
+.. image:: https://raw.githubusercontent.com/arnauddupuis/pygamelib/master/images/base_game.gif
 
 The base game makes use of:
     * The main "game engine" (gamelib.Game.Game)
