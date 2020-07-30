@@ -112,12 +112,47 @@ def color_picker():
 
 def utf8_picker(category):
     global game
-    game.clear_screen()
-    print("Pick a glyph from the list:")
-    game.display_menu(
-        category, constants.ORIENTATION_HORIZONTAL, int(game.terminal.width / 12)
-    )
-    return str(input_digit("\n(Enter a number)> "))
+    nb_elts = int(game.terminal.width / 12)
+    if len(game._menu[category]) / nb_elts > game.screen.height():
+        idx_line = 0
+        idx_col = 0
+        offset = 0
+        while True:
+            game.clear_screen()
+            print("Pick a glyph from the list:")
+            while idx_line < game.screen.height() - 5:
+                idx_col = nb_elts * idx_line + offset
+                if idx_col < 0:
+                    idx_col = 0
+                elif idx_col >= len(game._menu[category]):
+                    break
+                for k in range(idx_col, idx_col + nb_elts, 1):
+                    if k >= len(game._menu[category]):
+                        break
+                    elt = game._menu[category][k]
+                    print(
+                        f"{' '*(4-len(elt['shortcut']))}{elt['shortcut']} - "
+                        f"{elt['message']}",
+                        end=" | ",
+                    )
+                print("")
+                idx_line += 1
+            key = input("(Enter a number or n/p for next/previous page)> ")
+            if key == "n" and (idx_col + nb_elts) <= len(game._menu[category]):
+                idx_line = 0
+                offset = idx_col + nb_elts
+            elif key == "p":
+                offset -= nb_elts * idx_line
+                if offset < 0:
+                    offset = 0
+                idx_line = 0
+            elif key.isdigit() or key == "":
+                return key
+            else:
+                idx_line = 0
+    else:
+        game.display_menu(category, constants.ORIENTATION_HORIZONTAL, nb_elts)
+        return str(input_digit("\n(Enter a number)> "))
 
 
 def model_picker():
@@ -184,9 +219,9 @@ def to_history(object):
         object_history.append(object)
 
 
-def input_digit(str):
+def input_digit(msg):
     while True:
-        result = input(str)
+        result = input(msg)
         if result.isdigit() or result == "":
             return result
 
