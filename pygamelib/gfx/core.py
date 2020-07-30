@@ -235,7 +235,7 @@ class Sprite(object):
                     self._sprixels[height].append(sprixels[height][width])
                     width += 1
                 height += 1
-            self.size = [len(self._sprixels), max_width]
+            self.size = [max_width, len(self._sprixels)]
 
         else:
             self.empty()
@@ -627,18 +627,20 @@ class Screen(object):
         # get clear sequence for the terminal
         if terminal is None:
             raise base.PglException(
-                "Screen must be constructed with a terminal object."
+                "terminal_is_missing",
+                "Screen must be constructed with a terminal object.",
             )
         elif "blessed.terminal.Terminal" in str(type(terminal)):
             self.terminal = terminal
         else:
             raise base.PglException(
+                "terminal_not_blessed",
                 "Screen: terminal must be from the blessed module\n"
                 "Please install blessed if it is not already installed:\n"
                 "     pip3 install blessed --user"
                 "And instantiate Screen with terminal=blessed.Terminal()"
                 "or let the Game object do it and use mygame.screen to access the "
-                "screen (assuming that mygame is your Game() instance)."
+                "screen (assuming that mygame is your Game() instance).",
             )
 
     def clear(self):
