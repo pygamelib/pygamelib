@@ -3,16 +3,12 @@
 import os
 import uuid
 from copy import deepcopy
-import gamelib.Utils as Utils
-import gamelib.Constants as Constants
-import gamelib.Structures as Structures
-import gamelib.Sprites as Sprites
-from gamelib.Actuators import SimpleActuators
-from gamelib.Actuators import AdvancedActuators
-from gamelib.Game import Game
-from gamelib.Characters import Player, NPC
-from gamelib.Board import Board
-from gamelib.BoardItem import BoardItemVoid
+from pygamelib import constants
+from pygamelib import actuators
+from pygamelib import engine
+from pygamelib import board_items
+from pygamelib.assets import graphics
+from pygamelib import base
 
 # Global variables
 is_modified = False
@@ -20,6 +16,7 @@ edit_mode = True
 dbg_messages = []
 info_messages = []
 warn_messages = []
+# TODO: migrate the settings to .pygamelib
 base_config_dir = os.path.join(os.path.expanduser("~"), ".hac-game-lib")
 config_dir = os.path.join(base_config_dir, "config")
 editor_config_dir = os.path.join(config_dir, "editor")
@@ -38,8 +35,8 @@ def place_and_go(obj, x, y, direction):
     if initial_position != game.player.pos:
         game.current_board().place_item(deepcopy(obj), x, y)
         is_modified = True
-        if isinstance(obj, NPC) and isinstance(
-            obj.actuator, AdvancedActuators.PathFinder
+        if isinstance(obj, board_items.NPC) and isinstance(
+            obj.actuator, actuators.PathFinder
         ):
             current_menu = "waypoint_edition"
         return game.current_board().item(x, y)
@@ -50,13 +47,13 @@ def clear_and_go(direction):
     global game
     new_x = game.player.pos[0]
     new_y = game.player.pos[1]
-    if direction == Constants.DOWN:
+    if direction == constants.DOWN:
         new_x += 1
-    elif direction == Constants.UP:
+    elif direction == constants.UP:
         new_x -= 1
-    elif direction == Constants.LEFT:
+    elif direction == constants.LEFT:
         new_y -= 1
-    elif direction == Constants.RIGHT:
+    elif direction == constants.RIGHT:
         new_y += 1
 
     if (
@@ -65,7 +62,7 @@ def clear_and_go(direction):
         or new_x > (game.current_board().size[1] - 1)
         or new_y > (game.current_board().size[0] - 1)
     ):
-        Utils.warn(
+        base.Text.warn(
             f"Cannot remove anything at [{new_x},{new_y}] " "as it is out of bound."
         )
     else:
@@ -80,27 +77,28 @@ def switch_edit_mode():
     if edit_mode:
         game.update_menu_entry(
             "main",
-            Utils.white_bright("j/i/k/l"),
-            Utils.green_bright("Place")
+            base.Text.white_bright("j/i/k/l"),
+            base.Text.green_bright("Place")
             + " the current object and then move cursor Left/Up/Down/Right",
         )
         game.update_menu_entry(
             "main",
-            Utils.white_bright("0 to 9"),
-            Utils.green_bright("Select") + " an item in history to be the current item",
+            base.Text.white_bright("0 to 9"),
+            base.Text.green_bright("Select")
+            + " an item in history to be the current item",
         )
     else:
         game.update_menu_entry(
             "main",
-            Utils.white_bright("j/i/k/l"),
+            base.Text.white_bright("j/i/k/l"),
             "Move cursor Left/Up/Down/Right and "
-            + Utils.red_bright("Delete")
+            + base.Text.red_bright("Delete")
             + " anything that was at destination.",
         )
         game.update_menu_entry(
             "main",
-            Utils.white_bright("0 to 9"),
-            Utils.red_bright("Remove") + " an item from history",
+            base.Text.white_bright("0 to 9"),
+            base.Text.red_bright("Remove") + " an item from history",
         )
 
 
@@ -108,15 +106,17 @@ def color_picker():
     global game
     game.clear_screen()
     print("Pick a form and color from the list:")
-    game.display_menu("graphics_utils", Constants.ORIENTATION_HORIZONTAL, 8)
+    game.display_menu("graphics_utils", constants.ORIENTATION_HORIZONTAL, 8)
     return str(input_digit("\n(Enter a number)> "))
 
 
-def sprite_picker():
+def utf8_picker(category):
     global game
     game.clear_screen()
-    print("Pick a sprite from the list:")
-    game.display_menu("graphics_sprites", Constants.ORIENTATION_HORIZONTAL, 8)
+    print("Pick a glyph from the list:")
+    game.display_menu(
+        category, constants.ORIENTATION_HORIZONTAL, int(game.terminal.width / 12)
+    )
     return str(input_digit("\n(Enter a number)> "))
 
 
@@ -124,22 +124,46 @@ def model_picker():
     global game
     while True:
         game.clear_screen()
+        # TODO: Add support for box, geometric shapes, etc.
         print(
             "What kind of model do you want (you can edit that later)?\n"
             "1 - Colored squares and rectangles\n"
-            "2 - Sprites\n"
-            "3 - Set your own string of character(s)"
+            "2 - Models (emojis)\n"
+            "3 - Blocks\n"
+            "4 - Box drawings\n"
+            "5 - Geometric shapes\n"
+            "6 - Set your own string of character(s)"
         )
-        choice = str(Utils.get_key())
+        choice = str(engine.Game.get_key())
         if choice == "1":
             picked = game.get_menu_entry("graphics_utils", color_picker())
             if picked is not None:
                 return picked["data"]
-        if choice == "2":
-            picked = game.get_menu_entry("graphics_sprites", sprite_picker())
+        elif choice == "2":
+            picked = game.get_menu_entry(
+                "graphics_models", utf8_picker("graphics_models")
+            )
             if picked is not None:
                 return picked["data"]
-        if choice == "3":
+        elif choice == "3":
+            picked = game.get_menu_entry(
+                "graphics_blocks", utf8_picker("graphics_blocks")
+            )
+            if picked is not None:
+                return picked["data"]
+        elif choice == "4":
+            picked = game.get_menu_entry(
+                "graphics_box_drawings", utf8_picker("graphics_box_drawings")
+            )
+            if picked is not None:
+                return picked["data"]
+        elif choice == "5":
+            picked = game.get_menu_entry(
+                "graphics_geometric_shapes", utf8_picker("graphics_geometric_shapes")
+            )
+            if picked is not None:
+                return picked["data"]
+        elif choice == "6":
             return str(input("Enter your string now: "))
 
 
@@ -148,13 +172,13 @@ def to_history(object):
     if (
         len(object_history) <= 10
         and object not in object_history
-        and not isinstance(object, BoardItemVoid)
+        and not isinstance(object, board_items.BoardItemVoid)
     ):
         object_history.append(object)
     elif (
         len(object_history) > 10
         and object not in object_history
-        and not isinstance(object, BoardItemVoid)
+        and not isinstance(object, board_items.BoardItemVoid)
     ):
         del object_history[0]
         object_history.append(object)
@@ -172,20 +196,20 @@ def create_wizard():
     key = ""
     while True:
         game.clear_screen()
-        print(Utils.green_bright("\t\tObject creation wizard"))
+        print(base.Text.green_bright("\t\tObject creation wizard"))
         print("What do you want to create: a NPC or a structure?")
         print("1 - NPC (Non Playable Character)")
         print("2 - Structure (Wall, Door, Treasure, Portal, Trees, etc.)")
-        key = Utils.get_key()
+        key = engine.Game.get_key()
         if key == "1" or key == "2":
             break
     if key == "1":
         game.clear_screen()
         print(
-            Utils.green_bright("\t\tObject creation wizard: ")
-            + Utils.cyan_bright("NPC")
+            base.Text.green_bright("\t\tObject creation wizard: ")
+            + base.Text.cyan_bright("NPC")
         )
-        new_object = NPC()
+        new_object = board_items.NPC()
         print("First give a name to your NPC. Default value: " + new_object.name)
         r = str(input("(Enter name)> "))
         if len(r) > 0:
@@ -202,8 +226,8 @@ def create_wizard():
         new_object.model = model_picker()
         game.clear_screen()
         print(
-            Utils.green_bright("\t\tObject creation wizard: ")
-            + Utils.cyan_bright("NPC")
+            base.Text.green_bright("\t\tObject creation wizard: ")
+            + base.Text.cyan_bright("NPC")
             + f" - {new_object.model}"
         )
         print(
@@ -221,7 +245,7 @@ def create_wizard():
             # If it's 0 it means it's going to be a static NPC so to prevent
             # python to pass some random pre-initialized default, we explicitly
             # set the Actuator to a static one
-            new_object.actuator = SimpleActuators.RandomActuator(moveset=[])
+            new_object.actuator = actuators.RandomActuator(moveset=[])
 
         r = input_digit(
             f"Max HP (Health Points). " f"Default: {new_object.max_hp}(type: int) > "
@@ -283,9 +307,9 @@ def create_wizard():
             "4 - Automatically finding it's way from one point to another (no"
             " pre-determined path, you will set the points on the map)."
         )
-        r = Utils.get_key()
+        r = engine.Game.get_key()
         if r == "1":
-            new_object.actuator = SimpleActuators.RandomActuator(moveset=[])
+            new_object.actuator = actuators.RandomActuator(moveset=[])
             print(
                 "Random it is! Now choose from which preset "
                 "of movements should we give it:"
@@ -299,46 +323,48 @@ def create_wizard():
                 "but NO straight UP, DOWN, LEFT and RIGHT"
             )
             print("6 - No movement")
-            r = Utils.get_key()
+            r = engine.Game.get_key()
             if r == "1":
                 new_object.actuator.moveset = [
-                    Constants.UP,
-                    Constants.DOWN,
-                    Constants.LEFT,
-                    Constants.RIGHT,
+                    constants.UP,
+                    constants.DOWN,
+                    constants.LEFT,
+                    constants.RIGHT,
                 ]
             elif r == "2":
-                new_object.actuator.moveset = [Constants.UP, Constants.DOWN]
+                new_object.actuator.moveset = [constants.UP, constants.DOWN]
             elif r == "3":
-                new_object.actuator.moveset = [Constants.RIGHT, Constants.LEFT]
+                new_object.actuator.moveset = [constants.RIGHT, constants.LEFT]
             elif r == "4":
                 new_object.actuator.moveset = [
-                    Constants.UP,
-                    Constants.DOWN,
-                    Constants.LEFT,
-                    Constants.RIGHT,
-                    Constants.DLDOWN,
-                    Constants.DLUP,
-                    Constants.DRDOWN,
-                    Constants.DRUP,
+                    constants.UP,
+                    constants.DOWN,
+                    constants.LEFT,
+                    constants.RIGHT,
+                    constants.DLDOWN,
+                    constants.DLUP,
+                    constants.DRDOWN,
+                    constants.DRUP,
                 ]
             elif r == "5":
                 new_object.actuator.moveset = [
-                    Constants.DLDOWN,
-                    Constants.DLUP,
-                    Constants.DRDOWN,
-                    Constants.DRUP,
+                    constants.DLDOWN,
+                    constants.DLUP,
+                    constants.DRDOWN,
+                    constants.DRUP,
                 ]
             elif r == "6":
                 new_object.actuator.moveset = []
             else:
-                Utils.warn(f'"{r}" is not a valid choice. Movement set is now empty.')
+                base.Text.warn(
+                    f'"{r}" is not a valid choice. Movement set is now empty.'
+                )
                 new_object.actuator.moveset = []
         elif r == "2" or r == "3":
             if r == "2":
-                new_object.actuator = SimpleActuators.PathActuator(path=[])
+                new_object.actuator = actuators.PathActuator(path=[])
             elif r == "3":
-                new_object.actuator = SimpleActuators.PatrolActuator(path=[])
+                new_object.actuator = actuators.PatrolActuator(path=[])
             print("Great, so what path this NPC should take:")
             print("1 - UP/DOWN patrol")
             print("2 - DOWN/UP patrol")
@@ -349,87 +375,87 @@ def create_wizard():
             print("7 - Circle patrol: RIGHT, DOWN, LEFT, UP")
             print("8 - Circle patrol: RIGHT, UP, LEFT, DOWN")
             print("9 - Write your own path")
-            r = Utils.get_key()
+            r = engine.Game.get_key()
             if r == "1":
                 print(
                     "How many steps should the NPC go in one direction "
                     "before turning back ?"
                 )
                 r = int(input_digit("(please enter an integer)> "))
-                new_object.actuator.path += ([Constants.UP for i in range(0, r, 1)],)
-                new_object.actuator.path += [Constants.DOWN for i in range(0, r, 1)]
+                new_object.actuator.path += ([constants.UP for i in range(0, r, 1)],)
+                new_object.actuator.path += [constants.DOWN for i in range(0, r, 1)]
             elif r == "2":
                 print(
                     "How many steps should the NPC go in one "
                     "direction before turning back ?"
                 )
                 r = int(input_digit("(please enter an integer)> "))
-                new_object.actuator.path += [Constants.DOWN for i in range(0, r, 1)]
-                new_object.actuator.path += [Constants.UP for i in range(0, r, 1)]
+                new_object.actuator.path += [constants.DOWN for i in range(0, r, 1)]
+                new_object.actuator.path += [constants.UP for i in range(0, r, 1)]
             elif r == "3":
                 print(
                     "How many steps should the NPC go in one "
                     "direction before turning back ?"
                 )
                 r = int(input_digit("(please enter an integer)> "))
-                new_object.actuator.path += [Constants.LEFT for i in range(0, r, 1)]
-                new_object.actuator.path += [Constants.RIGHT for i in range(0, r, 1)]
+                new_object.actuator.path += [constants.LEFT for i in range(0, r, 1)]
+                new_object.actuator.path += [constants.RIGHT for i in range(0, r, 1)]
             elif r == "3":
                 print(
                     "How many steps should the NPC go in one direction "
                     "before turning back ?"
                 )
                 r = int(input_digit("(please enter an integer)> "))
-                new_object.actuator.path += [Constants.RIGHT for i in range(0, r, 1)]
-                new_object.actuator.path += [Constants.LEFT for i in range(0, r, 1)]
+                new_object.actuator.path += [constants.RIGHT for i in range(0, r, 1)]
+                new_object.actuator.path += [constants.LEFT for i in range(0, r, 1)]
             elif r == "4":
                 print(
                     "How many steps should the NPC go in one "
                     "direction before turning back ?"
                 )
                 r = int(input_digit("(please enter an integer)> "))
-                new_object.actuator.path += [Constants.DOWN for i in range(0, r, 1)]
-                new_object.actuator.path += [Constants.UP for i in range(0, r, 1)]
+                new_object.actuator.path += [constants.DOWN for i in range(0, r, 1)]
+                new_object.actuator.path += [constants.UP for i in range(0, r, 1)]
             elif r == "5":
                 print(
                     "How many steps should the NPC go in EACH "
                     "direction before changing ?"
                 )
                 r = int(input_digit("(please enter an integer)> "))
-                new_object.actuator.path += [Constants.LEFT for i in range(0, r, 1)]
-                new_object.actuator.path += [Constants.DOWN for i in range(0, r, 1)]
-                new_object.actuator.path += [Constants.RIGHT for i in range(0, r, 1)]
-                new_object.actuator.path += [Constants.UP for i in range(0, r, 1)]
+                new_object.actuator.path += [constants.LEFT for i in range(0, r, 1)]
+                new_object.actuator.path += [constants.DOWN for i in range(0, r, 1)]
+                new_object.actuator.path += [constants.RIGHT for i in range(0, r, 1)]
+                new_object.actuator.path += [constants.UP for i in range(0, r, 1)]
             elif r == "6":
                 print(
                     "How many steps should the NPC go in EACH "
                     "direction before changing ?"
                 )
                 r = int(input_digit("(please enter an integer)> "))
-                new_object.actuator.path += [Constants.LEFT for i in range(0, r, 1)]
-                new_object.actuator.path += [Constants.UP for i in range(0, r, 1)]
-                new_object.actuator.path += [Constants.RIGHT for i in range(0, r, 1)]
-                new_object.actuator.path += [Constants.DOWN for i in range(0, r, 1)]
+                new_object.actuator.path += [constants.LEFT for i in range(0, r, 1)]
+                new_object.actuator.path += [constants.UP for i in range(0, r, 1)]
+                new_object.actuator.path += [constants.RIGHT for i in range(0, r, 1)]
+                new_object.actuator.path += [constants.DOWN for i in range(0, r, 1)]
             elif r == "7":
                 print(
                     "How many steps should the NPC go in EACH "
                     "direction before changing ?"
                 )
                 r = int(input_digit("(please enter an integer)> "))
-                new_object.actuator.path += [Constants.RIGHT for i in range(0, r, 1)]
-                new_object.actuator.path += [Constants.DOWN for i in range(0, r, 1)]
-                new_object.actuator.path += [Constants.LEFT for i in range(0, r, 1)]
-                new_object.actuator.path += [Constants.UP for i in range(0, r, 1)]
+                new_object.actuator.path += [constants.RIGHT for i in range(0, r, 1)]
+                new_object.actuator.path += [constants.DOWN for i in range(0, r, 1)]
+                new_object.actuator.path += [constants.LEFT for i in range(0, r, 1)]
+                new_object.actuator.path += [constants.UP for i in range(0, r, 1)]
             elif r == "8":
                 print(
                     "How many steps should the NPC go in EACH direction "
                     "before changing ?"
                 )
                 r = int(input_digit("(please enter an integer)> "))
-                new_object.actuator.path += [Constants.RIGHT for i in range(0, r, 1)]
-                new_object.actuator.path += [Constants.UP for i in range(0, r, 1)]
-                new_object.actuator.path += [Constants.LEFT for i in range(0, r, 1)]
-                new_object.actuator.path += [Constants.DOWN for i in range(0, r, 1)]
+                new_object.actuator.path += [constants.RIGHT for i in range(0, r, 1)]
+                new_object.actuator.path += [constants.UP for i in range(0, r, 1)]
+                new_object.actuator.path += [constants.LEFT for i in range(0, r, 1)]
+                new_object.actuator.path += [constants.DOWN for i in range(0, r, 1)]
             elif r == "9":
                 print(
                     "Write your own path using only words from this list: "
@@ -439,10 +465,10 @@ def create_wizard():
                 r = str(input("Write your path: ")).upper()
                 new_object.actuator.path = r.split(",")
             else:
-                Utils.warn(f'"{r}" is not a valid choice. Path is now empty.')
+                base.Text.warn(f'"{r}" is not a valid choice. Path is now empty.')
                 new_object.actuator.path = []
         elif r == "4":
-            new_object.actuator = AdvancedActuators.PathFinder(
+            new_object.actuator = actuators.PathFinder(
                 parent=new_object, circle_waypoints=True
             )
             print(
@@ -451,7 +477,7 @@ def create_wizard():
             )
             print("1 - Cycle once")
             print("2 - Cycle infinitely (default value)")
-            r = Utils.get_key()
+            r = engine.Game.get_key()
             if r == "1":
                 new_object.actuator.circle_waypoints = False
         return new_object
@@ -459,8 +485,8 @@ def create_wizard():
         while True:
             game.clear_screen()
             print(
-                Utils.green_bright("\t\tObject creation wizard: ")
-                + Utils.magenta_bright("Structure")
+                base.Text.green_bright("\t\tObject creation wizard: ")
+                + base.Text.magenta_bright("Structure")
             )
             print("What kind of structure do you want to create:")
             print(
@@ -482,20 +508,20 @@ def create_wizard():
                 "5 - A generic actionable object (to make portals, heart "
                 "to replenish life, etc.)"
             )
-            key = Utils.get_key()
+            key = engine.Game.get_key()
             new_object = None
             if key == "1":
-                new_object = Structures.Wall()
+                new_object = board_items.Wall()
                 new_object.name = str(uuid.uuid1())
                 new_object.model = model_picker()
                 break
             elif key == "2":
-                new_object = Structures.Door()
+                new_object = board_items.Door()
                 new_object.name = str(uuid.uuid1())
                 new_object.model = model_picker()
                 break
             elif key == "3":
-                new_object = Structures.Treasure()
+                new_object = board_items.Treasure()
                 print(
                     "First give a name to your Treasure. Default value: "
                     + new_object.name
@@ -517,9 +543,9 @@ def create_wizard():
                 break
             elif key == "4" or key == "5":
                 if key == "4":
-                    new_object = Structures.GenericStructure()
+                    new_object = board_items.GenericStructure()
                 else:
-                    new_object = Structures.GenericActionableStructure()
+                    new_object = board_items.GenericActionableStructure()
                 new_object.set_overlappable(False)
                 new_object.set_pickable(False)
                 print(
@@ -544,7 +570,7 @@ def create_wizard():
                 )
                 print("0 - No")
                 print("1 - Yes")
-                r = Utils.get_key()
+                r = engine.Game.get_key()
                 if r == "1":
                     new_object.set_pickable(True)
                 print(
@@ -552,7 +578,7 @@ def create_wizard():
                 )
                 print("0 - No")
                 print("1 - Yes")
-                r = Utils.get_key()
+                r = engine.Game.get_key()
                 if r == "1":
                     new_object.set_overlappable(True)
                 break
@@ -560,7 +586,7 @@ def create_wizard():
         return new_object
 
     # Placeholder
-    return BoardItemVoid()
+    return board_items.BoardItemVoid()
 
 
 def save_current_board():
@@ -578,7 +604,7 @@ def create_board_wizard():
     global current_file
     global default_map_dir
     game.clear_screen()
-    print(Utils.blue_bright("\t\tNew board"))
+    print(base.Text.blue_bright("\t\tNew board"))
     print("First we need some information on your new board:")
     name, width, height = None, None, None
     if game.config("settings")["last_used_board_parameters"]["name"] is not None:
@@ -594,7 +620,7 @@ def create_board_wizard():
         input_digit(f"Width (in number of cells) (default: {width}): ") or width
     )
     if game.config("settings")["last_used_board_parameters"]["height"] is not None:
-        height = game.config("settings")["last_used_board_parametersheight"]
+        height = game.config("settings")["last_used_board_parameters"]["height"]
     else:
         height = 20
     height = int(
@@ -602,11 +628,11 @@ def create_board_wizard():
     )
     game.add_board(
         1,
-        Board(
+        engine.Board(
             name=name,
             size=[width, height],
-            ui_borders=Utils.WHITE_SQUARE,
-            ui_board_void_cell=Utils.BLACK_SQUARE,
+            ui_borders=graphics.WHITE_SQUARE,
+            ui_board_void_cell=graphics.BLACK_SQUARE,
         ),
     )
     is_modified = True
@@ -616,6 +642,9 @@ def create_board_wizard():
         "width": width,
         "height": height,
     }
+    if game.get_board(1).size[0] > 20 or game.get_board(1).size[1] > 20:
+        game.enable_partial_display = True
+        game.partial_display_viewport = [10, 10]
 
 
 def first_use():
@@ -624,7 +653,7 @@ def first_use():
     global base_config_dir
     global default_map_dir
     global game
-    print(Utils.yellow_bright("Configuration wizard (fresh install or update)"))
+    print(base.Text.yellow_bright("Configuration wizard (fresh install or update)"))
     print(
         "You may see that wizard because hgl-editor was updated with new settings.\n"
         "Please check that everything is fine (your previous values are showned as "
@@ -646,7 +675,7 @@ def first_use():
         or not os.path.isdir(new_default)
         or not os.path.isabs(new_default)
     ) and new_default != "":
-        print(Utils.red("The path to directory needs to exists and be absolute."))
+        print(base.Text.red("The path to directory needs to exists and be absolute."))
         new_default = str(input("Default maps directory: "))
     if new_default != "":
         default_map_dir = new_default
@@ -669,24 +698,24 @@ def first_use():
 
 
 # Main program
-game = Game()
+game = engine.Game()
 current_file = ""
-game.player = Player(model="[]")
+game.player = board_items.Player(model="[]")
 key = "None"
-current_object = BoardItemVoid(model="None")
-current_object_instance = BoardItemVoid(model="None")
+current_object = board_items.BoardItemVoid(model="None")
+current_object_instance = board_items.BoardItemVoid(model="None")
 object_history = []
-viewport_board = Board(
+viewport_board = engine.Board(
     name="Viewport testing board",
     size=[viewport_width * 2, viewport_height * 2],
-    ui_borders=Utils.GREEN_SQUARE,
-    ui_board_void_cell=Utils.RED_SQUARE,
+    ui_borders=graphics.GREEN_SQUARE,
+    ui_board_void_cell=graphics.RED_SQUARE,
 )
 game.add_board(2, viewport_board)
 current_menu = "main"
 while True:
     game.clear_screen()
-    print(Utils.cyan_bright("HAC-GAME-LIB - EDITOR v" + Constants.HAC_GAME_LIB_VERSION))
+    print(base.Text.cyan_bright("PYGAMELIB - EDITOR v" + constants.PYGAMELIB_VERSION))
     # Create config_dir if not exist and populate it with a directories.json file.
     if (
         not os.path.exists(config_dir)
@@ -707,7 +736,7 @@ while True:
         # before using the objects.
         objlib = []
         for ref in game.config("settings")["object_library"]:
-            objlib.append(Game._ref2obj(ref))
+            objlib.append(engine.Game._ref2obj(ref))
         game.config("settings")["object_library"] = objlib
     print("Looking for existing maps in selected directories...", end="")
     default_map_dir = None
@@ -731,9 +760,9 @@ while True:
                     elif os.path.exists(os.path.join(directory, f)):
                         hmaps.append(os.path.join(directory, f))
     if len(hmaps) > 0:
-        print(Utils.green("OK"))
+        print(base.Text.green("OK"))
     else:
-        print(Utils.red_bright("KO"))
+        print(base.Text.red_bright("KO"))
 
     if len(hmaps) > 0:
         map_num = 0
@@ -774,93 +803,146 @@ if len(game.object_library) > 0:
 
 # Build the menus
 i = 0
-for sp in dir(Utils):
+# WARNING: This might break!!!!
+for sp in dir(graphics):
     if sp.endswith("_SQUARE") or sp.endswith("_RECT"):
         game.add_menu_entry(
-            "graphics_utils", str(i), '"' + getattr(Utils, sp) + '"', getattr(Utils, sp)
+            "graphics_utils",
+            str(i),
+            '"' + getattr(graphics, sp) + '"',
+            getattr(graphics, sp),
         )
         i += 1
 
+# WARNING: This might/will break!!!!
 i = 0
-for sp in dir(Sprites):
+for sp in dir(graphics.Models):
     if not sp.startswith("__"):
         game.add_menu_entry(
-            "graphics_sprites", str(i), getattr(Sprites, sp), getattr(Sprites, sp)
+            "graphics_models",
+            str(i),
+            getattr(graphics.Models, sp),
+            getattr(graphics.Models, sp),
         )
         i += 1
-
+i = 0
+for sp in dir(graphics.Blocks):
+    if not sp.startswith("__"):
+        game.add_menu_entry(
+            "graphics_blocks",
+            str(i),
+            getattr(graphics.Blocks, sp),
+            getattr(graphics.Blocks, sp),
+        )
+        i += 1
+i = 0
+for sp in dir(graphics.BoxDrawings):
+    if not sp.startswith("__"):
+        game.add_menu_entry(
+            "graphics_box_drawings",
+            str(i),
+            getattr(graphics.BoxDrawings, sp),
+            getattr(graphics.BoxDrawings, sp),
+        )
+        i += 1
+i = 0
+for sp in dir(graphics.GeometricShapes):
+    if not sp.startswith("__"):
+        game.add_menu_entry(
+            "graphics_geometric_shapes",
+            str(i),
+            getattr(graphics.GeometricShapes, sp),
+            getattr(graphics.GeometricShapes, sp),
+        )
+        i += 1
 game.add_menu_entry(
     "main", None, "\n=== Menu (" + game.config("settings")["menu_mode"] + ") ==="
 )
 game.add_menu_entry(
-    "main", Utils.white_bright("Space"), "Switch between edit/delete mode"
+    "main", base.Text.white_bright("Space"), "Switch between edit/delete mode"
 )
 game.add_menu_entry(
     "main",
-    Utils.white_bright("0 to 9"),
-    Utils.green_bright("Select") + " an item in history to be the current item",
+    base.Text.white_bright("0 to 9"),
+    base.Text.green_bright("Select") + " an item in history to be the current item",
 )
 game.add_menu_entry(
     "main",
-    Utils.white_bright("\u2190/\u2191/\u2193/\u2192"),
+    base.Text.white_bright("\u2190/\u2191/\u2193/\u2192"),
     "Move cursor Left/Up/Down/Right",
 )
 game.add_menu_entry(
     "main",
-    Utils.white_bright("j/i/k/l"),
-    Utils.green_bright("Place")
+    base.Text.white_bright("j/i/k/l"),
+    base.Text.green_bright("Place")
     + " the current item and then move cursor Left/Up/Down/Right",
 )
 game.add_menu_entry(
     "main",
-    Utils.white_bright("c"),
+    base.Text.white_bright("c"),
     "Create a new board item (becomes the current item,"
     + " previous one is placed in history)",
 )
-game.add_menu_entry("main", Utils.white_bright("p"), "Modify board parameters")
-game.add_menu_entry("main", Utils.white_bright("P"), "Set player starting position")
+game.add_menu_entry("main", base.Text.white_bright("p"), "Modify board parameters")
+game.add_menu_entry("main", base.Text.white_bright("P"), "Set player starting position")
 game.add_menu_entry(
-    "main", Utils.white_bright("V"), "Modify partial display viewport (resolution)"
+    "main", base.Text.white_bright("V"), "Modify partial display viewport (resolution)"
 )
 game.add_menu_entry(
-    "main", Utils.white_bright("S"), f"Save the current Board to {current_file}"
+    "main", base.Text.white_bright("S"), f"Save the current Board to {current_file}"
 )
 game.add_menu_entry(
-    "main", Utils.white_bright("+"), "Save this Board and create a new one"
+    "main", base.Text.white_bright("+"), "Save this Board and create a new one"
 )
 game.add_menu_entry(
-    "main", Utils.white_bright("L"), "Save this Board and load a new one"
+    "main", base.Text.white_bright("L"), "Save this Board and load a new one"
 )
 game.add_menu_entry(
-    "main", Utils.white_bright("m"), "Switch menu display mode between full or hidden"
+    "main",
+    base.Text.white_bright("m"),
+    "Switch menu display mode between full or hidden",
 )
-game.add_menu_entry("main", Utils.white_bright("Q"), "Quit the editor")
+game.add_menu_entry("main", base.Text.white_bright("Q"), "Quit the editor")
 
 game.add_menu_entry("board", None, "=== Board ===")
 game.add_menu_entry(
-    "board", "1", "Change " + Utils.white_bright("width") + " (only sizing up)"
+    "board", "1", "Change " + base.Text.white_bright("width") + " (only sizing up)"
 )
 game.add_menu_entry(
-    "board", "2", "Change " + Utils.white_bright("height") + " (only sizing up)"
+    "board", "2", "Change " + base.Text.white_bright("height") + " (only sizing up)"
 )
-game.add_menu_entry("board", "3", "Change " + Utils.white_bright("name"))
-game.add_menu_entry("board", "4", "Change " + Utils.white_bright("top") + " border")
-game.add_menu_entry("board", "5", "Change " + Utils.white_bright("bottom") + " border")
-game.add_menu_entry("board", "6", "Change " + Utils.white_bright("left") + " border")
-game.add_menu_entry("board", "7", "Change " + Utils.white_bright("right") + " border")
-game.add_menu_entry("board", "8", "Change " + Utils.white_bright("void cell"))
+game.add_menu_entry("board", "3", "Change " + base.Text.white_bright("name"))
+game.add_menu_entry("board", "4", "Change " + base.Text.white_bright("top") + " border")
+game.add_menu_entry(
+    "board", "5", "Change " + base.Text.white_bright("bottom") + " border"
+)
+game.add_menu_entry(
+    "board", "6", "Change " + base.Text.white_bright("left") + " border"
+)
+game.add_menu_entry(
+    "board", "7", "Change " + base.Text.white_bright("right") + " border"
+)
+game.add_menu_entry("board", "8", "Change " + base.Text.white_bright("void cell"))
 game.add_menu_entry("board", "0", "Go back to the main menu")
 game.add_menu_entry(
-    "viewport", Utils.white_bright("\u2191"), "Increase the number of rows displayed"
+    "viewport",
+    base.Text.white_bright("\u2191"),
+    "Increase the number of rows displayed",
 )
 game.add_menu_entry(
-    "viewport", Utils.white_bright("\u2193"), "Decrease the number of rows displayed"
+    "viewport",
+    base.Text.white_bright("\u2193"),
+    "Decrease the number of rows displayed",
 )
 game.add_menu_entry(
-    "viewport", Utils.white_bright("\u2192"), "Increase the number of columns displayed"
+    "viewport",
+    base.Text.white_bright("\u2192"),
+    "Increase the number of columns displayed",
 )
 game.add_menu_entry(
-    "viewport", Utils.white_bright("\u2190"), "Decrease the number of columns displayed"
+    "viewport",
+    base.Text.white_bright("\u2190"),
+    "Decrease the number of columns displayed",
 )
 game.add_menu_entry("viewport", "B", "Go back to the main menu")
 game.add_menu_entry("waypoint_edition", "j/i/k/l", "Place a waypoint")
@@ -902,38 +984,38 @@ while True:
             "\n=== Menu (" + game.config("settings")["menu_mode"] + ") ===",
         )
     elif current_menu == "main":
-        if key == Utils.key.UP:
-            game.move_player(Constants.UP, 1)
-        elif key == Utils.key.DOWN:
-            game.move_player(Constants.DOWN, 1)
-        elif key == Utils.key.LEFT:
-            game.move_player(Constants.LEFT, 1)
-        elif key == Utils.key.RIGHT:
-            game.move_player(Constants.RIGHT, 1)
+        if key == engine.key.UP:
+            game.move_player(constants.UP, 1)
+        elif key == engine.key.DOWN:
+            game.move_player(constants.DOWN, 1)
+        elif key == engine.key.LEFT:
+            game.move_player(constants.LEFT, 1)
+        elif key == engine.key.RIGHT:
+            game.move_player(constants.RIGHT, 1)
         elif key == "k" and edit_mode:
             current_object_instance = place_and_go(
-                current_object, game.player.pos[0], game.player.pos[1], Constants.DOWN
+                current_object, game.player.pos[0], game.player.pos[1], constants.DOWN
             )
         elif key == "i" and edit_mode:
             current_object_instance = place_and_go(
-                current_object, game.player.pos[0], game.player.pos[1], Constants.UP
+                current_object, game.player.pos[0], game.player.pos[1], constants.UP
             )
         elif key == "j" and edit_mode:
             current_object_instance = place_and_go(
-                current_object, game.player.pos[0], game.player.pos[1], Constants.LEFT
+                current_object, game.player.pos[0], game.player.pos[1], constants.LEFT
             )
         elif key == "l" and edit_mode:
             current_object_instance = place_and_go(
-                current_object, game.player.pos[0], game.player.pos[1], Constants.RIGHT
+                current_object, game.player.pos[0], game.player.pos[1], constants.RIGHT
             )
         elif key == "k" and not edit_mode:
-            clear_and_go(Constants.DOWN)
+            clear_and_go(constants.DOWN)
         elif key == "i" and not edit_mode:
-            clear_and_go(Constants.UP)
+            clear_and_go(constants.UP)
         elif key == "j" and not edit_mode:
-            clear_and_go(Constants.LEFT)
+            clear_and_go(constants.LEFT)
         elif key == "l" and not edit_mode:
-            clear_and_go(Constants.RIGHT)
+            clear_and_go(constants.RIGHT)
         elif key == " ":
             switch_edit_mode()
         elif key in "1234567890" and current_menu == "main":
@@ -957,7 +1039,7 @@ while True:
         elif key == "V":
             current_menu = "viewport"
             game.change_level(2)
-            game.player.model = Utils.RED_SQUARE
+            game.player.model = graphics.RED_SQUARE
         elif key == "c":
             to_history(current_object)
             current_object = create_wizard()
@@ -980,7 +1062,9 @@ while True:
                 for x in range(0, game.current_board().size[1], 1):
                     for y in range(old_value, game.current_board().size[0], 1):
                         game.current_board()._matrix[x].append(
-                            BoardItemVoid(model=game.current_board().ui_board_void_cell)
+                            board_items.BoardItemVoid(
+                                model=game.current_board().ui_board_void_cell
+                            )
                         )
                         is_modified = True
 
@@ -994,7 +1078,9 @@ while True:
                     new_array = []
                     for y in range(0, game.current_board().size[0], 1):
                         new_array.append(
-                            BoardItemVoid(model=game.current_board().ui_board_void_cell)
+                            board_items.BoardItemVoid(
+                                model=game.current_board().ui_board_void_cell
+                            )
                         )
                     game.current_board()._matrix.append(new_array)
                     is_modified = True
@@ -1037,7 +1123,7 @@ while True:
                 current_file = e["data"]
                 game.update_menu_entry(
                     "main",
-                    Utils.white_bright("S"),
+                    base.Text.white_bright("S"),
                     f"Save the current Board to {current_file}",
                 )
                 current_menu = "main"
@@ -1050,13 +1136,13 @@ while True:
             game.change_level(1)
             game.player.model = "[]"
             current_menu = "main"
-        elif key == Utils.key.UP:
+        elif key == engine.key.UP:
             viewport_height += 1
-        elif key == Utils.key.DOWN:
+        elif key == engine.key.DOWN:
             viewport_height -= 1
-        elif key == Utils.key.LEFT:
+        elif key == engine.key.LEFT:
             viewport_width -= 1
-        elif key == Utils.key.RIGHT:
+        elif key == engine.key.RIGHT:
             viewport_width += 1
         viewport_board.size = [viewport_width * 2, viewport_height * 2]
         viewport_board.init_board()
@@ -1064,14 +1150,14 @@ while True:
         game.config("settings")["partial_display_viewport"][0] = viewport_height
         game.config("settings")["partial_display_viewport"][1] = viewport_width
     elif current_menu == "waypoint_edition":
-        game.player.model = Utils.green_bright("[]")
+        game.player.model = base.Text.green_bright("[]")
         initial_position = game.player.pos
         # I'm lazy so I just go for the bazooka option
         for o in game.current_board().get_immovables(type="waypoint_marker"):
             game.current_board().clear_cell(o.pos[0], o.pos[1])
         for wp in current_object_instance.actuator.waypoints:
             game.current_board().place_item(
-                Structures.Door(model=Utils.GREEN_SQUARE, type="waypoint_marker"),
+                board_items.Door(model=graphics.GREEN_SQUARE, type="waypoint_marker"),
                 wp[0],
                 wp[1],
             )
@@ -1080,20 +1166,20 @@ while True:
             game.player.model = "[]"
             for o in game.current_board().get_immovables(type="waypoint_marker"):
                 game.current_board().clear_cell(o.pos[0], o.pos[1])
-        elif key == Utils.key.UP:
-            game.move_player(Constants.UP, 1)
-        elif key == Utils.key.DOWN:
-            game.move_player(Constants.DOWN, 1)
-        elif key == Utils.key.LEFT:
-            game.move_player(Constants.LEFT, 1)
-        elif key == Utils.key.RIGHT:
-            game.move_player(Constants.RIGHT, 1)
+        elif key == engine.key.UP:
+            game.move_player(constants.UP, 1)
+        elif key == engine.key.DOWN:
+            game.move_player(constants.DOWN, 1)
+        elif key == engine.key.LEFT:
+            game.move_player(constants.LEFT, 1)
+        elif key == engine.key.RIGHT:
+            game.move_player(constants.RIGHT, 1)
         elif key == "k" and edit_mode:
             place_and_go(
-                Structures.Door(model=Utils.GREEN_SQUARE, type="waypoint_marker"),
+                board_items.Door(model=graphics.GREEN_SQUARE, type="waypoint_marker"),
                 game.player.pos[0],
                 game.player.pos[1],
-                Constants.DOWN,
+                constants.DOWN,
             )
             if initial_position != game.player.pos:
                 current_object_instance.actuator.add_waypoint(
@@ -1101,10 +1187,10 @@ while True:
                 )
         elif key == "i" and edit_mode:
             place_and_go(
-                Structures.Door(model=Utils.GREEN_SQUARE, type="waypoint_marker"),
+                board_items.Door(model=graphics.GREEN_SQUARE, type="waypoint_marker"),
                 game.player.pos[0],
                 game.player.pos[1],
-                Constants.UP,
+                constants.UP,
             )
             if initial_position != game.player.pos:
                 current_object_instance.actuator.add_waypoint(
@@ -1112,10 +1198,10 @@ while True:
                 )
         elif key == "j" and edit_mode:
             place_and_go(
-                Structures.Door(model=Utils.GREEN_SQUARE, type="waypoint_marker"),
+                board_items.Door(model=graphics.GREEN_SQUARE, type="waypoint_marker"),
                 game.player.pos[0],
                 game.player.pos[1],
-                Constants.LEFT,
+                constants.LEFT,
             )
             if initial_position != game.player.pos:
                 current_object_instance.actuator.add_waypoint(
@@ -1123,10 +1209,10 @@ while True:
                 )
         elif key == "l" and edit_mode:
             place_and_go(
-                Structures.Door(model=Utils.GREEN_SQUARE, type="waypoint_marker"),
+                board_items.Door(model=graphics.GREEN_SQUARE, type="waypoint_marker"),
                 game.player.pos[0],
                 game.player.pos[1],
-                Constants.RIGHT,
+                constants.RIGHT,
             )
             if initial_position != game.player.pos:
                 current_object_instance.actuator.add_waypoint(
@@ -1143,11 +1229,11 @@ while True:
     # Print the screen and interface
     game.clear_screen()
     if current_menu == "main" or current_menu == "board":
-        print(Utils.white_bright("Current mode: "), end="")
+        print(base.Text.white_bright("Current mode: "), end="")
         if edit_mode:
-            print(Utils.green_bright("EDIT"), end="")
+            print(base.Text.green_bright("EDIT"), end="")
         else:
-            print(Utils.red_bright("DELETE"), end="")
+            print(base.Text.red_bright("DELETE"), end="")
         print(
             f" | Board: {game.current_board().name} -",
             f"{game.current_board().size} | Cursor @ {game.player.pos}",
@@ -1166,23 +1252,23 @@ while True:
     if not (
         current_menu == "main" and game.config("settings")["menu_mode"] == "hidden"
     ):
-        game.display_menu(current_menu, Constants.ORIENTATION_VERTICAL, 15)
+        game.display_menu(current_menu, constants.ORIENTATION_VERTICAL, 15)
     for m in dbg_messages:
-        Utils.debug(m)
+        base.Text.debug(m)
     for m in info_messages:
-        Utils.info(m)
+        base.Text.info(m)
     for m in warn_messages:
-        Utils.warn(m)
+        base.Text.warn(m)
     if current_menu == "boards_list":
         key = input("Enter your choice (and hit ENTER): ")
     else:
-        key = Utils.get_key()
+        key = engine.Game.get_key()
 
 # Before saving we need to transform the object library into reference that json can
 # understand
 reflib = []
 for o in game.config("settings")["object_library"]:
-    reflib.append(Game._obj2ref(o))
+    reflib.append(engine.Game._obj2ref(o))
 game.config("settings")["object_library"] = reflib
 # Let's also save the partial display viewport
 game.config("settings")["partial_display_viewport"][0] = viewport_height
