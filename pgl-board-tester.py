@@ -21,11 +21,11 @@ g = engine.Game()
 
 b = g.load_board(board_to_load, 1)
 
-if b.width() >= g.screen.width() or b.height() >= g.screen.height():
+if b.width >= g.screen.width or b.height >= g.screen.height:
     g.enable_partial_display = True
     g.partial_display_viewport = [
-        int((g.screen.height() - 2) / 2),
-        int((g.screen.width() - 2) / 4),
+        int((g.screen.height - 2) / 2),
+        int((g.screen.width - 2) / 4),
     ]
 
 g.player = board_items.Player(model=graphics.Models.FLYING_SAUCER)
