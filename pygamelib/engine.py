@@ -326,6 +326,7 @@ class Board:
         else:
             raise base.PglException("SANITY_CHECK_KO", "The board data are not valid.")
 
+    @property
     def width(self):
         """A convenience method to get the width of the Board.
 
@@ -336,11 +337,12 @@ class Board:
 
         Example::
 
-            if board.size[0] != board.width():
+            if board.size[0] != board.width:
                 print('Houston, we have a problem...')
         """
         return self.size[0]
 
+    @property
     def height(self):
         """A convenience method to get the height of the Board.
 
@@ -351,7 +353,7 @@ class Board:
 
         Example::
 
-            if board.size[1] != board.height():
+            if board.size[1] != board.height:
                 print('Houston, we have a problem...')
         """
         return self.size[1]
@@ -406,8 +408,8 @@ class Board:
         pos_row = object.pos[0]
         pos_col = object.pos[1]
         if isinstance(object, board_items.BoardComplexItem):
-            pos_row = object.pos[0] + int(object.height() / 2)
-            pos_col = object.pos[1] + int(object.width() / 2)
+            pos_row = object.pos[0] + int(object.height / 2)
+            pos_col = object.pos[1] + int(object.width / 2)
         # Row
         if pos_row - row_radius >= 0:
             row_min_bound = pos_row - row_radius
@@ -630,8 +632,8 @@ class Board:
                 projected_position is not None
                 and projected_position.row >= 0
                 and projected_position.column >= 0
-                and (projected_position.row + item.height() - 1) < self.size[1]
-                and (projected_position.column + item.width() - 1) < self.size[0]
+                and (projected_position.row + item.height - 1) < self.size[1]
+                and (projected_position.column + item.width - 1) < self.size[0]
             ):
                 can_draw = True
                 for orow in range(0, item.size[1]):

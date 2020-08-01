@@ -137,6 +137,7 @@ class BoardItem:
         """
         return base.Vector2D(self.pos[0], self.pos[1])
 
+    @property
     def row(self):
         """Convenience method to get the current stored row of the item.
 
@@ -147,11 +148,12 @@ class BoardItem:
 
         Example::
 
-            if item.row() != item.pos[0]:
+            if item.row != item.pos[0]:
                 print('Something extremely unlikely just happened...')
         """
         return self.pos[0]
 
+    @property
     def column(self):
         """Convenience method to get the current stored column of the item.
 
@@ -162,11 +164,12 @@ class BoardItem:
 
         Example::
 
-            if item.column() != item.pos[1]:
+            if item.column != item.pos[1]:
                 print('Something extremely unlikely just happened...')
         """
         return self.pos[1]
 
+    @property
     def width(self):
         """Convenience method to get the width of the item.
 
@@ -177,11 +180,12 @@ class BoardItem:
 
         Example::
 
-            if item.width() > board.width():
+            if item.width > board.width:
                 print('The item is too big for the board.')
         """
         return self.size[0]
 
+    @property
     def height(self):
         """Convenience method to get the height of the item.
 
@@ -192,7 +196,7 @@ class BoardItem:
 
         Example::
 
-            if item.height() > board.height():
+            if item.height > board.height:
                 print('The item is too big for the board.')
         """
         return self.size[1]

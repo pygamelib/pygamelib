@@ -108,6 +108,13 @@ class TestBoard(unittest.TestCase):
         self.board.clear_cell(1, 1)
         self.assertIsInstance(self.board.item(1, 1), pgl_board_items.BoardItemVoid)
 
+    def test_size(self):
+        board = pgl_engine.Board(
+            name="test_board", size=[20, 30], player_starting_position=[5, 5]
+        )
+        self.assertEqual(board.height, 30)
+        self.assertEqual(board.width, 20)
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -28,8 +28,8 @@ class TestBase(unittest.TestCase):
         self.assertIsInstance(scr, gfx_core.Screen)
 
     def test_screen_dimension(self):
-        self.assertEqual(self.term.width, self.screen.width())
-        self.assertEqual(self.term.height, self.screen.height())
+        self.assertEqual(self.term.width, self.screen.width)
+        self.assertEqual(self.term.height, self.screen.height)
 
 
 if __name__ == "__main__":

@@ -650,6 +650,7 @@ class Screen(object):
         sys.stdout.write(self.terminal.clear)
         sys.stdout.flush()
 
+    @property
     def width(self):
         """
         This method wraps Terminal.width and return the width of the terminal window in
@@ -657,6 +658,7 @@ class Screen(object):
         """
         return self.terminal.width
 
+    @property
     def height(self):
         """
         This method wraps Terminal.height and return the height of the terminal window

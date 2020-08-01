@@ -701,9 +701,9 @@ class Math(object):
 
         Example::
 
-            if intersect(projectile.row(), projectile.column(), projectile.width(),
-                         projectile.height(), bady.row(), bady.column(), bady.width(),
-                         bady.height()):
+            if intersect(projectile.row, projectile.column, projectile.width,
+                         projectile.height, bady.row, bady.column, bady.width,
+                         bady.height):
                 projectile.hit([bady])
         """
         # Shortcut: if they are at the same position they obviously intersect
@@ -737,9 +737,9 @@ class Math(object):
 
         Example::
 
-            distance = round(base.Math.distance(player.row(),
-                                            player.column(),
-                                            npc.row(),
-                                            npc.column()))
+            distance = round(base.Math.distance(player.row,
+                                            player.column,
+                                            npc.row,
+                                            npc.column)
         """
         return math.sqrt((column2 - column1) ** 2 + (row2 - row1) ** 2)
