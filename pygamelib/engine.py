@@ -776,14 +776,19 @@ class Board:
         .. todo:: check all types!
 
         """
+        rounded_direction = None
         if isinstance(direction, base.Vector2D):
             # If direction is a vector, round the numbers to the next integer.
-            direction.row = round(direction.row)
-            direction.column = round(direction.column)
-        if isinstance(item, board_items.BoardComplexItem):
-            return self._move_complex(item, direction, step)
+            rounded_direction = base.Vector2D(
+                round(direction.row), round(direction.column)
+            )
         else:
-            return self._move_simple(item, direction, step)
+            # Else, just use the direction
+            rounded_direction = direction
+        if isinstance(item, board_items.BoardComplexItem):
+            return self._move_complex(item, rounded_direction, step)
+        else:
+            return self._move_simple(item, rounded_direction, step)
 
     def _move_simple(self, item, direction, step=1):
         if isinstance(item, board_items.Movable) and item.can_move():
