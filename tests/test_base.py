@@ -50,10 +50,11 @@ class TestBase(unittest.TestCase):
     def test_v2d_mult(self):
         v = self.vectors[0] * self.vectors[1]
         self.assertEqual(v, 0.0)
-        v = self.vectors[0] * self.vectors[2]
+        v = self.vectors[1] * self.vectors[2]
         self.assertEqual(v, 0.0)
         v = (self.vectors[2] + self.vectors[1]) * self.vectors[2]
-        self.assertEqual(v, -3.0)
+        self.assertEqual(v, 0.0)
+        self.assertEqual(self.vectors[2] * pgl_base.Vector2D(2, 5.0), 6.0)
 
     def test_v2d_unit(self):
         self.assertEqual(self.vectors[0].unit(), pgl_base.Vector2D())

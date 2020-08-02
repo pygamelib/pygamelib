@@ -485,6 +485,29 @@ class Vector2D:
      - substraction
      - multiplication
 
+    Let's elaborate a bit more on the multiplication. The product behaves in 2 different
+    ways:
+
+    If you multiply a vector with a scalar (int or float), the return value is a
+    Vector2D with each vector component multiplied by said scalar.
+
+    If you multiply a Vector2D with another Vector2D you ask for the the cross
+    product of vectors. This is an undefined mathematical operation in 2D as the
+    cross product is supposed to be perpendicular to the 2 other vectors (along the
+    z axis in our case). Since we don't have depth (z) in 2D, this will return the
+    magnitude of the signed cross product of the 2 vectors.
+
+    Example of products::
+
+        v1 = base.Vector2D(1,2)
+        v2 = base.Vector2D(3,4)
+        # This returns -2
+        mag = v1 * v2
+        # This returns a Vector2D with values (-1, -2)
+        inv = v1 * -1
+        # This return a Vector2D with values (2.85, 3.8) or 95% of v2
+        dim = v2 * 0.95
+
     :param row: The row/y parameter.
     :type row: int
     :param column: The column/x parameter.
@@ -532,7 +555,7 @@ class Vector2D:
             )
         if isinstance(other, Vector2D):
             return round(
-                self.row * other.column - self.column * self.row,
+                self.row * other.column - self.column * other.row,
                 self.rounding_precision,
             )
 
