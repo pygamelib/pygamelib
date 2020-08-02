@@ -113,14 +113,14 @@ def color_picker():
 def utf8_picker(category):
     global game
     nb_elts = int(game.terminal.width / 12)
-    if len(game._menu[category]) / nb_elts > game.screen.height():
+    if len(game._menu[category]) / nb_elts > game.screen.height:
         idx_line = 0
         idx_col = 0
         offset = 0
         while True:
             game.clear_screen()
             print("Pick a glyph from the list:")
-            while idx_line < game.screen.height() - 5:
+            while idx_line < game.screen.height - 5:
                 idx_col = nb_elts * idx_line + offset
                 if idx_col < 0:
                     idx_col = 0
