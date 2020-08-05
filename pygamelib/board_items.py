@@ -439,8 +439,14 @@ class Movable(BoardItem):
 
     Movable subclasses :class:`BoardItem`.
 
-    :param step: the amount of cell a movable can cross in one turn.
+    :param step: the amount of cell a movable can cross in one turn. Default value: 1.
     :type step: int
+    :param step_vertical: the amount of cell a movable can vertically cross in one turn.
+       Default value: step value.
+    :type step_vertical: int
+    :param step_horizontal: the amount of cell a movable can horizontally cross in one
+       turn. Default value: step value.
+    :type step_horizontal: int
 
     This class derive BoardItem and describe an object that can move or be
     moved (like a player or NPC).
@@ -451,10 +457,20 @@ class Movable(BoardItem):
 
     def __init__(self, **kwargs):
         BoardItem.__init__(self, **kwargs)
-        if "step" not in kwargs.keys():
-            self.step = 1
-        else:
-            self.step = kwargs["step"]
+        # Set default values
+        for s in ["step", "step_vertical", "step_horizontal"]:
+            if s not in kwargs.keys():
+                # self.step = 1
+                self.__setattr__(s, 1)
+            else:
+                # self.step = kwargs["step"]
+                self.__setattr__(s, kwargs[s])
+        # Now if only step is set and it's not 1, set the correct value for the 2 others
+        if "step_vertical" not in kwargs.keys() and self.step != 1:
+            self.step_vertical = self.step
+
+        if "step_horizontal" not in kwargs.keys() and self.step != 1:
+            self.step_horizontal = self.step
 
     def can_move(self):
         """
