@@ -358,7 +358,7 @@ class Board:
         """
         return self.size[1]
 
-    def display_around(self, object, row_radius, column_radius):
+    def display_around(self, item, row_radius, column_radius):
         """Display only a part of the board.
 
         This method behaves like display() but only display a part of the board around
@@ -382,7 +382,7 @@ class Board:
         It uses the same display algorithm than the regular display() method.
         """
         # First let's take care of the type checking
-        if not isinstance(object, board_items.BoardItem):
+        if not isinstance(item, board_items.BoardItem):
             raise base.PglInvalidTypeException(
                 "Board.display_around: object needs to be a BoardItem."
             )
@@ -405,11 +405,11 @@ class Board:
         column_max_bound = self.size[0]
         # Here we account for the dimension of the complex item to center the viewport
         # on it.
-        pos_row = object.pos[0]
-        pos_col = object.pos[1]
-        if isinstance(object, board_items.BoardComplexItem):
-            pos_row = object.pos[0] + int(object.height / 2)
-            pos_col = object.pos[1] + int(object.width / 2)
+        pos_row = item.pos[0]
+        pos_col = item.pos[1]
+        if isinstance(item, board_items.BoardComplexItem):
+            pos_row = item.pos[0] + int(item.height / 2)
+            pos_col = item.pos[1] + int(item.width / 2)
         # Row
         if pos_row - row_radius >= 0:
             row_min_bound = pos_row - row_radius
@@ -439,8 +439,8 @@ class Board:
             bt_size = column_radius * 2
             if bt_size >= self.size[0]:
                 bt_size = self.size[0]
-                if pos_col - column_radius > 0:
-                    bt_size = self.size[0] - (pos_col - column_radius)
+                # if pos_col - column_radius > 0:
+                #     bt_size = self.size[0] - (pos_col - column_radius)
             print(self.ui_border_top * bt_size, end="")
             if column_min_bound <= 0 and column_max_bound >= self.size[0]:
                 print(self.ui_border_top * 2, end="")
@@ -465,8 +465,8 @@ class Board:
             bb_size = column_radius * 2
             if bb_size >= self.size[0]:
                 bb_size = self.size[0]
-                if pos_col - column_radius > 0:
-                    bb_size = self.size[0] - (pos_col - column_radius)
+                # if pos_col - column_radius > 0:
+                #     bb_size = self.size[0] - (pos_col - column_radius)
             print(self.ui_border_bottom * bb_size, end="")
             if column_min_bound <= 0 and column_max_bound >= self.size[0]:
                 print(self.ui_border_bottom * 2, end="")
@@ -869,7 +869,7 @@ class Board:
                     ):
                         self._matrix[new_row][new_column].activate()
                 # Now we check if the destination contains a pickable item.
-                # Note: I'm not sure why I decided that pickables were not overlapable.
+                # Note: I'm not sure why I decided that pickables were not overlappable.
                 if (
                     not self._matrix[new_row][new_column].overlappable()
                     and self._matrix[new_row][new_column].pickable()
@@ -1617,15 +1617,32 @@ class Game:
             mygame.actuate_npcs(1)
 
         .. note:: This method only move NPCs when their actuator state is RUNNING. If it
-            is PAUSED or STOPPED, theNPC is not moved.
+            is PAUSED or STOPPED, the NPC is not moved.
+
+        .. note:: Since version 1.2.0 it's possible for a Movable item to have
+           different vertical and horizontal movement steps, so actuate_npc respect that
+           by integrating the steps with a unit direction vector. It should be
+           completely transparent and you should not expect any change. Just more
+           movement freedom. If you do experience issues, please report a bug.
         """
         if self.state == constants.RUNNING:
             if type(level_number) is int:
                 if level_number in self._boards.keys():
                     for npc in self._boards[level_number]["npcs"]:
                         if npc.actuator.state == constants.RUNNING:
+                            # Since version 1.2.0 horizontal and vertical movement
+                            # amplitude can be different so we proceed in 2 steps:
+                            #  1 - build a unit direction vector
+                            #  2 - use its component to build a movement vector
+                            d = base.Vector2D.from_direction(
+                                npc.actuator.next_move(), 1
+                            )
                             self._boards[level_number]["board"].move(
-                                npc, npc.actuator.next_move(), npc.step
+                                npc,
+                                base.Vector2D(
+                                    d.row * npc.step_vertical,
+                                    d.column * npc.step_horizontal,
+                                ),
                             )
                 else:
                     raise base.PglInvalidLevelException(
@@ -1758,64 +1775,74 @@ class Game:
             if type(level_number) is int:
                 if level_number in self._boards.keys():
                     board = self._boards[level_number]["board"]
+                    # For each projectile we need to cover 3 cases:
+                    #  1 - projectile range > 0 but the projectile collide with
+                    #      something (a moving object that moves into the projectile)
+                    #      => it's a hit
+                    #  2 - Range still > 0, the projectile itself cannot move forward
+                    #      because its path is blocked.  => it is also a hit
+                    #  3 - Range falls to 0 without colliding with anything.
+                    #      => it is a miss but we still need to callback with an empty
+                    #      list or the AOE neighbors.
                     for proj in self._boards[level_number]["projectiles"]:
                         if proj.actuator.state == constants.RUNNING:
                             if proj.range > 0:
+                                # Build a unit movement vector
+                                umv = base.Vector2D.from_direction(
+                                    proj.actuator.next_move(), 1
+                                )
+                                # Build a movement vector
+                                dm = base.Vector2D(
+                                    umv.row * proj.step_vertical,
+                                    umv.column * proj.step_horizontal,
+                                )
+                                # Then get a projected position (the projected position)
+                                # is the position where the projectile should move if
+                                # nothing blocks its path. And that's where it will be
+                                # unless we detect a collision.
+                                pp = base.Vector2D(
+                                    proj.row + dm.row, proj.column + dm.column,
+                                )
+                                v = proj.position_as_vector()
+                                if (
+                                    v.row >= 0
+                                    and v.row < board.height
+                                    and v.column >= 0
+                                    and v.column < board.width
+                                ):
+                                    item = board.item(v.row, v.column)
+                                    if (
+                                        item != proj
+                                        and not isinstance(
+                                            item, board_items.BoardItemVoid
+                                        )
+                                        and not item.overlappable()
+                                        and (proj.collides_with(item))
+                                    ):
+                                        if proj.is_aoe:
+                                            # AoE is easy, just return
+                                            # everything in range
+                                            proj.hit(
+                                                self.neighbors(proj.aoe_radius, proj)
+                                            )
+                                            return
+                                        else:
+                                            # Else just the item
+                                            proj.hit([item])
+                                            return
                                 init_position = proj.pos
-                                direction = proj.actuator.next_move()
-                                board.move(proj, direction, proj.step)
-                                proj.range -= proj.step
-                                # If range was positive and position did not change
-                                # it means something is blocking the projectile path
-                                # in other words: we detected a collision.
+                                board.move(proj, dm)
                                 if proj.pos == init_position:
                                     if proj.is_aoe:
-                                        # AoE is easy, just return everything in range
                                         proj.hit(self.neighbors(proj.aoe_radius, proj))
                                     else:
-                                        # directional hit requires us to get the item
-                                        # that blocked our path
-                                        proj.hit([board_items.BoardItemVoid()])
-                                        new_x = None
-                                        new_y = None
-                                        if direction == constants.UP:
-                                            new_x = proj.pos[0] - proj.step
-                                            new_y = proj.pos[1]
-                                        elif direction == constants.DOWN:
-                                            new_x = proj.pos[0] + proj.step
-                                            new_y = proj.pos[1]
-                                        elif direction == constants.LEFT:
-                                            new_x = proj.pos[0]
-                                            new_y = proj.pos[1] - proj.step
-                                        elif direction == constants.RIGHT:
-                                            new_x = proj.pos[0]
-                                            new_y = proj.pos[1] + proj.step
-                                        elif direction == constants.DRUP:
-                                            new_x = proj.pos[0] - proj.step
-                                            new_y = proj.pos[1] + proj.step
-                                        elif direction == constants.DRDOWN:
-                                            new_x = proj.pos[0] + proj.step
-                                            new_y = proj.pos[1] + proj.step
-                                        elif direction == constants.DLUP:
-                                            new_x = proj.pos[0] - proj.step
-                                            new_y = proj.pos[1] - proj.step
-                                        elif direction == constants.DLDOWN:
-                                            new_x = proj.pos[0] + proj.step
-                                            new_y = proj.pos[1] - proj.step
-                                        if (
-                                            new_x is not None
-                                            and new_y is not None
-                                            and new_x >= 0
-                                            and new_y >= 0
-                                            and new_x < board.size[1]
-                                            and new_y < board.size[0]
-                                        ):
-                                            proj.hit([board.item(new_x, new_y)])
+                                        proj.hit([board.item(pp.row, pp.column)])
+                                proj.range -= proj.step
                             elif proj.range == 0:
                                 if proj.is_aoe:
                                     proj.hit(self.neighbors(proj.aoe_radius, proj))
                                 else:
-                                    proj.hit([board_items.BoardItemVoid()])
+                                    proj.hit([board.generate_void_cell()])
                             else:
                                 self._boards[level_number]["projectiles"].remove(proj)
                                 board.clear_cell(proj.pos[0], proj.pos[1])
