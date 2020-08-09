@@ -9,6 +9,7 @@ from pygamelib import engine
 from pygamelib import board_items
 from pygamelib.assets import graphics
 from pygamelib import base
+import pygamelib.gfx.core as gfx_core
 
 # Global variables
 is_modified = False
@@ -661,15 +662,43 @@ def create_board_wizard():
     height = int(
         input_digit(f"Height (in number of cells) (default: {height}): ") or height
     )
+    print(
+        "\nFinally, we need to know how to configure your new board regarding the "
+        "items that you are going to put inside. Do you plan to use a mix of emojis "
+        "(that displays on 2 characters in the terminal) and regular single characters?"
+        "Or do you plan to use only squared items (emojis and colored squares)?"
+    )
+    use_square = input_digit(
+        "0 - Mixed: emojis, rectangles and any other characters\n"
+        "1 - Squares only: emojis and colored square (or any double characters)\n"
+        "Your choice: "
+    )
+    ui_borders = graphics.WHITE_SQUARE
+    ui_board_void_cell = graphics.BLACK_SQUARE
+    use_complex_item = False
+    if use_square == "0":
+        ui_borders = graphics.WHITE_RECT
+        ui_board_void_cell = graphics.BLACK_RECT
+        base.Text.warn(
+            "You have to pay attention to the items movements, you probably"
+            " want to make sure the items move faster horizontally than vertically."
+        )
+        cursor = gfx_core.Sprite(
+            sprixels=[[gfx_core.Sprixel("["), gfx_core.Sprixel("]")]]
+        )
+        game.player = board_items.ComplexPlayer(sprite=cursor)
+        use_complex_item = True
+        input("\n\nPress ENTER to continue.")
     game.add_board(
         1,
         engine.Board(
             name=name,
             size=[width, height],
-            ui_borders=graphics.WHITE_SQUARE,
-            ui_board_void_cell=graphics.BLACK_SQUARE,
+            ui_borders=ui_borders,
+            ui_board_void_cell=ui_board_void_cell,
         ),
     )
+    game.get_board(1).use_complex_item = use_complex_item
     is_modified = True
     current_file = os.path.join(default_map_dir, name.replace(" ", "_") + ".json")
     game.config("settings")["last_used_board_parameters"] = {
@@ -736,6 +765,7 @@ def first_use():
 game = engine.Game()
 current_file = ""
 game.player = board_items.Player(model="[]")
+
 key = "None"
 current_object = board_items.BoardItemVoid(model="None")
 current_object_instance = board_items.BoardItemVoid(model="None")
