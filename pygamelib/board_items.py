@@ -382,6 +382,8 @@ class BoardComplexItem(BoardItem):
                 setattr(self, item, kwargs[item])
         if self.size is None:
             self.size = self.sprite.size
+        if isinstance(self.sprite, core.Sprite) and self.sprite.parent is None:
+            self.sprite.parent = self
         self.update_sprite()
 
     def __repr__(self):
