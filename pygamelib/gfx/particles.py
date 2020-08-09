@@ -56,9 +56,3 @@ class BaseParticle(board_items.Movable):
         Overlapable always return true. As by definition a particle is overlapable.
         """
         return True
-
-    def size(self):
-        """
-        The size of a particle is the result of size[0]*size[1].
-        """
-        return self.size[0] * self.size[1]
