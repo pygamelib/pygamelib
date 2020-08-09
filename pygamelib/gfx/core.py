@@ -215,6 +215,113 @@ class Sprixel(object):
 
 
 class Sprite(object):
+    """
+    The Sprite object represent a 2D "image" that can be used to represent any complex
+    item.
+    Obviously, a sprite in the pygamelib is not really an image, it is a series of
+    glyphs (or characters) with colors (foreground and background) information.
+
+    A Sprite object is a 2D array of :class:`Sprixel`.
+
+    If you use the climage python module, you can load the generated result into a
+    Sprite through Sprite.load_from_ansi_file().
+
+    :param sprixels: A 2D array of :class:`Sprixel`.
+    :type sprixels: list
+    :param default_sprixel: A default Sprixel to complete lines that are not long
+       enough. By default, it's an empty Sprixel.
+    :type default_sprixel: :class:`Sprixel`
+    :param parent: The parent object of this Sprite. If it's left to None, the
+       :class:`~pygamelib.board_items.BoardComplexItem` constructor takes ownership of
+       the sprite.
+    :type parent: :class:`~pygamelib.board_items.BoardComplexItem` (suggested)
+    :param size: A 2 elements list that represent the width and height ([width, height])
+       of the Sprite. It is only needed if you create an empty Sprite. If you load from
+       a file or provide an array of sprixels it's obviously calculated automatically.
+       Default value: [2, 2].
+    :type size: list
+
+    Example::
+
+        void = Sprixel()
+        # This represent a panda
+        panda_sprite = Sprite(
+            sprixels=[
+                [void, void, void, void, void, void, void, void],
+                [
+                    Sprixel.black_rect(),
+                    Sprixel.black_rect(),
+                    void,
+                    void,
+                    void,
+                    void,
+                    Sprixel.black_rect(),
+                    Sprixel.black_rect(),
+                ],
+                [
+                    Sprixel.white_rect(),
+                    Sprixel.white_rect(),
+                    Sprixel.white_rect(),
+                    Sprixel.white_rect(),
+                    Sprixel.white_rect(),
+                    Sprixel.white_rect(),
+                    Sprixel.white_rect(),
+                    Sprixel.white_rect(),
+                ],
+                [
+                    Sprixel.white_rect(),
+                    Sprixel.white_rect(),
+                    Sprixel.black_rect(),
+                    Sprixel.black_rect(),
+                    Sprixel.white_rect(),
+                    Sprixel.white_rect(),
+                    Sprixel.black_rect(),
+                    Sprixel.black_rect(),
+                ],
+                [
+                    Sprixel.white_rect(),
+                    Sprixel.white_rect(),
+                    Sprixel.white_rect(),
+                    Sprixel.white_rect(),
+                    Sprixel.red_rect(),
+                    Sprixel.red_rect(),
+                    Sprixel.white_rect(),
+                    Sprixel.white_rect(),
+                ],
+                [
+                    void,
+                    void,
+                    Sprixel.black_rect(),
+                    Sprixel.black_rect(),
+                    Sprixel.black_rect(),
+                    Sprixel.black_rect(),
+                    void,
+                    void,
+                ],
+                [
+                    void,
+                    void,
+                    Sprixel.white_rect(),
+                    Sprixel.white_rect(),
+                    Sprixel.white_rect(),
+                    Sprixel.white_rect(),
+                    Sprixel.black_rect(),
+                    Sprixel.black_rect(),
+                ],
+                [
+                    void,
+                    void,
+                    Sprixel.black_rect(),
+                    Sprixel.black_rect(),
+                    void,
+                    void,
+                    void,
+                    void,
+                ],
+            ],
+        )
+    """
+
     def __init__(
         self, sprixels=None, default_sprixel=Sprixel(), parent=None, size=[2, 2]
     ):
@@ -250,25 +357,116 @@ class Sprite(object):
         return self.__repr__()
 
     def empty(self):
+        """Empty the sprite and fill it with default sprixels.
+
+        Example::
+
+            player_sprite.empty()
+        """
         self._sprixels = [
             [self.default_sprixel for i in range(0, self.size[0])]
             for j in range(0, self.size[1])
         ]
 
     def sprixel(self, row=0, column=None):
-        # WARNING: For performance consideration sprixel() does not check the size of
-        # its matrix. This method is called many times during rendering and 2 calls to
-        # len() in a row are adding up pretty quickly.
+        """Return a sprixel at a specific position within the sprite.
+
+        If the column is set to None, the whole row is returned.
+
+        :param row: The row to access within the sprite.
+        :type row: int
+        :param column: The column to access within the sprite.
+        :type column: int
+
+        Example::
+
+            # Return the entire line at row index 2
+            scanline = house_sprite.sprixel(2)
+            # Return the specific sprixel at sprite internal coordinate 2,3
+            house_sprixel = house_sprite.sprixel(2, 3)
+
+        .. WARNING:: For performance consideration sprixel() does not check the size of
+           its matrix. This method is called many times during rendering and 2 calls to
+           len() in a row are adding up pretty quickly.
+           It checks the boundary of the sprite using the cached size. Make sure it is
+           up to date!
+        """
+        if type(row) is not int:
+            raise base.PglInvalidTypeException("Sprite.sprixel(): Row is not an int.")
+        if row < 0 or row >= self.size[1]:
+            raise base.PglException(
+                "out_of_sprite_boundaries",
+                f"Sprite.sprixel(): Row ({row}) is out of the Sprite boundaries.",
+            )
         if column is None:
             return self._sprixels[row]
         else:
+            if type(column) is not int:
+                raise base.PglInvalidTypeException(
+                    "Sprite.sprixel(): Column is not an int."
+                )
+            if column < 0 or column >= self.size[0]:
+                raise base.PglException(
+                    "out_of_sprite_boundaries",
+                    f"Sprite.sprixel(): Column ({column}) is out of the "
+                    "Sprite boundaries.",
+                )
             return self._sprixels[row][column]
 
     def set_sprixel(self, row, column, val):
+        """
+        Set a specific sprixel in the sprite to the given value.
+        :param name: some param
+        :type name: str
+
+        Example::
+
+            method()
+        """
+        if type(row) is not int or type(column) is not int:
+            raise base.PglInvalidTypeException(
+                "Sprite.set_sprixel(row, column, val) row and column needs to be "
+                "integer."
+            )
+        if row < 0 or row >= self.size[1] or column < 0 or column >= self.size[0]:
+            raise base.PglException(
+                "out_of_sprite_boundaries",
+                f"Sprite.set_sprixel(): ({row},{column}) is out of bound.",
+            )
+        if not isinstance(val, Sprixel):
+            raise base.PglInvalidTypeException(
+                "Sprite.set_sprixel(row, column, val) val needs to be a Sprixel"
+            )
         self._sprixels[row][column] = val
 
     @classmethod
     def load_from_ansi_file(cls, filename, default_sprixel=None):
+        """Load an ANSI encoded file into a Sprite object.
+
+        This class method can load a file produced by the climage python module and
+        load it into a Sprite class. Each character is properly decoded into a
+        :class:`Sprixel` with model, background and foreground colors.
+
+        A Sprite is rectangular (at least for the moment), so in case the file is
+        not shaped as a rectangle, this method automatically fills the void with a
+        default sprixel (to make sure all lines in the sprite have the same length).
+        By default, it fills the table with None "values" but you can specify a default
+        sprixel.
+
+        The reasons the default sprixel is set to None is because None values in a
+        sprite are not translated into a component in
+        :class:`~pygamelib.board_items.BoardComplexItem` (i.e no sub item is generated).
+
+        :param filename: The path to a file to load.
+        :type filename: str
+        :param default_sprixel: The default Sprixel to fill a non rectangular shaped
+           sprite.
+        :type default_sprixel: None | :class:`Sprixel`
+
+        Example::
+
+            player_sprite = gfx_core.Sprite.load_from_ansi_file('gfx/models/player.ans')
+        """
         if default_sprixel is None:
             default_sprixel = Sprixel(" ", "", "")
         new_sprite = cls(default_sprixel=default_sprixel)
@@ -298,6 +496,20 @@ class Sprite(object):
         return new_sprite
 
     def flip_horizontally(self):
+        """Flip the sprite horizontally.
+
+        This method performs a symmetry versus the vertical axis.
+
+        At the moment, glyph are not inverted. Only the position of the sprixels.
+
+        The flipped sprite is returned (original sprite is not modified).
+
+        :rtype: :class:`Sprite`
+
+        Example::
+
+            reflection_sprite = player_sprite.flip_horizontally()
+        """
         new_sprite = Sprite(
             size=self.size,
             sprixels=None,
@@ -313,8 +525,20 @@ class Sprite(object):
         return new_sprite
 
     def flip_vertically(self):
-        # If the sprite was created from an image using climage using ▄ as a delimiter
-        # this function is going to flip the delimiter too and replace ▄ by ▀.
+        """Flip the sprite vertically (i.e upside/down).
+
+        At the moment, glyph are not inverted. Only the position of the sprixels.
+        There is one exception however, as climage uses the '▄' utf8 glyph as a marker,
+        that specific glyph is inverted to '▀' and vice versa.
+
+        The flipped sprite is returned (original sprite is not modified).
+
+        :rtype: :class:`Sprite`
+
+        Example::
+
+            reflection_sprite = player_sprite.flip_vertically()
+        """
         new_sprite = Sprite(
             size=self.size,
             sprixels=None,
@@ -327,11 +551,32 @@ class Sprite(object):
                 new_sprix = self._sprixels[row][col]
                 if new_sprix.model == graphics.Blocks.LOWER_HALF_BLOCK:
                     new_sprix.model = graphics.Blocks.UPPER_HALF_BLOCK
+                elif new_sprix.model == graphics.Blocks.UPPER_HALF_BLOCK:
+                    new_sprix.model = graphics.Blocks.LOWER_HALF_BLOCK
                 new_sprite.set_sprixel(nr, col, new_sprix)
             nr += 1
         return new_sprite
 
     def calculate_size(self):
+        """
+        Calculate the size of the sprite and update the size variable.
+
+        The size is immediately returned.
+
+        It is done separately for concerns about performances of doing that everytime
+        the size is requested.
+
+        :rtype: list
+
+        Example::
+
+            spr_size = spr.calculate_size()
+            if spr_size != spr.size:
+                raise PglException(
+                            'perturbation_in_the_Force',
+                            'Something is very wrong with the sprite!'
+                        )
+        """
         # Warning: recalculate the size of the Sprite, it is much faster
         # although not safe to use self.size
         height = 0
@@ -345,6 +590,27 @@ class Sprite(object):
             height += 1
         self.size = [max_width, height]
         return self.size
+
+    def set_transparency(self, state):
+        """This method enable transparent background to all the sprite's sprixels.
+
+        :param state: a boolean to enable or disable background transparency
+        :type name: bool
+
+        Example::
+
+            player_sprite.set_transparency(True)
+
+        .. WARNING:: This set background transparency on all sprixels, make sure you are
+           not using background colors as part of your sprite before doing that.
+           It can also be used as a game/rendering mechanic. Just make sure you know
+           what you do.
+           As a reminder, by default, sprixels with no background have transparent
+           background enable.
+        """
+        for line in self._sprixels:
+            for s in line:
+                s.is_bg_transparent = state
 
 
 class Animation(object):
