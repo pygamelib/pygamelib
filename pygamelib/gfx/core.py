@@ -14,6 +14,7 @@ import pygamelib.constants as constants
 import pygamelib.assets.graphics as graphics
 import time
 import sys
+from uuid import uuid4
 
 
 class Sprixel(object):
@@ -26,6 +27,15 @@ class Sprixel(object):
         self.model = model
         self.bg_color = bg_color
         self.fg_color = fg_color
+        if (
+            type(model) is not str
+            or type(bg_color) is not str
+            or type(fg_color) is not str
+        ):
+            raise base.PglInvalidTypeException(
+                "Sprixel(model, bg_color, fg_color): all 3 variables needs to be a "
+                "string or an empty string."
+            )
         self.is_bg_transparent = False
         if bg_color is None or bg_color == "":
             self.is_bg_transparent = True
@@ -92,6 +102,8 @@ class Sprixel(object):
             for e in colors.split("m"):
                 if "[48;" in e:
                     new_sprixel.bg_color = f"{e}m"
+        if new_sprixel.bg_color != "":
+            new_sprixel.is_bg_transparent = False
         return new_sprixel
 
     @property
@@ -147,7 +159,25 @@ class Sprixel(object):
             "model": self.model,
             "bg_color": self.bg_color,
             "fg_color": self.fg_color,
+            "is_bg_transparent": self.is_bg_transparent,
         }
+
+    @classmethod
+    def load(cls, data):
+        """
+        Create a new Sprixel object based on serialized data.
+
+        :param data: Data loaded from JSON data (deserialized).
+        :type data: dict
+        :rtype: :class:`Sprixel`
+
+        Example::
+
+            new_sprite = Sprixel.load(json_parsed_data['default_sprixel'])
+        """
+        sprix = cls(data["model"], data["bg_color"], data["fg_color"])
+        sprix.is_bg_transparent = bool(data["is_bg_transparent"])
+        return sprix
 
     @classmethod
     def black_rect(cls):
@@ -240,6 +270,9 @@ class Sprite(object):
        a file or provide an array of sprixels it's obviously calculated automatically.
        Default value: [2, 2].
     :type size: list
+    :param name: The name of sprite. If none is given, an UUID will be automatically
+       generated.
+    :type name: str
 
     Example::
 
@@ -323,12 +356,20 @@ class Sprite(object):
     """
 
     def __init__(
-        self, sprixels=None, default_sprixel=Sprixel(), parent=None, size=[2, 2]
+        self,
+        sprixels=None,
+        default_sprixel=Sprixel(),
+        parent=None,
+        size=[2, 2],
+        name=None,
     ):
         super().__init__()
         self.size = size
         self.parent = parent
+        self.name = name
         self.default_sprixel = default_sprixel
+        if self.name is None or type(self.name) is not str:
+            self.name = str(uuid4())
         if sprixels is not None and len(sprixels) > 0:
             self._sprixels = []
             height = 0
@@ -611,6 +652,64 @@ class Sprite(object):
         for line in self._sprixels:
             for s in line:
                 s.is_bg_transparent = state
+
+    def serialize(self):
+        """Serialize a Sprite into a dictionary.
+
+        :returns: The class as a  dictionary
+        :rtype: dict
+
+        Example::
+
+            json.dump( sprite.serialize() )
+        """
+        ret_dict = {
+            "size": self.size,
+            "name": self.name,
+            "default_sprixel": self.default_sprixel.serialize(),
+            "sprixels": [],
+        }
+        for row in range(0, self.size[1]):
+            tmp = []
+            for column in range(0, self.size[0]):
+                tmp.append(self.sprixel(row, column).serialize())
+
+            ret_dict["sprixels"].append(tmp)
+
+        return ret_dict
+
+    @classmethod
+    def load(cls, data):
+        """
+        Create a new Sprite object based on serialized data.
+
+        :param data: Data loaded from a JSON sprite file (deserialized).
+        :type data: dict
+        :rtype: :class:`Sprite`
+
+        Example::
+
+            new_sprite = Sprite.load(json_parsed_data)
+        """
+        sprixels = []
+        for row in range(0, int(data["size"][1])):
+            tmp = []
+            for column in range(0, int(data["size"][0])):
+                tmp.append(Sprixel.load(data["sprixels"][row][column]))
+            sprixels.append(tmp)
+        new_sprite = cls(
+            name=data["name"],
+            default_sprixel=Sprixel.load(data["default_sprixel"]),
+            sprixels=sprixels,
+        )
+        # Do some integrity check
+        if new_sprite.size != data["size"]:
+            raise base.PglException(
+                "invalid_sprite_size",
+                "Sprite.load(data): sprixels array size is different from sprite "
+                "computed size.",
+            )
+        return new_sprite
 
 
 class Animation(object):
