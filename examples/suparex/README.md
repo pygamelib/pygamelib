@@ -18,7 +18,7 @@ Good luck!
 
 Don't install, run it from here...
 
-You need to install simpleaudio to benefit from the annoying 8-bit sounds! All sounds are generated with [SFXR Qt](https://github.com/agateau/sfxr-qt).
+You need to install simpleaudio to benefit from the annoying 8-bit sounds!
 
 To install it you can do one of these:
 
@@ -38,8 +38,15 @@ There is a Pipfile for your convenience.
 
 Here is a list of ideas I have (no promise on delivery):
  * Package it on pypi.
- * Add background music.
+ * Add background music (done).
  * Add more traps and why not enemies.
  * Add more variety in the level generation (colors, density of traps, verticality, etc.).
  * Set a hotkey/option to record the level generation process (very easy actually).
  * Add an online leaderboard (with anti-cheat measures...).
+
+
+## SFX Credits
+
+All sounds are generated with [SFXR Qt](https://github.com/agateau/sfxr-qt).
+
+The background music is "Let Me See Ya Bounce" by [Dominik Braun](https://freesound.org/people/DominikBraun/), available on Freesound.
