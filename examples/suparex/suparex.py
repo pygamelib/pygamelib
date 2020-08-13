@@ -1,16 +1,8 @@
 #!/bin/env python3
 import os
 import examples_includes  # noqa F401
-from gamelib.Game import Game
-from gamelib.Characters import Player
-from gamelib.Assets import Graphics
-from gamelib.Structures import Wall, Door
-from gamelib.Board import Board
-from gamelib.BoardItem import BoardItemVoid
-from gamelib.Structures import GenericActionableStructure, Treasure
-from gamelib import Constants
-from gamelib import Utils
-from gamelib.Movable import Projectile
+from pygamelib import engine, base, constants, board_items
+from pygamelib.assets import graphics
 from time import sleep, process_time
 from blessed import Terminal
 import _thread
@@ -72,27 +64,27 @@ def title_screen(g):
         for logo_line in logo:
             print(logo_line, end="\r")
         print("\r")
-        print(Utils.blue(f"{' '*int(term_res/2-10)}Welcome {g.player.name}!\r"))
+        print(base.Text.blue(f"{' '*int(term_res/2-10)}Welcome {g.player.name}!\r"))
         for i in range(0, len(title_screen_menu)):
             if i == menu_index:
                 print(
-                    Utils.green_bright(
+                    base.Text.green_bright(
                         f"{' '*int(term_res/2-10)}{menu_indicator_left}"
                         f"{title_screen_menu[i]}{menu_indicator_right}\r"
                     )
                 )
             else:
                 print(f"  {' '*int(term_res/2-10)}{title_screen_menu[i]}\r")
-        key = Utils.get_key()
-        if key == Utils.key.DOWN:
+        key = engine.Game.get_key()
+        if key == engine.key.DOWN:
             menu_index += 1
             if menu_index >= len(title_screen_menu):
                 menu_index = 0
-        elif key == Utils.key.UP:
+        elif key == engine.key.UP:
             menu_index -= 1
             if menu_index < 0:
                 menu_index = len(title_screen_menu) - 1
-        elif key == Utils.key.ENTER:
+        elif key == engine.key.ENTER:
             if menu_index == 0:
                 g.clear_screen()
                 print(term.bold_underline_green("How to play"))
@@ -119,18 +111,18 @@ def title_screen(g):
                     "It is up to you to try your luck and trick the game or respawn "
                     "safely. You have 3 lives to complete your run.\n"
                     "\nAt the end of a level look for the portal to the next level. "
-                    "It looks like a cyclone: " + Graphics.Models.CYCLONE + "\n"
+                    "It looks like a cyclone: " + graphics.Models.CYCLONE + "\n"
                     "\nTo increase your score, just move forward! The higher the level"
                     " the higher the score. Difficulty also inscrease as you earn less"
                     " time.\n"
                     "\nOh... there's also treasures that gives you time and/or points "
                     "and traps that takes times or score (or your life...)\n"
                     "\n\nGOOD LUCK PANDA!!\n\n"
-                    + Graphics.Models.WARNING
+                    + graphics.Models.WARNING
                     + " This game relies on emojis for its "
                     "user interface. If you don't see a panda face between the "
                     "parenthesis ("
-                    + Graphics.Models.PANDA
+                    + graphics.Models.PANDA
                     + "), it means that your terminal fonts do NOT support "
                     "emojis. This game won't display correctly. Try other fonts.\n\n"
                 )
@@ -147,14 +139,14 @@ def title_screen(g):
                 g.player.remaining_lives = 3
                 # Then reset the player model in case he died
                 g.player.model = (
-                    bg_color + Graphics.Models.PANDA + Graphics.Style.RESET_ALL
+                    bg_color + graphics.Models.PANDA + graphics.Style.RESET_ALL
                 )
                 g.clear_screen()
                 change_level([g])
             elif menu_index == 2:
                 g.clear_screen()
                 print(
-                    Utils.blue(
+                    base.Text.blue(
                         f"{' '*int(term_res/2-10)}"
                         + term.bold_underline("Hall of fame")
                         + "\r"
@@ -166,11 +158,11 @@ def title_screen(g):
                 ):
                     extra = ""
                     if ranking == 1:
-                        extra = Graphics.Models.FIRST_PLACE_MEDAL
+                        extra = graphics.Models.FIRST_PLACE_MEDAL
                     elif ranking == 2:
-                        extra = Graphics.Models.SECOND_PLACE_MEDAL
+                        extra = graphics.Models.SECOND_PLACE_MEDAL
                     elif ranking == 3:
-                        extra = Graphics.Models.THIRD_PLACE_MEDAL
+                        extra = graphics.Models.THIRD_PLACE_MEDAL
                     print(f"{' '*int(term_res/2-10)}{el[0]} : {el[1]} {extra}")
                     ranking += 1
                 input("\n\nHit the ENTER key to return to the main menu.\n")
@@ -209,26 +201,26 @@ def refresh_screen(g):
     # )
     # print("\r")
     print(
-        f"Score: {Utils.blue_bright(str(g.score))}{' '*12}"
-        f"{g.player.remaining_lives*Graphics.Models.PANDA}\r"
+        f"Score: {base.Text.blue_bright(str(g.score))}{' '*12}"
+        f"{g.player.remaining_lives*graphics.Models.PANDA}\r"
     )
     # print("\r")
     status = ""
-    if g.state == Constants.PAUSED:
+    if g.state == constants.PAUSED:
         status = (
             " " * 5
-            + Graphics.Models.PAUSE_BUTTON
+            + graphics.Models.PAUSE_BUTTON
             + " GAME PAUSED"
-            + Graphics.Models.PAUSE_BUTTON
+            + graphics.Models.PAUSE_BUTTON
         )
     if g.timer >= 10:
         print(
-            f"Time left: {Utils.green_bright(str(round(g.timer,1)))}{' '*5}"
+            f"Time left: {base.Text.green_bright(str(round(g.timer,1)))}{' '*5}"
             f"Level: {g.current_level}{status}"
         )
     else:
         print(
-            f"Time left: {Utils.red_bright(str(round(g.timer,1)))}{' '*5}"
+            f"Time left: {base.Text.red_bright(str(round(g.timer,1)))}{' '*5}"
             f"Level: {g.current_level}{status}"
         )
     print("\r")
@@ -297,16 +289,16 @@ def gravity(g):
         # and g.player.pos[0] < g.current_board().size[1] - 1
         g.player.dy = -1
     g.player.last_y = g.player.pos[0]
-    g.move_player(Constants.UP, g.player.dy)
+    g.move_player(constants.UP, g.player.dy)
 
 
 def ui_threaded(g):
-    while g.state != Constants.STOPPED:
+    while g.state != constants.STOPPED:
         gravity(g)
         refresh_screen(g)
         g.actuate_projectiles(g.current_level)
         sleep(0.1)
-        if g.state == Constants.RUNNING:
+        if g.state == constants.RUNNING:
             g.timer -= 0.1
             for trap in g.current_board().get_immovables(type="trap."):
                 # Only actually fire for traps that are on screen or close
@@ -318,20 +310,20 @@ def ui_threaded(g):
                 if trap.type == "trap.hfire":
                     trap.fire_timer -= 0.1
                     if trap.fire_timer <= 0.0:
-                        proj = Projectile(
+                        proj = board_items.Projectile(
                             model=bg_color
-                            + Utils.yellow_bright("\U00002301\U00002301")
-                            + Graphics.Style.RESET_ALL,
+                            + base.Text.yellow_bright("\U00002301\U00002301")
+                            + graphics.Style.RESET_ALL,
                             name="zap",
                             range=5,
                             hit_model=bg_color
-                            + Graphics.Models.HIGH_VOLTAGE
-                            + Graphics.Style.RESET_ALL,
+                            + graphics.Models.HIGH_VOLTAGE
+                            + graphics.Style.RESET_ALL,
                             hit_callback=zap_callback,
                         )
                         proj.set_direction(trap.fdir)
                         trap_shoot_wave_obj.play()
-                        if trap.fdir == Constants.RIGHT:
+                        if trap.fdir == constants.RIGHT:
                             g.add_projectile(
                                 g.current_level, proj, trap.pos[0], trap.pos[1] + 1
                             )
@@ -343,15 +335,15 @@ def ui_threaded(g):
                 elif trap.type == "trap.vfire":
                     trap.fire_timer -= 0.1
                     if trap.fire_timer <= 0.0:
-                        proj = Projectile(
+                        proj = board_items.Projectile(
                             model=bg_color
-                            + Graphics.Models.BOMB
-                            + Graphics.Style.RESET_ALL,
+                            + graphics.Models.BOMB
+                            + graphics.Style.RESET_ALL,
                             name="boom",
                             range=2,
                             hit_model=bg_color
-                            + Graphics.Models.COLLISION
-                            + Graphics.Style.RESET_ALL,
+                            + graphics.Models.COLLISION
+                            + graphics.Style.RESET_ALL,
                             hit_callback=boom_callback,
                             is_aoe=True,
                             aoe_radius=1,
@@ -366,7 +358,7 @@ def ui_threaded(g):
         if g.player.pos[0] == g.current_board().size[1] - 1:
             g.timer = 0.0
         if round(g.timer, 1) <= 0.0:
-            g.player.model = bg_color + Graphics.Models.SKULL + Utils.Style.RESET_ALL
+            g.player.model = bg_color + graphics.Models.SKULL + graphics.Style.RESET_ALL
             g.player.remaining_lives -= 1
             refresh_screen(g)
         if (
@@ -386,7 +378,7 @@ def ui_threaded(g):
                 g.current_board().clear_cell(g.player.pos[0], g.player.pos[1])
                 potential_respawns = g.neighbors(2, g.player)
                 g.player.model = (
-                    bg_color + Graphics.Models.PANDA + Graphics.Style.RESET_ALL
+                    bg_color + graphics.Models.PANDA + graphics.Style.RESET_ALL
                 )
                 for o in potential_respawns:
                     if o.type == "platform":
@@ -401,7 +393,8 @@ def ui_threaded(g):
             new_stack = []
             for o in g.obj_stack:
                 if isinstance(
-                    g.current_board().item(o.pos[0], o.pos[1]), BoardItemVoid
+                    g.current_board().item(o.pos[0], o.pos[1]),
+                    board_items.BoardItemVoid,
                 ):
                     g.current_board().place_item(o, o.pos[0], o.pos[1])
                     sprouted_trees = g.current_board().get_immovables(
@@ -440,21 +433,23 @@ def ui_threaded(g):
 
 def change_level(params):
     game = params[0]
-    board = Board(
+    board = engine.Board(
         size=[250, 30],
         ui_borders="",
-        ui_board_void_cell=bg_color + "  " + Graphics.Style.RESET_ALL,
+        ui_board_void_cell=bg_color + "  " + graphics.Style.RESET_ALL,
         player_starting_position=[25, 0],
         DISPLAY_SIZE_WARNINGS=False,
     )
-    board.ui_border_bottom = Graphics.Models.RADIOACTIVE + " "
+    board.ui_border_bottom = graphics.Models.RADIOACTIVE + " "
     board.sprouted_count = 0
     # Let's use a nice curve to increase the trap number.
     board.available_traps = int(10 + 10 * g.current_level * 0.2)
     board.max_traps_number = board.available_traps
     for i in range(0, board.size[0]):
         board.place_item(
-            Wall(model=block_color() + "  " + Utils.Style.RESET_ALL, type="platform"),
+            board_items.Wall(
+                model=block_color() + "  " + graphics.Style.RESET_ALL, type="platform"
+            ),
             board.size[1] - 1,
             i,
         )
@@ -463,7 +458,7 @@ def change_level(params):
     new_level = game.current_level + 1
     game.add_board(new_level, board)
     game.change_level(new_level)
-    game.move_player(Constants.RIGHT, 3)
+    game.move_player(constants.RIGHT, 3)
     game.player.last_y = game.player.pos[0]
     game.player.last_x = game.player.pos[1]
     g.player.max_y = g.player.pos[0]
@@ -474,9 +469,9 @@ def change_level(params):
 def make_platform(b, row, column):
     psize = random.randint(2, 10)
     plateform = []
-    tmp_game = Game()
+    tmp_game = engine.Game()
     # Only because Game needs it, we don't care.
-    tmp_game.player = Player()
+    tmp_game.player = board_items.Player()
     tmp_game.add_board(0, b)
     tmp_game.change_level(0)
     # print(
@@ -488,24 +483,24 @@ def make_platform(b, row, column):
     for i in range(column - psize - 1, column):
         if i >= b.size[0]:
             break
-        if not isinstance(b.item(row, i), BoardItemVoid):
+        if not isinstance(b.item(row, i), board_items.BoardItemVoid):
             break
         if i in b.visited_columns:
             break
         # Check if we have other platforms around.
         # If yes moving the platform up.
         if get_up < 3:
-            for e in tmp_game.neighbors(2, Door(pos=[row, i])):
+            for e in tmp_game.neighbors(2, board_items.Door(pos=[row, i])):
                 if e.type == "ground":
                     get_up = 3
                     break
         if get_up < 4:
-            for e in tmp_game.neighbors(1, Door(pos=[row, i])):
+            for e in tmp_game.neighbors(1, board_items.Door(pos=[row, i])):
                 if e.type == "ground":
                     get_up = 4
                     break
-        m = block_color() + "  " + Utils.Style.RESET_ALL
-        plateform.append([Wall(model=m, type="platform"), row, i])
+        m = block_color() + "  " + graphics.Style.RESET_ALL
+        plateform.append([board_items.Wall(model=m, type="platform"), row, i])
     for i in plateform:
         b.place_item(i[0], i[1] - get_up, i[2])
         if random.choice([True, False]):
@@ -528,10 +523,10 @@ def generate_treasure(b, row, column):
         # The value of each treasure object is used differently.
         if t == "scorers":
             b.place_item(
-                Treasure(
+                board_items.Treasure(
                     model=bg_color
-                    + Graphics.Models.TANABATA_TREE
-                    + Graphics.Style.RESET_ALL,
+                    + graphics.Models.TANABATA_TREE
+                    + graphics.Style.RESET_ALL,
                     value=25,
                     type="treasure.scorers",
                 ),
@@ -540,10 +535,10 @@ def generate_treasure(b, row, column):
             )
         elif t == "timers":
             b.place_item(
-                Treasure(
+                board_items.Treasure(
                     model=bg_color
-                    + Graphics.Models.HOURGLASS_NOT_DONE
-                    + Graphics.Style.RESET_ALL,
+                    + graphics.Models.HOURGLASS_NOT_DONE
+                    + graphics.Style.RESET_ALL,
                     value=15,
                     type="treasure.timers",
                 ),
@@ -552,10 +547,10 @@ def generate_treasure(b, row, column):
             )
         elif t == "diamond":
             b.place_item(
-                Treasure(
+                board_items.Treasure(
                     model=bg_color
-                    + Graphics.Models.GEM_STONE
-                    + Graphics.Style.RESET_ALL,
+                    + graphics.Models.GEM_STONE
+                    + graphics.Style.RESET_ALL,
                     value=30,
                     type="treasure.diamond",
                 ),
@@ -564,10 +559,10 @@ def generate_treasure(b, row, column):
             )
         elif t == "1UP":
             b.place_item(
-                Treasure(
+                board_items.Treasure(
                     model=bg_color
-                    + Graphics.Models.HEART_WITH_RIBBON
-                    + Graphics.Style.RESET_ALL,
+                    + graphics.Models.HEART_WITH_RIBBON
+                    + graphics.Style.RESET_ALL,
                     value=30,
                     type="treasure.1UP",
                 ),
@@ -585,33 +580,33 @@ def generate_trap(b, row, column):
         chance = int(b.max_traps_number / b.size[0] * 100)
         if random.randint(0, 100) >= 100 - chance:
             if random.choice([True, False]):
-                trap = Wall(
+                trap = board_items.Wall(
                     model=bg_color
                     + traps_color
-                    + Graphics.Blocks.QUADRANT_UPPER_LEFT_AND_LOWER_RIGHT
-                    + Graphics.Blocks.QUADRANT_UPPER_RIGHT_AND_LOWER_LEFT
-                    + Graphics.Style.RESET_ALL,
+                    + graphics.Blocks.QUADRANT_UPPER_LEFT_AND_LOWER_RIGHT
+                    + graphics.Blocks.QUADRANT_UPPER_RIGHT_AND_LOWER_LEFT
+                    + graphics.Style.RESET_ALL,
                     type="trap.hfire",
                 )
                 trap.fire_timer = random.uniform(1.0, 4.0)
                 b.place_item(trap, row, column)
-                if isinstance(b.item(row, column - 1), BoardItemVoid):
-                    trap.fdir = Constants.LEFT
+                if isinstance(b.item(row, column - 1), board_items.BoardItemVoid):
+                    trap.fdir = constants.LEFT
                 else:
-                    trap.fdir = Constants.RIGHT
+                    trap.fdir = constants.RIGHT
             else:
-                trap = Wall(
+                trap = board_items.Wall(
                     model=bg_color
-                    + Utils.red_bright(
-                        Graphics.Blocks.QUADRANT_UPPER_RIGHT_AND_LOWER_LEFT_AND_LOWER_RIGHT  # noqa E501
-                        + Graphics.Blocks.QUADRANT_UPPER_LEFT_AND_LOWER_LEFT_AND_LOWER_RIGHT  # noqa E501
+                    + base.Text.red_bright(
+                        graphics.Blocks.QUADRANT_UPPER_RIGHT_AND_LOWER_LEFT_AND_LOWER_RIGHT  # noqa E501
+                        + graphics.Blocks.QUADRANT_UPPER_LEFT_AND_LOWER_LEFT_AND_LOWER_RIGHT  # noqa E501
                     )
-                    + Graphics.Style.RESET_ALL,
+                    + graphics.Style.RESET_ALL,
                     type="trap.vfire",
                 )
                 trap.fire_timer = random.uniform(2.0, 6.0)
                 b.place_item(trap, row, column)
-                trap.fdir = Constants.UP
+                trap.fdir = constants.UP
             b.available_traps -= 1
 
 
@@ -652,8 +647,8 @@ def generate_level(g, b):
             for y in range(alt + 1, b.size[1] - 1):
                 # print(f"[d] generate level y={y}")
                 b.place_item(
-                    Wall(
-                        model=block_color() + "  " + Utils.Style.RESET_ALL,
+                    board_items.Wall(
+                        model=block_color() + "  " + graphics.Style.RESET_ALL,
                         type="ground",
                     ),
                     y,
@@ -672,7 +667,9 @@ def generate_level(g, b):
             # in the background
             if random.randint(0, 100) >= 66:
                 b.place_item(
-                    Door(model=bg_color + "\U00002601 " + Utils.Style.RESET_ALL),
+                    board_items.Door(
+                        model=bg_color + "\U00002601 " + graphics.Style.RESET_ALL
+                    ),
                     alt - 8 + random.randint(-2, 2),
                     x,
                 )
@@ -683,8 +680,8 @@ def generate_level(g, b):
             # emptying it (we make a pit)
             gap += 1
     b.place_item(
-        GenericActionableStructure(
-            model=bg_color + Graphics.Models.CYCLONE + Utils.Style.RESET_ALL,
+        board_items.GenericActionableStructure(
+            model=bg_color + graphics.Models.CYCLONE + graphics.Style.RESET_ALL,
             type="exit",
             action=change_level,
             action_parameters=[g],
@@ -702,7 +699,10 @@ def generate_level(g, b):
                 for row in range(0, b.size[1]):
                     item = b.item(row, col)
                     # We only put treasures and traps on the ground
-                    if not isinstance(item, BoardItemVoid) and item.type == "ground":
+                    if (
+                        not isinstance(item, board_items.BoardItemVoid)
+                        and item.type == "ground"
+                    ):
                         # We want at least 2 free cells in all directions (except down)
                         free_cells = [
                             (row - 1, col),
@@ -721,7 +721,7 @@ def generate_level(g, b):
                             if coord[0] >= b.size[1] or coord[1] >= b.size[0]:
                                 continue
                             cell = b.item(coord[0], coord[1])
-                            if not isinstance(cell, BoardItemVoid):
+                            if not isinstance(cell, board_items.BoardItemVoid):
                                 good_candidate = False
                                 break
                         if good_candidate:
@@ -737,7 +737,10 @@ def generate_level(g, b):
                 for row in range(0, b.size[1]):
                     item = b.item(row, col)
                     # We only put treasures and traps on the ground
-                    if not isinstance(item, BoardItemVoid) and item.type == "ground":
+                    if (
+                        not isinstance(item, board_items.BoardItemVoid)
+                        and item.type == "ground"
+                    ):
                         # We want at least 2 free cells in all directions (except down)
                         free_cells = [
                             (row - 1, col),
@@ -756,7 +759,7 @@ def generate_level(g, b):
                             if coord[0] >= b.size[1] or coord[1] >= b.size[0]:
                                 continue
                             cell = b.item(coord[0], coord[1])
-                            if not isinstance(cell, BoardItemVoid):
+                            if not isinstance(cell, board_items.BoardItemVoid):
                                 good_candidate = False
                                 break
                         if good_candidate:
@@ -774,12 +777,12 @@ def sprout(p, *args):
     # if p.parent is None:
     #     return None
     if p is not None:
-        o = Wall(
-            model=bg_color + Graphics.Models.DECIDUOUS_TREE + Utils.Style.RESET_ALL,
+        o = board_items.Wall(
+            model=bg_color + graphics.Models.DECIDUOUS_TREE + graphics.Style.RESET_ALL,
             type="sprouted_trees",
         )
         o.pos = p.pos
-        # Projectile is own by the Board by default.
+        # board_items.Projectile is own by the Board by default.
         # Board is owned by the Game object.
         if p.parent is not None and p.parent.parent is not None:
             p.parent.sprouted_count += 1
@@ -811,18 +814,20 @@ def adapt_resolution(g):
 
 
 # We need the hac-game-lib v1.1+
-if Constants.HAC_GAME_LIB_VERSION < "1.1.0":
-    Utils.print_white_on_red(
+if constants.PYGAMELIB_VERSION < "1.2.0":
+    base.Text.print_white_on_red(
         "Super Panda Run EX require the hac-game-lib version 1.1.0 or greater."
-        f" Version installed is {Constants.HAC_GAME_LIB_VERSION}"
+        f" Version installed is {constants.PYGAMELIB_VERSION}"
     )
     raise SystemExit()
 
-g = Game()
+g = engine.Game()
 g.enable_partial_display = True
 g.partial_display_viewport = [10, int(term_res / 4)]
 g.current_level = 0
-g.player = Player(model=bg_color + Graphics.Models.PANDA + Graphics.Style.RESET_ALL)
+g.player = board_items.Player(
+    model=bg_color + graphics.Models.PANDA + graphics.Style.RESET_ALL
+)
 g.player.name = "Zigomar"
 g.player.max_y = g.player.pos[0]
 g.player.dy = gravity_speed
@@ -875,7 +880,7 @@ while current_state != "eop":
         key = "None"
         g.start()
         _thread.start_new_thread(ui_threaded, (g,))
-        while g.state != Constants.STOPPED:
+        while g.state != constants.STOPPED:
             g.score += g.player.pos[1] - g.player.last_x
             if g.player.pos[1] - g.player.last_x > 0:
                 # That is clearly where the difficulty should be:
@@ -891,15 +896,15 @@ while current_state != "eop":
                     - 1 / (g.player.pos[1] - g.player.last_x)
                 )
             g.player.last_x = g.player.pos[1]
-            if key == Utils.key.LEFT:
-                g.move_player(Constants.LEFT, 1)
-            elif key == Utils.key.RIGHT:
-                g.move_player(Constants.RIGHT, 1)
-            # elif key == Utils.key.DOWN:
+            if key == engine.key.LEFT:
+                g.move_player(constants.LEFT, 1)
+            elif key == engine.key.RIGHT:
+                g.move_player(constants.RIGHT, 1)
+            # elif key == engine.key.DOWN:
             #     gravity_friction -= 0.1
-            # elif key == Utils.key.UP:
+            # elif key == engine.key.UP:
             #     gravity_friction += 0.1
-            elif key == Utils.key.SPACE:
+            elif key == engine.key.SPACE:
                 if g.player.dy == 0 and len(g.neighbors(1, g.player)) > 0:
                     # Jump
                     # Start with sound
@@ -910,39 +915,41 @@ while current_state != "eop":
                 g.stop()
                 break
             elif key in "awsdzq":
-                projectile = Projectile(
+                projectile = board_items.Projectile(
                     name="treeball",
-                    direction=Constants.RIGHT,
+                    direction=constants.RIGHT,
                     range=2,
-                    model=Utils.green_bright(bg_color + " *" + Utils.Style.RESET_ALL),
+                    model=base.Text.green_bright(
+                        bg_color + " *" + graphics.Style.RESET_ALL
+                    ),
                     hit_model=bg_color
-                    + Graphics.Models.DECIDUOUS_TREE
-                    + Utils.Style.RESET_ALL,
+                    + graphics.Models.DECIDUOUS_TREE
+                    + graphics.Style.RESET_ALL,
                     hit_callback=sprout,
                 )
                 row = g.player.pos[0]
                 column = g.player.pos[1] + 1
                 if key == "w" or key == "z":
-                    projectile.set_direction(Constants.UP)
+                    projectile.set_direction(constants.UP)
                     row = g.player.pos[0] - 1
                     column = g.player.pos[1]
                 elif key == "s":
-                    projectile.set_direction(Constants.DOWN)
+                    projectile.set_direction(constants.DOWN)
                     row = g.player.pos[0] + 1
                     column = g.player.pos[1]
                 elif key == "a" or key == "q":
-                    projectile.set_direction(Constants.LEFT)
+                    projectile.set_direction(constants.LEFT)
                     row = g.player.pos[0]
                     column = g.player.pos[1] - 1
                 hit_wave_obj.play()
                 g.add_projectile(g.current_level, projectile, row, column)
                 g.timer -= projectile.range
             elif key == "p":
-                if g.state == Constants.RUNNING:
+                if g.state == constants.RUNNING:
                     g.pause()
                 else:
                     g.start()
-            key = Utils.get_key()
+            key = engine.Game.get_key()
         current_state = "title"
 
 g.save_config("settings", "settings-suparex.json")
