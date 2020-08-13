@@ -29,6 +29,7 @@ from blessed import Terminal
 import uuid
 import random
 import json
+import sys
 
 # We need to ignore that one as it is used by user to compare keys (i.e Utils.key.UP)
 from readchar import readkey, key  # noqa: F401
@@ -1097,7 +1098,7 @@ class Game:
         self._configuration_internals = None
         self.object_library = []
         self.terminal = Terminal()
-        self.screen = core.Screen(self.terminal)
+        self.screen = Screen(self.terminal)
         # Placeholder: we want to be able to center the screen on any item/position.
         self.center_screen_on = None
         base.init()
@@ -1267,7 +1268,7 @@ class Game:
         Clear the whole screen (i.e: remove everything written in terminal)
 
         .. deprecated:: 1.2.0
-           Starting 1.2.0 we are using the pygamelib.gfx.core.Screen object to manage
+           Starting 1.2.0 we are using the pygamelib.engine.Screen object to manage
            the screen. That function is a simple forward and is kept for backward
            compatibility only. You should use Game.screen.clear()
         """
@@ -2653,3 +2654,49 @@ class Inventory:
                 "no_item_by_that_name",
                 f'There is no item named "{name}" in the inventory.',
             )
+
+
+class Screen(object):
+    def __init__(self, terminal=None):
+        super().__init__()
+        # get clear sequence for the terminal
+        if terminal is None:
+            raise base.PglException(
+                "terminal_is_missing",
+                "Screen must be constructed with a terminal object.",
+            )
+        elif "blessed.terminal.Terminal" in str(type(terminal)):
+            self.terminal = terminal
+        else:
+            raise base.PglException(
+                "terminal_not_blessed",
+                "Screen: terminal must be from the blessed module\n"
+                "Please install blessed if it is not already installed:\n"
+                "     pip3 install blessed --user"
+                "And instantiate Screen with terminal=blessed.Terminal()"
+                "or let the Game object do it and use mygame.screen to access the "
+                "screen (assuming that mygame is your Game() instance).",
+            )
+
+    def clear(self):
+        """
+        This methods clear the screen
+        """
+        sys.stdout.write(self.terminal.clear)
+        sys.stdout.flush()
+
+    @property
+    def width(self):
+        """
+        This method wraps Terminal.width and return the width of the terminal window in
+        number of characters.
+        """
+        return self.terminal.width
+
+    @property
+    def height(self):
+        """
+        This method wraps Terminal.height and return the height of the terminal window
+        in number of characters.
+        """
+        return self.terminal.height

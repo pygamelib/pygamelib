@@ -13,15 +13,18 @@ import pygamelib.base as base
 import pygamelib.constants as constants
 import pygamelib.assets.graphics as graphics
 import time
-import sys
 from uuid import uuid4
 
 
 class Sprixel(object):
-    # A sprixel is the representation of 1 cell of the sprite. It is not really a pixel
-    # but it is the closest notion we'll have.
-    # A Sprixel has a background color, a foreground color and a model.
-    # Therefor, all regular BoardItems can have use Sprixel.
+
+    """
+    A sprixel is the representation of 1 cell of the sprite or one cell on the Board.
+    It is not really a pixel but it is the closest notion we'll have.
+    A Sprixel has a background color, a foreground color and a model.
+    All regular BoardItems can have use Sprixel instead of model.
+    """
+
     def __init__(self, model="", bg_color="", fg_color=""):
         super().__init__()
         self.model = model
@@ -984,49 +987,3 @@ class Animation(object):
             self.refresh_screen()
             time.sleep(self.display_time)
         return True
-
-
-class Screen(object):
-    def __init__(self, terminal=None):
-        super().__init__()
-        # get clear sequence for the terminal
-        if terminal is None:
-            raise base.PglException(
-                "terminal_is_missing",
-                "Screen must be constructed with a terminal object.",
-            )
-        elif "blessed.terminal.Terminal" in str(type(terminal)):
-            self.terminal = terminal
-        else:
-            raise base.PglException(
-                "terminal_not_blessed",
-                "Screen: terminal must be from the blessed module\n"
-                "Please install blessed if it is not already installed:\n"
-                "     pip3 install blessed --user"
-                "And instantiate Screen with terminal=blessed.Terminal()"
-                "or let the Game object do it and use mygame.screen to access the "
-                "screen (assuming that mygame is your Game() instance).",
-            )
-
-    def clear(self):
-        """
-        This methods clear the screen
-        """
-        sys.stdout.write(self.terminal.clear)
-        sys.stdout.flush()
-
-    @property
-    def width(self):
-        """
-        This method wraps Terminal.width and return the width of the terminal window in
-        number of characters.
-        """
-        return self.terminal.width
-
-    @property
-    def height(self):
-        """
-        This method wraps Terminal.height and return the height of the terminal window
-        in number of characters.
-        """
-        return self.terminal.height
