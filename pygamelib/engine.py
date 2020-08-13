@@ -17,6 +17,7 @@ The Board class is the base class for all levels.
    Board
    Game
    Inventory
+   Screen
 """
 import pygamelib.board_items as board_items
 import pygamelib.base as base
