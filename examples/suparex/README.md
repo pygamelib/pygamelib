@@ -1,6 +1,6 @@
 # SUPAREX
 
-![screenshot](https://raw.githubusercontent.com/arnauddupuis/hac-game-lib/master/images/suparex-title-screen.png "suparex")
+![screenshot](https://raw.githubusercontent.com/arnauddupuis/pygamelib/master/images/suparex-title-screen.png "suparex")
 
 ## Pitch
 
