@@ -1,7 +1,7 @@
-pygamelib.gfx.core.Screen
-=========================
+pygamelib.engine.Screen
+=======================
 
-.. currentmodule:: pygamelib.gfx.core
+.. currentmodule:: pygamelib.engine
 
 .. autoclass:: Screen
 
