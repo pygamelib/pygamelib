@@ -5,15 +5,17 @@
 
    Sprixel
    Sprite
+   SpriteCollection
    Animation
-   Screen
 """
 import pygamelib.board_items as board_items
 import pygamelib.base as base
 import pygamelib.constants as constants
 import pygamelib.assets.graphics as graphics
 import time
+from collections import UserDict
 from uuid import uuid4
+import json
 
 
 class Sprixel(object):
@@ -713,6 +715,159 @@ class Sprite(object):
                 "computed size.",
             )
         return new_sprite
+
+
+class SpriteCollection(UserDict):
+    """
+    SpriteCollection is a dictionnary class that derives collections.UserDict.
+
+    Its main goal is to provide an easy to use object to load and save sprite files.
+    On top of traditional dict method, it provides the following capabilities:
+       - loading and writing from and to JSON files,
+       - data serialization,
+       - shortcut to add sprites to the dictionnary.
+
+    A SpriteCollection is an unordered indexed list of Sprites (i.e a dictionnary).
+
+    Sprites are indexed by their names in that collection.
+
+    Example::
+
+       # Load a sprite file
+       sprites_village1 = SpriteCollection.load_json_file('gfx/village1.spr')
+       # display the Sprites with their name
+       for sprite_name in sprites_village1:
+           print(f'{sprite_name}:\\n{sprites_village1[sprite_name]}')
+       # Add an empty sprite with name 'house_placeholder'
+       sprites_village1.add( Sprite(name='house_placeholder') )
+       # This is absolutely equivalent to:
+       sprites_village1['house_placeholder'] = Sprite(name='house_placeholder')
+       # And now rewrite the sprite file with the new placeholder house
+       sprites_village1.to_json_file('gfx/village1.spr')
+
+    """
+
+    def __init__(self, data=dict()):
+        UserDict.__init__(self, data)
+
+    @classmethod
+    def load(cls, data):
+        """
+        Load serialized data and return a new SpriteCollection object.
+
+        :param data: Serialized data that need to be expanded into objects.
+        :type data: str
+        :returns: A new SpriteCollection object.
+        :rtype: :class:`SpriteCollection`
+
+        Example::
+
+            sprites_village1 = SpriteCollection.load(
+                sprites_village_template.serialize()
+            )
+        """
+        if "sprites_count" in data.keys() and data["sprites_count"] is not None:
+            if (
+                "sprites" in data.keys()
+                and data["sprites"] is not None
+                and type(data["sprites"]) is dict
+            ):
+                sc = cls()
+                if data["sprites_count"] == len(data["sprites"]):
+                    for spr_name in data["sprites"]:
+                        sc.data[spr_name] = Sprite.load(data["sprites"][spr_name])
+                    return sc
+                else:
+                    raise base.PglException(
+                        "corrupted_sprite_data",
+                        "SpriteCollection.load(data): sprites count is different from "
+                        "actual number of sprites.",
+                    )
+        else:
+            raise base.PglException(
+                "invalid_sprite_data",
+                "SpriteCollection.load(data): Invalid sprite data, sprites_count is "
+                "missing.",
+            )
+
+    @staticmethod
+    def load_json_file(filename):
+        """
+        Load a JSON sprite file into a new SpriteCollection object.
+
+        :param filename: The complete path (relative or absolute) to the sprite file.
+        :type filename: str
+        :returns: A new SpriteCollection object.
+        :rtype: :class:`SpriteCollection`
+
+        Example::
+
+            sprites_village1 = SpriteCollection.load_json_file('gfx/village1.spr')
+        """
+        with open(filename) as sprites_file:
+            sprites_data = json.load(sprites_file)
+            return SpriteCollection.load(sprites_data)
+
+    def serialize(self):
+        """
+        Return a serialized version of the SpriteCollection. The serialized data can be
+        pass to the JSON module to export.
+
+        :returns: The SpriteCollection object serialized as a dictionnary.
+        :rtype: dict
+
+        Example::
+
+            data = sprites_village1.serialize()
+        """
+        ret_data = dict()
+        ret_data["sprites_count"] = len(self.data)
+        ret_data["sprites"] = dict()
+        for spr_name in self.data:
+            ret_data["sprites"][spr_name] = self.data[spr_name].serialize()
+        return ret_data
+
+    def to_json_file(self, filename):
+        """
+        Export the SpriteCollection object in JSON and writes it on the disk.
+
+        :param filename: The complete path (relative or absolute) to the sprite file to
+           write.
+        :type filename: str
+
+        Example::
+
+            sprites_village1.to_json_file('gfx/village1.spr')
+        """
+        with open(filename, "w") as file:
+            json.dump(self.serialize(), file)
+
+    def add(self, sprite):
+        """
+        Add a Sprite to the collection. This method is simply a shortcut to the usual
+        dictionnary affection. The collection requires the name of the Sprite to be the
+        key. That method does that automatically.
+
+        :param sprite: A Sprite object to add to the collection.
+        :type sprite: :class:`Sprite`
+
+        .. WARNING:: As SpriteCollection index Sprites by their name if you change the
+           Sprite's name *after* adding it to the collection you will need to manually
+           update the keys.
+
+        Example::
+
+            sprites_village1 = SpriteCollection.load_json_file('gfx/village1.spr')
+            new_village = SpriteCollection()
+            new_village.add( copy.deepcopy( sprites_village1.get('bakery') ) )
+            print( new_village['bakery'] )
+        """
+        if isinstance(sprite, Sprite):
+            self.data[sprite.name] = sprite
+        else:
+            raise base.PglInvalidTypeException(
+                "SpriteCollection.add(sprite): require a Sprite object."
+            )
 
 
 class Animation(object):

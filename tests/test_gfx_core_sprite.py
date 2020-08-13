@@ -99,6 +99,38 @@ class TestBase(unittest.TestCase):
         spr.empty()
         self.assertEqual(spr.sprixel(1, 0), spr.default_sprixel)
 
+    def test_collection(self):
+        spr = gfx_core.Sprite(
+            sprixels=[
+                [
+                    gfx_core.Sprixel.cyan_rect(),
+                    gfx_core.Sprixel.red_rect(),
+                    gfx_core.Sprixel.green_rect(),
+                ],
+                [
+                    gfx_core.Sprixel.yellow_rect(),
+                    gfx_core.Sprixel.blue_rect(),
+                    gfx_core.Sprixel.white_rect(),
+                ],
+            ]
+        )
+        spr2 = spr.flip_horizontally()
+        spr3 = spr.flip_vertically()
+        sc = gfx_core.SpriteCollection()
+        sc.add(spr)
+        sc.add(spr2)
+        sc.add(spr3)
+        self.assertEqual(spr.name, sc[spr.name].name)
+        self.assertEqual(spr.name, sc.get(spr.name).name)
+        self.assertEqual(spr2.name, sc[spr2.name].name)
+        self.assertEqual(spr2.name, sc.get(spr2.name).name)
+        self.assertEqual(spr3.name, sc[spr3.name].name)
+        self.assertEqual(spr3.name, sc.get(spr3.name).name)
+        self.assertIsNone(sc.to_json_file("test.pgs"))
+        sc2 = gfx_core.SpriteCollection.load_json_file("test.pgs")
+        self.assertIsInstance(sc2, gfx_core.SpriteCollection)
+        self.assertEqual(spr3.sprixel(1, 1), sc2.get(spr3.name).sprixel(1, 1))
+
 
 if __name__ == "__main__":
     unittest.main()
