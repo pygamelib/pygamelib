@@ -1,4 +1,4 @@
-# Tutorial 3: Game design
+# Tutorial 3: Mighty Wizard
 
 ## Introduction
 
