@@ -49,6 +49,15 @@ trap_shoot_wave_obj = sa.WaveObject.from_wave_file(
     os.path.join("sfx", "trap-shoot.wav")
 )
 pickup_wave_obj = sa.WaveObject.from_wave_file(os.path.join("sfx", "pickup.wav"))
+next_level_wave_obj = sa.WaveObject.from_wave_file(os.path.join("sfx", "nextlevel.wav"))
+menu_move_wave_object = sa.WaveObject.from_wave_file(
+    os.path.join("sfx", "menu-move.wav")
+)
+death_wave_obj = sa.WaveObject.from_wave_file(os.path.join("sfx", "death.wav"))
+game_over_wave_obj = sa.WaveObject.from_wave_file(os.path.join("sfx", "gameover.wav"))
+bg_music_wave_obj = sa.WaveObject.from_wave_file(
+    os.path.join("sfx", "background-music.wav")
+)
 
 
 def block_color():
@@ -77,14 +86,17 @@ def title_screen(g):
                 print(f"  {' '*int(term_res/2-10)}{title_screen_menu[i]}\r")
         key = engine.Game.get_key()
         if key == engine.key.DOWN:
+            menu_move_wave_object.play()
             menu_index += 1
             if menu_index >= len(title_screen_menu):
                 menu_index = 0
         elif key == engine.key.UP:
+            menu_move_wave_object.play()
             menu_index -= 1
             if menu_index < 0:
                 menu_index = len(title_screen_menu) - 1
         elif key == engine.key.ENTER:
+            jump_wave_obj.play()
             if menu_index == 0:
                 g.clear_screen()
                 print(term.bold_underline_green("How to play"))
@@ -365,6 +377,7 @@ def ui_threaded(g):
             g.player.pos[0] == g.current_board().size[1] - 1 and g.player.dy == 0
         ) or round(g.timer, 1) <= 0.0:
             if g.player.remaining_lives == 0:
+                game_over_wave_obj.play()
                 g.stop()
                 g.config("settings")["hiscores"].append([g.player.name, g.score])
                 if len(g.config("settings")["hiscores"]) > 10:
@@ -375,6 +388,7 @@ def ui_threaded(g):
                     )[0:10]
                 raise SystemExit()
             else:
+                death_wave_obj.play()
                 g.current_board().clear_cell(g.player.pos[0], g.player.pos[1])
                 potential_respawns = g.neighbors(2, g.player)
                 g.player.model = (
@@ -419,6 +433,7 @@ def ui_threaded(g):
         if g.player.inventory.size() > 0:
             for iname in g.player.inventory.items_name():
                 item = g.player.inventory.get_item(iname)
+                pickup_wave_obj.play()
                 if item.type == "treasure.scorers":
                     g.score += int(item.value)
                 elif item.type == "treasure.timers":
@@ -432,6 +447,7 @@ def ui_threaded(g):
 
 
 def change_level(params):
+    next_level_wave_obj.play()
     game = params[0]
     board = engine.Board(
         size=[250, 30],
@@ -821,6 +837,9 @@ if constants.PYGAMELIB_VERSION < "1.2.0":
     )
     raise SystemExit()
 
+# Start background music
+bg_music_play_obj = bg_music_wave_obj.play()
+
 g = engine.Game()
 g.enable_partial_display = True
 g.partial_display_viewport = [10, int(term_res / 4)]
@@ -949,6 +968,8 @@ while current_state != "eop":
                     g.pause()
                 else:
                     g.start()
+            if not bg_music_play_obj.is_playing():
+                bg_music_play_obj = bg_music_wave_obj.play()
             key = engine.Game.get_key()
         current_state = "title"
 
