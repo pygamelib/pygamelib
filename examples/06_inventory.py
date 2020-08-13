@@ -1,6 +1,6 @@
 import examples_includes  # noqa: F401
-from gamelib.Inventory import Inventory
-from gamelib.Structures import Treasure
+from pygamelib.engine import Inventory
+from pygamelib.board_items import Treasure
 
 inv = Inventory(max_size=5)
 print("Inventory size:" + str(inv.size()))
