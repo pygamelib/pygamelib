@@ -83,9 +83,6 @@ class TestBase(unittest.TestCase):
         self.assertIn("TEST", self.text.blue("TEST"))
         self.assertIn("34m", self.text.blue("TEST"))
 
-    def test_text_to_sprite(self):
-        self.assertTrue("Sprite" in str(type(self.text.to_sprite())))
-
     def test_math_distance(self):
         self.assertEqual(self.math.distance(0, 0, 0, 0), 0)
         self.assertEqual(self.math.distance(0, 0, 0, 1), 1)
