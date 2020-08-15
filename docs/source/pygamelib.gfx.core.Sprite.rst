@@ -18,6 +18,7 @@ pygamelib.gfx.core.Sprite
       ~Sprite.empty
       ~Sprite.flip_horizontally
       ~Sprite.flip_vertically
+      ~Sprite.from_text
       ~Sprite.load_from_ansi_file
       ~Sprite.set_sprixel
       ~Sprite.sprixel

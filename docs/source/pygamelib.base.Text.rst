@@ -36,7 +36,6 @@ pygamelib.base.Text
       ~Text.red
       ~Text.red_bright
       ~Text.red_dim
-      ~Text.to_sprite
       ~Text.warn
       ~Text.white
       ~Text.white_bright
