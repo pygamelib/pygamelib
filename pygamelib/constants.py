@@ -37,6 +37,10 @@ Actions states (for Actuators for example):
 
 Special constants:
  * NO_PLAYER: That constant is used to tell the Game object not to manage the player.
+ * MODE_RT: Set the game object to Real Time mode. The game runs independently from the
+    user input.
+ * MODE_TBT: Set the game object to Turn By Turn mode. The game runs turn by turn and
+    pause between each user input.
 """
 
 # Main version
@@ -76,4 +80,4 @@ STOPPED = 40000011
 # Special constants
 NO_PLAYER = 90000001
 MODE_RT = 90000002
-MODE_TURN = 90000003
+MODE_TBT = 90000003
