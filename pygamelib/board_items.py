@@ -449,6 +449,16 @@ class Movable(BoardItem):
     :param step_horizontal: the amount of cell a movable can horizontally cross in one
        turn. Default value: step value.
     :type step_horizontal: int
+    :param movement_speed: The time (in seconds) between 2 movements of a Movable. It is
+       used by all the Game's actuation methods to enforce move speed of NPC and
+       projectiles.
+    :type movement_speed: int|float
+    
+    The movement_speed parameter is only used when the Game is configured with MODE_RT.
+    Additionally the dtmove property is used to accumulate time between frames. It is
+    entirely managed by the Game object and most of the time you shouldn't mess up with
+    it. Unless you want to manage movements by yourself. If so, have fun! That's the
+    point of the pygamelib to let you do whatever you like.
 
     This class derive BoardItem and describe an object that can move or be
     moved (like a player or NPC).
@@ -467,12 +477,40 @@ class Movable(BoardItem):
             else:
                 # self.step = kwargs["step"]
                 self.__setattr__(s, kwargs[s])
+        # TODO: That's initial thought for physic i the pygamelib. For future reference.
+        # if "velocity" in kwargs.keys():
+        #     self.velocity = kwargs["velocity"]
+        # else:
+        #     self.velocity = base.Vector2D()
+        # if "ignore_physic" in kwargs.keys():
+        #     self.ignore_physic = kwargs["ignore_physic"]
+        # else:
+        #     self.ignore_physic = False
         # Now if only step is set and it's not 1, set the correct value for the 2 others
         if "step_vertical" not in kwargs.keys() and self.step != 1:
             self.step_vertical = self.step
 
         if "step_horizontal" not in kwargs.keys() and self.step != 1:
             self.step_horizontal = self.step
+        # TODO : ADD move_speed
+        if "movement_speed" not in kwargs.keys():
+            self.movement_speed = 1.0
+        else:
+            self.movement_speed = kwargs["movement_speed"]
+        self.__dtmove = 0.0
+
+    @property
+    def dtmove(self):
+        return self.__dtmove
+
+    @dtmove.setter
+    def dtmove(self, value):
+        if type(value) is float or type(value) is int:
+            self.__dtmove = value
+        else:
+            raise base.PglInvalidTypeException(
+                "Movable.dtmove(value): value needs to be an int or float."
+            )
 
     def can_move(self):
         """
@@ -1197,7 +1235,7 @@ class TextItem(BoardComplexItem):
             )
         else:
             self._text = text
-        self.sprite = self._text.to_sprite()
+        self.sprite = gfx_core.Sprite.from_text(self._text)
         self.update_sprite()
 
     def __repr__(self):
@@ -1228,7 +1266,7 @@ class TextItem(BoardComplexItem):
             raise base.PglInvalidTypeException(
                 "TextItem.text must be either a str or a pygamelib.base.Text object."
             )
-        self.sprite = self._text.to_sprite()
+        self.sprite = gfx_core.Sprite.from_text(self._text)
         self.update_sprite()
 
 

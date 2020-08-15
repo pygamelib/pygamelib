@@ -31,6 +31,7 @@ import uuid
 import random
 import json
 import sys
+import time
 
 # We need to ignore that one as it is used by user to compare keys (i.e Utils.key.UP)
 from readchar import readkey, key  # noqa: F401
@@ -1062,6 +1063,22 @@ class Game:
         of the partial display in number of row and column. Please see
         :func:`~pygamelib.engine.Board.display_around()`.
     :type partial_display_viewport: list
+    :param mode: The mode parameter configures the way the run() method is going to
+       behave. The default value is constants.MODE_TBT. TBT is short for "Turn By Turn".
+       In that mode, the Game object wait for an user input before looping. Exactly like
+       when you wait for user input with get_key(). The other possible value is
+       constants.MODE_RT. RT stands for "Real Time". In that mode, the Game object waits
+       for a minimal amount of time (0.01 i.e 100 FPS, configurable through the
+       input_lag parameter) in order to get the input from the user and call the update
+       function right away. This parameter is *only* useful if you use Game.run().
+    :type mode: int
+    :param user_update: A reference to the main program update function. The update
+       function is called for each new frame. It is called with 3 parameters: the game
+       object, the user input (can be None) and the elapsed time since last frame.
+    :type user_update: function
+    :param input_lag: The amount of time the run() function is going to wait for a user
+       input before returning None and calling the update function. Default is 0.01.
+    :type input_lag: float|int
 
     .. note:: The game object has an object_library member that is always an empty array
         except just after loading a board. In this case, if the board have a "library"
@@ -1077,6 +1094,27 @@ class Game:
 
     """
 
+    # TODO: Documentation for a future release.
+    # FIXME: Lines messed up because linting.
+    # :param enable_physic: Enable or disable physic. Please read after.
+    # :type enable_physic: bool
+    # When physic is enable, it automatically set the mode to MODE_RT. The movement is
+    #  not
+    # using step, step_horizontal and step_vertical but it using the velocity attribute
+    #  of
+    # :class:`pygamelib.board_items.Movable` objects. The velocity is integrated over
+    #  time
+    # and gravity is automatically added to the forces.
+    # The engine sets Game.gravity to Vector2D(9.81, 0) (you can change it later).
+    # Gravity
+    # is automatically integrated over time and added to the velocity of movable
+    #  objects.
+    # If you want physics without gravity you just have to set it to a null vector.
+    # If you want to manage gravity by yourself, also set Game.gravity to a null vector.
+    # :class:`pygamelib.board_items.Movable` objects can explicitely request to not be
+    # subjected to physic by setting the ignore_physic attribute to True. It is the
+    # default for :class:`pygamelib.board_items.Projectile` objects.
+
     def __init__(
         self,
         name="Game",
@@ -1085,6 +1123,10 @@ class Game:
         current_level=None,
         enable_partial_display=False,
         partial_display_viewport=None,
+        mode=constants.MODE_TBT,
+        user_update=None,
+        input_lag=0.01,
+        enable_physic=False,
     ):
         self.name = name
         self._boards = boards
@@ -1100,9 +1142,100 @@ class Game:
         self.object_library = []
         self.terminal = Terminal()
         self.screen = Screen(self.terminal)
+        self.mode = mode
+        self.user_update = user_update
+        self.input_lag = input_lag
+        # TODO : In future release I'll add physic
+        # self.enable_physic = enable_physic
+        # # If physic is enabled we turn the mode to realtime (we need time integration)
+        # if self.enable_physic:
+        #     self.mode = constants.MODE_RT
+        #     self.gravity = base.Vector2D(9.81, 0)
+        # else:
+        #     self.gravity = None
         # Placeholder: we want to be able to center the screen on any item/position.
-        self.center_screen_on = None
+        # TODO: in a future version (post 1.2.0) a camera system will be added to build
+        # cinematic for example.
+        # self.center_screen_on = None
         base.init()
+        # In the case where user_update is defined, we cannot start the game on our own.
+        # We need the user to start it first.
+        if self.user_update is not None:
+            self.state = constants.PAUSED
+            self.previous_time = 0
+
+    def run(self):
+        # run() automatically position the cursor to 0,0 after calling user_update
+        # if the lines are "end of line" safe (i.e using Game.display_line()) you don't
+        # need to clear the screen.
+        # The game will also automatically enter fullscreen mode and restore the
+        # terminal state after.
+        if self.user_update is None:
+            raise base.PglInvalidTypeException(
+                "Game.run(): user_update cannot be undefined."
+            )
+        if not callable(self.user_update):
+            raise base.PglInvalidTypeException(
+                "Game.run(): user_update must be callable."
+            )
+        # Auto start if game hasn't be started before
+        if self.state == constants.PAUSED:
+            self.start()
+        # Update the inkey timeout based on mode
+        timeout = self.input_lag
+        if self.mode == constants.MODE_TBT:
+            timeout = None
+        self.previous_time = time.time()
+        with self.terminal.cbreak(), self.terminal.hidden_cursor(), (
+            self.terminal.fullscreen()
+        ):
+            # This runs until the game stops
+            while self.state != constants.STOPPED:
+                # But we only update if the game is not paused
+                if self.state == constants.RUNNING:
+                    in_key = self.terminal.inkey(timeout=timeout)
+                    elapsed = time.time() - self.previous_time
+                    self.previous_time = time.time()
+                    print(self.terminal.home)
+                    self.user_update(self, in_key, elapsed)
+                    self.actuate_npcs(self.current_level)
+                    self.actuate_projectiles(self.current_level)
+                    self.animate_items(self.current_level)
+
+    def display_line(self, *text, end="\n", file=sys.stdout, flush=False):
+        """
+        A wrapper to Python's print() builtin function except it will always add an
+        ANSI sequence to clear the end of the line. Making it more suitable to use in
+        a user_update callback.
+
+        The reason is that with line with variating length, if you use run() but not
+        clear(), some characters will remain on screen because run(), for performances
+        concerns does not clear the entire screen. It just bring the cursor back to the
+        top left corner of the screen.
+        So if you want to benefit from the increase performances you should use
+        display_line().
+
+        :param *text: objects that can serialize to str. The ANSI sequence to clear the
+           end of the line is *always* appended to the the text.
+        :type *text: str|objects
+        :param end: end sub string added to the printed text. Usually a carriage return.
+        :type end: str
+        :param file:
+        :type file: stream
+        :param flush:
+        :type flush: bool
+
+        Example::
+
+            game.display_line(f'This line will display correctly: {elapsed_time}')
+            # That line will have trailing characters that are not cleared after redraw
+            # if you don't use clear().
+            print(f'That one won't: {elapsed_time}')
+        """
+        # Funny how the documentation is waaayyy bigger than the code ;)
+        print(
+            *text, self.terminal.clear_eol, end=end, file=file, flush=flush,
+        )
 
     def add_menu_entry(self, category, shortcut, message, data=None):
         """Add a new entry to the menu.
@@ -1626,26 +1759,34 @@ class Game:
            by integrating the steps with a unit direction vector. It should be
            completely transparent and you should not expect any change. Just more
            movement freedom. If you do experience issues, please report a bug.
+
+        .. note:: Since version 1.2.0 and the appearance of the realtime mode, we have
+           to account for movement speed. This method does it.
         """
+        elapsed = time.time() - self.previous_time
         if self.state == constants.RUNNING:
             if type(level_number) is int:
                 if level_number in self._boards.keys():
                     for npc in self._boards[level_number]["npcs"]:
                         if npc.actuator.state == constants.RUNNING:
-                            # Since version 1.2.0 horizontal and vertical movement
-                            # amplitude can be different so we proceed in 2 steps:
-                            #  1 - build a unit direction vector
-                            #  2 - use its component to build a movement vector
-                            d = base.Vector2D.from_direction(
-                                npc.actuator.next_move(), 1
-                            )
-                            self._boards[level_number]["board"].move(
-                                npc,
-                                base.Vector2D(
-                                    d.row * npc.step_vertical,
-                                    d.column * npc.step_horizontal,
-                                ),
-                            )
+                            # Account for movement speed
+                            npc.dtmove += elapsed
+                            if npc.dtmove >= npc.movement_speed:
+                                # Since version 1.2.0 horizontal and vertical movement
+                                # amplitude can be different so we proceed in 2 steps:
+                                #  1 - build a unit direction vector
+                                #  2 - use its component to build a movement vector
+                                d = base.Vector2D.from_direction(
+                                    npc.actuator.next_move(), 1
+                                )
+                                self._boards[level_number]["board"].move(
+                                    npc,
+                                    base.Vector2D(
+                                        d.row * npc.step_vertical,
+                                        d.column * npc.step_horizontal,
+                                    ),
+                                )
+                                npc.dtmove = 0.0
                 else:
                     raise base.PglInvalidLevelException(
                         f"Impossible to actuate NPCs for this level (level number "
@@ -2185,6 +2326,7 @@ class Game:
             mygame.start()
         """
         self.state = constants.RUNNING
+        self.previous_time = time.process_time()
 
     def pause(self):
         """Set the game engine state to PAUSE.
