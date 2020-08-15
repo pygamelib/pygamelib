@@ -453,7 +453,7 @@ class Movable(BoardItem):
        used by all the Game's actuation methods to enforce move speed of NPC and
        projectiles.
     :type movement_speed: int|float
-    
+
     The movement_speed parameter is only used when the Game is configured with MODE_RT.
     Additionally the dtmove property is used to accumulate time between frames. It is
     entirely managed by the Game object and most of the time you shouldn't mess up with
