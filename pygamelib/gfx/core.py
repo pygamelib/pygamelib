@@ -33,9 +33,15 @@ class Sprixel(object):
         self.bg_color = bg_color
         self.fg_color = fg_color
         if (
-            type(model) is not str
-            or type(bg_color) is not str
-            or type(fg_color) is not str
+            (type(model) is not str and "FormattingString" not in str(type(model)))
+            or (
+                type(bg_color) is not str
+                and "FormattingString" not in str(type(bg_color))
+            )
+            or (
+                type(fg_color) is not str
+                and "FormattingString" not in str(type(fg_color))
+            )
         ):
             raise base.PglInvalidTypeException(
                 "Sprixel(model, bg_color, fg_color): all 3 variables needs to be a "
@@ -484,6 +490,40 @@ class Sprite(object):
                 "Sprite.set_sprixel(row, column, val) val needs to be a Sprixel"
             )
         self._sprixels[row][column] = val
+
+    @classmethod
+    def from_text(cls, text_object):
+        """
+        Create a Sprite from a :class:`~pygamelib.base.Text` object.
+
+        :param text_object: A text object to transform into Sprite.
+        :type text_object: :class:`~pygamelib.base.Text`
+
+        Example::
+
+            # The Text object allow for easy manipulation of text
+            village_name = base.Text('khukdale',fg_red, bg_green)
+            # It can be converted into a Sprite to be displayed on the Board
+            village_sign = board_items.Tile(sprite=Sprite.from_text(village_name))
+            # And can be used as formatted text
+            notifications.push( f'You enter the dreaded village of {village_name}' )
+        """
+        sprixels = []
+        style = ""
+        max_width = 0
+        for line in text_object.text.splitlines():
+            sprixels.append([])
+            if len(line) > max_width:
+                max_width = len(line)
+            for char in line:
+                sprixels[-1].append(
+                    Sprixel(
+                        style + char + base.Style.RESET_ALL,
+                        text_object.bg_color,
+                        text_object.fg_color,
+                    )
+                )
+        return cls(sprixels=sprixels)
 
     @classmethod
     def load_from_ansi_file(cls, filename, default_sprixel=None):

@@ -25,7 +25,6 @@ It is the base class for all levels.
    Text
 """
 import pygamelib.constants as constants
-import pygamelib.gfx.core as gfx_core
 import math
 from colorama import Fore, Back, Style, init
 
@@ -81,22 +80,6 @@ class Text:
 
     def __str__(self):
         return self.__repr__()
-
-    def to_sprite(self):
-        sprixels = []
-        style = ""
-        max_width = 0
-        for line in self.text.splitlines():
-            sprixels.append([])
-            if len(line) > max_width:
-                max_width = len(line)
-            for char in line:
-                sprixels[-1].append(
-                    gfx_core.Sprixel(
-                        style + char + Style.RESET_ALL, self.bg_color, self.fg_color,
-                    )
-                )
-        return gfx_core.Sprite(sprixels=sprixels)
 
     @staticmethod
     def warn(message):
