@@ -331,7 +331,7 @@ class Board:
 
     @property
     def width(self):
-        """A convenience method to get the width of the Board.
+        """A convenience read only property to get the width of the Board.
 
         It is absolutely equivalent to access to board.size[0].
 
@@ -347,7 +347,7 @@ class Board:
 
     @property
     def height(self):
-        """A convenience method to get the height of the Board.
+        """A convenience read only property to get the height of the Board.
 
         It is absolutely equivalent to access to board.size[1].
 
@@ -779,6 +779,14 @@ class Board:
         .. todo:: check all types!
 
         """
+        if (
+            item.parent is not None
+            and isinstance(item.parent, Game)
+            and item.parent.mode == constants.MODE_RT
+            and item.dtmove < item.movement_speed
+        ):
+            return
+        item.dtmove = 0.0
         rounded_direction = None
         if isinstance(direction, base.Vector2D):
             # If direction is a vector, round the numbers to the next integer.
@@ -1156,13 +1164,13 @@ class Game:
         # Placeholder: we want to be able to center the screen on any item/position.
         # TODO: in a future version (post 1.2.0) a camera system will be added to build
         # cinematic for example.
-        # self.center_screen_on = None
+        # self.center_board_on = None
         base.init()
         # In the case where user_update is defined, we cannot start the game on our own.
         # We need the user to start it first.
         if self.user_update is not None:
             self.state = constants.PAUSED
-            self.previous_time = 0
+        self.previous_time = time.time()
 
     def run(self):
         # run() automatically position the cursor to 0,0 after calling user_update
@@ -1198,9 +1206,10 @@ class Game:
                     self.previous_time = time.time()
                     print(self.terminal.home)
                     self.user_update(self, in_key, elapsed)
-                    self.actuate_npcs(self.current_level)
-                    self.actuate_projectiles(self.current_level)
-                    self.animate_items(self.current_level)
+                    print(self.terminal.clear_eos)
+                    self.actuate_npcs(self.current_level, elapsed)
+                    self.actuate_projectiles(self.current_level, elapsed)
+                    self.animate_items(self.current_level, elapsed)
 
     def display_line(self, *text, end="\n", file=sys.stdout, flush=False):
         """
@@ -1737,7 +1746,7 @@ class Game:
         else:
             raise base.PglInvalidTypeException("The level number must be an int.")
 
-    def actuate_npcs(self, level_number):
+    def actuate_npcs(self, level_number, elapsed_time=0.0):
         """Actuate all NPCs on a given level
 
         This method actuate all NPCs on a board associated with a level. At the moment
@@ -1745,7 +1754,10 @@ class Game:
         will evolve to allow more choice (like attack use objects, etc.)
 
         :param level_number: The number of the level to actuate NPCs in.
-        :type int:
+        :type level_number: int
+        :param elapsed_time: The amount of time that passed since last call. This
+            parameter is not mandatory.
+        :type elapsed_time: float
 
         Example::
 
@@ -1763,30 +1775,33 @@ class Game:
         .. note:: Since version 1.2.0 and the appearance of the realtime mode, we have
            to account for movement speed. This method does it.
         """
-        elapsed = time.time() - self.previous_time
         if self.state == constants.RUNNING:
             if type(level_number) is int:
                 if level_number in self._boards.keys():
                     for npc in self._boards[level_number]["npcs"]:
                         if npc.actuator.state == constants.RUNNING:
                             # Account for movement speed
-                            npc.dtmove += elapsed
-                            if npc.dtmove >= npc.movement_speed:
-                                # Since version 1.2.0 horizontal and vertical movement
-                                # amplitude can be different so we proceed in 2 steps:
-                                #  1 - build a unit direction vector
-                                #  2 - use its component to build a movement vector
-                                d = base.Vector2D.from_direction(
-                                    npc.actuator.next_move(), 1
-                                )
-                                self._boards[level_number]["board"].move(
-                                    npc,
-                                    base.Vector2D(
-                                        d.row * npc.step_vertical,
-                                        d.column * npc.step_horizontal,
-                                    ),
-                                )
-                                npc.dtmove = 0.0
+                            npc.dtmove += elapsed_time
+                            if (
+                                self.mode == constants.MODE_RT
+                                and npc.dtmove < npc.movement_speed
+                            ):
+                                continue
+                            # Since version 1.2.0 horizontal and vertical movement
+                            # amplitude can be different so we proceed in 2 steps:
+                            #  1 - build a unit direction vector
+                            #  2 - use its component to build a movement vector
+                            d = base.Vector2D.from_direction(
+                                npc.actuator.next_move(), 1
+                            )
+                            self._boards[level_number]["board"].move(
+                                npc,
+                                base.Vector2D(
+                                    d.row * npc.step_vertical,
+                                    d.column * npc.step_horizontal,
+                                ),
+                            )
+                            # npc.dtmove = 0.0
                 else:
                     raise base.PglInvalidLevelException(
                         f"Impossible to actuate NPCs for this level (level number "
@@ -1892,7 +1907,7 @@ class Game:
         self._boards[level_number]["npcs"].remove(npc)
         self.current_board().clear_cell(npc.pos[0], npc.pos[1])
 
-    def actuate_projectiles(self, level_number):
+    def actuate_projectiles(self, level_number, elapsed_time=0.0):
         """Actuate all Projectiles on a given level
 
         This method actuate all Projectiles on a board associated with a level.
@@ -1905,7 +1920,10 @@ class Game:
         hit_callback is called.
 
         :param level_number: The number of the level to actuate Projectiles in.
-        :type int:
+        :type level_number: int
+        :param elapsed_time: The amount of time that passed since last call. This
+            parameter is not mandatory.
+        :type elapsed_time: float
 
         Example::
 
@@ -1929,6 +1947,14 @@ class Game:
                     #      list or the AOE neighbors.
                     for proj in self._boards[level_number]["projectiles"]:
                         if proj.actuator.state == constants.RUNNING:
+                            # Account for movement speed
+                            proj.dtmove += elapsed_time
+                            if (
+                                self.mode == constants.MODE_RT
+                                and proj.dtmove < proj.movement_speed
+                            ):
+                                continue
+                            proj.dtmove = 0.0
                             if proj.range > 0:
                                 # Build a unit movement vector
                                 umv = base.Vector2D.from_direction(
@@ -2002,11 +2028,14 @@ class Game:
                     "In actuate_npcs(level_number) the level_number must be an int."
                 )
 
-    def animate_items(self, level_number):
+    def animate_items(self, level_number, elapsed_time=0.0):
         """That method goes through all the BoardItems of a given map and call
         Animation.next_frame()
         :param level_number: The number of the level to animate items in.
         :type level_number: int
+        :param elapsed_time: The amount of time that passed since last call. This
+            parameter is not mandatory.
+        :type elapsed_time: float
 
         :raise: :class:`pygamelib.base.PglInvalidLevelException`
             class:`pygamelib.base.PglInvalidTypeException`
@@ -2018,6 +2047,7 @@ class Game:
         if self.state == constants.RUNNING:
             if type(level_number) is int:
                 if level_number in self._boards.keys():
+                    # TODO: Account for elapsed time
                     for item in self._boards[level_number]["board"].get_immovables():
                         if item.animation is not None:
                             item.animation.next_frame()
