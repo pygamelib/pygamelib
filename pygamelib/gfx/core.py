@@ -54,7 +54,7 @@ class Sprixel(object):
     def __repr__(self):
         return f"{self.bg_color}{self.fg_color}{self.model}\x1b[0m"
 
-    def __str__(self):
+    def __str__(self):  # pragma: no cover
         return self.__repr__()
 
     def __eq__(self, other):
@@ -405,7 +405,7 @@ class Sprite(object):
             string.append("".join(map(lambda i: i.__repr__(), scanline)))
         return "\n".join(string)
 
-    def __str__(self):
+    def __str__(self):  # pragma: no cover
         return self.__repr__()
 
     def empty(self):
