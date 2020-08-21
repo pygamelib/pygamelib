@@ -32,11 +32,19 @@ jobs:
           name: Run unit tests under tests folder
           command: |
             pipenv run python3 -m unittest discover -s tests
+      - run:
+          name: Run test coverage suite
+          command: |
+            $HOME/.local/bin/coverage run --source=./pygamelib -m unittest discover -s tests
+            $HOME/.local/bin/coverage html
+            bash <(curl -s https://codecov.io/bash)
           when: always
       - store_test_results:
           path: reports
       - store_artifacts:
           path: reports
+      - store_artifacts:
+          path: htmlcov
 
 workflows:
   version: 2
