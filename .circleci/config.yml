@@ -35,8 +35,8 @@ jobs:
       - run:
           name: Run test coverage suite
           command: |
-            $HOME/.local/bin/coverage run --source=./pygamelib -m unittest discover -s tests
-            $HOME/.local/bin/coverage html
+            coverage run --source=./pygamelib -m unittest discover -s tests
+            coverage html
             bash <(curl -s https://codecov.io/bash)
           when: always
       - store_test_results:
