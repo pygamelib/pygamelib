@@ -6,6 +6,8 @@
 [![Documentation Status](https://readthedocs.org/projects/pygamelib/badge/?version=latest)](https://pygamelib.readthedocs.io/en/latest/?badge=latest)
 [![CII Best Practices](https://bestpractices.coreinfrastructure.org/projects/2849/badge)](https://bestpractices.coreinfrastructure.org/projects/2849)
 [![CircleCI](https://circleci.com/gh/arnauddupuis/pygamelib.svg?style=svg)](https://circleci.com/gh/arnauddupuis/pygamelib)
+[![codecov](https://codecov.io/gh/arnauddupuis/pygamelib/branch/v1.2-working/graph/badge.svg)](https://codecov.io/gh/arnauddupuis/pygamelib)
+
 
 # pygamelib
 A (not so) small library for terminal based game development.
