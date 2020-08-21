@@ -67,8 +67,6 @@ class BoardItem:
         self.parent = None
         self.sprixel = None
         self.size = [1, 1]
-        # We probably need the item to store its own velocity at some point
-        # self.velocity = base.Vector2d(0,0)
         # Setting class parameters
         for item in ["name", "type", "pos", "model", "parent", "sprixel"]:
             if item in kwargs:
@@ -80,7 +78,7 @@ class BoardItem:
         else:
             return self.model
 
-    def __repr__(self):
+    def __repr__(self):  # pragma: no cover
         return self.__str__()
 
     def display(self):
@@ -104,7 +102,7 @@ class BoardItem:
                     + "'\n"
                 )
             else:
-                string += f"'{key}' = '" + getattr(self, key) + "'\n"
+                string += f"'{key}' = '{getattr(self, key)}'\n"
         return string
 
     def store_position(self, row, column):
@@ -386,10 +384,10 @@ class BoardComplexItem(BoardItem):
             self.sprite.parent = self
         self.update_sprite()
 
-    def __repr__(self):
+    def __repr__(self):  # pragma: no cover
         return self.sprite.__repr__()
 
-    def __str__(self):
+    def __str__(self):  # pragma: no cover
         return self.sprite.__str__()
 
     def update_sprite(self):
@@ -427,7 +425,7 @@ class BoardComplexItem(BoardItem):
         if row < self.size[1] and column < self.size[0]:
             return self._item_matrix[row][column]
         else:
-            raise base.PglOutOfBoardBoundException(
+            raise base.PglOutOfItemBoundException(
                 (
                     f"There is no item at coordinates [{row},{column}] "
                     "because it's out of the board multi item boundaries "
@@ -469,6 +467,8 @@ class Movable(BoardItem):
 
     def __init__(self, **kwargs):
         BoardItem.__init__(self, **kwargs)
+        # We probably need the item to store its own velocity at some point
+        # self.velocity = base.Vector2d(0,0)
         # Set default values
         for s in ["step", "step_vertical", "step_horizontal"]:
             if s not in kwargs.keys():
@@ -591,7 +591,10 @@ class Projectile(Movable):
     :param aoe_radius: the radius of the projectile area of effect. This will force the
         Game object to send a list of all objects in that radius.
     :type aoe_radius: int
-    :param args: extra parameters to pass to hit_callback.
+    :param callback_parameters: A list of parameters to pass to hit_callback.
+    :type callback_parameters: list
+    :param movement_speed: The movement speed of the projectile
+    :type movement_speed: int|float
     :param parent: The parent object (usually a Board object or some sort of BoardItem).
 
     .. important:: The effects of a Projectile are determined by the callback. No
@@ -625,14 +628,22 @@ class Projectile(Movable):
         is_aoe=False,
         aoe_radius=0,
         parent=None,
-        *args,
+        callback_parameters=[],
+        movement_speed=0.15,
     ):
         if range % step != 0:
             raise base.PglException(
                 "incorrect_range_step",
                 "range must be a factor of step" " in Projectile",
             )
-        Movable.__init__(self, model=model, step=step, name=name, parent=parent)
+        Movable.__init__(
+            self,
+            model=model,
+            step=step,
+            name=name,
+            parent=parent,
+            movement_speed=movement_speed,
+        )
         self.direction = direction
         self.range = range
         self.movement_animation = movement_animation
@@ -641,7 +652,7 @@ class Projectile(Movable):
         self.hit_animation = hit_animation
         self.hit_model = hit_model
         self.hit_callback = hit_callback
-        self.callback_parameters = args
+        self.callback_parameters = callback_parameters
         self.actuator = actuators.UnidirectionalActuator(direction=direction)
         self.is_aoe = is_aoe
         self.aoe_radius = aoe_radius
@@ -877,6 +888,7 @@ class Projectile(Movable):
         :return: True
         :rtype: bool
         """
+        return True
 
 
 class Immovable(BoardItem):
@@ -1044,10 +1056,12 @@ class Player(Movable, Character):
 
     This class sets a couple of variables to default values:
 
-     * max_hp : 100
-     * hp : 100
-     * remaining_lives : 3
-     * attack_power : 10
+     * max_hp: 100
+     * hp: 100
+     * remaining_lives: 3
+     * attack_power: 10
+     * movement_speed: 0.1 (one movement every 0.1 second). Only useful if the game mode
+         is set to MODE_RT.
 
     .. note:: If no inventory is passed as parameter a default one is created.
     """
@@ -1061,6 +1075,8 @@ class Player(Movable, Character):
             kwargs["remaining_lives"] = 3
         if "attack_power" not in kwargs.keys():
             kwargs["attack_power"] = 10
+        if "movement_speed" not in kwargs.keys():
+            kwargs["movement_speed"] = 0.1
         Movable.__init__(self, **kwargs)
         Character.__init__(self, **kwargs)
         if "inventory" in kwargs.keys():
@@ -1106,6 +1122,15 @@ class NPC(Movable, Character):
         * :class:`pygamelib.board_items.Movable`
         * :class:`pygamelib.board_items.BoardItem`
 
+    This class sets a couple of variables to default values:
+
+     * max_hp: 10
+     * hp: 10
+     * remaining_lives: 1
+     * attack_power: 5
+     * movement_speed: 0.25 (one movement every 0.25 second). Only useful if the game
+         mode is set to MODE_RT.
+
     :param actuator: An actuator, it can be any class but it need to implement
         pygamelib.actuators.Actuator.
     :type actuator: pygamelib.actuators.Actuator
@@ -1126,6 +1151,8 @@ class NPC(Movable, Character):
             kwargs["remaining_lives"] = 1
         if "attack_power" not in kwargs.keys():
             kwargs["attack_power"] = 5
+        if "movement_speed" not in kwargs.keys():
+            kwargs["movement_speed"] = 0.25
         Movable.__init__(self, **kwargs)
         Character.__init__(self, **kwargs)
         if "actuator" not in kwargs.keys():
@@ -1238,7 +1265,7 @@ class TextItem(BoardComplexItem):
         self.sprite = gfx_core.Sprite.from_text(self._text)
         self.update_sprite()
 
-    def __repr__(self):
+    def __repr__(self):  # pragma: no cover
         return self._text.__repr__()
 
     @property
