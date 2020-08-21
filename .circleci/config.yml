@@ -35,8 +35,9 @@ jobs:
       - run:
           name: Run test coverage suite
           command: |
-            pipenv run coverage run --source=./pygamelib -m unittest discover -s tests
-            pipenv run coverage html
+            pipenv shell
+            coverage run --source=./pygamelib -m unittest discover -s tests
+            coverage html
             bash <(curl -s https://codecov.io/bash)
           when: always
       - store_test_results:
