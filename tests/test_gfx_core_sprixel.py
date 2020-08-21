@@ -14,6 +14,8 @@ class TestBase(unittest.TestCase):
         self.assertEqual(sprix.model, "m")
         self.assertEqual(sprix.bg_color, "b")
         self.assertEqual(sprix.fg_color, "f")
+        with self.assertRaises(gfx_core.base.PglInvalidTypeException):
+            gfx_core.Sprixel(False, False, False)
 
     def test_sprixel_cmp(self):
         s1 = gfx_core.Sprixel()
@@ -21,6 +23,8 @@ class TestBase(unittest.TestCase):
         s3 = gfx_core.Sprixel("m")
         self.assertEqual(s1, s2)
         self.assertNotEqual(s1, s3)
+        self.assertFalse(s1 == s3)
+        self.assertFalse(s1 != s2)
 
     def test_sprixel_from_ansi(self):
         s = gfx_core.Sprixel.from_ansi(
@@ -30,6 +34,15 @@ class TestBase(unittest.TestCase):
         self.assertEqual(s.model, "▄")
         self.assertEqual(s.bg_color, "\x1b[48;2;160;26;23m")
         self.assertEqual(s.fg_color, "\x1b[38;2;120;18;15m")
+        s = gfx_core.Sprixel.from_ansi("\x1b[38;2;120;18;15m▄\x1b[0m")
+        self.assertEqual(s.model, "▄")
+        self.assertEqual(s.bg_color, "")
+        self.assertEqual(s.fg_color, "\x1b[38;2;120;18;15m")
+        s = gfx_core.Sprixel.from_ansi("\x1b[48;2;160;26;23m▄\x1b[0m")
+        self.assertIsInstance(s, gfx_core.Sprixel)
+        self.assertEqual(s.model, "▄")
+        self.assertEqual(s.bg_color, "\x1b[48;2;160;26;23m")
+        self.assertEqual(s.fg_color, "")
 
     def test_sprixel_update(self):
         sprix = gfx_core.Sprixel()
@@ -48,6 +61,10 @@ class TestBase(unittest.TestCase):
         self.assertEqual(sprix.model, "@")
         self.assertEqual(sprix.bg_color, "\x1b[48;2;160;26;23m")
         self.assertEqual(sprix.fg_color, "\x1b[38;2;120;18;15m")
+        with self.assertRaises(gfx_core.base.PglInvalidTypeException):
+            sprix.bg_color = 1
+        with self.assertRaises(gfx_core.base.PglInvalidTypeException):
+            sprix.fg_color = 1
 
     def test_sprixel_static_black(self):
         s = gfx_core.Sprixel.black_rect()

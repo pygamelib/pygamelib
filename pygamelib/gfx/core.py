@@ -737,24 +737,24 @@ class Sprite(object):
             new_sprite = Sprite.load(json_parsed_data)
         """
         sprixels = []
-        for row in range(0, int(data["size"][1])):
-            tmp = []
-            for column in range(0, int(data["size"][0])):
-                tmp.append(Sprixel.load(data["sprixels"][row][column]))
-            sprixels.append(tmp)
-        new_sprite = cls(
-            name=data["name"],
-            default_sprixel=Sprixel.load(data["default_sprixel"]),
-            sprixels=sprixels,
-        )
-        # Do some integrity check
-        if new_sprite.size != data["size"]:
+        try:
+            for row in range(0, int(data["size"][1])):
+                tmp = []
+                for column in range(0, int(data["size"][0])):
+                    tmp.append(Sprixel.load(data["sprixels"][row][column]))
+                sprixels.append(tmp)
+            new_sprite = cls(
+                name=data["name"],
+                default_sprixel=Sprixel.load(data["default_sprixel"]),
+                sprixels=sprixels,
+            )
+            return new_sprite
+        except IndexError:
             raise base.PglException(
                 "invalid_sprite_size",
                 "Sprite.load(data): sprixels array size is different from sprite "
                 "computed size.",
             )
-        return new_sprite
 
 
 class SpriteCollection(UserDict):

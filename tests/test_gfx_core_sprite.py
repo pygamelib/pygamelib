@@ -10,6 +10,25 @@ class TestBase(unittest.TestCase):
         self.assertEqual(spr.size[0], 2)
         self.assertEqual(spr.size[1], 2)
         self.assertEqual(spr.sprixel(1, 1), gfx_core.Sprixel())
+        self.assertEqual(spr.__repr__(), "\x1b[0m\x1b[0m\n\x1b[0m\x1b[0m")
+        with self.assertRaises(gfx_core.base.PglInvalidTypeException):
+            spr.sprixel("crash", 1)
+        with self.assertRaises(gfx_core.base.PglInvalidTypeException):
+            spr.sprixel(1, "crash")
+        with self.assertRaises(gfx_core.base.PglException) as e:
+            spr.sprixel(1, 10)
+            self.assertEqual(e.error, "out_of_sprite_boundaries")
+        self.assertTrue(type(spr.sprixel(1)) is list)
+        with self.assertRaises(gfx_core.base.PglException) as e:
+            spr.sprixel(10, 1)
+            self.assertEqual(e.error, "out_of_sprite_boundaries")
+        with self.assertRaises(gfx_core.base.PglInvalidTypeException):
+            spr.set_sprixel(1, "crash", "bork")
+        with self.assertRaises(gfx_core.base.PglException) as e:
+            spr.set_sprixel(1, 10, "bork")
+            self.assertEqual(e.error, "out_of_sprite_boundaries")
+        with self.assertRaises(gfx_core.base.PglInvalidTypeException):
+            spr.set_sprixel(1, 1, "bork")
 
     def test_screen_create1(self):
         spr = gfx_core.Sprite(size=[4, 4])
@@ -79,6 +98,15 @@ class TestBase(unittest.TestCase):
         spr_flipped = spr.flip_vertically()
         self.assertEqual(spr.sprixel(1, 0), gfx_core.Sprixel.yellow_rect())
         self.assertEqual(spr_flipped.sprixel(1, 0), gfx_core.Sprixel.cyan_rect())
+        spr = gfx_core.Sprite(
+            sprixels=[
+                [gfx_core.Sprixel("▄"), gfx_core.Sprixel("▄")],
+                [gfx_core.Sprixel("▀"), gfx_core.Sprixel("▀")],
+            ]
+        )
+        spr_flipped = spr.flip_vertically()
+        self.assertEqual(spr.sprixel(0, 0).model, "▀")
+        self.assertIsNone(spr.set_transparency(True))
 
     def test_screen_empty(self):
         spr = gfx_core.Sprite(
@@ -98,6 +126,53 @@ class TestBase(unittest.TestCase):
         self.assertEqual(spr.sprixel(1, 0), gfx_core.Sprixel.yellow_rect())
         spr.empty()
         self.assertEqual(spr.sprixel(1, 0), spr.default_sprixel)
+
+    def test_load(self):
+        gfx_core.Sprite.load_from_ansi_file("tests/house-red.ans")
+        with self.assertRaises(gfx_core.base.PglException) as e:
+            gfx_core.Sprite.load(
+                {
+                    "size": [2, 3],
+                    "name": "villager",
+                    "default_sprixel": {
+                        "bg_color": "",
+                        "fg_color": "",
+                        "model": "",
+                        "is_bg_transparent": True,
+                    },
+                    "sprixels": [
+                        [
+                            {
+                                "bg_color": "\x1b[48;2;139;22;19m",
+                                "fg_color": "\x1b[38;2;160;26;23m",
+                                "model": "▄",
+                                "is_bg_transparent": True,
+                            },
+                            {
+                                "bg_color": "\x1b[48;2;139;22;19m",
+                                "fg_color": "\x1b[38;2;160;26;23m",
+                                "model": "▄",
+                                "is_bg_transparent": True,
+                            },
+                        ],
+                        [
+                            {
+                                "bg_color": "\x1b[48;2;139;22;19m",
+                                "fg_color": "\x1b[38;2;160;26;23m",
+                                "model": "▄",
+                                "is_bg_transparent": False,
+                            },
+                            {
+                                "bg_color": "\x1b[48;2;139;22;19m",
+                                "fg_color": "\x1b[38;2;160;26;23m",
+                                "model": "▄",
+                                "is_bg_transparent": False,
+                            },
+                        ],
+                    ],
+                }
+            )
+            self.assertEqual(e.error, "invalid_sprite_size")
 
     def test_collection(self):
         spr = gfx_core.Sprite(
@@ -120,6 +195,8 @@ class TestBase(unittest.TestCase):
         sc.add(spr)
         sc.add(spr2)
         sc.add(spr3)
+        with self.assertRaises(gfx_core.base.PglInvalidTypeException):
+            sc.add(1)
         self.assertEqual(spr.name, sc[spr.name].name)
         self.assertEqual(spr.name, sc.get(spr.name).name)
         self.assertEqual(spr2.name, sc[spr2.name].name)
@@ -130,6 +207,12 @@ class TestBase(unittest.TestCase):
         sc2 = gfx_core.SpriteCollection.load_json_file("test.pgs")
         self.assertIsInstance(sc2, gfx_core.SpriteCollection)
         self.assertEqual(spr3.sprixel(1, 1), sc2.get(spr3.name).sprixel(1, 1))
+        with self.assertRaises(gfx_core.base.PglException) as e:
+            gfx_core.SpriteCollection.load({})
+            self.assertEqual(e.error, "invalid_sprite_data")
+        with self.assertRaises(gfx_core.base.PglException) as e:
+            gfx_core.SpriteCollection.load({"sprites_count": 2, "sprites": {}})
+            self.assertEqual(e.error, "corrupted_sprite_data")
 
 
 if __name__ == "__main__":

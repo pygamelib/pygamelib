@@ -14,6 +14,15 @@ class TestAnimation(unittest.TestCase):
             parent=self.item, refresh_screen=self.redraw, display_time=0.5
         )
         self.assertEqual(self.item.name, self.animation.parent.name)
+        a = gfx_core.Animation(
+            animated_object=self.item,
+            refresh_screen=self.redraw,
+            display_time=0.5,
+            initial_index=2,
+        )
+        self.assertEqual(a._initial_index, 2)
+        a.reset()
+        self.assertEqual(a._initial_index, a._frame_index)
 
     def test_start(self):
         self.item = pgl_board_items.NPC(model="-o-", name="Dancer")
@@ -83,6 +92,8 @@ class TestAnimation(unittest.TestCase):
         self.assertEqual(self.animation.remove_frame(2), "|o|")
         self.assertEqual(self.animation.current_frame(), "\\o\\")
         self.assertEqual(self.animation.next_frame(), "/o/")
+        with self.assertRaises(gfx_core.base.PglInvalidTypeException):
+            self.animation.remove_frame("999")
 
     def test_current_frame(self):
         self.item = pgl_board_items.NPC(model="-o-", name="Dancer")
@@ -111,6 +122,18 @@ class TestAnimation(unittest.TestCase):
         self.assertEqual(self.animation.next_frame(), "\\o-")
         self.animation.stop()
         self.assertIsNone(self.animation.next_frame())
+        self.animation.start()
+        self.animation.next_frame()
+        self.animation.next_frame()
+        self.animation.next_frame()
+        self.animation.reset()
+        self.animation.auto_replay = False
+        self.animation.next_frame()
+        self.animation.next_frame()
+        self.animation.next_frame()
+        self.animation.next_frame()
+        self.animation.next_frame()
+        self.assertEqual(self.animation._frame_index, 3)
         self.animation.parent = "This is going to break!"
         with self.assertRaises(Exception) as context:
             self.animation.next_frame()
