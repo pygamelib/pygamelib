@@ -78,7 +78,7 @@ class Text:
     def __repr__(self):
         return "".join([self.bg_color, self.fg_color, self.style, self.text, "\x1b[0m"])
 
-    def __str__(self):
+    def __str__(self):  # pragma: no cover
         return self.__repr__()
 
     @staticmethod
@@ -393,6 +393,15 @@ class PglOutOfBoardBoundException(Exception):
         self.message = message
 
 
+class PglOutOfItemBoundException(Exception):
+    """
+    Exception for out of the item's boundaries operations.
+    """
+
+    def __init__(self, message):
+        self.message = message
+
+
 class HacOutOfBoardBoundException(PglOutOfBoardBoundException):
     """Simple forward to PglOutOfBoardBoundException
     """
@@ -517,7 +526,7 @@ class Vector2D:
     def __repr__(self):
         return f"{self.__class__.__name__} ({self.__row}, {self.__column})"
 
-    def __str__(self):
+    def __str__(self):  # pragma: no cover
         return self.__repr__()
 
     def __add__(self, other):
