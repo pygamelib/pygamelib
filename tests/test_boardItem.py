@@ -45,6 +45,9 @@ class TestBoard(unittest.TestCase):
 
         self.assertTrue("require a BoardItem as parameter" in str(context.exception))
 
+        bi = pgl_board_items.BoardItem(sprixel=gfx_core.Sprixel("-"))
+        self.assertEqual(bi.__str__(), gfx_core.Sprixel("-").__repr__())
+
     def test_default_boarditem_implementation(self):
         bi = pgl_board_items.BoardItem()
         with self.assertRaises(NotImplementedError):
@@ -150,6 +153,103 @@ class TestBoard(unittest.TestCase):
 
         p.hit_callback = _cb
         self.assertIsNone(p.hit([pgl_board_items.BoardItemVoid]))
+
+    def test_immovable(self):
+        bi = pgl_board_items.Immovable(inventory_space=2)
+        self.assertFalse(bi.can_move())
+        self.assertEqual(bi.inventory_space(), 2)
+        with self.assertRaises(NotImplementedError):
+            bi.restorable()
+
+    def test_actionable(self):
+        bi = pgl_board_items.Actionable()
+
+        def _act(p):
+            t = p[0]
+            t.assertEqual(p[1], 1)
+
+        bi = pgl_board_items.Actionable(
+            action=_act,
+            action_parameters=[self, 1],
+            perm=constants.ALL_MOVABLE_AUTHORIZED,
+        )
+        self.assertIsNone(bi.activate())
+
+    def test_player(self):
+        p = pgl_board_items.Player(inventory=pgl_board_items.engine.Inventory())
+        self.assertFalse(p.pickable())
+        self.assertTrue(p.has_inventory())
+
+    def test_npc(self):
+        npc = pgl_board_items.NPC(
+            actuator=pgl_board_items.actuators.RandomActuator(), step=1
+        )
+        self.assertFalse(npc.pickable())
+        self.assertFalse(npc.overlappable())
+        self.assertFalse(npc.has_inventory())
+
+    def test_complexnpc(self):
+        pgl_board_items.ComplexNPC()
+
+    def test_textitem(self):
+        with self.assertRaises(pgl_board_items.base.PglInvalidTypeException):
+            pgl_board_items.TextItem(text=pgl_board_items.TextItem(text="crash"))
+        bi = pgl_board_items.TextItem(text="test")
+        self.assertEqual(bi.text.text, "test")
+        bi = pgl_board_items.TextItem(text=pgl_board_items.base.Text("test"))
+        self.assertEqual(bi.text.text, "test")
+        bi.text = "value change"
+        self.assertEqual(bi.text.text, "value change")
+        bi.text = pgl_board_items.base.Text("value change")
+        self.assertEqual(bi.text.text, "value change")
+        with self.assertRaises(pgl_board_items.base.PglInvalidTypeException):
+            bi.text = pgl_board_items.BoardComplexItem()
+
+    def test_wall(self):
+        bi = pgl_board_items.Wall()
+        self.assertFalse(bi.pickable())
+        self.assertFalse(bi.overlappable())
+        self.assertFalse(bi.restorable())
+
+    def test_genericstructure(self):
+        bi = pgl_board_items.GenericStructure(value=5)
+        self.assertFalse(bi.pickable())
+        self.assertFalse(bi.overlappable())
+        self.assertFalse(bi.restorable())
+        with self.assertRaises(pgl_board_items.base.PglInvalidTypeException):
+            bi.set_restorable(1)
+        bi.set_restorable(True)
+        self.assertTrue(bi.restorable())
+        bi = pgl_board_items.GenericActionableStructure()
+
+    def test_treasure(self):
+        bi = pgl_board_items.Treasure(value=1000, inventory_space=5)
+        self.assertTrue(bi.pickable())
+        self.assertFalse(bi.overlappable())
+        self.assertFalse(bi.restorable())
+
+    def test_door(self):
+        bi = pgl_board_items.Door()
+        self.assertEqual(bi.model, "]")
+        self.assertEqual(bi.name, "Door")
+        self.assertEqual(bi.type, "door")
+        bi = pgl_board_items.Door(
+            value=1,
+            inventory_space=5,
+            model="]",
+            name="The door",
+            type="closed_door",
+            pickable=False,
+            overlappable=False,
+            restorable=True,
+        )
+        self.assertFalse(bi.pickable())
+        self.assertFalse(bi.overlappable())
+        self.assertTrue(bi.restorable())
+
+    def test_tile(self):
+        bi = pgl_board_items.Tile()
+        self.assertFalse(bi.pickable())
 
 
 if __name__ == "__main__":
