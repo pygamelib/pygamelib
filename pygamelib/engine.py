@@ -2668,7 +2668,7 @@ class Inventory:
                     or item.name == ""
                     or item.name in self.__items.keys()
                 ):
-                    item.name += "_" + uuid.uuid4().hex
+                    item.name = f"{item.name}_{uuid.uuid4().hex}"
                 if (
                     hasattr(item, "_inventory_space")
                     and self.max_size >= self.size() + item.inventory_space()
@@ -2693,7 +2693,7 @@ class Inventory:
         else:
             raise base.PglInvalidTypeException(
                 "The item is not an instance of BoardItem. The item is of type: "
-                + type(item)
+                + str(type(item))
             )
 
     def size(self):
