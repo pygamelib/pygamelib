@@ -27,6 +27,9 @@ class TestBase(unittest.TestCase):
         scr = engine.Screen(self.term)
         self.assertIsInstance(scr, engine.Screen)
 
+    def test_clear(self):
+        self.screen.clear()
+
     def test_screen_dimension(self):
         self.assertEqual(self.term.width, self.screen.width)
         self.assertEqual(self.term.height, self.screen.height)
