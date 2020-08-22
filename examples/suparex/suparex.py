@@ -214,7 +214,7 @@ def refresh_screen(g):
     # print("\r")
     print(
         f"Score: {base.Text.blue_bright(str(g.score))}{' '*12}"
-        f"{g.player.remaining_lives*graphics.Models.PANDA}\r"
+        f"{g.player.remaining_lives*graphics.Models.PANDA}{g.terminal.clear_eol}\r"
     )
     # print("\r")
     status = ""
@@ -228,18 +228,21 @@ def refresh_screen(g):
     if g.timer >= 10:
         print(
             f"Time left: {base.Text.green_bright(str(round(g.timer,1)))}{' '*5}"
-            f"Level: {g.current_level}{status}"
+            f"Level: {g.current_level}{status}{g.terminal.clear_eol}"
         )
     else:
         print(
             f"Time left: {base.Text.red_bright(str(round(g.timer,1)))}{' '*5}"
-            f"Level: {g.current_level}{status}"
+            f"Level: {g.current_level}{status}{g.terminal.clear_eol}"
         )
     print("\r")
     current = 1 / (process_time() - fps["last"])
     fps["count"] += 1
     fps["sum"] += current
-    print(f"FPS: {current:2.2f} Average: {fps['sum']/fps['count']:2.2f}\r")
+    print(
+        f"FPS: {current:2.2f} Average: {fps['sum']/fps['count']:2.2f}"
+        f"{g.terminal.clear_eol}\r"
+    )
     fps["last"] = process_time()
     # print(
     #     f"Remaining traps: {g.current_board().available_traps} Scorers: "
@@ -256,6 +259,8 @@ def refresh_screen(g):
 
 
 def gravity(g):
+    if g.state != constants.RUNNING:
+        return
     # if g.player.pos[0] == g.current_board().size[1] - 1 or g.player.pos[0] == int(
     #     g.player.max_y
     # ):
