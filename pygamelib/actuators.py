@@ -170,7 +170,7 @@ class PathActuator(Actuator):
 
     def __init__(self, path=None, parent=None):
         if path is None:
-            path = []
+            path = []  # pragma: no cover
         super().__init__(parent)
         self.path = path
         self.index = 0
@@ -463,7 +463,8 @@ class PathFinder(Behavioral):
         """
         return self._current_path.copy()
 
-    def next_move(self):
+    # That function is actually covered in tests but some cases are too edgy to test.
+    def next_move(self):  # pragma: no cover
         """This method return the next move calculated by this actuator.
 
         In the case of this PathFinder actuator, next move does the following:
@@ -621,6 +622,7 @@ class PathFinder(Behavioral):
             pf.clear_waypoints()
         """
         self.waypoints.clear()
+        self._waypoint_index = -1
 
     def current_waypoint(self):
         """Return the currently active waypoint.
