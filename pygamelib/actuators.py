@@ -701,5 +701,8 @@ class PathFinder(Behavioral):
         try:
             idx = self.waypoints.index((row, column))
             self.waypoints.pop(idx)
-        except ValueError as e:
-            print(e)
+        except ValueError:
+            raise base.PglException(
+                "invalid_waypoint",
+                f"Waypoint ({row},{column}) does not exist in the waypoints stack.",
+            )
