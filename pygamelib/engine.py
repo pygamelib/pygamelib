@@ -288,8 +288,10 @@ class Board:
                 "SANITY_CHECK_KO",
                 ("The 'ui_board_void_cell' parameter must be a string."),
             )
+        # TODO: The void_cell check should be done once and for all (str and sprixel at
+        #  the same time)
         if self.ui_board_void_cell_sprixel is not None and isinstance(
-            self.ui_board_void_cell, core.Sprixel
+            self.ui_board_void_cell_sprixel, core.Sprixel
         ):
             sanity_check += 1
         elif self.ui_board_void_cell_sprixel is not None and not isinstance(
@@ -323,11 +325,14 @@ class Board:
 
         # If all sanity check clears return True else raise a general error.
         # I have no idea how the general error could ever occur but...
-        # better safe than sorry!
-        if sanity_check == 11:
+        # better safe than sorry! However we have to skip test coverage for the else.
+        if sanity_check == 11 or sanity_check == 12:
             return True
-        else:
-            raise base.PglException("SANITY_CHECK_KO", "The board data are not valid.")
+        else:  # pragma: no cover
+            raise base.PglException(
+                "SANITY_CHECK_KO",
+                f"The board data are not valid. (Score: {sanity_check}/12)",
+            )
 
     @property
     def width(self):
@@ -519,7 +524,7 @@ class Board:
                     isinstance(column, board_items.BoardItemVoid)
                     and column.model != self.ui_board_void_cell
                 ):
-                    if isinstance(self.ui_board_void_cell, core.Sprixel):
+                    if isinstance(self.ui_board_void_cell_sprixel, core.Sprixel):
                         column.sprixel = self.ui_board_void_cell_sprixel
                         column.model = self.ui_board_void_cell_sprixel.model
                     else:
@@ -728,7 +733,9 @@ class Board:
                     self.place_item(
                         item, projected_position.row, projected_position.column,
                     )
-        else:
+        else:  # pragma: no cover
+            # This is actually test in tests/test_board.py in function test_move()
+            # I have no idea why it is not registering as a tested statement
             raise base.PglObjectIsNotMovableException(
                 (
                     f"Item '{item.name}' at position [{item.pos[0]}, "
@@ -1191,7 +1198,9 @@ class Game:
             self.start()
         # Update the inkey timeout based on mode
         timeout = self.input_lag
-        if self.mode == constants.MODE_TBT:
+        # This cannot be automatically tested as it means the main loop requires an user
+        # input.
+        if self.mode == constants.MODE_TBT:  # pragma: no cover
             timeout = None
         self.previous_time = time.time()
         with self.terminal.cbreak(), self.terminal.hidden_cursor(), (
@@ -1431,7 +1440,8 @@ class Game:
 
         .. note:: See `readkey` documentation in `readchar` package.
         """
-        return readkey()
+        # Not testable automatically
+        return readkey()  # pragma: no cover
 
     def load_config(self, filename, section="main"):
         """
@@ -1702,6 +1712,10 @@ class Game:
             if isinstance(npc, board_items.NPC):
                 if row is None or column is None:
                     retry = 0
+                    if row is not None and type(row) is not int:
+                        raise base.PglInvalidTypeException("row must be an int.")
+                    if column is not None and type(column) is not int:
+                        raise base.PglInvalidTypeException("column must be an int.")
                     while True:
                         if row is None:
                             row = random.randint(
@@ -1716,7 +1730,8 @@ class Game:
                             board_items.BoardItemVoid,
                         ):
                             break
-                        else:
+                        # Too much randomness to test
+                        else:  # pragma: no cover
                             row = None
                             column = None
                             retry += 1
@@ -1733,6 +1748,8 @@ class Game:
                             )
                         if npc.step is None:
                             npc.step = 1
+                            npc.step_horizontal = 1
+                            npc.step_vertical = 1
                         self._boards[level_number]["board"].place_item(npc, row, column)
                         self._boards[level_number]["npcs"].append(npc)
                     else:
@@ -1876,6 +1893,8 @@ class Game:
                             )
                         if projectile.step is None:
                             projectile.step = 1
+                            projectile.step_vertical = 1
+                            projectile.step_horizontal = 1
                         self._boards[level_number]["board"].place_item(
                             projectile, row, column
                         )
@@ -1905,7 +1924,7 @@ class Game:
             mygame.remove_npc(1, dead_npc)
         """
         self._boards[level_number]["npcs"].remove(npc)
-        self.current_board().clear_cell(npc.pos[0], npc.pos[1])
+        self.get_board(level_number).clear_cell(npc.pos[0], npc.pos[1])
 
     def actuate_projectiles(self, level_number, elapsed_time=0.0):
         """Actuate all Projectiles on a given level
@@ -1931,6 +1950,10 @@ class Game:
 
         .. note:: This method only move Projectiles when their actuator state is
             RUNNING. If it is PAUSED or STOPPED, the Projectile is not moved.
+
+        .. Important:: Please have a look at the
+            :meth:`pygamelib.board_items.Projectile.hit` method for more information on
+            the projectile hit mechanic.
         """
         if self.state == constants.RUNNING:
             if type(level_number) is int:
@@ -2066,7 +2089,7 @@ class Game:
 
     def display_player_stats(
         self, life_model=graphics.RED_RECT, void_model=graphics.BLACK_RECT
-    ):
+    ):  # pragma: no cover
         """Display the player name and health.
 
         This method print the Player name, a health bar (20 blocks of life_model). When
