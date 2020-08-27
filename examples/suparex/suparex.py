@@ -1,5 +1,7 @@
 #!/bin/env python3
+# coding=utf-8
 import os
+import sys
 import examples_includes  # noqa F401
 from pygamelib import engine, base, constants, board_items
 from pygamelib.assets import graphics
@@ -39,24 +41,34 @@ brick_colors = [
 ]
 fps = {"last": process_time(), "count": 0, "sum": 0}
 
+# Get current working directory
+wd = ""
+try:
+    wd = sys._MEIPASS
+except AttributeError:
+    wd = os.getcwd()
 
 # Sound effects
-jump_wave_obj = sa.WaveObject.from_wave_file(os.path.join("sfx", "panda-jump.wav"))
-hit_wave_obj = sa.WaveObject.from_wave_file(os.path.join("sfx", "hit.wav"))
-boom_wave_obj = sa.WaveObject.from_wave_file(os.path.join("sfx", "boom.wav"))
-zap_wave_obj = sa.WaveObject.from_wave_file(os.path.join("sfx", "zap.wav"))
+jump_wave_obj = sa.WaveObject.from_wave_file(os.path.join(wd, "sfx", "panda-jump.wav"))
+hit_wave_obj = sa.WaveObject.from_wave_file(os.path.join(wd, "sfx", "hit.wav"))
+boom_wave_obj = sa.WaveObject.from_wave_file(os.path.join(wd, "sfx", "boom.wav"))
+zap_wave_obj = sa.WaveObject.from_wave_file(os.path.join(wd, "sfx", "zap.wav"))
 trap_shoot_wave_obj = sa.WaveObject.from_wave_file(
-    os.path.join("sfx", "trap-shoot.wav")
+    os.path.join(wd, "sfx", "trap-shoot.wav")
 )
-pickup_wave_obj = sa.WaveObject.from_wave_file(os.path.join("sfx", "pickup.wav"))
-next_level_wave_obj = sa.WaveObject.from_wave_file(os.path.join("sfx", "nextlevel.wav"))
+pickup_wave_obj = sa.WaveObject.from_wave_file(os.path.join(wd, "sfx", "pickup.wav"))
+next_level_wave_obj = sa.WaveObject.from_wave_file(
+    os.path.join(wd, "sfx", "nextlevel.wav")
+)
 menu_move_wave_object = sa.WaveObject.from_wave_file(
-    os.path.join("sfx", "menu-move.wav")
+    os.path.join(wd, "sfx", "menu-move.wav")
 )
-death_wave_obj = sa.WaveObject.from_wave_file(os.path.join("sfx", "death.wav"))
-game_over_wave_obj = sa.WaveObject.from_wave_file(os.path.join("sfx", "gameover.wav"))
+death_wave_obj = sa.WaveObject.from_wave_file(os.path.join(wd, "sfx", "death.wav"))
+game_over_wave_obj = sa.WaveObject.from_wave_file(
+    os.path.join(wd, "sfx", "gameover.wav")
+)
 bg_music_wave_obj = sa.WaveObject.from_wave_file(
-    os.path.join("sfx", "background-music.wav")
+    os.path.join(wd, "sfx", "background-music.wav")
 )
 
 
@@ -198,7 +210,7 @@ def title_screen(g):
 
 def load_logo():
     global logo
-    with open(f"suparex-{term_res}.utf.ans", "r") as f:
+    with open(os.path.join(wd, f"suparex-{term_res}.utf.ans"), "r") as f:
         logo = f.readlines()
 
 
