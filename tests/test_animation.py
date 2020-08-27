@@ -23,6 +23,12 @@ class TestAnimation(unittest.TestCase):
         self.assertEqual(a._initial_index, 2)
         a.reset()
         self.assertEqual(a._initial_index, a._frame_index)
+        col = gfx_core.SpriteCollection()
+        col.add(gfx_core.Sprite())
+        col.add(gfx_core.Sprite())
+        a = gfx_core.Animation(frames=col)
+        self.assertIsInstance(a, gfx_core.Animation)
+        self.assertEqual(len(a.frames), 2)
 
     def test_start(self):
         self.item = pgl_board_items.NPC(model="-o-", name="Dancer")

@@ -162,6 +162,15 @@ class TestBoard(unittest.TestCase):
             self.board.place_item(1, 1, 1)
         with self.assertRaises(pgl_base.PglOutOfBoardBoundException):
             self.board.place_item(i, 100, 100)
+        with self.assertRaises(pgl_base.PglInvalidTypeException):
+            self.board.remove_item(1)
+        # Let's try to break things
+        j = pgl_board_items.NPC()
+        j.store_position(2, 2)
+        with self.assertRaises(pgl_base.PglException) as e:
+            self.board.remove_item(j)
+            self.assertEqual(e.error, "invalid_item")
+        self.assertTrue(self.board.remove_item(i))
 
     def test_move_complex(self):
         def _act(p):
@@ -175,15 +184,13 @@ class TestBoard(unittest.TestCase):
         )
         g = pgl_engine.Game(mode=constants.MODE_RT)
         self.board.place_item(i, 1, 1)
-        self.assertIsInstance(self.board.item(1, 1).parent, pgl_board_items.ComplexNPC)
+        self.assertIsInstance(self.board.item(1, 1), pgl_board_items.ComplexNPC)
         self.assertIsNone(self.board.move(i, constants.RIGHT, 1))
         i = pgl_board_items.ComplexPlayer(
             sprite=gfx_core.Sprite(default_sprixel=gfx_core.Sprixel("*"))
         )
         self.board.place_item(i, 3, 1)
-        self.assertIsInstance(
-            self.board.item(3, 1).parent, pgl_board_items.ComplexPlayer
-        )
+        self.assertIsInstance(self.board.item(3, 1), pgl_board_items.ComplexPlayer)
         self.board.place_item(
             pgl_board_items.GenericActionableStructure(
                 action=_act, action_parameters=[self, 1]

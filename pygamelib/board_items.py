@@ -498,6 +498,7 @@ class Movable(BoardItem):
         else:
             self.movement_speed = kwargs["movement_speed"]
         self.__dtmove = 0.0
+        self.__can_move = True
 
     @property
     def dtmove(self):
@@ -519,7 +520,7 @@ class Movable(BoardItem):
         :return: True
         :rtype: Boolean
         """
-        return True
+        return self.__can_move
 
     def has_inventory(self):
         """

@@ -552,7 +552,12 @@ class Board:
             out of bound.
         """
         if row < self.size[1] and column < self.size[0]:
-            return self._matrix[row][column]
+            if self._matrix[row][column].parent is not None and isinstance(
+                self._matrix[row][column].parent, board_items.BoardComplexItem
+            ):
+                return self._matrix[row][column].parent
+            else:
+                return self._matrix[row][column]
         else:
             raise base.PglOutOfBoardBoundException(
                 (
@@ -627,6 +632,54 @@ class Board:
             raise base.PglOutOfBoardBoundException(
                 f"Cannot place item at coordinates [{row},{column}] because "
                 f"it's out of the board boundaries ({self.size[0]}x{self.size[1]})."
+            )
+
+    def remove_item(self, item):
+        """Remove an item from the board.
+
+        If the item is a single BoardItem, this method is absolutely equivalent to
+        calling :meth:`clear_cell`.
+        If item is a derivative of BoardComplexItem, it is not as clear_cell() only
+        clears a specific cell (that can be part of a complex item). This method
+        actually remove the entire item and clears all its cells.
+
+        :param item: The item to remove.
+        :type item: :class:`~pygamelib.board_items.BoardItem`
+
+        Example::
+
+            game.current_board().remove_item(game.player)
+        """
+        if not isinstance(item, board_items.BoardItem):
+            raise base.PglInvalidTypeException(
+                "Board.remove_item(item): item must be a BoardItem."
+            )
+        cc = None
+        if isinstance(item, board_items.BoardComplexItem):
+            for r in range(item.row, item.row + item.height):
+                for c in range(item.column, item.column + item.width):
+                    cc = self.item(r, c)
+                    if cc == item:
+                        break
+                    else:
+                        cc = None
+                if cc is not None:
+                    break
+        else:
+            cc = self.item(item.row, item.column)
+        if cc is not None and item == cc:
+            if isinstance(item, board_items.BoardComplexItem):
+                for r in range(item.row, item.row + item.height):
+                    for c in range(item.column, item.column + item.width):
+                        self.clear_cell(r, c)
+            else:
+                self.clear_cell(item.row, item.column)
+            return True
+        else:
+            raise base.PglException(
+                "invalid_item",
+                "Board.remove_item(item): The item is different from what is on the "
+                "board at these coordinates.",
             )
 
     def _move_complex(self, item, direction, step=1):
@@ -975,12 +1028,17 @@ class Board:
 
         .. Important:: This method test if something is left on the overlapped layer.
            If so, it restore what was overlapped instead of creating a new void item.
+           It also removes the items from the the list of movables and immovables.
+           In the case of a BoardComplexItem derivative (Tile, ComplexPlayer, ComplexNPC
+           , etc.) clearing one cell of the entire item is enough to remove the entire
+           item from the list of movables or immovables.
 
         """
-        if self._matrix[row][column] in self._movables:
-            self._movables.discard(self._matrix[row][column])
-        elif self._matrix[row][column] in self._immovables:
-            self._immovables.discard(self._matrix[row][column])
+        item = self.item(row, column)
+        if item in self._movables:
+            self._movables.discard(item)
+        elif item in self._immovables:
+            self._immovables.discard(item)
         self._matrix[row][column] = None
         if self._overlapped_matrix[row][column] is not None:
             self._matrix[row][column] = self._overlapped_matrix[row][column]
@@ -1203,6 +1261,8 @@ class Game:
         if self.mode == constants.MODE_TBT:  # pragma: no cover
             timeout = None
         self.previous_time = time.time()
+        if self.player is None:
+            self.player = constants.NO_PLAYER
         with self.terminal.cbreak(), self.terminal.hidden_cursor(), (
             self.terminal.fullscreen()
         ):
@@ -1213,6 +1273,8 @@ class Game:
                     in_key = self.terminal.inkey(timeout=timeout)
                     elapsed = time.time() - self.previous_time
                     self.previous_time = time.time()
+                    if self.player != constants.NO_PLAYER:
+                        self.player.dtmove += elapsed
                     print(self.terminal.home)
                     self.user_update(self, in_key, elapsed)
                     print(self.terminal.clear_eos)
@@ -2172,7 +2234,7 @@ class Game:
         else:
             self.current_board().display()
 
-    def neighbors(self, radius=1, object=None):
+    def neighbors(self, radius=1, obj=None):
         """Get a list of neighbors (non void item) around an object.
 
         This method returns a list of objects that are all around an object between the
@@ -2196,15 +2258,19 @@ class Game:
             raise base.PglInvalidTypeException(
                 "In Game.neighbors(radius), radius must be an integer."
             )
-        if object is None:
-            object = self.player
+        if obj is None:
+            obj = self.player
+        elif not isinstance(obj, board_items.BoardItem):
+            raise base.PglInvalidTypeException(
+                "In Game.neighbors(radius, object), object must be a BoardItem."
+            )
         return_array = []
         for x in range(-radius, radius + 1, 1):
             for y in range(-radius, radius + 1, 1):
                 if x == 0 and y == 0:
                     continue
-                true_x = object.pos[0] + x
-                true_y = object.pos[1] + y
+                true_x = obj.pos[0] + x
+                true_y = obj.pos[1] + y
                 if (
                     true_x < self.current_board().size[1]
                     and true_y < self.current_board().size[0]

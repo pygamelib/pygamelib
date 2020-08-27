@@ -25,9 +25,12 @@ class Sprixel(object):
     It is not really a pixel but it is the closest notion we'll have.
     A Sprixel has a background color, a foreground color and a model.
     All regular BoardItems can have use Sprixel instead of model.
+
+    If the background color and the is_background_transparent are None or empty strings,
+    the sprixel will be automatically configured with transparent background.
     """
 
-    def __init__(self, model="", bg_color="", fg_color=""):
+    def __init__(self, model="", bg_color="", fg_color="", is_bg_transparent=None):
         super().__init__()
         self.model = model
         self.bg_color = bg_color
@@ -47,9 +50,13 @@ class Sprixel(object):
                 "Sprixel(model, bg_color, fg_color): all 3 variables needs to be a "
                 "string or an empty string."
             )
-        self.is_bg_transparent = False
-        if bg_color is None or bg_color == "":
+
+        if (bg_color is None or bg_color == "") and (
+            is_bg_transparent is None or is_bg_transparent == ""
+        ):
             self.is_bg_transparent = True
+        else:
+            self.is_bg_transparent = False
 
     def __repr__(self):
         return f"{self.bg_color}{self.fg_color}{self.model}\x1b[0m"
@@ -885,8 +892,8 @@ class SpriteCollection(UserDict):
     def add(self, sprite):
         """
         Add a Sprite to the collection. This method is simply a shortcut to the usual
-        dictionnary affection. The collection requires the name of the Sprite to be the
-        key. That method does that automatically.
+        dictionnary affectation. The collection requires the name of the Sprite to be
+        the key. That method does that automatically.
 
         :param sprite: A Sprite object to add to the collection.
         :type sprite: :class:`Sprite`
@@ -928,8 +935,8 @@ class Animation(object):
         once the animation is played it stays on the last
         frame of the animation.
     :type auto_replay: bool
-    :param frames: an array of "frames" (string)
-    :type frames: array[str]
+    :param frames: an array of "frames" (string, sprixel or sprite)
+    :type frames: array[str|Sprixel|Sprite]
     :param animated_object: The object to animate. This parameter is deprecated.
         Please use parent instead. It is only kept for backward compatibility.
         The parent parameter always takes precedence over this one.
@@ -969,6 +976,13 @@ class Animation(object):
         self.auto_replay = auto_replay
         if frames is None:
             frames = []
+        elif isinstance(frames, SpriteCollection):
+            nf = []
+            for sn in frames:
+                print(f"Appending frame: {frames[sn]}")
+                nf.append(frames[sn])
+            frames = nf
+
         self.frames = frames
         if initial_index is None:
             self._frame_index = 0
@@ -1031,11 +1045,16 @@ class Animation(object):
             item.animation.add_frame(Sprite.ALIEN)
             item.animation.add_frame(Sprite.ALIEN_MONSTER)
         """
-        if type(frame) is not str:
+        if (
+            type(frame) is str
+            or isinstance(frame, Sprixel)
+            or isinstance(frame, Sprite)
+        ):
+            self.frames.append(frame)
+        else:
             raise base.PglInvalidTypeException(
                 'The "frame" parameter must be a string.'
             )
-        self.frames.append(frame)
 
     def search_frame(self, frame):
         """Search a frame in the animation.
@@ -1056,11 +1075,16 @@ class Animation(object):
             )
 
         """
-        if type(frame) is not str:
+        if (
+            type(frame) is str
+            or isinstance(frame, Sprixel)
+            or isinstance(frame, Sprite)
+        ):
+            return self.frames.index(frame)
+        else:
             raise base.PglInvalidTypeException(
                 'The "frame" parameter must be a string.'
             )
-        return self.frames.index(frame)
 
     def remove_frame(self, index):
         """Remove a frame from the animation.
@@ -1108,7 +1132,8 @@ class Animation(object):
         return self.frames[self._frame_index]
 
     def next_frame(self):
-        """Update the parent.model with the next frame of the animation.
+        """Update the parent's model, sprixel or sprite with the next frame of the
+        animation.
 
         That method takes care of automatically replaying the animation if the
         last frame is reached if the state is constants.RUNNING.
@@ -1124,26 +1149,37 @@ class Animation(object):
         Example::
 
             item.animation.next_frame()
+
+        .. WARNING:: If you use Sprites as frames, you need to make sure your Animation
+            is attached to a :class:`~pygamelib.board_items.BoardComplexItem`.
+
         """
         if not isinstance(self.parent, board_items.BoardItem):
             raise base.PglInvalidTypeException(
                 "The parent needs to be a sub class of BoardItem."
             )
-        if self.state == constants.RUNNING:
+        if self.state == constants.STOPPED:
+            return
+        elif self.state == constants.RUNNING:
             self._frame_index += 1
             if self._frame_index >= len(self.frames):
                 if self.auto_replay:
                     self.reset()
                 else:
                     self._frame_index = len(self.frames) - 1
+        if type(self.frames[self._frame_index]) is str:
             self.parent.model = self.frames[self._frame_index]
-            return self.frames[self._frame_index]
-        elif self.state == constants.PAUSED:
-            self.parent.model = self.frames[self._frame_index]
-            return self.frames[self._frame_index]
-        # By default Python will return None for the STOPPED case.
-        # This is debatable: why shouldn't we do the same thing
-        # for STOPPED and PAUSED
+        elif isinstance(self.frames[self._frame_index], Sprixel):
+            self.parent.sprixel = self.frames[self._frame_index]
+        elif isinstance(self.frames[self._frame_index], Sprite):
+            self.parent.sprite = self.frames[self._frame_index]
+            self.parent.update_sprite()
+        else:
+            raise base.PglInvalidTypeException(
+                "Animation.next_frame(): the frame is neither a string, a sprixel nor a"
+                " sprite."
+            )
+        return self.frames[self._frame_index]
 
     def play_all(self):
         """Play the entire animation once.
@@ -1177,8 +1213,41 @@ class Animation(object):
             raise base.PglInvalidTypeException(
                 "The parent needs to be a sub class of BoardItem."
             )
-        for f in self.frames:
-            self.parent.model = f
-            self.refresh_screen()
-            time.sleep(self.display_time)
+        self.reset()
+        self.dtanimate = time.time()
+        ctrl = 0
+        while ctrl < len(self.frames):
+            if (time.time() - self.dtanimate) >= self.display_time:
+                # Dirty but that's a current limitation: to restore stuff on the board's
+                # overlapped matrix, we need to either move or replace an item after
+                # updating the sprite. This is only for sprites that have null items but
+                # we don't want to let any one slip.
+                # Also: this is convoluted...
+                if (
+                    isinstance(self.parent, board_items.BoardComplexItem)
+                    and self.parent.parent is not None
+                    and (
+                        isinstance(self.parent.parent, board_items.engine.Board)
+                        or isinstance(self.parent.parent, board_items.engine.Game)
+                    )
+                ):
+                    b = None
+                    if isinstance(self.parent.parent, board_items.engine.Board):
+                        b = self.parent.parent
+                    else:
+                        b = self.parent.parent.current_board()
+                    pos = self.parent.pos
+                    # We have to think that someone could try to animate the player
+                    # while not on the current board.
+                    try:
+                        b.remove_item(self.parent)
+                    except Exception:
+                        return
+                    self.next_frame()
+                    b.place_item(self.parent, pos[0], pos[1])
+                else:
+                    self.next_frame()
+                self.refresh_screen()
+                self.dtanimate = time.time()
+                ctrl += 1
         return True
