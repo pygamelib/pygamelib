@@ -979,7 +979,6 @@ class Animation(object):
         elif isinstance(frames, SpriteCollection):
             nf = []
             for sn in frames:
-                print(f"Appending frame: {frames[sn]}")
                 nf.append(frames[sn])
             frames = nf
 
@@ -997,6 +996,20 @@ class Animation(object):
             self.parent = parent
             self.animated_object = parent
         self.refresh_screen = refresh_screen
+        self.__dtanimate = 0.0
+
+    @property
+    def dtanimate(self):
+        return self.__dtanimate
+
+    @dtanimate.setter
+    def dtanimate(self, value):
+        if type(value) is float or type(value) is int:
+            self.__dtanimate = value
+        else:
+            raise base.PglInvalidTypeException(
+                "Animation.dtanimate(value): value needs to be an int or float."
+            )
 
     def start(self):
         """Set the animation state to constants.RUNNING.
@@ -1053,7 +1066,7 @@ class Animation(object):
             self.frames.append(frame)
         else:
             raise base.PglInvalidTypeException(
-                'The "frame" parameter must be a string.'
+                'The "frame" parameter must be a string, Sprixel or Sprite.'
             )
 
     def search_frame(self, frame):
@@ -1214,10 +1227,10 @@ class Animation(object):
                 "The parent needs to be a sub class of BoardItem."
             )
         self.reset()
-        self.dtanimate = time.time()
+        previous_time = time.time()
         ctrl = 0
         while ctrl < len(self.frames):
-            if (time.time() - self.dtanimate) >= self.display_time:
+            if self.dtanimate >= self.display_time:
                 # Dirty but that's a current limitation: to restore stuff on the board's
                 # overlapped matrix, we need to either move or replace an item after
                 # updating the sprite. This is only for sprites that have null items but
@@ -1248,6 +1261,8 @@ class Animation(object):
                 else:
                     self.next_frame()
                 self.refresh_screen()
-                self.dtanimate = time.time()
                 ctrl += 1
+                self.dtanimate = 0
+            self.dtanimate += time.time() - previous_time
+            previous_time = time.time()
         return True
