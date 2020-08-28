@@ -160,7 +160,6 @@ def model_picker():
     global game
     while True:
         game.clear_screen()
-        # TODO: Add support for box, geometric shapes, etc.
         print(
             "What kind of model do you want (you can edit that later)?\n"
             "1 - Colored squares and rectangles\n"
