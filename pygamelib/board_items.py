@@ -492,7 +492,6 @@ class Movable(BoardItem):
 
         if "step_horizontal" not in kwargs.keys() and self.step != 1:
             self.step_horizontal = self.step
-        # TODO : ADD move_speed
         if "movement_speed" not in kwargs.keys():
             self.movement_speed = 1.0
         else:
