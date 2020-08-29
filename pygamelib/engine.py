@@ -743,18 +743,19 @@ class Board:
                                 )
                             ):
                                 self._matrix[new_row][new_column].activate()
-                        # Now I need to put the rest of the code here...
+                        # Now taking care of pickable objects
+                        pickable_item = self.item(new_row, new_column)
                         if (
-                            not self._matrix[new_row][new_column].overlappable()
-                            and self._matrix[new_row][new_column].pickable()
+                            not pickable_item.overlappable()
+                            and pickable_item.pickable()
                             and isinstance(item, board_items.Movable)
                             and item.has_inventory()
                         ):
                             # Put the item in the inventory
-                            item.inventory.add_item(self._matrix[new_row][new_column])
+                            item.inventory.add_item(pickable_item)
                             # And then clear the cell (this is usefull for the next one)
-                            self.clear_cell(new_row, new_column)
-                            # Finally we check if the destination is overlappable
+                            self.remove_item(pickable_item)
+                        # Finally we check if the destination is overlappable
                         if (
                             self._matrix[new_row][new_column].parent != item
                             and not self._matrix[new_row][new_column].overlappable()
@@ -958,16 +959,17 @@ class Board:
                         self._matrix[new_row][new_column].activate()
                 # Now we check if the destination contains a pickable item.
                 # Note: I'm not sure why I decided that pickables were not overlappable.
+                pickable_item = self.item(new_row, new_column)
                 if (
-                    not self._matrix[new_row][new_column].overlappable()
-                    and self._matrix[new_row][new_column].pickable()
+                    not pickable_item.overlappable()
+                    and pickable_item.pickable()
                     and isinstance(item, board_items.Movable)
                     and item.has_inventory()
                 ):
                     # Put the item in the inventory
-                    item.inventory.add_item(self._matrix[new_row][new_column])
+                    item.inventory.add_item(pickable_item)
                     # And then clear the cell (this is usefull for the next one)
-                    self.clear_cell(new_row, new_column)
+                    self.remove_item(pickable_item)
                 # Finally we check if the destination is overlappable
                 if self._matrix[new_row][new_column].overlappable():
                     # And if it is, we check if the destination is restorable
