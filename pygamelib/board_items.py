@@ -18,8 +18,11 @@
    ComplexNPC
    TextItem
    Wall
+   ComplexWall
    Treasure
+   ComplexTreasure
    Door
+   ComplexDoor
    GenericStructure
    GenericActionableStructure
    Tile
@@ -350,19 +353,85 @@ class BoardItemComplexComponent(BoardItem):
         self.__is_pickable = False
 
     def restorable(self):
+        """
+        Returns True if the item is restorable, False otherwise.
+
+        Example::
+
+            if item.item(4,5).restorable():
+                print('The item is restorable')
+        """
         return self.__is_restorable
 
     def overlappable(self):
+        """
+        Returns True if the item is overlappable, False otherwise.
+
+        Example::
+
+            if item.item(4,5).overlappable():
+                print('The item is overlappable')
+        """
         return self.__is_overlappable
 
     def can_move(self):
+        """
+        Returns True if the item can move, False otherwise.
+
+        Example::
+
+            if item.item(4,5).can_move():
+                print('The item can move')
+        """
         return self.__can_move
 
     def pickable(self):
+        """
+        Returns True if the item is pickable, False otherwise.
+
+        Example::
+
+            if item.item(4,5).pickable():
+                print('The item is pickable')
+        """
         return self.__is_pickable
 
 
 class BoardComplexItem(BoardItem):
+    """
+    .. versionadded:: 1.2.0
+
+    A BoardComplexItem is the base item for multi cells elements. It inherits from
+    :class:`BoardItem` and accepts all its parameters.
+
+    The main difference is that a complex item can use
+    :class:`~pygamelib.gfx.core.Sprite` as representation.
+
+    You can see a complex item as a collection of other items that are ruled by the
+    same laws. They behave as one but a complex item is actually made of complex
+    components. At first it is not important but you may want to exploit that as a
+    feature for your game.
+
+    On top of :class:`BoardItem` the constructor accepts the following parameters:
+
+    :param sprite: A sprite representing the item.
+    :type sprite: :class:`~pygamelib.gfx.core.Sprite`
+    :param size: The size of the item. It impact movement and collision detection
+        amongst other things. If it is left empty the Sprite size is used. If no sprite
+        is given to the constructor the default size is 2x2.
+    :type size: array[int]
+    :null_sprixel: The null_sprixel is a bit of a special parameter: during construction
+        a null sprixel is replaced by a BoardItemVoid. This is a trick to show the
+        background (i.e transparency). A sprixel can take the color of the background
+        but a complex item with a null_sprixel that correspond to transparent zone of a
+        sprite will really be transparent and show the background.
+    :null_sprixel: :class:`~pygamelib.gfx.core.Sprixel`
+    :param base_item_type: the building block of the complex item. The complex item is
+        built from a 2D array of base items.
+    :type base_item_type: :class:`BoardItemComplexComponent`
+
+    """
+
     def __init__(self, **kwargs):
         self.__kwargs = kwargs
         self.name = "Board Multi Item"
@@ -391,6 +460,19 @@ class BoardComplexItem(BoardItem):
         return self.sprite.__str__()
 
     def update_sprite(self):
+        """
+        Update the complex item with the current sprite.
+        This method needs to be called everytime the sprite is changed.
+
+        Example::
+
+            item = BoardComplexItem(sprite=position_idle)
+            for s in [walk_1, walk_2, walk_3, walk_4]:
+                item.sprite = s
+                item.update_sprite()
+                board.move(item, constants.RIGHT, 1)
+                time.sleep(0.2)
+        """
         self._item_matrix = []
         # Update sprite size.
         self.sprite.calculate_size()
@@ -414,8 +496,8 @@ class BoardComplexItem(BoardItem):
 
     def item(self, row, column):
         """
-        Return the item at the row, column position if within
-        sprite's boundaries.
+        Return the item at the row, column position if it is within the item's
+        boundaries.
 
         :rtype: pygamelib.board_items.BoardItem
 
@@ -1104,6 +1186,26 @@ class Player(Movable, Character):
 
 
 class ComplexPlayer(Player, BoardComplexItem):
+    """
+    .. versionadded:: 1.2.0
+
+    A complex player is nothing more than a :class:`~Player` mashed with a
+    :class:`BoardComplexItem`.
+
+    It supports all parameters of both with inheritance going first to Player and second
+    to BoardComplexItem.
+
+    The main interest is of course the multiple cell representation and the Sprites
+    support.
+
+    Example::
+
+        player = ComplexPlayer(
+                name='Mighty Wizard',
+                sprite=sprite_collection['wizard_idle']
+            )
+    """
+
     def __init__(self, **kwargs):
         Player.__init__(self, **kwargs)
         BoardComplexItem.__init__(self, **kwargs)
@@ -1218,6 +1320,26 @@ class NPC(Movable, Character):
 
 
 class ComplexNPC(NPC, BoardComplexItem):
+    """
+    .. versionadded:: 1.2.0
+
+    A complex NPC is nothing more than a :class:`~NPC` mashed with a
+    :class:`BoardComplexItem`.
+
+    It supports all parameters of both with inheritance going first to NPC and second
+    to BoardComplexItem.
+
+    The main interest is of course the multiple cell representation and the Sprites
+    support.
+
+    Example::
+
+        player = ComplexNPC(
+                name='Idiot McComplexStupid',
+                sprite=npc_sprite_collection['troll_licking_stones']
+            )
+    """
+
     def __init__(self, **kwargs):
         NPC.__init__(self, **kwargs)
         BoardComplexItem.__init__(self, **kwargs)
@@ -1365,6 +1487,31 @@ class Wall(Immovable):
         :rtype: bool
         """
         return False
+
+
+class ComplexWall(Wall, BoardComplexItem):
+    """
+    .. versionadded:: 1.2.0
+
+    A complex wall is nothing more than a :class:`~Wall` mashed with a
+    :class:`BoardComplexItem`.
+
+    It supports all parameters of both with inheritance going first to Wall and second
+    to BoardComplexItem.
+
+    The main interest is of course the multiple cell representation and the Sprites
+    support.
+
+    Example::
+
+        wall = ComplexWall(
+                sprite=sprite_brick_wall
+            )
+    """
+
+    def __init__(self, **kwargs):
+        Wall.__init__(self, **kwargs)
+        BoardComplexItem.__init__(self, **kwargs)
 
 
 class GenericStructure(Immovable):
@@ -1604,6 +1751,31 @@ class Treasure(Immovable):
         return False
 
 
+class ComplexTreasure(Treasure, BoardComplexItem):
+    """
+    .. versionadded:: 1.2.0
+
+    A complex treasure is nothing more than a :class:`~Treasure` mashed with a
+    :class:`BoardComplexItem`.
+
+    It supports all parameters of both with inheritance going first to Treasure and
+    second to BoardComplexItem.
+
+    The main interest is of course the multiple cell representation and the Sprites
+    support.
+
+    Example::
+
+        chest = ComplexTreasure(
+                sprite=sprite_chest
+            )
+    """
+
+    def __init__(self, **kwargs):
+        Treasure.__init__(self, **kwargs)
+        BoardComplexItem.__init__(self, **kwargs)
+
+
 class Door(GenericStructure):
     """
     A Door is a :class:`~pygamelib.board_items.GenericStructure` that is not
@@ -1674,7 +1846,36 @@ class Door(GenericStructure):
             self.set_restorable(kwargs["restorable"])
 
 
+class ComplexDoor(Door, BoardComplexItem):
+    """
+    .. versionadded:: 1.2.0
+
+    A complex door is nothing more than a :class:`~Door` mashed with a
+    :class:`BoardComplexItem`.
+
+    It supports all parameters of both with inheritance going first to Door and second
+    to BoardComplexItem.
+
+    The main interest is of course the multiple cell representation and the Sprites
+    support.
+
+    Example::
+
+        castle_door = ComplexDoor(
+                sprite=sprite_castle_door
+            )
+    """
+
+    def __init__(self, **kwargs):
+        Door.__init__(self, **kwargs)
+        BoardComplexItem.__init__(self, **kwargs)
+
+
 class GenericStructureComplexComponent(GenericStructure, BoardItemComplexComponent):
+    """
+    A ComplexComponent specifically for generic structures.
+    """
+
     def __init__(self, **kwargs):
         GenericStructure.__init__(self, **kwargs)
         BoardItemComplexComponent.__init__(self, **kwargs)
@@ -1684,13 +1885,26 @@ class Tile(GenericStructure, BoardComplexItem):
     """
     .. versionadded:: 1.2.0
 
-    A Tile is a standard :class:`BoardComplexItem` configured to be overlappable but not
-    pickable. It also cannot move.
+    A Tile is a standard :class:`BoardComplexItem` configured by default to:
+
+     * be overlappable
+     * be not pickable
+     * be immovable.
+
+    Aside from the movable attributes (it inherit from GenericStructure so it's an
+    Immovable object), everything else is configurable.
 
     It is particularly useful to display a :class:`~pygamelib.gfx.core.Sprite` on the
     background or to create terrain.
 
-    Please see :class:`BoardComplexItem` for parameters.
+    :param overlappable: Defines if the Tile can be overlapped.
+    :type overlappable: bool
+    :param restorable: Defines is the Tile should be restored after being overlapped.
+    :type restorable: bool
+    :param pickable: Defines if the Tile can be picked up by the Player or NPC.
+    :type pickable: bool
+
+    Please see :class:`BoardComplexItem` for additional parameters.
 
     Example::
 
@@ -1702,39 +1916,18 @@ class Tile(GenericStructure, BoardComplexItem):
     def __init__(self, **kwargs):
         kwargs["parent"] = self
         kwargs["base_item_type"] = GenericStructureComplexComponent
-        kwargs["overlappable"] = True
-        kwargs["restorable"] = True
-        kwargs["pickable"] = False
+        if "overlappable" not in kwargs:
+            kwargs["overlappable"] = True
+        if "restorable" not in kwargs:
+            kwargs["restorable"] = True
+        if "pickable" not in kwargs:
+            kwargs["pickable"] = False
         GenericStructure.__init__(self, **kwargs)
         # kwargs["base_item_type"] = Door
         BoardComplexItem.__init__(self, **kwargs)
 
-    def overlappable(self):
-        """A Tile is overlappable.
-
-        :returns: True
-        :rtype: bool
-        """
-        return True
-
-    def restorable(self):
-        """A Tile is restorable.
-
-        :returns: True
-        :rtype: bool
-        """
-        return True
-
     def can_move(self):
         """A Tile cannot move.
-
-        :returns: False
-        :rtype: bool
-        """
-        return False
-
-    def pickable(self):
-        """A Tile cannot be picked up.
 
         :returns: False
         :rtype: bool

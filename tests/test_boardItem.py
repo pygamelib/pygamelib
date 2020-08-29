@@ -251,6 +251,17 @@ class TestBoard(unittest.TestCase):
         bi = pgl_board_items.Tile()
         self.assertFalse(bi.pickable())
 
+    def test_complex_version(self):
+        ci = pgl_board_items.ComplexDoor()
+        self.assertFalse(ci.pickable())
+        self.assertTrue(ci.overlappable())
+        ci = pgl_board_items.ComplexWall()
+        self.assertFalse(ci.pickable())
+        self.assertFalse(ci.overlappable())
+        ci = pgl_board_items.ComplexTreasure()
+        self.assertTrue(ci.pickable())
+        self.assertFalse(ci.overlappable())
+
 
 if __name__ == "__main__":
     unittest.main()
