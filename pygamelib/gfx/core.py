@@ -26,8 +26,27 @@ class Sprixel(object):
     A Sprixel has a background color, a foreground color and a model.
     All regular BoardItems can have use Sprixel instead of model.
 
-    If the background color and the is_background_transparent are None or empty strings,
+    If the background color and the is_bg_transparent are None or empty strings,
     the sprixel will be automatically configured with transparent background.
+    In that case, as we can really achieve transparency in the console, the sprixel will
+    take the background color of whatever it is overlapping.
+
+    :param model: The model, it can be any string. Preferrably a single character.
+    :type model: str
+    :param bg_color: An ANSI escape sequence to configure the background color.
+    :type bg_color: str
+    :param fg_color: An ANSI escape sequence to configure the foreground color.
+    :type fg_color: str
+    :param is_bg_transparent:
+    :type is_bg_transparent:
+
+    Example::
+
+        player = Player(sprixel=Sprixel(
+                                        '#',
+                                        screen.terminal.on_color_rgb(128,56,32),
+                                        screen.terminal.color_rgb(255,255,0),
+                                        ))
     """
 
     def __init__(self, model="", bg_color="", fg_color="", is_bg_transparent=None):
@@ -199,66 +218,230 @@ class Sprixel(object):
 
     @classmethod
     def black_rect(cls):
+        """
+        This classmethod returns a sprixel that is the equivalent of
+        pygamelib.assets.graphics.BLACK_RECT.
+        The difference is that BLACK_RECT is a string and this one is a Sprixel that can
+        be manipulated more easily.
+
+        Example::
+
+            sprixel = Sprixel.black_rect()
+        """
         return cls(" ", "\x1b[40m")
 
     @classmethod
     def black_square(cls):
+        """
+        This classmethod returns a sprixel that is the equivalent of
+        pygamelib.assets.graphics.BLACK_SQUARE.
+        The difference is that BLACK_SQUARE is a string and this one is a Sprixel that
+        can be manipulated more easily.
+
+        Example::
+
+            sprixel = Sprixel.black_square()
+        """
         return cls("  ", "\x1b[40m")
 
     @classmethod
     def white_rect(cls):
+        """
+        This classmethod returns a sprixel that is the equivalent of
+        pygamelib.assets.graphics.WHITE_RECT.
+        The difference is that WHITE_RECT is a string and this one is a Sprixel that can
+        be manipulated more easily.
+
+        Example::
+
+            sprixel = Sprixel.white_rect()
+        """
         return cls(" ", "\x1b[47m")
 
     @classmethod
     def white_square(cls):
+        """
+        This classmethod returns a sprixel that is the equivalent of
+        pygamelib.assets.graphics.WHITE_SQUARE.
+        The difference is that WHITE_SQUARE is a string and this one is a Sprixel that
+        can be manipulated more easily.
+
+        Example::
+
+            sprixel = Sprixel.white_square()
+        """
         return cls("  ", "\x1b[47m")
 
     @classmethod
     def red_rect(cls):
+        """
+        This classmethod returns a sprixel that is the equivalent of
+        pygamelib.assets.graphics.RED_RECT.
+        The difference is that RED_RECT is a string and this one is a Sprixel that can
+        be manipulated more easily.
+
+        Example::
+
+            sprixel = Sprixel.red_rect()
+        """
         return cls(" ", "\x1b[41m")
 
     @classmethod
     def red_square(cls):
+        """
+        This classmethod returns a sprixel that is the equivalent of
+        pygamelib.assets.graphics.RED_SQUARE.
+        The difference is that RED_SQUARE is a string and this one is a Sprixel that can
+        be manipulated more easily.
+
+        Example::
+
+            sprixel = Sprixel.red_square()
+        """
         return cls("  ", "\x1b[41m")
 
     @classmethod
     def green_rect(cls):
+        """
+        This classmethod returns a sprixel that is the equivalent of
+        pygamelib.assets.graphics.GREEN_RECT.
+        The difference is that GREEN_RECT is a string and this one is a Sprixel that can
+        be manipulated more easily.
+
+        Example::
+
+            sprixel = Sprixel.green_rect()
+        """
         return cls(" ", "\x1b[42m")
 
     @classmethod
     def green_square(cls):
+        """
+        This classmethod returns a sprixel that is the equivalent of
+        pygamelib.assets.graphics.GREEN_SQUARE.
+        The difference is that GREEN_SQUARE is a string and this one is a Sprixel that
+        can be manipulated more easily.
+
+        Example::
+
+            sprixel = Sprixel.green_square()
+        """
         return cls("  ", "\x1b[42m")
 
     @classmethod
     def blue_rect(cls):
+        """
+        This classmethod returns a sprixel that is the equivalent of
+        pygamelib.assets.graphics.BLUE_RECT.
+        The difference is that BLUE_RECT is a string and this one is a Sprixel that can
+        be manipulated more easily.
+
+        Example::
+
+            sprixel = Sprixel.blue_rect()
+        """
         return cls(" ", "\x1b[44m")
 
     @classmethod
     def blue_square(cls):
+        """
+        This classmethod returns a sprixel that is the equivalent of
+        pygamelib.assets.graphics.BLUE_SQUARE.
+        The difference is that BLUE_SQUARE is a string and this one is a Sprixel that
+        can be manipulated more easily.
+
+        Example::
+
+            sprixel = Sprixel.blue_square()
+        """
         return cls("  ", "\x1b[44m")
 
     @classmethod
     def cyan_rect(cls):
+        """
+        This classmethod returns a sprixel that is the equivalent of
+        pygamelib.assets.graphics.CYAN_RECT.
+        The difference is that CYAN_RECT is a string and this one is a Sprixel that can
+        be manipulated more easily.
+
+        Example::
+
+            sprixel = Sprixel.cyan_rect()
+        """
         return cls(" ", "\x1b[46m")
 
     @classmethod
     def cyan_square(cls):
+        """
+        This classmethod returns a sprixel that is the equivalent of
+        pygamelib.assets.graphics.CYAN_SQUARE.
+        The difference is that CYAN_SQUARE is a string and this one is a Sprixel that
+        can be manipulated more easily.
+
+        Example::
+
+            sprixel = Sprixel.cyan_square()
+        """
         return cls("  ", "\x1b[46m")
 
     @classmethod
     def magenta_rect(cls):
+        """
+        This classmethod returns a sprixel that is the equivalent of
+        pygamelib.assets.graphics.MAGENTA_RECT.
+        The difference is that MAGENTA_RECT is a string and this one is a Sprixel that
+        can be manipulated more easily.
+
+        Example::
+
+            sprixel = Sprixel.magenta_rect()
+        """
         return cls(" ", "\x1b[45m")
 
     @classmethod
     def magenta_square(cls):
+        """
+        This classmethod returns a sprixel that is the equivalent of
+        pygamelib.assets.graphics.MAGENTA_SQUARE.
+        The difference is that MAGENTA_SQUARE is a string and this one is a Sprixel that
+        can be manipulated more easily.
+
+        Example::
+
+            sprixel = Sprixel.magenta_square()
+        """
         return cls("  ", "\x1b[45m")
 
     @classmethod
     def yellow_rect(cls):
+        """
+        This classmethod returns a sprixel that is the equivalent of
+        pygamelib.assets.graphics.YELLOW_RECT.
+        The difference is that YELLOW_RECT is a string and this one is a Sprixel that
+        can be manipulated more easily.
+
+        .. Note:: Yellow is often rendered as brown.
+
+        Example::
+
+            sprixel = Sprixel.yellow_rect()
+        """
         return cls(" ", "\x1b[43m")
 
     @classmethod
     def yellow_square(cls):
+        """
+        This classmethod returns a sprixel that is the equivalent of
+        pygamelib.assets.graphics.YELLOW_SQUARE.
+        The difference is that YELLOW_SQUARE is a string and this one is a Sprixel that
+        can be manipulated more easily.
+
+        .. Note:: Yellow is often rendered as brown.
+
+        Example::
+
+            sprixel = Sprixel.yellow_square()
+        """
         return cls("  ", "\x1b[43m")
 
 
