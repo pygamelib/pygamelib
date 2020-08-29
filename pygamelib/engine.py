@@ -399,6 +399,9 @@ class Board:
                 "Board.display_around: both row_radius and"
                 " column_radius needs to be int."
             )
+        clear_eol = "\x1b[K"
+        if isinstance(self.parent, Game) and isinstance(self.parent.terminal, Terminal):
+            clear_eol = self.parent.terminal.clear_eol
         # Now if the viewport is greater or equal to the board size, well we just need
         # a regular display()
         if self.size[1] <= 2 * row_radius and self.size[0] <= 2 * column_radius:
@@ -449,11 +452,11 @@ class Board:
                 bt_size = self.size[0]
                 # if pos_col - column_radius > 0:
                 #     bt_size = self.size[0] - (pos_col - column_radius)
-            print(self.ui_border_top * bt_size, end="")
+            print(f"{self.ui_border_top * bt_size}{clear_eol}", end="")
             if column_min_bound <= 0 and column_max_bound >= self.size[0]:
-                print(self.ui_border_top * 2, end="")
+                print(f"{self.ui_border_top * 2}{clear_eol}", end="")
             elif column_min_bound <= 0 or column_max_bound >= self.size[0]:
-                print(self.ui_border_top, end="")
+                print(f"{self.ui_border_top}{clear_eol}", end="")
             print("\r")
         for row in self._matrix[row_min_bound:row_max_bound]:
             if column_min_bound == 0:
@@ -467,7 +470,7 @@ class Board:
                     y.sprixel = self.ui_board_void_cell_sprixel
                 print(y, end="")
             if column_max_bound >= self.size[0]:
-                print(self.ui_border_right, end="")
+                print(f"{self.ui_border_right}{clear_eol}", end="")
             print("\r")
         if row_max_bound >= self.size[1]:
             bb_size = column_radius * 2
@@ -475,11 +478,11 @@ class Board:
                 bb_size = self.size[0]
                 # if pos_col - column_radius > 0:
                 #     bb_size = self.size[0] - (pos_col - column_radius)
-            print(self.ui_border_bottom * bb_size, end="")
+            print(f"{self.ui_border_bottom * bb_size}{clear_eol}", end="")
             if column_min_bound <= 0 and column_max_bound >= self.size[0]:
-                print(self.ui_border_bottom * 2, end="")
+                print(f"{self.ui_border_bottom * 2}{clear_eol}", end="")
             elif column_min_bound <= 0 or column_max_bound >= self.size[0]:
-                print(self.ui_border_bottom, end="")
+                print(f"{self.ui_border_bottom}{clear_eol}", end="")
             print("\r")
 
     def display(self):
@@ -508,11 +511,15 @@ class Board:
         #     print(self.ui_border_right + "\x1b[0m\r")
         # print("\x1b[0m")
         # # eod
+        clear_eol = "\x1b[K"
+        if isinstance(self.parent, Game) and isinstance(self.parent.terminal, Terminal):
+            clear_eol = self.parent.terminal.clear_eol
         print(
             "".join(
                 [
                     self.ui_border_top * len(self._matrix[0]),
                     self.ui_border_top * 2,
+                    clear_eol,
                     "\r",
                 ]
             )
@@ -530,12 +537,13 @@ class Board:
                     else:
                         column.model = self.ui_board_void_cell
                 print(column, end="")
-            print(self.ui_border_right + "\r")
+            print(self.ui_border_right + clear_eol + "\r")
         print(
             "".join(
                 [
                     self.ui_border_bottom * len(self._matrix[0]),
                     self.ui_border_bottom * 2,
+                    clear_eol,
                     "\r",
                 ]
             )
@@ -802,7 +810,8 @@ class Board:
         Board.move() is a routing function. It does 2 things:
 
          1 - If the direction is a :class:`~pygamelib.base.Vector2D`, round the
-            values to the nearest integer (as move works with entire board cells).
+            values to the nearest integer (as move works with entire board cells, i.e
+            integers).
          2 - route toward the right moving function depending if the item is complex or
             not.
 
@@ -834,10 +843,8 @@ class Board:
         .. Important:: Also important: If the direction is a
            :class:`~pygamelib.base.Vector2D`, the values will be rounded to the
            nearest integer (as move works with entire board cells). It allows for
-           movement accumulation before actually moving.
-
-        .. todo:: check all types!
-
+           movement accumulation before actually moving. The step parameter is not used
+           in that case.
         """
         if (
             item.parent is not None
@@ -854,8 +861,18 @@ class Board:
                 round(direction.row), round(direction.column)
             )
         else:
-            # Else, just use the direction
-            rounded_direction = direction
+            if type(direction) is int:
+                # Else, just use the direction
+                rounded_direction = direction
+                if type(step) is not int:
+                    raise base.PglInvalidTypeException(
+                        "Board.move(item, direction, step): step must be an int."
+                    )
+            else:
+                raise base.PglInvalidTypeException(
+                    "Board.move(item, direction, step): direction must be a Vector2D or"
+                    " a constant direction."
+                )
         if isinstance(item, board_items.BoardComplexItem):
             return self._move_complex(item, rounded_direction, step)
         else:
@@ -1238,6 +1255,35 @@ class Game:
         self.previous_time = time.time()
 
     def run(self):
+        """
+        .. versionadded:: 1.2.0
+
+        The run() method act as the main game loop and does a number of things for you:
+
+         1. It grabs the user input. If the Game object is configured with MODE_TBT (the
+            default), nothing happen until the user hit a key. If the mode is set to
+            MODE_RT, it will wait for input_lag secondes for a user input before going
+            to step 3.
+         2. It calculate the elapsed time between 2 frames.
+         3. Accumulates the elapsed time in the player dtmove variable (if there is a
+            player object configured)
+         4. It sets the cursor position to 0,0 (meaning that your user_update function
+           will draw on top of the previously drawn window). The Board.display() and
+           Board.display_around() method clean the end of their line.
+         5. It calls the user_update function with 3 parameters: the game object, the
+            key hit by the user (it can be None) and the elapsed time between to calls.
+         6. Clears the end of the screen.
+         7. Actuates NPCs.
+         8. Actuates projectiles.
+         9. Animates items.
+         10. Actuates particles (WIP).
+
+        :raises: PglInvalidTypeException, PglInvalidTypeException
+
+        Example::
+
+            mygame.run()
+        """
         # run() automatically position the cursor to 0,0 after calling user_update
         # if the lines are "end of line" safe (i.e using Game.display_line()) you don't
         # need to clear the screen.
@@ -1281,41 +1327,7 @@ class Game:
                     self.actuate_npcs(self.current_level, elapsed)
                     self.actuate_projectiles(self.current_level, elapsed)
                     self.animate_items(self.current_level, elapsed)
-
-    def display_line(self, *text, end="\n", file=sys.stdout, flush=False):
-        """
-        A wrapper to Python's print() builtin function except it will always add an
-        ANSI sequence to clear the end of the line. Making it more suitable to use in
-        a user_update callback.
-
-        The reason is that with line with variating length, if you use run() but not
-        clear(), some characters will remain on screen because run(), for performances
-        concerns does not clear the entire screen. It just bring the cursor back to the
-        top left corner of the screen.
-        So if you want to benefit from the increase performances you should use
-        display_line().
-
-        :param *text: objects that can serialize to str. The ANSI sequence to clear the
-           end of the line is *always* appended to the the text.
-        :type *text: str|objects
-        :param end: end sub string added to the printed text. Usually a carriage return.
-        :type end: str
-        :param file:
-        :type file: stream
-        :param flush:
-        :type flush: bool
-
-        Example::
-
-            game.display_line(f'This line will display correctly: {elapsed_time}')
-            # That line will have trailing characters that are not cleared after redraw
-            # if you don't use clear().
-            print(f'That one won't: {elapsed_time}')
-        """
-        # Funny how the documentation is waaayyy bigger than the code ;)
-        print(
-            *text, self.terminal.clear_eol, end=end, file=file, flush=flush,
-        )
+                    # TODO: Take care of particles.
 
     def add_menu_entry(self, category, shortcut, message, data=None):
         """Add a new entry to the menu.
@@ -2122,8 +2134,8 @@ class Game:
             parameter is not mandatory.
         :type elapsed_time: float
 
-        :raise: :class:`pygamelib.base.PglInvalidLevelException`
-            class:`pygamelib.base.PglInvalidTypeException`
+        :raise: :class:`~pygamelib.base.PglInvalidLevelException`
+            :class:`~pygamelib.base.PglInvalidTypeException`
 
         Example::
 
@@ -2132,12 +2144,19 @@ class Game:
         if self.state == constants.RUNNING:
             if type(level_number) is int:
                 if level_number in self._boards.keys():
-                    # TODO: Account for elapsed time
-                    for item in self._boards[level_number]["board"].get_immovables():
+                    for item in (
+                        self._boards[level_number]["board"].get_immovables()
+                        + self._boards[level_number]["board"].get_movables()
+                    ):
                         if item.animation is not None:
-                            item.animation.next_frame()
-                    for item in self._boards[level_number]["board"].get_movables():
-                        if item.animation is not None:
+                            item.animation.dtanimate += elapsed_time
+                            if (
+                                self.mode == constants.MODE_RT
+                                and item.animation.dtanimate
+                                < item.animation.display_time
+                            ):
+                                continue
+                            item.animation.dtanimate = 0.0
                             item.animation.next_frame()
                 else:
                     raise base.PglInvalidLevelException(
@@ -2962,3 +2981,40 @@ class Screen(object):
         in number of characters.
         """
         return self.terminal.height
+
+    def display_line(self, *text, end="\n", file=sys.stdout, flush=False):
+        """
+        .. versionadded:: 1.2.0
+
+        A wrapper to Python's print() builtin function except it will always add an
+        ANSI sequence to clear the end of the line. Making it more suitable to use in
+        a user_update callback.
+
+        The reason is that with line with variating length, if you use run() but not
+        clear(), some characters will remain on screen because run(), for performances
+        concerns does not clear the entire screen. It just bring the cursor back to the
+        top left corner of the screen.
+        So if you want to benefit from the increase performances you should use
+        display_line().
+
+        :param *text: objects that can serialize to str. The ANSI sequence to clear the
+           end of the line is *always* appended to the the text.
+        :type *text: str|objects
+        :param end: end sub string added to the printed text. Usually a carriage return.
+        :type end: str
+        :param file:
+        :type file: stream
+        :param flush:
+        :type flush: bool
+
+        Example::
+
+            game.display_line(f'This line will display correctly: {elapsed_time}')
+            # That line will have trailing characters that are not cleared after redraw
+            # if you don't use clear().
+            print(f'That one won't: {elapsed_time}')
+        """
+        # Funny how the documentation is waaayyy bigger than the code ;)
+        print(
+            *text, self.terminal.clear_eol, end=end, file=file, flush=flush,
+        )

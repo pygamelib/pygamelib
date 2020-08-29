@@ -31,12 +31,11 @@ class TestBase(unittest.TestCase):
             self.assertTrue("callable" in e.message)
         g = engine.Game(user_update=user_update_placeholder, mode=constants.MODE_RT)
         g.pause()
-        self.assertIsNone(g.display_line("testing the Game.run() mechanic."))
+        self.assertIsNone(g.screen.display_line("testing the Game.run() mechanic."))
         g.run()
         g = engine.Game(user_update=user_update_placeholder, mode=constants.MODE_RT)
         g.player = board_items.Player()
         g.pause()
-        self.assertIsNone(g.display_line("testing the Game.run() mechanic."))
         g.run()
 
     def test_menu(self):
