@@ -28,11 +28,20 @@ class TestBase(unittest.TestCase):
         self.assertIsInstance(scr, engine.Screen)
 
     def test_clear(self):
-        self.screen.clear()
+        self.assertIsNone(self.screen.clear())
 
     def test_screen_dimension(self):
         self.assertEqual(self.term.width, self.screen.width)
         self.assertEqual(self.term.height, self.screen.height)
+
+    def test_screen_display(self):
+        self.assertIsNone(
+            self.screen.display_at(
+                "This is centered",
+                int(self.screen.height / 2),
+                int(self.screen.width / 2),
+            )
+        )
 
 
 if __name__ == "__main__":

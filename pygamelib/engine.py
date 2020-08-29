@@ -2938,6 +2938,21 @@ class Inventory:
 
 
 class Screen(object):
+    """
+    The screen object is pretty straightforward: it is an object that allow manipulation
+    of the screen.
+    At the moment it relies heavily on the blessed module, but it wraps a lot of its
+    methods and provide easy calls to actions.
+
+    :param terminal: A Terminal reference.
+    :type terminal: :class:`~blessed.Terminal`
+
+    Example::
+
+        screen = Screen(terminal=Terminal())
+        screen.display_at('This is centered', int(screen.height/2), int(screen.width/2))
+    """
+
     def __init__(self, terminal=None):
         super().__init__()
         # get clear sequence for the terminal
@@ -3018,3 +3033,57 @@ class Screen(object):
         print(
             *text, self.terminal.clear_eol, end=end, file=file, flush=flush,
         )
+
+    def display_at(
+        self,
+        text,
+        row=0,
+        column=0,
+        clear_eol=False,
+        end="\n",
+        file=sys.stdout,
+        flush=False,
+    ):
+        """
+        Displays text at a given position. If clear_eol is True, also clear the end of
+        line.
+        Additionally you can specify all the parameters of a regular print() if you
+        need to.
+
+        :param text: The text to display. Please note that in that case text is a single
+            string.
+        :type text: str
+        :param row: The row position in the terminal window.
+        :type row: int
+        :param column: The column position in the terminal window.
+        :type column: int
+        :param clear_eol: If True this clears the end of the line (everything after the
+            last character displayed by that method).
+        :type clear_eol: bool
+        :param end: end sub string added to the printed text. Usually a carriage return.
+        :type end: str
+        :param file:
+        :type file: stream
+        :param flush:
+        :type flush: bool
+
+        .. IMPORTANT:: The cursor is only moved for printing the text. It is returned to
+            its previous position after.
+
+        .. Note:: The position respect the row/column convention accross the library. It
+            is reversed compared to the blessed module.
+
+        Example::
+
+            screen.display_at('This is centered',
+                              int(screen.height/2),
+                              int(screen.width/2),
+                              clear_eol=True,
+                              end=''
+                            )
+        """
+        eol = ""
+        if clear_eol:
+            eol = self.terminal.clear_eol
+        with self.terminal.location(column, row):
+            print(text, eol, end=end, file=file, flush=flush)
