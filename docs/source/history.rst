@@ -2,6 +2,39 @@
 
 History
 -------
+1.2.0 (2020-08-29)
+~~~~~~~~~~~~~~~~~~
+
+ * Renamed the entire library from hac-game-lib to pygamelib.
+ * ***Breaking change:*** The library has been heavily refactored and this creates some issues. Please have a look at `the migration notes <https://github.com/arnauddupuis/pygamelib/wiki/Migrating-from-hac%E2%80%90game%E2%80%90lib-1.1.x-to-pygamelib-1.2.0>`_
+ * **New feature:** Items that can be represented on more than one cell. We call them complex items. There's a lot of new complex items: ComplexPlayer and ComplexNPC of course, but also ComplexWall, ComplexDoor, ComplexTreasure and the general purpose Tile object.
+ * **New feature:** Going, with complex item we now have a proper sprite system with the gfx.core.Sprite class.
+ * **New feature:** In addition to the regular model we now have a new concept: the Sprixel. A Sprite is made of many Sprixels.
+ * **New feature:** New JSON based file format to save, load and distribute sprites and/or sprixels.
+ * **New feature:** All these sprites can be grouped into a SpriteCollection that in turn can be saved in our new sprite file format.
+ * **New feature:** New Math library. This one starts small but will grow. It makes calculating the distance and intersections easier.
+ * **New feature:** New Vector2D class to represent forces and movement as a vector. It is now possible to give a vector to the move() method.
+ * **New feature:** Gave some love to text. There are now 2 objects dedicated to text: base.Text to manipulate text and board_items.TextItem to easily place text on a board.
+ * **New feature:** A Screen object has been added to make the screen manipulation simpler.
+ * **New feature:** The Game object now has a run() method that act as the main game loop. It calls a user defined update function and takes care of a lot of things. It runs until the Game.state is set to STOPPED.
+ * **New feature:** The Game object can now turn by turn or real time. All movables can be configured to have time based or turn based movement speed.
+ * *Improvement*: The Animation class now support both regular strings (models), Sprixel and Sprite.
+ * *Improvement*: All complex items obviously support (actually requires) sprites but all regular board items now supports sprixels.
+ * *Improvement*: Test coverage dramatically improved. It has jumped from 25% to 98%.
+ * *Improvement*: Lots of objects now have attributes to easily access and/or set properties like position (mostly read only), width, height, etc.
+ * *Improvement*: Converted the editor to pygamelib and renamed it pgl-editor.py. Also added a multi page selector and integrated the new graphic assets.
+ * *Improvement*: All movables can now have different vertical and horizontal "steps" parameters.
+ * Cleaned up the repository (it was becoming seriously messy).
+ * Change the prefix of all exceptions from HAc to Pgl.
+ * Added a NO_PLAYER constant to tell the game object that he should not expect a player object.
+ * Improve the generated documentation.
+ * Various improvements in exceptions raising across the library. Please see the documentation (that was also updated).
+ * Various bug fixing in the Suparex example.
+
+I also need to give some kudos to the kids of the Hyrule Astronomy Club for thorough testing of Suparex. They found well hidden bug and exploitable bugs. Special thanks to Arthur who found many glitches.
+Congratulations to Arthur and Hadrien that successfully exploited them to achieve extremely high scores (up to 12000!!!).
+
+
 1.1.1 (2020-07-18)
 ~~~~~~~~~~~~~~~~~~
 
