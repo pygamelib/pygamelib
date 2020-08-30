@@ -1,3 +1,5 @@
+:orphan:
+
 pygamelib.base.HacObjectIsNotMovableException
 =============================================
 
