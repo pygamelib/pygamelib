@@ -1,7 +1,7 @@
 .. _constants-module:
 
-Constants
+constants
 =========
 
-.. automodule:: gamelib.Constants
+.. automodule:: pygamelib.constants
     :members:

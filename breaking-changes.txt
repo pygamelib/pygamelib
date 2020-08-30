@@ -1,0 +1,9 @@
+BoardItem.size() -> BoardItem.inventory_space()
+Utils.get_key() -> Game.get_key() and is not static anymore
+Utils colored functions : all in base.Text
+All Structures are moved to board_items.
+Utils.key -> game.key
+Projectile: *args replaced by callback_parameters.
+
+Changing a lot of variables into properties to manage internals ?
+Sprites are not describing the same thing as before.

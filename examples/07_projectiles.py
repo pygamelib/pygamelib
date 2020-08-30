@@ -1,13 +1,7 @@
 import examples_includes  # noqa: F401
-from gamelib.Game import Game
-from gamelib.Characters import Player
-from gamelib.Animation import Animation
-from gamelib.Board import Board
-from gamelib.Movable import Projectile
-from gamelib.Structures import Wall
-import gamelib.Sprites as Sprites
-import gamelib.Utils as Utils
-import gamelib.Constants as Constants
+from pygamelib import engine, board_items, base, constants
+from pygamelib.gfx import core
+from pygamelib.assets import graphics
 
 
 def manage_fireballs():
@@ -17,7 +11,7 @@ def manage_fireballs():
             item.range -= 1
             if item.range == 0:
                 item.animation = None
-                item.model = Sprites.EXPLOSION
+                item.model = graphics.Models.EXPLOSION
                 item.actuator.stop()
             elif item.range < 0:
                 item.model = g.current_board().ui_board_void_cell
@@ -30,25 +24,25 @@ def redraw_screen():
     nb_blocks = int((g.player.mp / g.player.max_mp) * 20)
     print(
         "Mana ["
-        + Utils.BLUE_RECT * nb_blocks
-        + Utils.BLACK_RECT * (20 - nb_blocks)
+        + graphics.BLUE_RECT * nb_blocks
+        + graphics.BLACK_RECT * (20 - nb_blocks)
         + "]"
     )
     g.display_board()
     # manage_fireballs()
 
 
-b = Board(
-    ui_borders=Utils.WHITE_SQUARE,
-    ui_board_void_cell=Utils.BLACK_SQUARE,
+b = engine.Board(
+    ui_borders=graphics.WHITE_SQUARE,
+    ui_board_void_cell=graphics.BLACK_SQUARE,
     size=[20, 20],
     player_starting_position=[5, 5],
 )
-wall = Wall(model=Sprites.WALL)
+wall = board_items.Wall(model=graphics.Models.BRICK)
 b.place_item(wall, 1, 6)
-g = Game()
+g = engine.Game()
 g.add_board(1, b)
-g.player = Player(model=Sprites.MAGE, name="The Maje")
+g.player = board_items.Player(model=graphics.Models.MAGE, name="The Maje")
 g.player.mp = 20
 g.player.max_mp = 20
 g.change_level(1)
@@ -58,7 +52,7 @@ black_circle = "-\U000025CF"
 circle_jot = "-\U0000233E"
 
 throw_fireball = False
-projectile = Projectile()
+projectile = board_items.Projectile()
 
 while True:
     if key == "Q":
@@ -74,32 +68,32 @@ while True:
         g.partial_display_viewport = viewport
     if key == " ":
         if g.player.mp >= 4:
-            fireball = Projectile(
+            fireball = board_items.Projectile(
                 name="fireball",
-                model=Utils.red_bright(black_circle),
-                hit_model=Sprites.EXPLOSION,
+                model=base.Text.red_bright(black_circle),
+                hit_model=graphics.Models.COLLISION,
             )
-            fireball.animation = Animation(
+            fireball.animation = core.Animation(
                 auto_replay=True,
                 animated_object=fireball,
                 refresh_screen=None,
                 display_time=0.5,
             )
-            fireball.animation.add_frame(Utils.red_bright(black_circle))
-            fireball.animation.add_frame(Utils.red_bright(circle_jot))
+            fireball.animation.add_frame(base.Text.red_bright(black_circle))
+            fireball.animation.add_frame(base.Text.red_bright(circle_jot))
             fireball.range = 7
-            fireball.set_direction(Constants.RIGHT)
+            fireball.set_direction(constants.RIGHT)
             g.add_projectile(1, fireball, g.player.pos[0], g.player.pos[1] + 1)
             g.player.mp -= 4
 
-    elif key == Utils.key.UP:
-        g.move_player(Constants.UP, 1)
-    elif key == Utils.key.DOWN:
-        g.move_player(Constants.DOWN, 1)
-    elif key == Utils.key.LEFT:
-        g.move_player(Constants.LEFT, 1)
-    elif key == Utils.key.RIGHT:
-        g.move_player(Constants.RIGHT, 1)
+    elif key == engine.key.UP:
+        g.move_player(constants.UP, 1)
+    elif key == engine.key.DOWN:
+        g.move_player(constants.DOWN, 1)
+    elif key == engine.key.LEFT:
+        g.move_player(constants.LEFT, 1)
+    elif key == engine.key.RIGHT:
+        g.move_player(constants.RIGHT, 1)
 
     redraw_screen()
     print("Screen just redrawn")
@@ -118,4 +112,4 @@ while True:
         g.player.mp += 1
     else:
         g.player.mp = 20
-    key = Utils.get_key()
+    key = g.get_key()

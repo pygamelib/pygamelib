@@ -112,3 +112,4 @@ venv.bak/
 # Generative content
 hac-maps/test-write-board.json
 settings-suparex*
+test-*

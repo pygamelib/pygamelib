@@ -1,7 +1,7 @@
 version: 2
 jobs:
   build:
-    working_directory: ~/hac-game-lib
+    working_directory: ~/pygamelib
     docker:
       - image: circleci/python:3.7
         environment:
@@ -19,9 +19,9 @@ jobs:
       - save_cache:
           key: deps10-{{ .Branch }}-{{ checksum "Pipfile.lock" }}
           paths:
-            - '.venv'
-            - '/usr/local/bin'
-            - '/usr/local/lib/python3.7/site-packages'
+            - ".venv"
+            - "/usr/local/bin"
+            - "/usr/local/lib/python3.7/site-packages"
       - run:
           name: Run linting and metrics
           command: |
@@ -32,11 +32,21 @@ jobs:
           name: Run unit tests under tests folder
           command: |
             pipenv run python3 -m unittest discover -s tests
+      - run:
+          name: Run test coverage suite
+          command: |
+            pipenv run coverage run --source=./pygamelib -m unittest discover -s tests
+            pipenv run coverage report
+            pipenv run coverage html
+            pipenv run coverage xml
+            bash <(curl -s https://codecov.io/bash)
           when: always
       - store_test_results:
           path: reports
       - store_artifacts:
           path: reports
+      - store_artifacts:
+          path: htmlcov
 
 workflows:
   version: 2

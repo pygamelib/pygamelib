@@ -1,13 +1,9 @@
 .. _actuators-module:
 
-Actuators
+actuators
 =========
 
-.. toctree::
-    simpleactuators
-    advancedactuators
-
-.. automodule:: gamelib.Actuators.Actuator
+.. automodule:: pygamelib.actuators
     :members:
     :inherited-members:
     :undoc-members:

@@ -1,8 +1,8 @@
 .. _graphics-module:
 
-Assets.Graphics
-===============
+graphics
+========
 
-.. automodule:: gamelib.Assets.Graphics
+.. automodule:: pygamelib.assets.graphics
     :members:
     :inherited-members:

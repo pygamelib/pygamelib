@@ -9,7 +9,7 @@ if "%SPHINXBUILD%" == "" (
 )
 set SOURCEDIR=source
 set BUILDDIR=build
-set SPHINXPROJ=hac-game-lib
+set SPHINXPROJ=pygamelib
 
 if "%1" == "" goto help
 

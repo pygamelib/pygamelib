@@ -7,14 +7,12 @@ verify_ssl = true
 flake8 = "*"
 ipdb = "*"
 ipython = "*"
+coverage = "*"
 
 [packages]
 colorama = ">=0.3.8"
 readchar = ">=2.0.0"
 appdirs = ">=1.4.4"
 blessed = ">=1.17.0"
-
-[requires]
-python_version = "3.7"
 
 # Please update the .legacy/requirements.txt with new dependencies added here.

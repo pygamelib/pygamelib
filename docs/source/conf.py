@@ -18,19 +18,19 @@ import sys
 sys.path.insert(0, os.path.abspath("."))
 sys.path.insert(1, os.path.abspath(".."))
 sys.path.insert(2, os.path.abspath("../.."))
-import gamelib.Constants as CST  # noqa: F402, F541, E402
+# sys.path.insert(2, os.path.abspath("../../.."))
+import pygamelib.constants as CST  # noqa: F402, F541, E402
 
 # -- Project information -----------------------------------------------------
 
-project = "hac-game-lib"
-copyright = "2019, Arnaud Dupuis"
+project = "pygamelib"
+copyright = "2019-2020, Arnaud Dupuis"
 author = "Arnaud Dupuis"
 
 # The short X.Y version
 version = ""
 # The full version, including alpha/beta/rc tags
-# release = '2019.3a1'
-release = CST.HAC_GAME_LIB_VERSION
+release = CST.PYGAMELIB_VERSION
 
 # -- General configuration ---------------------------------------------------
 
@@ -115,7 +115,7 @@ html_static_path = ["nstatic"]
 # -- Options for HTMLHelp output ---------------------------------------------
 
 # Output file base name for HTML help builder.
-htmlhelp_basename = "hac-game-libdoc"
+htmlhelp_basename = "pygamelibdoc"
 
 
 # -- Options for LaTeX output ------------------------------------------------
@@ -141,8 +141,8 @@ latex_elements = {
 latex_documents = [
     (
         master_doc,
-        "hac-game-lib.tex",
-        "hac-game-lib Documentation",
+        "pygamelib.tex",
+        "pygamelib Documentation",
         "Arnaud Dupuis",
         "manual",
     ),
@@ -153,7 +153,7 @@ latex_documents = [
 
 # One entry per manual page. List of tuples
 # (source start file, name, description, authors, manual section).
-man_pages = [(master_doc, "hac-game-lib", "hac-game-lib Documentation", [author], 1)]
+man_pages = [(master_doc, "pygamelib", "pygamelib Documentation", [author], 1)]
 
 
 # -- Options for Texinfo output ----------------------------------------------
@@ -164,10 +164,10 @@ man_pages = [(master_doc, "hac-game-lib", "hac-game-lib Documentation", [author]
 texinfo_documents = [
     (
         master_doc,
-        "hac-game-lib",
-        "hac-game-lib Documentation",
+        "pygamelib",
+        "pygamelib Documentation",
         author,
-        "hac-game-lib",
+        "pygamelib",
         "One line description of project.",
         "Miscellaneous",
     ),

@@ -1,7 +1,6 @@
-from gamelib.BoardItem import BoardItem, BoardItemVoid
-from gamelib.Game import Game
-from gamelib.Characters import Player
-import gamelib.Constants as Constants
+import pygamelib.board_items as pgl_board_items
+import pygamelib.engine as pgl_engine
+import pygamelib.constants as pgl_constants
 import unittest
 
 
@@ -18,9 +17,9 @@ def readable_board_items(board_item_list):
 class GameNeighborTestCase(unittest.TestCase):
     def setUp(self):
         super().setUp()
-        self.game = Game()
+        self.game = pgl_engine.Game()
         self.board = self.game.load_board("hac-maps/kneighbors.json", 1)
-        self.game.player = Player(name="player")
+        self.game.player = pgl_board_items.Player(name="player")
         self.game.change_level(1)
         self.tree26 = self.board.item(2, 6)
         self.treasure38 = self.board.item(3, 8)
@@ -64,8 +63,8 @@ class GameNeighborTestCase(unittest.TestCase):
     def test_npc_neighbors(self):
         def move_player_next_to_npc77():
             pos_next_to_npc = [7, 8]
-            self.game.move_player(Constants.DOWN, pos_next_to_npc[0])
-            self.game.move_player(Constants.RIGHT, pos_next_to_npc[1])
+            self.game.move_player(pgl_constants.DOWN, pos_next_to_npc[0])
+            self.game.move_player(pgl_constants.RIGHT, pos_next_to_npc[1])
             self.assertEqual(pos_next_to_npc, self.game.player.pos)
 
         actual_board_items = self.game.neighbors(1, self.npc77)
@@ -80,7 +79,7 @@ class GameNeighborTestCase(unittest.TestCase):
         for y in range(h):
             for x in range(w):
                 boarditem = self.board.item(y, x)
-                assert isinstance(boarditem, BoardItem)
-                if isinstance(boarditem, BoardItemVoid):
+                assert isinstance(boarditem, pgl_board_items.BoardItem)
+                if isinstance(boarditem, pgl_board_items.BoardItemVoid):
                     continue
                 print(readable_board_item(boarditem))
