@@ -47,7 +47,7 @@ setuptools.setup(
         "Tracker": "https://github.com/arnauddupuis/pygamelib/issues",
         "Wiki": "https://github.com/arnauddupuis/pygamelib/wiki",
         "Tech blog": "https://8bitscoding.io/",
-        "Release Notes": "https://astro.hyrul.es/news/pygamelib-v1.1.0-release-notes.html",  # noqa: E501
+        "Release Notes": "https://8bitscoding.io/2020/08/30/pygamelib-v1-2-0-release-notes/",  # noqa: E501
     },
     python_requires=">=3.6",
     obsolotes="hac-game-lib",
