@@ -1270,8 +1270,8 @@ class Game:
          3. Accumulates the elapsed time in the player dtmove variable (if there is a
             player object configured)
          4. It sets the cursor position to 0,0 (meaning that your user_update function
-           will draw on top of the previously drawn window). The Board.display() and
-           Board.display_around() method clean the end of their line.
+            will draw on top of the previously drawn window). The Board.display() and
+            Board.display_around() method clean the end of their line.
          5. It calls the user_update function with 3 parameters: the game object, the
             key hit by the user (it can be None) and the elapsed time between to calls.
          6. Clears the end of the screen.
@@ -2129,7 +2129,8 @@ class Game:
 
     def animate_items(self, level_number, elapsed_time=0.0):
         """That method goes through all the BoardItems of a given map and call
-        Animation.next_frame()
+        Animation.next_frame().
+
         :param level_number: The number of the level to animate items in.
         :type level_number: int
         :param elapsed_time: The amount of time that passed since last call. This
@@ -2142,6 +2143,7 @@ class Game:
         Example::
 
             mygame.animate_items(1)
+
         """
         if self.state == constants.RUNNING:
             if type(level_number) is int:
@@ -3014,9 +3016,9 @@ class Screen(object):
         So if you want to benefit from the increase performances you should use
         display_line().
 
-        :param *text: objects that can serialize to str. The ANSI sequence to clear the
+        :param \*text: objects that can serialize to str. The ANSI sequence to clear the
            end of the line is *always* appended to the the text.
-        :type *text: str|objects
+        :type \*text: str|objects
         :param end: end sub string added to the printed text. Usually a carriage return.
         :type end: str
         :param file:

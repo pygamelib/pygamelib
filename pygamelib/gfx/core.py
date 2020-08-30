@@ -953,9 +953,10 @@ class SpriteCollection(UserDict):
 
     Its main goal is to provide an easy to use object to load and save sprite files.
     On top of traditional dict method, it provides the following capabilities:
-       - loading and writing from and to JSON files,
-       - data serialization,
-       - shortcut to add sprites to the dictionnary.
+
+     - loading and writing from and to JSON files,
+     - data serialization,
+     - shortcut to add sprites to the dictionnary.
 
     A SpriteCollection is an unordered indexed list of Sprites (i.e a dictionnary).
 
