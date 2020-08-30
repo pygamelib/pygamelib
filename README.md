@@ -12,6 +12,10 @@
 # pygamelib
 A (not so) small library for terminal based game development.
 
+## Preemptive warning
+
+Between version 1.1.1 and 1.2.0 the library was renamed from hac-game-lib to pygamelib and reworked to its core. So even though all the objects remains API compatible across versions, there is a bit of renaming to do in the imports.
+
 ## Introduction
 
 Historically, this library is used as a base to teach coding to kids from 6 to 15.

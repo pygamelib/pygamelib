@@ -38,10 +38,10 @@ We used the fact that renaming and restructuring was going to break everything t
 So without further ado:
 
  * gamelib.Game, gamelib.Board, gamelib.Inventory are now unified into **pygamelib.engine**.
- * gamelib.HacExceptions and gamelib.Utils are now unified into **pygamelib.base**. Hac prefix was replaced by Pgl but for convenience mirror classes were added to not break existing games.
+ * gamelib.HacExceptions and gamelib.Utils are now unified into **pygamelib.base**. For exceptions, Hac prefix was replaced by Pgl but for convenience mirror classes were added to not break existing games.
  * gamelib.BoardItems, gamelib.Movable, gamelib.Immovable, gamelib.Characters and gamelib.Structures are now unified into **pygamelib.board_items**.
  * gamelib.Actuators.Actuator, gamelib.Actuators.SimpleActuators, gamelib.Actuators.AdvancedActuators are now unified into **pygamelib.actuators**.
- * gamelib.Sprites was deprecated in favor of gamelib.Assets.Graphics.Sprites and is now removed.
+ * gamelib.Sprites was deprecated in version 1.1.0 in favor of gamelib.Assets.Graphics.Sprites and is now removed (please continue reading).
  * gamelib.Assets is now **pygamelib.assets**.
  * gamelib.Assets.Graphics is now **pygamelib.assets.graphics**.
  * gamelib.Assets.Graphics.Sprites has been renamed to **pygamelib.assets.graphics.Models**.
@@ -50,10 +50,20 @@ The gamelib.Utils module is the one that is probably going to require the most a
 
  * The colored squares and rectangle are now in pygamelib.assets.graphics with the exact same name.
  * The coloring text functions have been moved to a new Text class in pygamelib.base.
- * the get_key() function was moved to 
+ * the get_key() function was moved to **pygamelib.engine.Game**.
 
 There is also new modules and features but please see the release notes of [pygamelib](https://pypi.org/project/pygamelib/).
 
 The general idea is to limit the number of imports and to group things by functional similitude.
 
-Hopefully it's not too much work to convert your software. 
+Hopefully it's not too much work to convert your software.
+
+## Real breaking changes
+
+There is a couple of things that changed and are breaking previous implementations:
+
+ * BoardItem.size() -> BoardItem.inventory_space(): with the introduction of pygamelib.gfx.core.Sprite and BoardComplexItem we needed to have actual item's size. Previously size was used to calculate how much space was used in the inventory. The internals are up to date but if you were using the size attribute, you should pay attention to that change.
+ * Projectile: *args replaced by callback_parameters. In the Projectile class, the extra parameters passed to the hit_callback were a mess. So it is now using the same formalism than the GenericActionableStructure.
+
+There is also a lot of class variables that were changed into properties. Please read the documentation.
+In case it was not clear Sprites (pygamelib.gfx.core.Sprite) are not describing the same thing as before (formerly pygamelib.Assets.Sprites now pygamelib.assets.graphics.Models).

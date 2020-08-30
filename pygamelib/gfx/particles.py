@@ -9,6 +9,13 @@ import uuid
 
 
 class BaseParticle(board_items.Movable):
+    """
+    Particles are not ready. This is only an early early test.
+    *you should not use it*. If you do, don't complain. And if you really want to help,
+    interact on Github or Discord.
+    Thank you ;)
+    """
+
     def __init__(self, **kwargs):
         board_items.Movable.__init__(self, **kwargs)
         self.size = [1, 1]

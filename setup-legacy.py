@@ -7,7 +7,7 @@ setuptools.setup(
     name="hac-game-lib",
     version="1.1.99",
     author="Arnaud Dupuis",
-    author_email="hyrule.astronomy.club@gmail.com",
+    author_email="8bitscoding@gmail.com",
     description="A small game development framework for teaching programming.",
     long_description=long_description,
     long_description_content_type="text/markdown",

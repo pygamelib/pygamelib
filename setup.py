@@ -21,14 +21,14 @@ setuptools.setup(
     name="pygamelib",
     version=constants.PYGAMELIB_VERSION,
     author="Arnaud Dupuis",
-    author_email="hyrule.astronomy.club@gmail.com",
+    author_email="8bitscoding@gmail.com",
     description="A small game development framework for teaching programming.",
     long_description=long_description,
     long_description_content_type="text/markdown",
     install_requires=INSTALL_PACKAGES,
-    url="https://astro.hyrul.es",
+    url="https://www.pygamelib.org",
     packages=setuptools.find_packages(),
-    scripts=["hgl-editor.py", "hgl-board-tester.py"],
+    scripts=["pgl-editor.py", "pgl-board-tester.py"],
     keywords=["game", "development", "beginner", "console", "terminal"],
     classifiers=[
         "Programming Language :: Python :: 3",
@@ -45,7 +45,10 @@ setuptools.setup(
         "Guides & Tutorials": "https://astro.hyrul.es/guides/pygamelib/",
         "Source": "https://github.com/arnauddupuis/pygamelib",
         "Tracker": "https://github.com/arnauddupuis/pygamelib/issues",
+        "Wiki": "https://github.com/arnauddupuis/pygamelib/wiki",
+        "Tech blog": "https://8bitscoding.io/",
         "Release Notes": "https://astro.hyrul.es/news/pygamelib-v1.1.0-release-notes.html",  # noqa: E501
     },
     python_requires=">=3.6",
+    obsolotes="hac-game-lib",
 )
