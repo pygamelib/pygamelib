@@ -744,10 +744,15 @@ def first_use():
         default_map_dir = new_default
     if not os.path.exists(os.path.join(config_dir, "directories.json")):
         with open(os.path.join(config_dir, "directories.json"), "w") as fp:
-            fp.write(f'["{default_map_dir}","hac-maps","maps"]')
+            fp.write(f'["{default_map_dir}","pgl-maps","hac-maps","maps"]')
     if not os.path.exists(os.path.join(editor_config_dir, "settings.json")):
         game.create_config("settings")
-        game.config("settings")["directories"] = [default_map_dir, "hac-maps", "maps"]
+        game.config("settings")["directories"] = [
+            default_map_dir,
+            "pgl-maps",
+            "hac-maps",
+            "maps",
+        ]
         game.config("settings")["config_file_version"] = 10100
         game.config("settings")["enable_partial_display"] = True
         game.config("settings")["partial_display_viewport"] = [10, 30]
@@ -1026,8 +1031,8 @@ while True:
             )
             answer = str(input("> "))
             if answer.startswith("y"):
-                if not os.path.exists("hac-maps") or not os.path.isdir("hac-maps"):
-                    os.makedirs("hac-maps")
+                if not os.path.exists("pgl-maps") or not os.path.isdir("pgl-maps"):
+                    os.makedirs("pgl-maps")
                 game.object_library = object_history
                 for o in object_history:
                     if o not in game.config("settings")["object_library"]:
