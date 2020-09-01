@@ -518,7 +518,7 @@ class Board:
         # This statement doesn't registered as tested but it is. In tests/test_board.py
         # in test_partial_display.
         if isinstance(self.parent, Game) and isinstance(
-            self.parent.terminal
+            self.parent.terminal, Terminal
         ):  # pragma: no cover
             clear_eol = self.parent.terminal.clear_eol
         print(

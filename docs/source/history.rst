@@ -2,6 +2,11 @@
 
 History
 -------
+1.2.3 (2020-09-01)
+~~~~~~~~~~~~~~~~~~
+
+Emergency release: fix a regression introduced by v1.2.2.
+
 1.2.2 (2020-09-01)
 ~~~~~~~~~~~~~~~~~~
 
