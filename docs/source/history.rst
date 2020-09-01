@@ -2,6 +2,13 @@
 
 History
 -------
+1.2.2 (2020-09-01)
+~~~~~~~~~~~~~~~~~~
+
+ * Fix issue with imports for Python 3.6
+ * Fix an issue with the way pygamelib.engine.Screen test the terminal on Windows.
+
+
 1.2.0 (2020-08-29)
 ~~~~~~~~~~~~~~~~~~
 
