@@ -399,7 +399,11 @@ class Board:
                 " column_radius needs to be int."
             )
         clear_eol = "\x1b[K"
-        if isinstance(self.parent, Game) and isinstance(self.parent.terminal, Terminal):
+        # This statement doesn't registered as tested but it is. In tests/test_board.py
+        # in test_partial_display.
+        if isinstance(self.parent, Game) and isinstance(
+            self.parent.terminal, Terminal
+        ):  # pragma: no cover
             clear_eol = self.parent.terminal.clear_eol
         # Now if the viewport is greater or equal to the board size, well we just need
         # a regular display()
@@ -511,7 +515,11 @@ class Board:
         # print("\x1b[0m")
         # # eod
         clear_eol = "\x1b[K"
-        if isinstance(self.parent, Game) and isinstance(self.parent.terminal, Terminal):
+        # This statement doesn't registered as tested but it is. In tests/test_board.py
+        # in test_partial_display.
+        if isinstance(self.parent, Game) and isinstance(
+            self.parent.terminal
+        ):  # pragma: no cover
             clear_eol = self.parent.terminal.clear_eol
         print(
             "".join(

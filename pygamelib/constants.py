@@ -44,7 +44,7 @@ Special constants:
 """
 
 # Main version
-PYGAMELIB_VERSION = "1.2.1"
+PYGAMELIB_VERSION = "1.2.2"
 
 # Directions
 NO_DIR = 10000000

@@ -171,6 +171,10 @@ class TestBoard(unittest.TestCase):
             self.board.remove_item(j)
             self.assertEqual(e.error, "invalid_item")
         self.assertTrue(self.board.remove_item(i))
+        b = pgl_engine.Board()
+        i = pgl_board_items.ComplexNPC()
+        self.assertIsNone(b.place_item(i, 5, 5))
+        self.assertTrue(b.remove_item(i))
 
     def test_move_complex(self):
         def _act(p):
@@ -321,6 +325,11 @@ class TestBoard(unittest.TestCase):
         i = pgl_board_items.ComplexNPC()
         self.board.place_item(i, 2, 2)
         self.assertIsNone(self.board.display_around(i, 2, 2))
+        b = pgl_engine.Board(parent=pgl_engine.Game())
+        self.assertIsInstance(b, pgl_engine.Board)
+        b.place_item(i, 2, 2)
+        self.assertIsNone(self.board.display_around(i, 2, 2))
+        self.assertIsNone(self.board.display())
 
 
 if __name__ == "__main__":
