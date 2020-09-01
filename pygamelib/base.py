@@ -24,7 +24,7 @@ It is the base class for all levels.
    Vector2D
    Text
 """
-import pygamelib.constants as constants
+from pygamelib import constants
 import math
 from colorama import Fore, Back, Style, init
 

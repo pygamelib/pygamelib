@@ -8,10 +8,10 @@
    SpriteCollection
    Animation
 """
-import pygamelib.board_items as board_items
-import pygamelib.base as base
-import pygamelib.constants as constants
-import pygamelib.assets.graphics as graphics
+from pygamelib import board_items
+from pygamelib import base
+from pygamelib import constants
+from pygamelib.assets import graphics
 import time
 from collections import UserDict
 from uuid import uuid4

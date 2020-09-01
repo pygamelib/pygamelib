@@ -18,9 +18,9 @@ patterns.
     PathFinder
 
 """
-import pygamelib.board_items as board_items
-import pygamelib.constants as constants
-import pygamelib.base as base
+from pygamelib import board_items
+from pygamelib import base
+from pygamelib import constants
 import random
 import collections
 

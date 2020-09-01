@@ -27,12 +27,11 @@
    GenericActionableStructure
    Tile
 """
-import pygamelib.engine as engine
-import pygamelib.base as base
-import pygamelib.gfx.core as core
-import pygamelib.constants as constants
-import pygamelib.actuators as actuators
-import pygamelib.gfx.core as gfx_core
+from pygamelib import engine
+from pygamelib import base
+from pygamelib import constants
+from pygamelib.gfx import core
+from pygamelib import actuators
 
 
 class BoardItem:
@@ -758,7 +757,7 @@ class Projectile(Movable):
                 "requires an int from the constants module as"
                 "direction."
             )
-        if not isinstance(animation, gfx_core.Animation):
+        if not isinstance(animation, core.Animation):
             raise base.PglInvalidTypeException(
                 "Projectile.add_directional_animation "
                 "requires a pygamelib.gfx.core.Animation as "
@@ -1384,7 +1383,7 @@ class TextItem(BoardComplexItem):
             )
         else:
             self._text = text
-        self.sprite = gfx_core.Sprite.from_text(self._text)
+        self.sprite = core.Sprite.from_text(self._text)
         self.update_sprite()
 
     def __repr__(self):  # pragma: no cover
@@ -1415,7 +1414,7 @@ class TextItem(BoardComplexItem):
             raise base.PglInvalidTypeException(
                 "TextItem.text must be either a str or a pygamelib.base.Text object."
             )
-        self.sprite = gfx_core.Sprite.from_text(self._text)
+        self.sprite = core.Sprite.from_text(self._text)
         self.update_sprite()
 
 
