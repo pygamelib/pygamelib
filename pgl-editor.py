@@ -1135,6 +1135,11 @@ while True:
                                 model=game.current_board().ui_board_void_cell
                             )
                         )
+                        game.current_board()._overlapped_matrix[x].append(
+                            board_items.BoardItemVoid(
+                                model=game.current_board().ui_board_void_cell
+                            )
+                        )
                         is_modified = True
 
         elif key == "2":
@@ -1143,6 +1148,7 @@ while True:
             if nw >= game.current_board().size[1]:
                 old_value = game.current_board().size[1]
                 game.current_board().size[1] = nw
+                # TODO: We should use list completion here
                 for x in range(old_value, nw, 1):
                     new_array = []
                     for y in range(0, game.current_board().size[0], 1):
@@ -1152,6 +1158,8 @@ while True:
                             )
                         )
                     game.current_board()._matrix.append(new_array)
+                    # TODO: Need to test side effects
+                    game.current_board()._overlapped_matrix.append(deepcopy(new_array))
                     is_modified = True
 
         elif key == "3":
