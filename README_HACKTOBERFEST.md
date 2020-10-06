@@ -19,6 +19,10 @@ I use it in my Kids Coding Class with kids from age 6 to age 16.
 
 Everyone, just try to pick an issue that is related to your level in Python.
 
+### How to discuss with the community
+
+There is a Discord server: https://discord.gg/ZtVaMqr
+
 ### Do I need to know game development?
 
 It's better but not required. I did not know anything about game dev before starting.
