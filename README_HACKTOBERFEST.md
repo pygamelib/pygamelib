@@ -13,6 +13,8 @@ A game library to make console based games.
 
 Everyone with an interest in game development and terminal based games. Mostly it is supposed to be a library that can be used by novice programers but also provides fun stuff as they grow as developers.
 
+I use it in my Kids Coding Class with kids from age 6 to age 16.
+
 ### Who can contributes?
 
 Everyone, just try to pick an issue that is related to your level.
