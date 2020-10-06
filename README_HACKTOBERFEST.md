@@ -17,7 +17,7 @@ I use it in my Kids Coding Class with kids from age 6 to age 16.
 
 ### Who can contributes?
 
-Everyone, just try to pick an issue that is related to your level.
+Everyone, just try to pick an issue that is related to your level in Python.
 
 ### Do I need to know game development?
 
