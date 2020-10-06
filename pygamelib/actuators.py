@@ -104,7 +104,7 @@ class Behavioral(Actuator):
         The constructor simply construct an Actuator. It takes on positional paraneter:
         the parent object.
         """
-        Actuator.__init__(self, parent)
+        super().__init__(parent)
 
     def next_action(self):
         """
