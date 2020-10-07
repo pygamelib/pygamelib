@@ -2505,6 +2505,7 @@ class Game:
             "name": obj.name,
             "pos": obj.pos,
             "model": obj.model,
+            "sprixel": obj.sprixel,
             "type": obj.type,
         }
 
@@ -2697,6 +2698,8 @@ class Game:
                 local_object.name = ref["name"]
             if "model" in obj_keys:
                 local_object.model = ref["model"]
+            if "sprixel" in obj_keys:
+                local_object.sprixel = ref["sprixel"]
             if "type" in obj_keys:
                 local_object.type = ref["type"]
         return local_object
