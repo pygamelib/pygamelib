@@ -112,7 +112,6 @@ Congratulations to Arthur and Hadrien that successfully exploited them to achiev
   `@f-osorio`_ `@guilleijo`_ `@diego-caceres`_ `@spassarop`_
 * CircleCI integration `@caballerojavier13`_ `@bwirtz`_
 
-
 .. _`@arnauddupuis`: https://github.com/arnauddupuis
 .. _`@kaozdl`: https://github.com/kaozdl
 .. _`@Dansyuqri`: https://github.com/Dansyuqri
@@ -128,7 +127,7 @@ Congratulations to Arthur and Hadrien that successfully exploited them to achiev
 .. _`@diego-caceres`: https://github.com/diego-caceres
 .. _`@spassarop`: https://github.com/spassarop
 .. _`@caballerojavier13`: https://github.com/caballerojavier13
-
+.. _`@ollelogdahl`: https://github.com/ollelogdahl
 
 2019.5
 ~~~~~~

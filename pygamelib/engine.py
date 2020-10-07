@@ -2699,7 +2699,7 @@ class Game:
             if "model" in obj_keys:
                 local_object.model = ref["model"]
             if "sprixel" in obj_keys:
-                local_object.sprixel = ref["sprixel"]
+                local_object.sprixel = core.Sprixel.from_ansi(ref["sprixel"])
             if "type" in obj_keys:
                 local_object.type = ref["type"]
         return local_object
