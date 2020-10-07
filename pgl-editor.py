@@ -9,7 +9,7 @@ from pygamelib import engine
 from pygamelib import board_items
 from pygamelib.assets import graphics
 from pygamelib import base
-from pygamelib.gfx import core
+import pygamelib.gfx.core as gfx_core
 
 # Global variables
 is_modified = False
@@ -259,7 +259,7 @@ def create_wizard():
         print("Now we need a model. Default value: " + new_object.model)
         input('Hit "Enter" when you are ready to choose a model.')
         chosen_model = model_picker()
-        new_object.sprixel = core.Sprixel(chosen_model)
+        new_object.sprixel = gfx_core.Sprixel(chosen_model)
         # also sets new_objects model, for backward compatibility
         new_object.model = chosen_model
 
