@@ -9,7 +9,7 @@ from pygamelib import engine
 from pygamelib import board_items
 from pygamelib.assets import graphics
 from pygamelib import base
-import pygamelib.gfx.core as gfx_core
+from pygamelib.gfx import core
 
 # Global variables
 is_modified = False
@@ -258,12 +258,16 @@ def create_wizard():
             new_object.type = r
         print("Now we need a model. Default value: " + new_object.model)
         input('Hit "Enter" when you are ready to choose a model.')
-        new_object.model = model_picker()
+        chosen_model = model_picker()
+        new_object.sprixel = core.Sprixel(chosen_model)
+        # also sets new_objects model, for backward compatibility
+        new_object.model = chosen_model
+
         game.clear_screen()
         print(
             base.Text.green_bright("\t\tObject creation wizard: ")
             + base.Text.cyan_bright("NPC")
-            + f" - {new_object.model}"
+            + f" - {new_object.sprixel}"
         )
         print(
             "We now needs to go through some basic statistics. "
