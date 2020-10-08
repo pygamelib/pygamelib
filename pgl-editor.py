@@ -201,6 +201,7 @@ def model_picker():
         elif choice == "6":
             return str(input("Enter your string now: "))
 
+
 def to_history(object):
     global object_history
     if (
