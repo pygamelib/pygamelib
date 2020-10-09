@@ -8,6 +8,8 @@ flake8 = "*"
 ipdb = "*"
 ipython = "*"
 coverage = "*"
+sphinx-rtd-theme = "*"
+sphinx = "*"
 
 [packages]
 colorama = ">=0.3.8"
