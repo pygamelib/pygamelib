@@ -2505,9 +2505,11 @@ class Game:
             "name": obj.name,
             "pos": obj.pos,
             "model": obj.model,
-            "sprixel": obj.sprixel.serialize(),
             "type": obj.type,
         }
+
+        if obj.sprixel is not None:
+            ref["sprixel"] = obj.sprixel.serialize()
 
         if isinstance(obj, board_items.Wall):
             ref["inventory_space"] = obj.inventory_space()
