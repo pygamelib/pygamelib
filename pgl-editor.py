@@ -258,12 +258,16 @@ def create_wizard():
             new_object.type = r
         print("Now we need a model. Default value: " + new_object.model)
         input('Hit "Enter" when you are ready to choose a model.')
-        new_object.model = model_picker()
+        chosen_model = model_picker()
+        new_object.sprixel = gfx_core.Sprixel(chosen_model)
+        # also sets new_objects model, for backward compatibility
+        new_object.model = chosen_model
+
         game.clear_screen()
         print(
             base.Text.green_bright("\t\tObject creation wizard: ")
             + base.Text.cyan_bright("NPC")
-            + f" - {new_object.model}"
+            + f" - {new_object.sprixel}"
         )
         print(
             "We now needs to go through some basic statistics. "
@@ -548,12 +552,18 @@ def create_wizard():
             if key == "1":
                 new_object = board_items.Wall()
                 new_object.name = str(uuid.uuid1())
-                new_object.model = model_picker()
+                chosen_model = model_picker()
+                new_object.sprixel = gfx_core.Sprixel(chosen_model)
+                # also sets new_objects model, for backward compatibility
+                new_object.model = chosen_model
                 break
             elif key == "2":
                 new_object = board_items.Door()
                 new_object.name = str(uuid.uuid1())
-                new_object.model = model_picker()
+                chosen_model = model_picker()
+                new_object.sprixel = gfx_core.Sprixel(chosen_model)
+                # also sets new_objects model, for backward compatibility
+                new_object.model = chosen_model
                 break
             elif key == "3":
                 new_object = board_items.Treasure()
@@ -574,7 +584,10 @@ def create_wizard():
                     new_object.type = r
                 print("Now we need a model. Default value: " + new_object.model)
                 input('Hit "Enter" when you are ready to choose a model.')
-                new_object.model = model_picker()
+                chosen_model = model_picker()
+                new_object.sprixel = gfx_core.Sprixel(chosen_model)
+                # also sets new_objects model, for backward compatibility
+                new_object.model = chosen_model
                 break
             elif key == "4" or key == "5":
                 if key == "4":
@@ -599,7 +612,10 @@ def create_wizard():
                     new_object.type = r
                 print("Now we need a model. Default value: " + new_object.model)
                 input('Hit "Enter" when you are ready to choose a model.')
-                new_object.model = model_picker()
+                chosen_model = model_picker()
+                new_object.sprixel = gfx_core.Sprixel(chosen_model)
+                # also sets new_objects model, for backward compatibility
+                new_object.model = chosen_model
                 print(
                     "Is this object pickable? (can it be picked up " "by the player)?"
                 )
