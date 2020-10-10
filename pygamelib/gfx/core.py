@@ -979,7 +979,7 @@ class SpriteCollection(UserDict):
     """
 
     def __init__(self, data=dict()):
-        UserDict.__init__(self, data)
+        super().__init__(data)
 
     @classmethod
     def load(cls, data):
