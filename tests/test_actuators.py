@@ -35,7 +35,7 @@ class TestBase(unittest.TestCase):
     def test_random_empty(self):
         a = actuators.RandomActuator()
         self.assertEqual(a.moveset, [])
-        self.assertIsNone(a.next_move())
+        self.assertEqual(a.next_move(), constants.NO_DIR)
 
     def test_path(self):
         a = actuators.PathActuator([constants.UP])
