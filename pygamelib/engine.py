@@ -514,19 +514,11 @@ class Board:
         #     print(self.ui_border_right + "\x1b[0m\r")
         # print("\x1b[0m")
         # # eod
-        clear_eol = "\x1b[K"
-        # This statement doesn't registered as tested but it is. In tests/test_board.py
-        # in test_partial_display.
-        if isinstance(self.parent, Game) and isinstance(
-            self.parent.terminal, Terminal
-        ):  # pragma: no cover
-            clear_eol = self.parent.terminal.clear_eol
         print(
             "".join(
                 [
                     self.ui_border_top * len(self._matrix[0]),
                     self.ui_border_top * 2,
-                    clear_eol,
                     "\r",
                 ]
             )
@@ -544,13 +536,12 @@ class Board:
                     else:
                         column.model = self.ui_board_void_cell
                 print(column, end="")
-            print(self.ui_border_right + clear_eol + "\r")
+            print(self.ui_border_right + "\r")
         print(
             "".join(
                 [
                     self.ui_border_bottom * len(self._matrix[0]),
                     self.ui_border_bottom * 2,
-                    clear_eol,
                     "\r",
                 ]
             )
@@ -1332,7 +1323,6 @@ class Game:
                         self.player.dtmove += elapsed
                     print(self.terminal.home)
                     self.user_update(self, in_key, elapsed)
-                    print(self.terminal.clear_eos)
                     self.actuate_npcs(self.current_level, elapsed)
                     self.actuate_projectiles(self.current_level, elapsed)
                     self.animate_items(self.current_level, elapsed)
