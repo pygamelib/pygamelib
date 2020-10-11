@@ -119,3 +119,21 @@ There is tons of limitations but for the most important ones:
 * Only one player is supported.
 * There is little protections against messing up with the internal. This is *on purpose*, I want the kids to learn to use the API not mess up with the internals of every single class.
 * It's pure Python (it's slow).
+
+## Comparison between Pygame and Pyglet
+
+**3d support**
+Since pyglet is so firmly merged with OpenGL. It allows the support of drawing in 3D.	Easy Python syntax
+Pygame uses Python as its scripting language. Python is widely treated one of the most natural languages to grasp even for beginners.
+
+**Platform**
+It can work with Window, Linux, and OS X.	Usage API
+The API is very straightforward.
+
+**Language used**
+It can be compiled using the other Python interpreters.	Best canvas system
+Pygame provides a drawing system that allows the user to create and draw an unlimited number of the canvas.
+
+**Popularity**
+Pyglet is less popularee because it has small community support.	More popular
+Pygame is more popular than the pyglet.
