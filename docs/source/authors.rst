@@ -28,6 +28,7 @@ Contributors
 * Diego Cáceres (`@diego-caceres`_)
 * Spassarop (`@spassarop`_)
 * Javier Hernán Caballero García (`@caballerojavier13`_)
+* Olle Lögdahl (`@ollelogdahl`_)
 
 .. _`@arnauddupuis`: https://github.com/arnauddupuis
 .. _`@kaozdl`: https://github.com/kaozdl
@@ -44,3 +45,4 @@ Contributors
 .. _`@diego-caceres`: https://github.com/diego-caceres
 .. _`@spassarop`: https://github.com/spassarop
 .. _`@caballerojavier13`: https://github.com/caballerojavier13
+.. _`@ollelogdahl`: https://github.com/ollelogdahl

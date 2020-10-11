@@ -2,6 +2,7 @@ from pygamelib import engine
 from pygamelib import base
 from pygamelib import board_items
 from pygamelib import constants
+from pygamelib.gfx import core
 import unittest
 
 # Test cases for all classes in pygamelib.gfx.core except for Animation.
@@ -242,6 +243,15 @@ class TestBase(unittest.TestCase):
                 board_items.GenericActionableStructure(value=10, inventory_space=1),
                 1,
                 5,
+            )
+        )
+        self.assertIsNone(
+            b.place_item(
+                board_items.Door(
+                    value=10, inventory_space=1, sprixel=core.Sprixel("#")
+                ),
+                2,
+                2,
             )
         )
         self.assertIsNone(

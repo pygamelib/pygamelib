@@ -2524,6 +2524,9 @@ class Game:
             "type": obj.type,
         }
 
+        if obj.sprixel is not None:
+            ref["sprixel"] = obj.sprixel.serialize()
+
         if isinstance(obj, board_items.Wall):
             ref["inventory_space"] = obj.inventory_space()
         elif isinstance(obj, board_items.Treasure):
@@ -2713,6 +2716,8 @@ class Game:
                 local_object.name = ref["name"]
             if "model" in obj_keys:
                 local_object.model = ref["model"]
+            if "sprixel" in obj_keys:
+                local_object.sprixel = core.Sprixel.load(ref["sprixel"])
             if "type" in obj_keys:
                 local_object.type = ref["type"]
         return local_object
