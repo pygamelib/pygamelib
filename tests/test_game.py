@@ -273,6 +273,13 @@ class TestBase(unittest.TestCase):
         self.assertEqual(g._string_to_constant("DLUP"), constants.DLUP)
         self.assertEqual(g._string_to_constant("DLDOWN"), constants.DLDOWN)
 
+    def test_singleton(self):
+        mygame = engine.Game.instance()
+        mygame.test_singleton = True
+        self.assertTrue(engine.Game.instance(), 'test_singleton')
+        self.assertTrue(engine.Game.instance().test_singleton)
+        self.assertTrue(mygame is engine.Game.instance())
+
 
 if __name__ == "__main__":
     unittest.main()
