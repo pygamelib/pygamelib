@@ -1214,6 +1214,8 @@ class Game:
     # subjected to physic by setting the ignore_physic attribute to True. It is the
     # default for :class:`pygamelib.board_items.Projectile` objects.
 
+    __instance = None  # Class variable stores the singleton instance of Game object
+
     def __init__(
         self,
         name="Game",
@@ -1262,6 +1264,20 @@ class Game:
         if self.user_update is not None:
             self.state = constants.PAUSED
         self.previous_time = time.time()
+
+    @classmethod
+    def instance(cls, *args, **kwargs):
+        """Returns the instance of the Game object
+
+        Creates a Game object on first call an then returns the same instance
+        on further calls
+
+        :return: Instance of Game object
+
+        """
+        if cls.__instance is None:
+            cls.__instance = cls(*args, **kwargs)
+        return cls.__instance
 
     def run(self):
         """
