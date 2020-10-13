@@ -3119,3 +3119,56 @@ class Screen(object):
             eol = self.terminal.clear_eol
         with self.terminal.location(column, row):
             print(text, eol, end=end, file=file, flush=flush)
+    
+    def display_sprite_at(
+        self,
+        sprite,
+        row=0,
+        column=0,
+        file=sys.stdout,
+        flush=False,
+    ):
+        """
+        Displays sprite at a given position.
+
+        :param sprite: The sprite object to display.
+        :type sprite: str
+        :param row: The row position in the terminal window.
+        :type row: int
+        :param column: The column position in the terminal window.
+        :type column: int
+        :param file:
+        :type file: stream
+        :param flush:
+        :type flush: bool
+
+        Example::
+        
+            screen.display_sprite_at(panda_sprite,
+                                     int(screen.height/2),
+                                     int(screen.width/2)
+                                     )
+        """
+        for r in range(0, sprite.size[1]):
+            for c in range(0, sprite.size[0]):
+                self.display_at(
+                    sprite._sprixels[r][c], row + r, column + c, file=file, flush=flush
+                )
+    
+    def display_sprite(self, sprite, file=sys.stdout, flush=False):
+        """
+        Displays sprite at the current cursor position.
+        
+        :param sprite: The sprite object to display.
+        :type sprite: str
+        :param file:
+        :type file: stream
+        :param flush:
+        :type flush:
+
+        Examples::
+
+            screen.display_sprite(panda_sprite)
+        """
+        column, row = self.terminal.get_location()
+        self.display_sprite_at(sprite, row, column, file, flush)
