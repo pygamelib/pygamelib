@@ -3132,14 +3132,14 @@ class Screen(object):
         Displays sprite at a given position.
 
         :param sprite: The sprite object to display.
-        :type sprite: str
+        :type sprite: pygamelib.gfx.core.Sprite
         :param row: The row position in the terminal window.
         :type row: int
         :param column: The column position in the terminal window.
         :type column: int
         :param file:
         :type file: stream
-        :param flush:
+        :param flush: print() parameter to flush the stream after printing
         :type flush: bool
 
         Example::
@@ -3160,10 +3160,10 @@ class Screen(object):
         Displays sprite at the current cursor position.
         
         :param sprite: The sprite object to display.
-        :type sprite: str
+        :type sprite: pygamelib.gfx.core.Sprite
         :param file:
         :type file: stream
-        :param flush:
+        :param flush: print() parameter to flush the stream after printing
         :type flush:
 
         Examples::
