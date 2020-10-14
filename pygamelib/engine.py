@@ -3170,5 +3170,12 @@ class Screen(object):
 
             screen.display_sprite(panda_sprite)
         """
-        column, row = self.terminal.get_location()
-        self.display_sprite_at(sprite, row, column, file, flush)
+        for r in range(0, sprite.size[1]):
+            for c in range(0, sprite.size[0]):
+                if sprite._sprixels[r][c] == core.Sprixel():
+                    print(" ", end="")
+                else:
+                    print(
+                        sprite._sprixels[r][c], end="", file=file, flush=flush,
+                    )
+            print()
