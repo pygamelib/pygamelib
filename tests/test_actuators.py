@@ -81,6 +81,8 @@ class TestBase(unittest.TestCase):
         npc.actuator.set_destination(2, 2)
         npc.actuator.find_path()
         self.assertTrue(len(npc.actuator.current_path()) > 0)
+        npc.actuator.find_path(1)
+        self.assertTrue(len(npc.actuator.current_path()) > 0)
         with self.assertRaises(engine.base.PglInvalidTypeException):
             npc.actuator.set_destination("2", 2)
         npc.actuator.actuated_object = None
@@ -99,6 +101,7 @@ class TestBase(unittest.TestCase):
         b.place_item(board_items.Wall(), 2, 2)
         npc.actuator.set_destination(2, 2)
         self.assertEqual(npc.actuator.find_path(), [])
+        self.assertEqual(npc.actuator.find_path(1), [])
         # These tests are a recipe of how to NOT do things...
         npc.actuator.destination = (None, None)
         self.assertEqual(npc.actuator.next_move(), constants.NO_DIR)

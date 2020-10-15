@@ -23,7 +23,7 @@ from pygamelib import base
 from pygamelib import constants
 import random
 import collections
-
+from queue import PriorityQueue
 
 class Actuator:
     """
@@ -331,11 +331,13 @@ class PathFinder(Behavioral):
         method is going to circle between the waypoints
         (when the last is visited, go back to the first)
     :type circle_waypoints: bool
+    :param path_finding_mechanism: 0 - BFS, 1 - AStar
+    :type path_finding_mechanism: int
 
     """
 
     def __init__(
-        self, game=None, actuated_object=None, circle_waypoints=True, parent=None
+        self, game=None, actuated_object=None, circle_waypoints=True, parent=None,path_finding_mechanism=0
     ):
         if actuated_object is not None and parent is None:
             self.actuated_object = actuated_object
@@ -350,6 +352,12 @@ class PathFinder(Behavioral):
         self.waypoints = []
         self._waypoint_index = 0
         self.circle_waypoints = circle_waypoints
+        self.path_finding_mechanism = path_finding_mechanism
+        if type(path_finding_mechanism) is not int or (path_finding_mechanism!=0 or path_finding_mechanism!=1):
+            raise base.PglInvalidTypeException(
+                "In Actuator.PathFinder.__init__(..,path_finding_mechanism) path_finding_mechanism must be"
+                "either 0 or 1."
+            )
 
     def set_destination(self, row=0, column=0):
         """Set the targeted destination.
@@ -377,9 +385,7 @@ class PathFinder(Behavioral):
         """Find a path to the destination.
 
         Destination (PathFinder.destination) has to be set beforehand.
-        This method implements a Breadth First Search algorithm
-        (`Wikipedia <https://en.wikipedia.org/wiki/Breadth-first_search>`_)
-        to find the shortest path to destination.
+       
 
         Example::
 
@@ -393,6 +399,7 @@ class PathFinder(Behavioral):
 
         .. warning:: PathFinder.destination is a tuple!
             Please use PathFinder.set_destination(x,y) to avoid problems.
+        
 
         """
         if self.actuated_object is None:
@@ -411,7 +418,23 @@ class PathFinder(Behavioral):
                 "destination is not defined",
                 "PathFinder.destination has to be defined.",
             )
+        
+        # if type(path_finding_mechanism) is not int or (path_finding_mechanism!=0 or path_finding_mechanism!=1):
+        #     raise base.PglInvalidTypeException(
+        #         "In Actuator.PathFinder.find_path(path_finding_mechanism) path_finding_mechanism must be"
+        #         "either 0 or 1."
+        #     )
+        if self.path_finding_mechanism==0:
+            return self.path_find_bfs()
+        
+        return self.path_find_astar()
 
+    def path_find_bfs(self):
+        '''
+         This method implements a A Star Search algorithm
+        (`Wikipedia <https://en.wikipedia.org/wiki/A*_search_algorithm>`_)
+        to find the shortest path to destination.
+        '''
         queue = collections.deque(
             [[(self.actuated_object.pos[0], self.actuated_object.pos[1])]]
         )
@@ -435,6 +458,49 @@ class PathFinder(Behavioral):
                     queue.append(path + [(r, c)])
                     seen.add((r, c))
         return []
+
+    def path_find_astar(self):
+        '''
+         This method implements a Breadth First Search algorithm
+        (`Wikipedia <https://en.wikipedia.org/wiki/Breadth-first_search>`_)
+        to find the shortest path to destination.
+        '''
+        
+        queue = PriorityQueue()
+
+        # queue stores a tuple with values:
+        # h - heuristic value = depth + manhattan distance from distance
+        # type(h) = int
+        # path - path to reach current node from start node
+        # type(path) = list
+        # For each node, depth = len(path)
+
+        initial_h = abs(self.actuated_object.pos[0]-self.destination[0]) + abs(self.actuated_object.pos[1]-self.destination[1]) 
+
+        queue.put((initial_h,[(self.actuated_object.pos[0], self.actuated_object.pos[1])]))
+        seen = set([(self.actuated_object.pos[0], self.actuated_object.pos[1])])
+        
+        while queue:
+            h_val,path = queue.get()
+            x, y = path[-1]
+            if (x, y) == self.destination:
+                self._current_path = path
+                # We return only a copy of the path as we need to keep the
+                # real one untouched for our own needs.
+                return path.copy()
+            # r = row c = column
+            for r, c in ((x + 1, y), (x - 1, y), (x, y + 1), (x, y - 1)):
+                if (
+                    0 <= c < self.game.current_board().size[0]
+                    and 0 <= r < self.game.current_board().size[1]
+                    and self.game.current_board().item(r, c).overlappable()
+                    and (r, c) not in seen
+                ):
+                    h_val = len(path) + abs(self.destination[0]-r) + abs(self.destination[1]-c)
+                    queue.put((h_val,path+[(r,c)]))
+                    seen.add((r, c))
+        return []
+
 
     def current_path(self):
         """This method simply return a copy of the current path of the actuator.
