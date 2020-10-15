@@ -1,5 +1,5 @@
 from pygamelib import engine
-from pygamelib.gfx.core import Sprite, SpriteCollection
+from pygamelib.gfx.core import Sprite, SpriteCollection, Sprixel
 import unittest
 from blessed import Terminal
 
@@ -47,7 +47,7 @@ class TestBase(unittest.TestCase):
     def test_screen_display_sprite(self):
         sprites_panda = SpriteCollection.load_json_file("tests/panda.spr")
         self.assertIsNone(
-            self.screen.display_sprite(sprites_panda["panda"])
+            self.screen.display_sprite(sprites_panda["panda"], filler=Sprixel(" "))
         )
 
     def test_screen_display_sprite_at(self):
@@ -55,6 +55,7 @@ class TestBase(unittest.TestCase):
         self.assertIsNone(
             self.screen.display_sprite_at(
                 sprites_panda["panda"],
+                Sprixel(" "),
                 int(self.screen.height / 2),
                 int(self.screen.width / 2),
             )
