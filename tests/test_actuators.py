@@ -148,7 +148,8 @@ class TestBase(unittest.TestCase):
         g.add_npc(1, npc, 5, 5)
         g.change_level(1)
         actuators.PathFinder(actuated_object=npc)
-        npc.actuator = actuators.PathFinder(parent=npc, game=g, circle_waypoints=False,path_finding_mechanism=1)
+        npc.actuator = actuators.PathFinder(
+            parent=npc, game=g, circle_waypoints=False, algorithm=constants.ALGO_ASTAR)
         npc.actuator.set_destination(2, 2)
         npc.actuator.find_path()
         self.assertTrue(len(npc.actuator.current_path()) > 0)
@@ -209,6 +210,7 @@ class TestBase(unittest.TestCase):
             npc.actuator.remove_waypoint(30, 30)
             self.assertEqual(e.error, "invalid_waypoint")
         self.assertIsNone(npc.actuator.remove_waypoint(10, 10))
+
 
 if __name__ == "__main__":
     unittest.main()
