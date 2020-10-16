@@ -10,7 +10,7 @@ This is the checklist that all PR are going through, so as a potential contribut
 ## Check the Code
 
 - [ ] If it does too much, ask for it to be broken up into smaller PRs.
-- [ ] Does it pass flake8?
+- [ ] Does it pass `flake8`?
 - [ ] Have you run `black` on your code to comply with code formatting rules (https://black.readthedocs.io/en/stable/)?
 - [ ] Is it consistent?
 - [ ] Review the changes carefully, line by line. Make sure you understand every single part of every line. Learn whatever you do not know yet.
