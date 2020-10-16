@@ -149,7 +149,8 @@ class TestBase(unittest.TestCase):
         g.change_level(1)
         actuators.PathFinder(actuated_object=npc)
         npc.actuator = actuators.PathFinder(
-            parent=npc, game=g, circle_waypoints=False, algorithm=constants.ALGO_ASTAR)
+            parent=npc, game=g, circle_waypoints=False, algorithm=constants.ALGO_ASTAR
+        )
         npc.actuator.set_destination(2, 2)
         npc.actuator.find_path()
         self.assertTrue(len(npc.actuator.current_path()) > 0)

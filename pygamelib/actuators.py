@@ -338,7 +338,12 @@ class PathFinder(Behavioral):
     """
 
     def __init__(
-        self, game=None, actuated_object=None, circle_waypoints=True, parent=None, algorithm=constants.ALGO_BFS
+        self,
+        game=None,
+        actuated_object=None,
+        circle_waypoints=True,
+        parent=None,
+        algorithm=constants.ALGO_BFS,
     ):
         if actuated_object is not None and parent is None:
             self.actuated_object = actuated_object
@@ -354,7 +359,10 @@ class PathFinder(Behavioral):
         self._waypoint_index = 0
         self.circle_waypoints = circle_waypoints
         self.algorithm = algorithm
-        if type(self.algorithm) is not int or (self.algorithm != constants.ALGO_BFS and self.algorithm != constants.ALGO_ASTAR):
+        if type(self.algorithm) is not int or (
+            self.algorithm != constants.ALGO_BFS
+            and self.algorithm != constants.ALGO_ASTAR
+        ):
             raise base.PglInvalidTypeException(
                 "In Actuator.PathFinder.__init__(..,algorithm) algorithm must be"
                 "either ALGO_BFS or ALGO_ASTAR."
@@ -473,10 +481,12 @@ class PathFinder(Behavioral):
         # For each node, depth = len(path)
 
         initial_h = abs(self.actuated_object.pos[0] - self.destination[0]) + abs(
-            self.actuated_object.pos[1] - self.destination[1])
+            self.actuated_object.pos[1] - self.destination[1]
+        )
 
         queue.put(
-            (initial_h, [(self.actuated_object.pos[0], self.actuated_object.pos[1])]))
+            (initial_h, [(self.actuated_object.pos[0], self.actuated_object.pos[1])])
+        )
         seen = dict()
         while queue.empty() == False:
             h_val, path = queue.get()
@@ -489,8 +499,11 @@ class PathFinder(Behavioral):
                 return path.copy()
             # r = row c = column
             for r, c in ((x + 1, y), (x - 1, y), (x, y + 1), (x, y - 1)):
-                h_val = len(path) + \
-                    abs(self.destination[0] - r) + abs(self.destination[1] - c)
+                h_val = (
+                    len(path)
+                    + abs(self.destination[0] - r)
+                    + abs(self.destination[1] - c)
+                )
                 if (
                     0 <= c < self.game.current_board().size[0]
                     and 0 <= r < self.game.current_board().size[1]
@@ -737,7 +750,7 @@ class PathFinder(Behavioral):
         return self.waypoints[self._waypoint_index]
 
     def remove_waypoint(self, row, column):
-        """ Remove a waypoint from the stack.
+        """Remove a waypoint from the stack.
 
         This method removes the first occurrence of a waypoint in the stack.
 
