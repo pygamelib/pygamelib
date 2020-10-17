@@ -438,8 +438,7 @@ class PathFinder(Behavioral):
                 "destination is not defined",
                 "PathFinder.destination has to be defined.",
             )
-
-        if self.algorithm == 0:
+        if self.algorithm == constants.ALGO_BFS:
             return self.__find_path_bfs()
 
         return self.__find_path_astar()
@@ -487,16 +486,16 @@ class PathFinder(Behavioral):
         queue.put(
             (initial_h, [(self.actuated_object.pos[0], self.actuated_object.pos[1])])
         )
-        seen = dict()
-        while queue.empty() == False:
+        seen = set()
+        while not queue.empty():
             h_val, path = queue.get()
             x, y = path[-1]
-            seen[(x, y)] = len(path)
             if (x, y) == self.destination:
                 self._current_path = path
                 # We return only a copy of the path as we need to keep the
                 # real one untouched for our own needs.
                 return path.copy()
+
             # r = row c = column
             for r, c in ((x + 1, y), (x - 1, y), (x, y + 1), (x, y - 1)):
                 h_val = (
@@ -508,9 +507,10 @@ class PathFinder(Behavioral):
                     0 <= c < self.game.current_board().size[0]
                     and 0 <= r < self.game.current_board().size[1]
                     and self.game.current_board().item(r, c).overlappable()
-                    and ((r, c) not in seen.keys() or seen[(r, c)] > len(path))
+                    and ((r, c) not in seen)
                 ):
                     queue.put((h_val, path + [(r, c)]))
+                    seen.add((r, c))
         return []
 
     def current_path(self):
