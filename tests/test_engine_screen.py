@@ -1,5 +1,5 @@
 from pygamelib import engine
-from pygamelib.gfx.core import Sprite, SpriteCollection, Sprixel
+from pygamelib.gfx.core import SpriteCollection, Sprixel
 import unittest
 from blessed import Terminal
 
@@ -60,6 +60,7 @@ class TestBase(unittest.TestCase):
                 int(self.screen.width / 2),
             )
         )
+
 
 if __name__ == "__main__":
     unittest.main()
