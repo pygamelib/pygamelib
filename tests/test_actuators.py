@@ -80,11 +80,11 @@ class TestBase(unittest.TestCase):
         npc.actuator = actuators.PathFinder(parent=npc, game=g, circle_waypoints=False)
         with self.assertRaises(engine.base.PglInvalidTypeException):
             actuators.PathFinder(
-                    parent=npc, 
-                    game=g,
-                    circle_waypoints=False,
-                    algorithm="constants.ALGO_BFS"
-                )
+                parent=npc,
+                game=g,
+                circle_waypoints=False,
+                algorithm="constants.ALGO_BFS",
+            )
         npc.actuator.set_destination(2, 2)
         npc.actuator.find_path()
         self.assertTrue(len(npc.actuator.current_path()) > 0)
@@ -164,21 +164,21 @@ class TestBase(unittest.TestCase):
         )
         with self.assertRaises(engine.base.PglInvalidTypeException):
             actuators.PathFinder(
-                    parent=npc, 
-                    game=g,
-                    circle_waypoints=False,
-                    algorithm="constants.ALGO_ASTAR"
-                )
+                parent=npc,
+                game=g,
+                circle_waypoints=False,
+                algorithm="constants.ALGO_ASTAR",
+            )
         npc.actuator.set_destination(2, 2)
         npc.actuator.find_path()
         self.assertTrue(len(npc.actuator.current_path()) > 0)
-        
+
         with self.assertRaises(engine.base.PglInvalidTypeException):
             npc.actuator.set_destination("2", 2)
         npc.actuator.actuated_object = None
         with self.assertRaises(engine.base.PglException) as e:
             npc.actuator.find_path()
-            self.assertEqual(e.error, "actuated_object is not defined")        
+            self.assertEqual(e.error, "actuated_object is not defined")
         npc.actuator.actuated_object = board_items.Door()
         with self.assertRaises(engine.base.PglException) as e:
             npc.actuator.find_path()
