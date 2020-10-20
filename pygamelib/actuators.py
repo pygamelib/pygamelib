@@ -473,7 +473,8 @@ class PathFinder(Behavioral):
         queue = PriorityQueue()
 
         # queue stores a tuple with values:
-        # h - heuristic value = depth + manhattan distance from current node to destination
+        # h - heuristic value = depth + manhattan distance from current node to
+        # destination
         # type(h) = int
         # path - path to reach current node from start node
         # type(path) = list
