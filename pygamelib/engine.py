@@ -3109,3 +3109,83 @@ class Screen(object):
             eol = self.terminal.clear_eol
         with self.terminal.location(column, row):
             print(text, eol, end=end, file=file, flush=flush)
+
+    def display_sprite_at(
+        self,
+        sprite,
+        filler=core.Sprixel(" "),
+        row=0,
+        column=0,
+        file=sys.stdout,
+        flush=False,
+    ):
+        """
+        .. versionadded:: 1.3.0
+        Displays sprite at a given position.
+        If a :class:`~pygamelib.gfx.core.Sprixel` is empty, then it's going to be
+        replaced by filler.
+
+        :param sprite: The sprite object to display.
+        :type sprite: :class:`~pygamelib.gfx.core.Sprite`
+        :param filler: A sprixel object to replace all empty sprixels in sprite.
+        :type filler: :class:`~pygamelib.gfx.core.Sprixel`
+        :param row: The row position in the terminal window.
+        :type row: int
+        :param column: The column position in the terminal window.
+        :type column: int
+        :param file:
+        :type file: stream
+        :param flush: print() parameter to flush the stream after printing
+        :type flush: bool
+
+        Example::
+
+            screen.display_sprite_at(panda_sprite,
+                                     int(screen.height/2),
+                                     int(screen.width/2)
+                                     )
+        """
+        for r in range(0, sprite.size[1]):
+            for c in range(0, sprite.size[0]):
+                if sprite._sprixels[r][c] == core.Sprixel():
+                    self.display_at(filler, row + r, column + c, file=file, flush=flush)
+                else:
+                    self.display_at(
+                        sprite._sprixels[r][c],
+                        row + r,
+                        column + c,
+                        file=file,
+                        flush=flush,
+                    )
+
+    def display_sprite(
+        self, sprite, filler=core.Sprixel(" "), file=sys.stdout, flush=False
+    ):
+        """
+        .. versionadded:: 1.3.0
+        Displays sprite at the current cursor position.
+        If a :class:`~pygamelib.gfx.core.Sprixel` is empty, then it's going to be
+        replaced by filler.
+
+        :param sprite: The sprite object to display.
+        :type sprite: :class:`~pygamelib.gfx.core.Sprite`
+        :param filler: A sprixel object to replace all empty sprixels in sprite.
+        :type filler: :class:`~pygamelib.gfx.core.Sprixel`
+        :param file:
+        :type file: stream
+        :param flush: print() parameter to flush the stream after printing
+        :type flush:
+
+        Examples::
+
+            screen.display_sprite(panda_sprite)
+        """
+        for r in range(0, sprite.size[1]):
+            for c in range(0, sprite.size[0]):
+                if sprite._sprixels[r][c] == core.Sprixel():
+                    print(filler, end="")
+                else:
+                    print(
+                        sprite._sprixels[r][c], end="", file=file, flush=flush,
+                    )
+            print()

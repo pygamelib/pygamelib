@@ -1,4 +1,5 @@
 from pygamelib import engine
+from pygamelib.gfx.core import SpriteCollection, Sprixel
 import unittest
 from blessed import Terminal
 
@@ -38,6 +39,23 @@ class TestBase(unittest.TestCase):
         self.assertIsNone(
             self.screen.display_at(
                 "This is centered",
+                int(self.screen.height / 2),
+                int(self.screen.width / 2),
+            )
+        )
+
+    def test_screen_display_sprite(self):
+        sprites_panda = SpriteCollection.load_json_file("tests/panda.spr")
+        self.assertIsNone(
+            self.screen.display_sprite(sprites_panda["panda"], filler=Sprixel(" "))
+        )
+
+    def test_screen_display_sprite_at(self):
+        sprites_panda = SpriteCollection.load_json_file("tests/panda.spr")
+        self.assertIsNone(
+            self.screen.display_sprite_at(
+                sprites_panda["panda"],
+                Sprixel(" "),
                 int(self.screen.height / 2),
                 int(self.screen.width / 2),
             )
