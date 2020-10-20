@@ -31,6 +31,7 @@ import random
 import json
 import sys
 import time
+import numpy as np
 
 # We need to ignore that one as it is used by user to compare keys (i.e Utils.key.UP)
 from readchar import readkey, key  # noqa: F401
@@ -91,7 +92,7 @@ class Board:
         # The overlapped matrix is used as an invisible layer were overlapped
         # restorable items are parked momentarily (until the cell they were on
         # is free again).
-        self._overlapped_matrix = []
+        self._overlapped_matrix = np.array([])
         # Setting class parameters
         for item in [
             "name",
@@ -153,28 +154,35 @@ class Board:
         if self.ui_board_void_cell_sprixel is not None and isinstance(
             self.ui_board_void_cell_sprixel, core.Sprixel
         ):
-            self._matrix = [
+            self._matrix = np.array(
                 [
-                    board_items.BoardItemVoid(
-                        sprixel=self.ui_board_void_cell_sprixel, parent=self
-                    )
-                    for i in range(0, self.size[0], 1)
+                    [
+                        board_items.BoardItemVoid(
+                            sprixel=self.ui_board_void_cell_sprixel, parent=self
+                        )
+                        for i in range(0, self.size[0], 1)
+                    ]
+                    for j in range(0, self.size[1], 1)
                 ]
-                for j in range(0, self.size[1], 1)
-            ]
+            )
         else:
-            self._matrix = [
+            self._matrix = np.array(
                 [
-                    board_items.BoardItemVoid(
-                        model=self.ui_board_void_cell, parent=self
-                    )
-                    for i in range(0, self.size[0], 1)
+                    [
+                        board_items.BoardItemVoid(
+                            model=self.ui_board_void_cell, parent=self
+                        )
+                        for i in range(0, self.size[0], 1)
+                    ]
+                    for j in range(0, self.size[1], 1)
                 ]
+            )
+        self._overlapped_matrix = np.array(
+            [
+                [None for i in range(0, self.size[0], 1)]
                 for j in range(0, self.size[1], 1)
             ]
-        self._overlapped_matrix = [
-            [None for i in range(0, self.size[0], 1)] for j in range(0, self.size[1], 1)
-        ]
+        )
 
     def generate_void_cell(self):
         """This method return a void cell.
@@ -800,7 +808,9 @@ class Board:
                                 ] = None
                     # Finally, place the item at its new position
                     self.place_item(
-                        item, projected_position.row, projected_position.column,
+                        item,
+                        projected_position.row,
+                        projected_position.column,
                     )
         else:  # pragma: no cover
             # This is actually test in tests/test_board.py in function test_move()
@@ -1022,7 +1032,9 @@ class Board:
                         self._overlapped_matrix[item.pos[0]][item.pos[1]] = None
                     else:
                         self.place_item(
-                            self.generate_void_cell(), item.pos[0], item.pos[1],
+                            self.generate_void_cell(),
+                            item.pos[0],
+                            item.pos[1],
                         )
                     self.place_item(item, new_row, new_column)
         else:
@@ -2092,7 +2104,8 @@ class Game:
                                 # nothing blocks its path. And that's where it will be
                                 # unless we detect a collision.
                                 pp = base.Vector2D(
-                                    proj.row + dm.row, proj.column + dm.column,
+                                    proj.row + dm.row,
+                                    proj.column + dm.column,
                                 )
                                 v = proj.position_as_vector()
                                 if (
@@ -3063,7 +3076,11 @@ class Screen(object):
         """
         # Funny how the documentation is waaayyy bigger than the code ;)
         print(
-            *text, self.terminal.clear_eol, end=end, file=file, flush=flush,
+            *text,
+            self.terminal.clear_eol,
+            end=end,
+            file=file,
+            flush=flush,
         )
 
     def display_at(
