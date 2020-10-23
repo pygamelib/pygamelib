@@ -1356,7 +1356,7 @@ class Game:
                     self.previous_time = time.time()
                     if self.player != constants.NO_PLAYER:
                         self.player.dtmove += elapsed
-                    print(self.terminal.home)
+                    print(self.terminal.home, end="")
                     self.user_update(self, in_key, elapsed)
                     print(self.terminal.clear_eos)
                     self.actuate_npcs(self.current_level, elapsed)
