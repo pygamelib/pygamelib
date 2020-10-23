@@ -89,6 +89,7 @@ class Board:
         self.ui_board_void_cell_sprixel = None
         self.DISPLAY_SIZE_WARNINGS = True
         self.parent = None
+        self._matrix = np.array([])
         # The overlapped matrix is used as an invisible layer were overlapped
         # restorable items are parked momentarily (until the cell they were on
         # is free again).
