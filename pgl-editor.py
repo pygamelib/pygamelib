@@ -2,6 +2,7 @@
 
 import os
 import uuid
+import numpy as np
 from copy import deepcopy
 from pygamelib import constants
 from pygamelib import actuators
@@ -980,7 +981,10 @@ for sp in dir(graphics):
         ):
             fct = getattr(gfx_core.Sprixel, f_name)
             game.add_menu_entry(
-                "graphics_utils", str(i), f'"{fct()}"', fct(),
+                "graphics_utils",
+                str(i),
+                f'"{fct()}"',
+                fct(),
             )
             i += 1
 
@@ -1229,19 +1233,22 @@ while True:
             if nw >= game.current_board().size[0]:
                 old_value = game.current_board().size[0]
                 game.current_board().size[0] = nw
-                for x in range(0, game.current_board().size[1], 1):
-                    for y in range(old_value, game.current_board().size[0], 1):
-                        game.current_board()._matrix[x].append(
-                            board_items.BoardItemVoid(
-                                model=game.current_board().ui_board_void_cell
-                            )
-                        )
-                        game.current_board()._overlapped_matrix[x].append(
-                            board_items.BoardItemVoid(
-                                model=game.current_board().ui_board_void_cell
-                            )
-                        )
-                        is_modified = True
+                ext = np.full(
+                    (
+                        game.current_board().size[1],
+                        game.current_board().size[0] - old_value,
+                    ),
+                    board_items.BoardItemVoid(
+                        model=game.current_board().ui_board_void_cell
+                    ),
+                )
+                game.current_board()._matrix = np.append(
+                    game.current_board()._matrix, ext, 1
+                )
+                game.current_board()._overlapped_matrix = np.append(
+                    game.current_board()._overlapped_matrix, ext, 1
+                )
+                is_modified = True
 
         elif key == "2":
             game.clear_screen()
@@ -1250,18 +1257,22 @@ while True:
                 old_value = game.current_board().size[1]
                 game.current_board().size[1] = nw
                 # TODO: We should use list completion here
-                for x in range(old_value, nw, 1):
-                    new_array = []
-                    for y in range(0, game.current_board().size[0], 1):
-                        new_array.append(
-                            board_items.BoardItemVoid(
-                                model=game.current_board().ui_board_void_cell
-                            )
-                        )
-                    game.current_board()._matrix.append(new_array)
-                    # TODO: Need to test side effects
-                    game.current_board()._overlapped_matrix.append(deepcopy(new_array))
-                    is_modified = True
+                ext = np.full(
+                    (
+                        game.current_board().size[1] - old_value,
+                        game.current_board().size[0],
+                    ),
+                    board_items.BoardItemVoid(
+                        model=game.current_board().ui_board_void_cell
+                    ),
+                )
+                game.current_board()._matrix = np.append(
+                    game.current_board()._matrix, ext, 0
+                )
+                game.current_board()._overlapped_matrix = np.append(
+                    game.current_board()._overlapped_matrix, ext, 0
+                )
+                is_modified = True
 
         elif key == "3":
             game.clear_screen()
