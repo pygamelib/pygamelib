@@ -1,3 +1,4 @@
+__docformat__ = "restructuredtext"
 """This module contains the core classes for the "graphic" system.
 
 .. autosummary::

@@ -1,3 +1,4 @@
+__docformat__ = "restructuredtext"
 """This module contains the basic board items classes.
 
 .. autosummary::

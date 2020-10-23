@@ -1,3 +1,4 @@
+__docformat__ = "restructuredtext"
 """
 Accessible constants are the following:
 

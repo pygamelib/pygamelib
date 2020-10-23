@@ -1,3 +1,4 @@
+__docformat__ = "restructuredtext"
 """
 
 .. Important:: The Graphics module was introduced in version 1.1.0.

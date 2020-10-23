@@ -7,6 +7,8 @@ import pygamelib.base as base
 import random
 import uuid
 
+__docformat__ = "restructuredtext"
+
 
 class BaseParticle(board_items.Movable):
     """

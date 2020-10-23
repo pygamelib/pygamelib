@@ -1,3 +1,4 @@
+__docformat__ = "restructuredtext"
 """
 The game module contains the core classes for a game:
 
@@ -809,9 +810,7 @@ class Board:
                                 ] = None
                     # Finally, place the item at its new position
                     self.place_item(
-                        item,
-                        projected_position.row,
-                        projected_position.column,
+                        item, projected_position.row, projected_position.column,
                     )
         else:  # pragma: no cover
             # This is actually test in tests/test_board.py in function test_move()
@@ -1033,9 +1032,7 @@ class Board:
                         self._overlapped_matrix[item.pos[0]][item.pos[1]] = None
                     else:
                         self.place_item(
-                            self.generate_void_cell(),
-                            item.pos[0],
-                            item.pos[1],
+                            self.generate_void_cell(), item.pos[0], item.pos[1],
                         )
                     self.place_item(item, new_row, new_column)
         else:
@@ -2105,8 +2102,7 @@ class Game:
                                 # nothing blocks its path. And that's where it will be
                                 # unless we detect a collision.
                                 pp = base.Vector2D(
-                                    proj.row + dm.row,
-                                    proj.column + dm.column,
+                                    proj.row + dm.row, proj.column + dm.column,
                                 )
                                 v = proj.position_as_vector()
                                 if (
@@ -3077,11 +3073,7 @@ class Screen(object):
         """
         # Funny how the documentation is waaayyy bigger than the code ;)
         print(
-            *text,
-            self.terminal.clear_eol,
-            end=end,
-            file=file,
-            flush=flush,
+            *text, self.terminal.clear_eol, end=end, file=file, flush=flush,
         )
 
     def display_at(
