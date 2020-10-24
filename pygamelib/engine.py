@@ -1251,8 +1251,8 @@ class Game:
         self._configuration = None
         self._configuration_internals = None
         self.object_library = []
-        self.terminal = Terminal()
-        self.screen = Screen(self.terminal)
+        self.terminal = base.Console.instance()
+        self.screen = Screen()
         self.mode = mode
         self.user_update = user_update
         self.input_lag = input_lag
@@ -2986,35 +2986,37 @@ class Screen(object):
     At the moment it relies heavily on the blessed module, but it wraps a lot of its
     methods and provide easy calls to actions.
 
-    :param terminal: A Terminal reference.
-    :type terminal: :class:`~blessed.Terminal`
+    .. WARNING:: Starting with version 1.3.0 the terminal parameter has been removed.
+       The Screen object now takes advantage of base.Console.instance() to get a
+       reference to a blessed.Terminal object.
 
     Example::
 
-        screen = Screen(terminal=Terminal())
+        screen = Screen()
         screen.display_at('This is centered', int(screen.height/2), int(screen.width/2))
     """
 
-    def __init__(self, terminal=None):
+    def __init__(self):
         super().__init__()
         # get clear sequence for the terminal
-        if terminal is None:
-            raise base.PglException(
-                "terminal_is_missing",
-                "Screen must be constructed with a terminal object.",
-            )
-        elif "terminal.Terminal" in str(type(terminal)):
-            self.terminal = terminal
-        else:
-            raise base.PglException(
-                "terminal_not_blessed",
-                "Screen: terminal must be from the blessed module\n"
-                "Please install blessed if it is not already installed:\n"
-                "     pip3 install blessed --user"
-                "And instantiate Screen with terminal=blessed.Terminal()"
-                "or let the Game object do it and use mygame.screen to access the "
-                "screen (assuming that mygame is your Game() instance).",
-            )
+        self.terminal = base.Console.instance()
+        # if terminal is None:
+        #     raise base.PglException(
+        #         "terminal_is_missing",
+        #         "Screen must be constructed with a terminal object.",
+        #     )
+        # elif "terminal.Terminal" in str(type(terminal)):
+        #     self.terminal = terminal
+        # else:
+        #     raise base.PglException(
+        #         "terminal_not_blessed",
+        #         "Screen: terminal must be from the blessed module\n"
+        #         "Please install blessed if it is not already installed:\n"
+        #         "     pip3 install blessed --user"
+        #         "And instantiate Screen with terminal=blessed.Terminal()"
+        #         "or let the Game object do it and use mygame.screen to access the "
+        #         "screen (assuming that mygame is your Game() instance).",
+        #     )
 
     def clear(self):
         """

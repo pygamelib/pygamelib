@@ -16,6 +16,7 @@ It is the base class for all levels.
 .. autosummary::
    :toctree: .
 
+   Console
    Math
    PglException
    PglInvalidLevelException
@@ -28,9 +29,35 @@ It is the base class for all levels.
 from pygamelib import constants
 import math
 from colorama import Fore, Back, Style, init
+from blessed import Terminal
 
 # Initialize terminal colors for colorama.
 init()
+
+
+class Console:
+    __instance = None
+
+    @classmethod
+    def instance(cls):
+        """Returns the instance of the Terminal object
+
+        The pygamelib extensively use the Terminal object from the blessed module.
+        However we find ourselves in need of a Terminal instance a lot, so to help with
+        memory and execution time we just encapsulate the Terminal object in a singleton
+        so any object can use it without instanciating it many times (and messing up
+        with the contexts).
+
+        :return: Instance of blessed.Terminal object
+
+        Example::
+
+        term = Console.instance()
+
+        """
+        if cls.__instance is None:
+            cls.__instance = Terminal()
+        return cls.__instance
 
 
 class Text:
