@@ -1,7 +1,6 @@
 from pygamelib import engine
 from pygamelib.gfx.core import SpriteCollection, Sprixel
 import unittest
-from blessed import Terminal
 
 # Test cases for all classes in pygamelib.gfx.core except for Animation.
 
@@ -9,31 +8,31 @@ from blessed import Terminal
 class TestBase(unittest.TestCase):
     def setUp(self):
         super().setUp()
-        self.term = Terminal()
-        self.screen = engine.Screen(self.term)
+        self.screen = engine.Screen()
+        self.assertIsInstance(self.screen, engine.Screen)
 
-    def test_screen_create_empty(self):
-        with self.assertRaises(Exception) as context:
-            engine.Screen()
+    # def test_screen_create_empty(self):
+    #     with self.assertRaises(Exception) as context:
+    #         engine.Screen()
 
-        self.assertTrue("terminal_is_missing" in str(context.exception))
+    #     self.assertTrue("terminal_is_missing" in str(context.exception))
 
-    def test_screen_create_bad(self):
-        with self.assertRaises(Exception) as context:
-            engine.Screen("Terminal")
+    # def test_screen_create_bad(self):
+    #     with self.assertRaises(Exception) as context:
+    #         engine.Screen("Terminal")
 
-        self.assertTrue("terminal_not_blessed" in str(context.exception))
+    #     self.assertTrue("terminal_not_blessed" in str(context.exception))
 
     def test_screen_create_good(self):
-        scr = engine.Screen(self.term)
+        scr = engine.Screen()
         self.assertIsInstance(scr, engine.Screen)
 
     def test_clear(self):
         self.assertIsNone(self.screen.clear())
 
     def test_screen_dimension(self):
-        self.assertEqual(self.term.width, self.screen.width)
-        self.assertEqual(self.term.height, self.screen.height)
+        self.assertEqual(self.screen.terminal.width, self.screen.width)
+        self.assertEqual(self.screen.terminal.height, self.screen.height)
 
     def test_screen_display(self):
         self.assertIsNone(

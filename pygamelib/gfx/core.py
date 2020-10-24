@@ -208,14 +208,59 @@ class Color(object):
         """
         Create a new Color object based on serialized data.
 
+        If data is None, None is returned.
+
+        If a color component is missing from data, it is set to 0 (see examples).
+
+        Raises an exception if the color components are not integer.
+
         :param data: Data loaded from JSON data (deserialized).
         :type data: dict
         :rtype: :class:`Color`
+        :raise: `~pygamelib.base.PglInvalidTypeException`
 
         Example::
 
-            new_sprite = Color.load(json_parsed_data['default_sprixel']['fg_color'])
+            # Loading from parsed JSON data
+            new_color = Color.load(json_parsed_data['default_sprixel']['fg_color'])
+
+            # Loading from incomplete data
+            color = Color.load({'red':25,'green':35})
+            # Result in the following Color object:
+            # Color(25, 35, 0)
         """
+        if data is None or data == "":
+            return
+        elif type(data) is str and ("[38;" in data or "[48;" in data):
+            # This is for backward compatibility with 1.2.X
+            return cls.from_ansi(data)
+        # 43 45 46 44 42 41 47 40
+        elif re.search("\[4[01234567]{1}m", data):
+            # Here we deal with legacy colors
+            if "[40m" in data:
+                return cls(0, 0, 0)
+            elif "[41m" in data:
+                return cls(255, 0, 0)
+            elif "[42m" in data:
+                return cls(0, 255, 0)
+            elif "[43m" in data:
+                return cls(255, 255, 0)
+            elif "[44m" in data:
+                return cls(0, 0, 255)
+            elif "[45m" in data:
+                return cls(255, 0, 255)
+            elif "[46m" in data:
+                return cls(0, 255, 255)
+            elif "[47m" in data:
+                return cls(255, 255, 255)
+        print(f"Color.load(): data received: '{data}'")
+        for c in ["red", "green", "blue"]:
+            if c not in data:
+                data[c] = 0
+            elif type(data[c]) is not int:
+                raise base.PglInvalidTypeException(
+                    f"In Color.load(data) the {c} component is not an integer."
+                )
         return cls(data["red"], data["green"], data["blue"])
 
 
@@ -404,8 +449,8 @@ class Sprixel(object):
         """
         return {
             "model": self.model,
-            "bg_color": self.bg_color and self.bg_color.serialize() or {},
-            "fg_color": self.fg_color and self.fg_color.serialize() or {},
+            "bg_color": self.bg_color and self.bg_color.serialize() or None,
+            "fg_color": self.fg_color and self.fg_color.serialize() or None,
             "is_bg_transparent": self.is_bg_transparent,
         }
 
