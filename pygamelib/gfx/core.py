@@ -140,9 +140,28 @@ class Color(object):
 
             color = Color.from_ansi()
         """
-        match = re.findall(".*\[[34]8;2;(\d+);(\d+);(\d+)m.*", string)
-        if len(match) > 0:
-            return Color(match[0][0], match[0][1], match[0][2])
+        if re.search("\[4[01234567]{1}m", string):
+            # Here we deal with legacy colors,
+            if "[40m" in string:
+                return cls(0, 0, 0)
+            elif "[41m" in string:
+                return cls(255, 0, 0)
+            elif "[42m" in string:
+                return cls(0, 255, 0)
+            elif "[43m" in string:
+                return cls(255, 255, 0)
+            elif "[44m" in string:
+                return cls(0, 0, 255)
+            elif "[45m" in string:
+                return cls(255, 0, 255)
+            elif "[46m" in string:
+                return cls(0, 255, 255)
+            elif "[47m" in string:
+                return cls(255, 255, 255)
+        else:
+            match = re.findall(".*\[[34]8;2;(\d+);(\d+);(\d+)m.*", string)
+            if len(match) > 0:
+                return Color(match[0][0], match[0][1], match[0][2])
         return None
 
     def __eq__(self, other):
@@ -231,28 +250,11 @@ class Color(object):
         """
         if data is None or data == "":
             return
-        elif type(data) is str and ("[38;" in data or "[48;" in data):
+        elif type(data) is str and (
+            ("[38;" in data or "[48;" in data) or re.search("\[4[01234567]{1}m", data)
+        ):
             # This is for backward compatibility with 1.2.X
             return cls.from_ansi(data)
-        # 43 45 46 44 42 41 47 40
-        elif re.search("\[4[01234567]{1}m", data):
-            # Here we deal with legacy colors
-            if "[40m" in data:
-                return cls(0, 0, 0)
-            elif "[41m" in data:
-                return cls(255, 0, 0)
-            elif "[42m" in data:
-                return cls(0, 255, 0)
-            elif "[43m" in data:
-                return cls(255, 255, 0)
-            elif "[44m" in data:
-                return cls(0, 0, 255)
-            elif "[45m" in data:
-                return cls(255, 0, 255)
-            elif "[46m" in data:
-                return cls(0, 255, 255)
-            elif "[47m" in data:
-                return cls(255, 255, 255)
         print(f"Color.load(): data received: '{data}'")
         for c in ["red", "green", "blue"]:
             if c not in data:
