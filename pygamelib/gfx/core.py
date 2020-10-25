@@ -11,7 +11,6 @@ __docformat__ = "restructuredtext"
    SpriteCollection
    Animation
 """
-from pygamelib import board_items
 from pygamelib import base
 from pygamelib import constants
 from pygamelib.assets import graphics
@@ -1361,6 +1360,9 @@ class SpriteCollection(UserDict):
 
 
 class Animation(object):
+    # Deferred loading to break circular import
+    from pygamelib import board_items
+
     """
     The Animation class is used to give the ability to have more than one model
     for a BoardItem. A BoardItem can have an animation and all of them that
@@ -1610,7 +1612,7 @@ class Animation(object):
             is attached to a :class:`~pygamelib.board_items.BoardComplexItem`.
 
         """
-        if not isinstance(self.parent, board_items.BoardItem):
+        if not isinstance(self.parent, board_items.BoardItem):  # noqa: F821
             raise base.PglInvalidTypeException(
                 "The parent needs to be a sub class of BoardItem."
             )
@@ -1665,7 +1667,7 @@ class Animation(object):
                 "The refresh_screen parameter needs to be a callback "
                 "function reference."
             )
-        if not isinstance(self.parent, board_items.BoardItem):
+        if not isinstance(self.parent, board_items.BoardItem):  # noqa: F821
             raise base.PglInvalidTypeException(
                 "The parent needs to be a sub class of BoardItem."
             )
@@ -1680,15 +1682,21 @@ class Animation(object):
                 # we don't want to let any one slip.
                 # Also: this is convoluted...
                 if (
-                    isinstance(self.parent, board_items.BoardComplexItem)
+                    isinstance(self.parent, board_items.BoardComplexItem)  # noqa: F821
                     and self.parent.parent is not None
                     and (
-                        isinstance(self.parent.parent, board_items.engine.Board)
-                        or isinstance(self.parent.parent, board_items.engine.Game)
+                        isinstance(
+                            self.parent.parent, board_items.engine.Board  # noqa: F821
+                        )
+                        or isinstance(
+                            self.parent.parent, board_items.engine.Game  # noqa: F821
+                        )
                     )
                 ):
                     b = None
-                    if isinstance(self.parent.parent, board_items.engine.Board):
+                    if isinstance(
+                        self.parent.parent, board_items.engine.Board  # noqa: F821
+                    ):
                         b = self.parent.parent
                     else:
                         b = self.parent.parent.current_board()
