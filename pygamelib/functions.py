@@ -13,7 +13,7 @@ def pgl_isinstance(obj, obj_type):
     module just to check the type of a variable.
 
     .. Important:: You need to give the full type name string not just a part of it. For
-       example, pgl_isinstance(board_items.Player(), 'Movable') will return False. 
+       example, pgl_isinstance(board_items.Player(), 'Movable') will return False.
        pgl_isinstance(board_items.Player(), 'pygamelib.board_items.Movable') will
        return True.
 
