@@ -14,6 +14,7 @@ __docformat__ = "restructuredtext"
 from pygamelib import base
 from pygamelib import constants
 from pygamelib.assets import graphics
+from pygamelib.functions import pgl_isinstance
 import time
 from collections import UserDict
 from uuid import uuid4
@@ -45,9 +46,24 @@ class Color(object):
 
     def __init__(self, r=0, g=0, b=0):
         super().__init__()
-        self.__r = r
-        self.__g = g
-        self.__b = b
+        if type(r) is int:
+            self.__r = r
+        else:
+            raise base.PglInvalidTypeException(
+                "Color(r, g, b): all parameters must be integers."
+            )
+        if type(g) is int:
+            self.__g = g
+        else:
+            raise base.PglInvalidTypeException(
+                "Color(r, g, b): all parameters must be integers."
+            )
+        if type(b) is int:
+            self.__b = b
+        else:
+            raise base.PglInvalidTypeException(
+                "Color(r, g, b): all parameters must be integers."
+            )
 
     @property
     def r(self):
@@ -160,7 +176,7 @@ class Color(object):
         else:
             match = re.findall(".*\[[34]8;2;(\d+);(\d+);(\d+)m.*", string)
             if len(match) > 0:
-                return Color(match[0][0], match[0][1], match[0][2])
+                return Color(int(match[0][0]), int(match[0][1]), int(match[0][2]))
         return None
 
     def __eq__(self, other):
@@ -254,7 +270,7 @@ class Color(object):
         ):
             # This is for backward compatibility with 1.2.X
             return cls.from_ansi(data)
-        print(f"Color.load(): data received: '{data}'")
+        # print(f"Color.load(): data received: '{data}'")
         for c in ["red", "green", "blue"]:
             if c not in data:
                 data[c] = 0
@@ -1360,9 +1376,6 @@ class SpriteCollection(UserDict):
 
 
 class Animation(object):
-    # Deferred loading to break circular import
-    from pygamelib import board_items
-
     """
     The Animation class is used to give the ability to have more than one model
     for a BoardItem. A BoardItem can have an animation and all of them that
@@ -1612,7 +1625,7 @@ class Animation(object):
             is attached to a :class:`~pygamelib.board_items.BoardComplexItem`.
 
         """
-        if not isinstance(self.parent, board_items.BoardItem):  # noqa: F821
+        if not pgl_isinstance(self.parent, "pygamelib.board_items.BoardItem"):
             raise base.PglInvalidTypeException(
                 "The parent needs to be a sub class of BoardItem."
             )
@@ -1667,7 +1680,7 @@ class Animation(object):
                 "The refresh_screen parameter needs to be a callback "
                 "function reference."
             )
-        if not isinstance(self.parent, board_items.BoardItem):  # noqa: F821
+        if not pgl_isinstance(self.parent, "pygamelib.board_items.BoardItem"):
             raise base.PglInvalidTypeException(
                 "The parent needs to be a sub class of BoardItem."
             )
@@ -1682,21 +1695,17 @@ class Animation(object):
                 # we don't want to let any one slip.
                 # Also: this is convoluted...
                 if (
-                    isinstance(self.parent, board_items.BoardComplexItem)  # noqa: F821
+                    pgl_isinstance(
+                        self.parent, "pygamelib.board_items.BoardComplexItem"
+                    )
                     and self.parent.parent is not None
                     and (
-                        isinstance(
-                            self.parent.parent, board_items.engine.Board  # noqa: F821
-                        )
-                        or isinstance(
-                            self.parent.parent, board_items.engine.Game  # noqa: F821
-                        )
+                        pgl_isinstance(self.parent.parent, "pygamelib.engine.Board")
+                        or pgl_isinstance(self.parent.parent, "pygamelib.engine.Game")
                     )
                 ):
                     b = None
-                    if isinstance(
-                        self.parent.parent, board_items.engine.Board  # noqa: F821
-                    ):
+                    if pgl_isinstance(self.parent.parent, "pygamelib.engine.Board"):
                         b = self.parent.parent
                     else:
                         b = self.parent.parent.current_board()
