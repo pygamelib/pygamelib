@@ -438,7 +438,7 @@ class Sprixel(object):
             self.__bg_color = value
         else:
             raise base.PglInvalidTypeException(
-                f"A Sprixel.bg_color must be a Color object."
+                "A Sprixel.bg_color must be a Color object."
             )
 
     @property
@@ -451,7 +451,7 @@ class Sprixel(object):
             self.__fg_color = value
         else:
             raise base.PglInvalidTypeException(
-                f"A Sprixel.fg_color must be a Color object."
+                "A Sprixel.fg_color must be a Color object."
             )
 
     def serialize(self):
