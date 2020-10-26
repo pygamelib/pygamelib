@@ -140,12 +140,11 @@ class TestBoard(unittest.TestCase):
         with self.assertRaises(pgl_base.PglOutOfBoardBoundException) as excinfo:
             self.board.item(15, 15)
         self.assertTrue("out of the board boundaries" in str(excinfo.exception))
-        g = pgl_engine.Game()
-        sprix = gfx_core.Sprixel(bg_color=g.terminal.on_color_rgb(45, 45, 45))
+        sprix = gfx_core.Sprixel(bg_color=gfx_core.Color(45, 45, 45))
         sprix.is_bg_transparent = True
         self.board.place_item(
             pgl_board_items.Door(
-                sprixel=gfx_core.Sprixel(bg_color=g.terminal.on_color_rgb(15, 15, 15))
+                sprixel=gfx_core.Sprixel(bg_color=gfx_core.Color(15, 15, 15))
             ),
             5,
             5,
@@ -229,7 +228,6 @@ class TestBoard(unittest.TestCase):
         b = pgl_engine.Board(
             name="test_board", size=[10, 10], player_starting_position=[0, 0],
         )
-        g = pgl_engine.Game()
         b.place_item(i, 0, 0)
         self.assertIsNone(b.move(i, constants.DOWN, 1))
         self.assertIsNone(b.move(i, constants.UP, 1))
@@ -255,14 +253,14 @@ class TestBoard(unittest.TestCase):
         self.assertEqual(i.inventory.value(), 50)
         b.place_item(
             pgl_board_items.Door(
-                sprixel=gfx_core.Sprixel(bg_color=g.terminal.on_color_rgb(45, 45, 45))
+                sprixel=gfx_core.Sprixel(bg_color=gfx_core.Color(45, 45, 45))
             ),
             i.row + 1,
             i.column,
         )
         b.place_item(
             pgl_board_items.Door(
-                sprixel=gfx_core.Sprixel(bg_color=g.terminal.on_color_rgb(45, 45, 45))
+                sprixel=gfx_core.Sprixel(bg_color=gfx_core.Color(45, 45, 45))
             ),
             i.row + 2,
             i.column,

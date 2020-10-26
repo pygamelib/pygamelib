@@ -1,4 +1,5 @@
 import pygamelib.base as pgl_base
+import pygamelib.gfx.core as core
 import unittest
 
 
@@ -11,8 +12,8 @@ class TestBase(unittest.TestCase):
         self.vectors.append(pgl_base.Vector2D(2, 2))
         self.text = pgl_base.Text(
             "Test case",
-            pgl_base.Fore.WHITE,
-            pgl_base.Back.YELLOW,
+            core.Color(0, 0, 0),
+            core.Color(255, 255, 0),
             pgl_base.Style.BRIGHT,
         )
         self.math = pgl_base.Math()
@@ -111,7 +112,8 @@ class TestBase(unittest.TestCase):
 
     def test_text(self):
         self.assertEqual(
-            self.text.__repr__(), "\x1b[43m\x1b[37m\x1b[1mTest case\x1b[0m"
+            self.text.__repr__(),
+            "\x1b[48;2;255;255;0m\x1b[38;2;255;255;0m\x1b[1mTest case\x1b[0m",
         )
         self.assertIn("TEST", self.text.black("TEST"))
         self.assertIn("30m", self.text.black("TEST"))
@@ -146,6 +148,10 @@ class TestBase(unittest.TestCase):
         self.assertIsNone(self.text.info("test"))
         self.assertIsNone(self.text.debug("test"))
         self.assertIsNone(self.text.print_white_on_red("test"))
+        with self.assertRaises(pgl_base.PglInvalidTypeException):
+            pgl_base.Text("breaking", "pink")
+        with self.assertRaises(pgl_base.PglInvalidTypeException):
+            pgl_base.Text("breaking", None, "pink")
 
     def test_math_distance(self):
         self.assertEqual(self.math.distance(0, 0, 0, 0), 0)

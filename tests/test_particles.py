@@ -1,4 +1,5 @@
 import pygamelib.gfx.particles as particles
+import pygamelib.gfx.core as core
 from pygamelib import constants
 import unittest
 
@@ -13,15 +14,15 @@ class TestBase(unittest.TestCase):
         self.assertEqual(p.type, "base_particle")
         self.assertEqual(p.size, [1, 1])
         p = particles.BaseParticle(
-            bg_color="blue",
-            fg_color="red",
+            bg_color=core.Color(0, 0, 255),
+            fg_color=core.Color(255, 0, 0),
             model="*",
             velocity=particles.base.Vector2D(),
             acceleration=particles.base.Vector2D(),
             lifespan=8,
         )
-        self.assertEqual(p.sprixel.bg_color, "blue")
-        self.assertEqual(p.sprixel.fg_color, "red")
+        self.assertEqual(p.sprixel.bg_color, core.Color(0, 0, 255))
+        self.assertEqual(p.sprixel.fg_color, core.Color(255, 0, 0))
         self.assertEqual(p.sprixel.model, "*")
 
     def test_accessors(self):
