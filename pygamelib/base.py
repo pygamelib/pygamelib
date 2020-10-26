@@ -96,7 +96,7 @@ class Text:
         """The fg_color attribute sets the foreground color. It needs to be a
            :class:`~pyagemlib.gfx.core.Color`."""
         if fg_color is None or pgl_isinstance(fg_color, "pygamelib.gfx.core.Color"):
-            self.fg_color = bg_color
+            self.fg_color = fg_color
         else:
             raise PglInvalidTypeException(
                 "Text(text, bg_color, fg_color, style): fg_color needs to be a "

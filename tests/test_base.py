@@ -119,7 +119,7 @@ class TestBase(unittest.TestCase):
         )
         self.assertEqual(
             text.__repr__(),
-            "\x1b[48;2;255;255;0m\x1b[38;2;255;255;0m\x1b[1mTest case\x1b[0m",
+            "\x1b[48;2;255;255;0m\x1b[38;2;0;0;0m\x1b[1mTest case\x1b[0m",
         )
         self.assertIn("TEST", text.black("TEST"))
         self.assertIn("30m", text.black("TEST"))
