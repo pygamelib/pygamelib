@@ -27,6 +27,7 @@ It is the base class for all levels.
    Text
 """
 from pygamelib import constants
+from pygamelib.functions import pgl_isinstance
 import math
 from colorama import Fore, Back, Style, init
 from blessed import Terminal
@@ -88,13 +89,29 @@ class Text:
     :type style: str
     """
 
-    def __init__(self, text="", fg_color="", bg_color="", style=""):
+    def __init__(self, text="", fg_color=None, bg_color=None, style=""):
         self.text = text
         """The text attribute. It needs to be a str."""
-        self.fg_color = fg_color
-        """The fg_color attribute sets the foreground color. It needs to be a str."""
-        self.bg_color = bg_color
-        """The bg_color attribute sets the background color. It needs to be a str."""
+        self.fg_color = None
+        """The fg_color attribute sets the foreground color. It needs to be a
+           :class:`~pyagemlib.gfx.core.Color`."""
+        if fg_color is None or pgl_isinstance(fg_color, "pygamelib.gfx.core.Color"):
+            self.fg_color = bg_color
+        else:
+            raise PglInvalidTypeException(
+                "Text(text, bg_color, fg_color, style): fg_color needs to be a "
+                "pygamelib.gfx.core.Color object."
+            )
+        self.bg_color = None
+        """The bg_color attribute sets the background color. It needs to be a
+           :class:`~pyagemlib.gfx.core.Color`."""
+        if bg_color is None or pgl_isinstance(bg_color, "pygamelib.gfx.core.Color"):
+            self.bg_color = bg_color
+        else:
+            raise PglInvalidTypeException(
+                "Text(text, bg_color, fg_color, style): bg_color needs to be a "
+                "pygamelib.gfx.core.Color object."
+            )
         self.style = style
         """The style attribute sets the style of the text. It needs to be a str."""
         self.parent = None
@@ -104,7 +121,19 @@ class Text:
         self._item = None
 
     def __repr__(self):
-        return "".join([self.bg_color, self.fg_color, self.style, self.text, "\x1b[0m"])
+        t = Console.instance()
+        bgc = fgc = ""
+        if self.bg_color is not None and pgl_isinstance(
+            self.bg_color, "pygamelib.gfx.core.Color"
+        ):
+            bgc = t.on_color_rgb(self.bg_color.r, self.bg_color.g, self.bg_color.b)
+        if self.fg_color is not None and pgl_isinstance(
+            self.fg_color, "pygamelib.gfx.core.Color"
+        ):
+            fgc = t.color_rgb(self.fg_color.r, self.fg_color.g, self.fg_color.b)
+        return f"{bgc}{fgc}{self.style}{self.text}\x1b[0m"
+        # return "".join([self.bg_color, self.fg_color, self.style, self.text,
+        #  "\x1b[0m"])
 
     def __str__(self):  # pragma: no cover
         return self.__repr__()
