@@ -123,10 +123,16 @@ class Text:
     def __repr__(self):
         t = Console.instance()
         bgc = fgc = ""
+        print(
+            f"Text.__repr__(): bg_color={self.bg_color} with type={type(self.bg_color)}"
+        )
         if self.bg_color is not None and pgl_isinstance(
             self.bg_color, "pygamelib.gfx.core.Color"
         ):
             bgc = t.on_color_rgb(self.bg_color.r, self.bg_color.g, self.bg_color.b)
+        print(
+            f"Text.__repr__(): fg_color={self.fg_color} with type={type(self.fg_color)}"
+        )
         if self.fg_color is not None and pgl_isinstance(
             self.fg_color, "pygamelib.gfx.core.Color"
         ):
