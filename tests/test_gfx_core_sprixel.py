@@ -1,4 +1,5 @@
 import pygamelib.gfx.core as gfx_core
+import pygamelib.base as pgl_base
 import unittest
 
 # Test cases for all classes in pygamelib.gfx.core except for Animation.
@@ -14,7 +15,11 @@ class TestBase(unittest.TestCase):
         self.assertEqual(sprix.model, "m")
         self.assertEqual(sprix.bg_color, gfx_core.Color(0, 0, 0))
         self.assertEqual(sprix.fg_color, gfx_core.Color(1, 1, 1))
-        self.assertEqual(sprix.__repr__(), "\x1b[48;2;0;0;0m\x1b[38;2;1;1;1mm\x1b[0m")
+        t = pgl_base.Console.instance()
+        self.assertEqual(
+            sprix.__repr__(),
+            "".join([t.on_color_rgb(0, 0, 0), t.color_rgb(1, 1, 1), "m", "\x1b[0m"]),
+        )
         with self.assertRaises(gfx_core.base.PglInvalidTypeException):
             gfx_core.Sprixel(False, gfx_core.Color(0, 0, 0), gfx_core.Color(1, 1, 1))
         with self.assertRaises(gfx_core.base.PglInvalidTypeException):
