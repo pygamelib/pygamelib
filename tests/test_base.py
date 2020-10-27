@@ -117,12 +117,6 @@ class TestBase(unittest.TestCase):
             core.Color(255, 255, 0),
             pgl_base.Style.BRIGHT,
         )
-        text.debug_print = True
-        print(
-            "[debug] test_base.test_text(): "
-            f"bg_color={text.bg_color} ({type(text.fg_color)}) "
-            f"fg_color={text.fg_color} ({type(text.fg_color)})"
-        )
         t = pgl_base.Console.instance()
         self.assertEqual(
             text.__repr__(),
@@ -136,8 +130,6 @@ class TestBase(unittest.TestCase):
                 ]
             ),
         )
-        # "\x1b[48;2;255;255;0m\x1b[38;2;0;0;0m\x1b[1mTest case\x1b[0m",
-        text.debug_print = False
         self.assertIn("TEST", text.black("TEST"))
         self.assertIn("30m", text.black("TEST"))
         self.assertIn("TEST", text.red("TEST"))

@@ -119,44 +119,18 @@ class Text:
         :class:`~pygamelib.board_items.BoardItem`."""
         self._sprite = None
         self._item = None
-        self.debug_print = False
 
     def __repr__(self):
         t = Console.instance()
         bgc = fgc = ""
-        if self.debug_print:
-            print(
-                f"Text.__repr__(): bg_color={self.bg_color} with "
-                f"type={type(self.bg_color)} terminal={t}"
-            )
         if self.bg_color is not None and pgl_isinstance(
             self.bg_color, "pygamelib.gfx.core.Color"
         ):
             bgc = t.on_color_rgb(self.bg_color.r, self.bg_color.g, self.bg_color.b)
-            if self.debug_print:
-                print(
-                    f"Text.__repr__(): bg_color != None and type ok. bgc={str(bgc)} "
-                    f"type={type(bgc)}"
-                )
-        if self.debug_print:
-            print(
-                f"Text.__repr__(): fg_color={self.fg_color} "
-                f"with type={type(self.fg_color)}"
-            )
         if self.fg_color is not None and pgl_isinstance(
             self.fg_color, "pygamelib.gfx.core.Color"
         ):
             fgc = t.color_rgb(self.fg_color.r, self.fg_color.g, self.fg_color.b)
-            if self.debug_print:
-                print(
-                    f"Text.__repr__(): fg_color != None and type ok. fgc={str(fgc)} "
-                    f"type={type(fgc)}"
-                )
-        if self.debug_print:
-            print(
-                f"Text.__repr__(): returning '{bgc}{fgc}{self.style}{self.text}\x1b[0m'"
-            )
-        # return f"{bgc}{fgc}{self.style}{self.text}\x1b[0m"
         return "".join([bgc, fgc, self.style, self.text, "\x1b[0m"])
 
     def __str__(self):  # pragma: no cover
