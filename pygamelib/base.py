@@ -129,6 +129,7 @@ class Text:
         if self.bg_color is not None and pgl_isinstance(
             self.bg_color, "pygamelib.gfx.core.Color"
         ):
+            print("Text.__repr__(): bg_color is not None and type ok")
             bgc = t.on_color_rgb(self.bg_color.r, self.bg_color.g, self.bg_color.b)
         print(
             f"Text.__repr__(): fg_color={self.fg_color} with type={type(self.fg_color)}"
@@ -136,6 +137,7 @@ class Text:
         if self.fg_color is not None and pgl_isinstance(
             self.fg_color, "pygamelib.gfx.core.Color"
         ):
+            print("Text.__repr__(): fg_color is not None and type ok")
             fgc = t.color_rgb(self.fg_color.r, self.fg_color.g, self.fg_color.b)
         return f"{bgc}{fgc}{self.style}{self.text}\x1b[0m"
         # return "".join([self.bg_color, self.fg_color, self.style, self.text,
