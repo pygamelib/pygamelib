@@ -2,6 +2,7 @@
 
 import os
 import uuid
+import numpy as np
 from copy import deepcopy
 from pygamelib import constants
 from pygamelib import actuators
@@ -111,6 +112,52 @@ def color_picker():
     return str(input_digit("\n(Enter a number)> "))
 
 
+def custom_color_picker():
+    # Custom color chooser.
+    global game
+    r = g = b = 128
+    step = 1
+    base_char = ""
+    print("What type of color block do you want:\n1 - Rectangle\n2 - Square")
+    c_ch = input_digit("\n(Enter a number)> ")
+    if c_ch == "1":
+        base_char = " "
+    else:
+        base_char = "  "
+    spr = gfx_core.Sprixel(base_char, game.terminal.on_color_rgb(r, g, b))
+    key = None
+    while key != engine.key.ENTER:
+        game.clear_screen()
+        print(game.terminal.center("Build your color\n"))
+        spr.bg_color = game.terminal.on_color_rgb(r, g, b)
+        print(
+            f"{base.Text.red('Red')}: {r} {base.Text.green_bright('Green')}: {g} "
+            f"{base.Text.blue_bright('Blue')}: {b}\n\nYour color: {spr}\n"
+        )
+        print("4/1 - Increase/decrease the red value")
+        print("5/2 - Increase/decrease the green value")
+        print("6/3 - Increase/decrease the blue value")
+        print(f"+/- - Increase/decrease the increment step (current: {step})")
+        if key == "1" and r >= step:
+            r -= step
+        elif key == "4" and r + step <= 255:
+            r += step
+        if key == "2" and g >= step:
+            g -= step
+        elif key == "5" and g + step <= 255:
+            g += step
+        if key == "3" and b >= step:
+            b -= step
+        elif key == "6" and b + step <= 255:
+            b += step
+        if key == "-":
+            step -= 1
+        elif key == "+":
+            step += 1
+        key = game.get_key()
+    return spr
+
+
 def utf8_picker(category):
     global game
     nb_elts = int(game.terminal.width / 12)
@@ -171,9 +218,13 @@ def model_picker():
         )
         choice = str(engine.Game.get_key())
         if choice == "1":
-            picked = game.get_menu_entry("graphics_utils", color_picker())
-            if picked is not None:
-                return picked["data"]
+            choice = color_picker()
+            if int(choice) > 0:
+                picked = game.get_menu_entry("graphics_utils", choice)
+                if picked is not None:
+                    return picked["data"]
+            else:
+                return custom_color_picker()
         elif choice == "2":
             picked = game.get_menu_entry(
                 "graphics_models", utf8_picker("graphics_models")
@@ -259,9 +310,13 @@ def create_wizard():
         print("Now we need a model. Default value: " + new_object.model)
         input('Hit "Enter" when you are ready to choose a model.')
         chosen_model = model_picker()
-        new_object.sprixel = gfx_core.Sprixel(chosen_model)
-        # also sets new_objects model, for backward compatibility
-        new_object.model = chosen_model
+        if isinstance(chosen_model, gfx_core.Sprixel):
+            new_object.sprixel = chosen_model
+            # also sets new_objects model, for backward compatibility
+            new_object.model = str(chosen_model)
+        else:
+            new_object.sprixel = gfx_core.Sprixel(chosen_model)
+            new_object.model = chosen_model
 
         game.clear_screen()
         print(
@@ -553,17 +608,25 @@ def create_wizard():
                 new_object = board_items.Wall()
                 new_object.name = str(uuid.uuid1())
                 chosen_model = model_picker()
-                new_object.sprixel = gfx_core.Sprixel(chosen_model)
-                # also sets new_objects model, for backward compatibility
-                new_object.model = chosen_model
+                if isinstance(chosen_model, gfx_core.Sprixel):
+                    new_object.sprixel = chosen_model
+                    # also sets new_objects model, for backward compatibility
+                    new_object.model = str(chosen_model)
+                else:
+                    new_object.sprixel = gfx_core.Sprixel(chosen_model)
+                    new_object.model = chosen_model
                 break
             elif key == "2":
                 new_object = board_items.Door()
                 new_object.name = str(uuid.uuid1())
                 chosen_model = model_picker()
-                new_object.sprixel = gfx_core.Sprixel(chosen_model)
-                # also sets new_objects model, for backward compatibility
-                new_object.model = chosen_model
+                if isinstance(chosen_model, gfx_core.Sprixel):
+                    new_object.sprixel = chosen_model
+                    # also sets new_objects model, for backward compatibility
+                    new_object.model = str(chosen_model)
+                else:
+                    new_object.sprixel = gfx_core.Sprixel(chosen_model)
+                    new_object.model = chosen_model
                 break
             elif key == "3":
                 new_object = board_items.Treasure()
@@ -585,9 +648,13 @@ def create_wizard():
                 print("Now we need a model. Default value: " + new_object.model)
                 input('Hit "Enter" when you are ready to choose a model.')
                 chosen_model = model_picker()
-                new_object.sprixel = gfx_core.Sprixel(chosen_model)
-                # also sets new_objects model, for backward compatibility
-                new_object.model = chosen_model
+                if isinstance(chosen_model, gfx_core.Sprixel):
+                    new_object.sprixel = chosen_model
+                    # also sets new_objects model, for backward compatibility
+                    new_object.model = str(chosen_model)
+                else:
+                    new_object.sprixel = gfx_core.Sprixel(chosen_model)
+                    new_object.model = chosen_model
                 break
             elif key == "4" or key == "5":
                 if key == "4":
@@ -613,9 +680,13 @@ def create_wizard():
                 print("Now we need a model. Default value: " + new_object.model)
                 input('Hit "Enter" when you are ready to choose a model.')
                 chosen_model = model_picker()
-                new_object.sprixel = gfx_core.Sprixel(chosen_model)
-                # also sets new_objects model, for backward compatibility
-                new_object.model = chosen_model
+                if isinstance(chosen_model, gfx_core.Sprixel):
+                    new_object.sprixel = chosen_model
+                    # also sets new_objects model, for backward compatibility
+                    new_object.model = str(chosen_model)
+                else:
+                    new_object.sprixel = gfx_core.Sprixel(chosen_model)
+                    new_object.model = chosen_model
                 print(
                     "Is this object pickable? (can it be picked up " "by the player)?"
                 )
@@ -887,17 +958,35 @@ if len(game.object_library) > 0:
             game.config("settings")["object_library"].append(i)
 
 # Build the menus
-i = 0
+i = 1
 # WARNING: This might break!!!!
+# for sp in dir(graphics):
+#     if sp.endswith("_SQUARE") or sp.endswith("_RECT"):
+#         game.add_menu_entry(
+#             "graphics_utils",
+#             str(i),
+#             '"' + getattr(graphics, sp) + '"',
+#             getattr(graphics, sp),
+#         )
+#         i += 1
+
+# First element is for custom color
+game.add_menu_entry("graphics_utils", "0", "Custom color")
+# I don't know if I should be proud or ashamed of that...
 for sp in dir(graphics):
     if sp.endswith("_SQUARE") or sp.endswith("_RECT"):
-        game.add_menu_entry(
-            "graphics_utils",
-            str(i),
-            '"' + getattr(graphics, sp) + '"',
-            getattr(graphics, sp),
-        )
-        i += 1
+        f_name = sp.lower()
+        if hasattr(gfx_core.Sprixel, f_name) and callable(
+            getattr(gfx_core.Sprixel, f_name)
+        ):
+            fct = getattr(gfx_core.Sprixel, f_name)
+            game.add_menu_entry(
+                "graphics_utils",
+                str(i),
+                f'"{fct()}"',
+                fct(),
+            )
+            i += 1
 
 # WARNING: This might/will break!!!!
 i = 0
@@ -1144,19 +1233,22 @@ while True:
             if nw >= game.current_board().size[0]:
                 old_value = game.current_board().size[0]
                 game.current_board().size[0] = nw
-                for x in range(0, game.current_board().size[1], 1):
-                    for y in range(old_value, game.current_board().size[0], 1):
-                        game.current_board()._matrix[x].append(
-                            board_items.BoardItemVoid(
-                                model=game.current_board().ui_board_void_cell
-                            )
-                        )
-                        game.current_board()._overlapped_matrix[x].append(
-                            board_items.BoardItemVoid(
-                                model=game.current_board().ui_board_void_cell
-                            )
-                        )
-                        is_modified = True
+                ext = np.full(
+                    (
+                        game.current_board().size[1],
+                        game.current_board().size[0] - old_value,
+                    ),
+                    board_items.BoardItemVoid(
+                        model=game.current_board().ui_board_void_cell
+                    ),
+                )
+                game.current_board()._matrix = np.append(
+                    game.current_board()._matrix, ext, 1
+                )
+                game.current_board()._overlapped_matrix = np.append(
+                    game.current_board()._overlapped_matrix, ext, 1
+                )
+                is_modified = True
 
         elif key == "2":
             game.clear_screen()
@@ -1165,18 +1257,22 @@ while True:
                 old_value = game.current_board().size[1]
                 game.current_board().size[1] = nw
                 # TODO: We should use list completion here
-                for x in range(old_value, nw, 1):
-                    new_array = []
-                    for y in range(0, game.current_board().size[0], 1):
-                        new_array.append(
-                            board_items.BoardItemVoid(
-                                model=game.current_board().ui_board_void_cell
-                            )
-                        )
-                    game.current_board()._matrix.append(new_array)
-                    # TODO: Need to test side effects
-                    game.current_board()._overlapped_matrix.append(deepcopy(new_array))
-                    is_modified = True
+                ext = np.full(
+                    (
+                        game.current_board().size[1] - old_value,
+                        game.current_board().size[0],
+                    ),
+                    board_items.BoardItemVoid(
+                        model=game.current_board().ui_board_void_cell
+                    ),
+                )
+                game.current_board()._matrix = np.append(
+                    game.current_board()._matrix, ext, 0
+                )
+                game.current_board()._overlapped_matrix = np.append(
+                    game.current_board()._overlapped_matrix, ext, 0
+                )
+                is_modified = True
 
         elif key == "3":
             game.clear_screen()

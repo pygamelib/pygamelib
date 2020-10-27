@@ -7,6 +7,8 @@ import pygamelib.base as base
 import random
 import uuid
 
+__docformat__ = "restructuredtext"
+
 
 class BaseParticle(board_items.Movable):
     """
@@ -17,7 +19,7 @@ class BaseParticle(board_items.Movable):
     """
 
     def __init__(self, **kwargs):
-        board_items.Movable.__init__(self, **kwargs)
+        super().__init__(**kwargs)
         self.size = [1, 1]
         self.name = str(uuid.uuid4())
         self.type = "base_particle"

@@ -1,3 +1,4 @@
+__docformat__ = "restructuredtext"
 """This module contains the base classes for simple and advanced actuators.
 These classes are the base contract for actuators.
 If you wish to create your own one, you need to inheritate from one of these base class.
@@ -23,6 +24,7 @@ from pygamelib import base
 from pygamelib import constants
 import random
 import collections
+from queue import PriorityQueue
 
 
 class Actuator:
@@ -104,7 +106,7 @@ class Behavioral(Actuator):
         The constructor simply construct an Actuator. It takes on positional paraneter:
         the parent object.
         """
-        Actuator.__init__(self, parent)
+        super().__init__(parent)
 
     def next_action(self):
         """
@@ -333,11 +335,18 @@ class PathFinder(Behavioral):
         method is going to circle between the waypoints
         (when the last is visited, go back to the first)
     :type circle_waypoints: bool
+    :param algorithm: ALGO_BFS - BFS, ALGO_ASTAR - AStar
+    :type algorithm: constant
 
     """
 
     def __init__(
-        self, game=None, actuated_object=None, circle_waypoints=True, parent=None
+        self,
+        game=None,
+        actuated_object=None,
+        circle_waypoints=True,
+        parent=None,
+        algorithm=constants.ALGO_BFS,
     ):
         if actuated_object is not None and parent is None:
             self.actuated_object = actuated_object
@@ -352,6 +361,15 @@ class PathFinder(Behavioral):
         self.waypoints = []
         self._waypoint_index = 0
         self.circle_waypoints = circle_waypoints
+        self.algorithm = algorithm
+        if type(self.algorithm) is not int or (
+            self.algorithm != constants.ALGO_BFS
+            and self.algorithm != constants.ALGO_ASTAR
+        ):
+            raise base.PglInvalidTypeException(
+                "In Actuator.PathFinder.__init__(..,algorithm) algorithm must be"
+                "either ALGO_BFS or ALGO_ASTAR."
+            )
 
     def set_destination(self, row=0, column=0):
         """Set the targeted destination.
@@ -379,9 +397,7 @@ class PathFinder(Behavioral):
         """Find a path to the destination.
 
         Destination (PathFinder.destination) has to be set beforehand.
-        This method implements a Breadth First Search algorithm
-        (`Wikipedia <https://en.wikipedia.org/wiki/Breadth-first_search>`_)
-        to find the shortest path to destination.
+
 
         Example::
 
@@ -395,6 +411,18 @@ class PathFinder(Behavioral):
 
         .. warning:: PathFinder.destination is a tuple!
             Please use PathFinder.set_destination(x,y) to avoid problems.
+
+        Path Finding Algorithm Description:
+
+        Breadth First Search:
+         This method implements a Breadth First Search algorithm
+        (`Wikipedia <https://en.wikipedia.org/wiki/Breadth-first_search>`_)
+        to find the shortest path to destination.
+
+        A* Search:
+        This method implements a A* Search algorithm
+        (`Wikipedia <https://en.wikipedia.org/wiki/A*_search_algorithm>`_)
+        to find the shortest path to destination.
 
         """
         if self.actuated_object is None:
@@ -413,7 +441,12 @@ class PathFinder(Behavioral):
                 "destination is not defined",
                 "PathFinder.destination has to be defined.",
             )
+        if self.algorithm == constants.ALGO_BFS:
+            return self.__find_path_bfs()
 
+        return self.__find_path_astar()
+
+    def __find_path_bfs(self):
         queue = collections.deque(
             [[(self.actuated_object.pos[0], self.actuated_object.pos[1])]]
         )
@@ -435,6 +468,52 @@ class PathFinder(Behavioral):
                     and (r, c) not in seen
                 ):
                     queue.append(path + [(r, c)])
+                    seen.add((r, c))
+        return []
+
+    def __find_path_astar(self):
+
+        queue = PriorityQueue()
+
+        # queue stores a tuple with values:
+        # h - heuristic value = depth + manhattan distance from current node to
+        # destination
+        # type(h) = int
+        # path - path to reach current node from start node
+        # type(path) = list
+        # For each node, depth = len(path)
+
+        initial_h = abs(self.actuated_object.pos[0] - self.destination[0]) + abs(
+            self.actuated_object.pos[1] - self.destination[1]
+        )
+
+        queue.put(
+            (initial_h, [(self.actuated_object.pos[0], self.actuated_object.pos[1])])
+        )
+        seen = set()
+        while not queue.empty():
+            h_val, path = queue.get()
+            x, y = path[-1]
+            if (x, y) == self.destination:
+                self._current_path = path
+                # We return only a copy of the path as we need to keep the
+                # real one untouched for our own needs.
+                return path.copy()
+
+            # r = row c = column
+            for r, c in ((x + 1, y), (x - 1, y), (x, y + 1), (x, y - 1)):
+                h_val = (
+                    len(path)
+                    + abs(self.destination[0] - r)
+                    + abs(self.destination[1] - c)
+                )
+                if (
+                    0 <= c < self.game.current_board().size[0]
+                    and 0 <= r < self.game.current_board().size[1]
+                    and self.game.current_board().item(r, c).overlappable()
+                    and ((r, c) not in seen)
+                ):
+                    queue.put((h_val, path + [(r, c)]))
                     seen.add((r, c))
         return []
 
@@ -675,7 +754,7 @@ class PathFinder(Behavioral):
         return self.waypoints[self._waypoint_index]
 
     def remove_waypoint(self, row, column):
-        """ Remove a waypoint from the stack.
+        """Remove a waypoint from the stack.
 
         This method removes the first occurrence of a waypoint in the stack.
 

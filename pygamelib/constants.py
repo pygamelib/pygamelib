@@ -1,3 +1,4 @@
+__docformat__ = "restructuredtext"
 """
 Accessible constants are the following:
 
@@ -81,3 +82,7 @@ STOPPED = 40000011
 NO_PLAYER = 90000001
 MODE_RT = 90000002
 MODE_TBT = 90000003
+
+# Path Finding Algorithm Constants
+ALGO_BFS = 90000100
+ALGO_ASTAR = 90000101

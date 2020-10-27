@@ -1,3 +1,4 @@
+__docformat__ = "restructuredtext"
 """This module contains the basic board items classes.
 
 .. autosummary::
@@ -34,7 +35,7 @@ from pygamelib.gfx import core
 from pygamelib import actuators
 
 
-class BoardItem:
+class BoardItem(object):
     """
     Base class for any item that will be placed on a Board.
 
@@ -61,6 +62,7 @@ class BoardItem:
     """
 
     def __init__(self, **kwargs):
+        super().__init__()
         self.name = "Board item"
         self.type = "item"
         self.pos = [None, None]
@@ -297,7 +299,7 @@ class BoardItemVoid(BoardItem):
     """
 
     def __init__(self, **kwargs):
-        BoardItem.__init__(self, **kwargs)
+        super().__init__(**kwargs)
         self.name = "void_cell"
 
     def pickable(self):
@@ -547,7 +549,7 @@ class Movable(BoardItem):
     """
 
     def __init__(self, **kwargs):
-        BoardItem.__init__(self, **kwargs)
+        super().__init__(**kwargs)
         # We probably need the item to store its own velocity at some point
         # self.velocity = base.Vector2d(0,0)
         # Set default values
@@ -717,8 +719,7 @@ class Projectile(Movable):
                 "incorrect_range_step",
                 "range must be a factor of step" " in Projectile",
             )
-        Movable.__init__(
-            self,
+        super().__init__(
             model=model,
             step=step,
             name=name,
@@ -981,7 +982,7 @@ class Immovable(BoardItem):
     """
 
     def __init__(self, **kwargs):
-        BoardItem.__init__(self, **kwargs)
+        super().__init__(**kwargs)
         if "inventory_space" not in kwargs.keys():
             self._inventory_space = 0
         else:
@@ -1056,7 +1057,7 @@ class Actionable(Immovable):
             self.perm = constants.PLAYER_AUTHORIZED
         else:
             self.perm = kwargs["perm"]
-        Immovable.__init__(self, **kwargs)
+        super().__init__(**kwargs)
 
     def activate(self):
         """
@@ -1070,7 +1071,7 @@ class Actionable(Immovable):
             self.action(self.action_parameters)
 
 
-class Character:
+class Character(object):
     """A base class for a character (playable or not)
 
     :param agility: Represent the agility of the character
@@ -1103,6 +1104,7 @@ class Character:
     """
 
     def __init__(self, **kwargs):
+        super().__init__()
         self.max_hp = None
         self.hp = None
         self.max_mp = None
@@ -1158,8 +1160,7 @@ class Player(Movable, Character):
             kwargs["attack_power"] = 10
         if "movement_speed" not in kwargs.keys():
             kwargs["movement_speed"] = 0.1
-        Movable.__init__(self, **kwargs)
-        Character.__init__(self, **kwargs)
+        super().__init__(**kwargs)
         if "inventory" in kwargs.keys():
             self.inventory = kwargs["inventory"]
         else:
@@ -1206,8 +1207,7 @@ class ComplexPlayer(Player, BoardComplexItem):
     """
 
     def __init__(self, **kwargs):
-        Player.__init__(self, **kwargs)
-        BoardComplexItem.__init__(self, **kwargs)
+        super().__init__(**kwargs)
 
 
 class NPC(Movable, Character):
@@ -1253,9 +1253,8 @@ class NPC(Movable, Character):
         if "attack_power" not in kwargs.keys():
             kwargs["attack_power"] = 5
         if "movement_speed" not in kwargs.keys():
-            kwargs["movement_speed"] = 0.25
-        Movable.__init__(self, **kwargs)
-        Character.__init__(self, **kwargs)
+            kwargs["movement_speed"] = 0.2
+        super().__init__(**kwargs)
         if "actuator" not in kwargs.keys():
             self.actuator = None
         else:
@@ -1340,8 +1339,7 @@ class ComplexNPC(NPC, BoardComplexItem):
     """
 
     def __init__(self, **kwargs):
-        NPC.__init__(self, **kwargs)
-        BoardComplexItem.__init__(self, **kwargs)
+        super().__init__(**kwargs)
 
 
 class TextItem(BoardComplexItem):
@@ -1373,7 +1371,7 @@ class TextItem(BoardComplexItem):
     """
 
     def __init__(self, text=None, **kwargs):
-        BoardComplexItem.__init__(self, **kwargs)
+        super().__init__(**kwargs)
         if text is not None and not isinstance(text, base.Text) and type(text) is str:
             self._text = base.Text(text)
         elif text is not None and not isinstance(text, base.Text):
@@ -1447,7 +1445,7 @@ class Wall(Immovable):
             kwargs["name"] = "wall"
         if "size" not in kwargs.keys():
             kwargs["size"] = 1
-        Immovable.__init__(self, **kwargs)
+        super().__init__(**kwargs)
 
     def pickable(self):
         """ This represent the capacity for a :class:`~pygamelib.board_items.BoardItem` to
@@ -1509,8 +1507,7 @@ class ComplexWall(Wall, BoardComplexItem):
     """
 
     def __init__(self, **kwargs):
-        Wall.__init__(self, **kwargs)
-        BoardComplexItem.__init__(self, **kwargs)
+        super().__init__(**kwargs)
 
 
 class GenericStructure(Immovable):
@@ -1553,7 +1550,6 @@ class GenericStructure(Immovable):
             kwargs["model"] = "#"
         if "name" not in kwargs.keys():
             kwargs["name"] = "structure"
-        Immovable.__init__(self, **kwargs)
         if "value" not in kwargs.keys():
             self.value = 0
         else:
@@ -1571,6 +1567,7 @@ class GenericStructure(Immovable):
             self.__is_restorable = kwargs["restorable"]
         else:
             self.__is_restorable = False
+        super().__init__(**kwargs)
 
     def pickable(self):
         """This represent the capacity for a BoardItem to be picked-up by player or NPC.
@@ -1671,8 +1668,7 @@ class GenericActionableStructure(GenericStructure, Actionable):
     """
 
     def __init__(self, **kwargs):
-        GenericStructure.__init__(self, **kwargs)
-        Actionable.__init__(self, **kwargs)
+        super().__init__(**kwargs)
 
 
 class Treasure(Immovable):
@@ -1707,7 +1703,7 @@ class Treasure(Immovable):
     def __init__(self, **kwargs):
         if "model" not in kwargs.keys():
             kwargs["model"] = "¤"
-        Immovable.__init__(self, **kwargs)
+        super().__init__(**kwargs)
         if "value" not in kwargs.keys():
             self.value = 10
         else:
@@ -1771,8 +1767,7 @@ class ComplexTreasure(Treasure, BoardComplexItem):
     """
 
     def __init__(self, **kwargs):
-        Treasure.__init__(self, **kwargs)
-        BoardComplexItem.__init__(self, **kwargs)
+        super().__init__(**kwargs)
 
 
 class Door(GenericStructure):
@@ -1814,7 +1809,7 @@ class Door(GenericStructure):
     def __init__(self, **kwargs):
         if "model" not in kwargs.keys():
             kwargs["model"] = "]"
-        Immovable.__init__(self, **kwargs)
+        super().__init__(**kwargs)
         if "value" not in kwargs.keys():
             self.value = 0
         else:
@@ -1866,8 +1861,7 @@ class ComplexDoor(Door, BoardComplexItem):
     """
 
     def __init__(self, **kwargs):
-        Door.__init__(self, **kwargs)
-        BoardComplexItem.__init__(self, **kwargs)
+        super().__init__(**kwargs)
 
 
 class GenericStructureComplexComponent(GenericStructure, BoardItemComplexComponent):
@@ -1876,8 +1870,7 @@ class GenericStructureComplexComponent(GenericStructure, BoardItemComplexCompone
     """
 
     def __init__(self, **kwargs):
-        GenericStructure.__init__(self, **kwargs)
-        BoardItemComplexComponent.__init__(self, **kwargs)
+        super().__init__(**kwargs)
 
 
 class Tile(GenericStructure, BoardComplexItem):
@@ -1921,9 +1914,8 @@ class Tile(GenericStructure, BoardComplexItem):
             kwargs["restorable"] = True
         if "pickable" not in kwargs:
             kwargs["pickable"] = False
-        GenericStructure.__init__(self, **kwargs)
+        super().__init__(**kwargs)
         # kwargs["base_item_type"] = Door
-        BoardComplexItem.__init__(self, **kwargs)
 
     def can_move(self):
         """A Tile cannot move.

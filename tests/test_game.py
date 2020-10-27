@@ -2,6 +2,7 @@ from pygamelib import engine
 from pygamelib import base
 from pygamelib import board_items
 from pygamelib import constants
+from pygamelib.gfx import core
 import unittest
 
 # Test cases for all classes in pygamelib.gfx.core except for Animation.
@@ -245,6 +246,15 @@ class TestBase(unittest.TestCase):
             )
         )
         self.assertIsNone(
+            b.place_item(
+                board_items.Door(
+                    value=10, inventory_space=1, sprixel=core.Sprixel("#")
+                ),
+                2,
+                2,
+            )
+        )
+        self.assertIsNone(
             b.place_item(board_items.Treasure(value=10, inventory_space=1), 1, 6)
         )
         with self.assertRaises(base.PglInvalidTypeException):
@@ -272,6 +282,13 @@ class TestBase(unittest.TestCase):
         self.assertEqual(g._string_to_constant("DRDOWN"), constants.DRDOWN)
         self.assertEqual(g._string_to_constant("DLUP"), constants.DLUP)
         self.assertEqual(g._string_to_constant("DLDOWN"), constants.DLDOWN)
+
+    def test_singleton(self):
+        mygame = engine.Game.instance()
+        mygame.test_singleton = True
+        self.assertTrue(engine.Game.instance(), 'test_singleton')
+        self.assertTrue(engine.Game.instance().test_singleton)
+        self.assertTrue(mygame is engine.Game.instance())
 
 
 if __name__ == "__main__":
