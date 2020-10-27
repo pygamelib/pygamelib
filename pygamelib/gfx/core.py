@@ -342,14 +342,16 @@ class Sprixel(object):
     def __repr__(self):
         t = base.Console.instance()
         bgc = fgc = ""
-        print(
-            f"Text.__repr__(): bg_color={self.bg_color} with type={type(self.bg_color)}"
-        )
+        # print(
+        #     f"Sprixel.__repr__(): bg_color={self.bg_color} "
+        #     f"with type={type(self.bg_color)}"
+        # )
         if self.bg_color is not None and isinstance(self.bg_color, Color):
             bgc = t.on_color_rgb(self.bg_color.r, self.bg_color.g, self.bg_color.b)
-        print(
-            f"Text.__repr__(): fg_color={self.fg_color} with type={type(self.fg_color)}"
-        )
+        # print(
+        #     f"Sprixel.__repr__(): fg_color={self.fg_color} "
+        #     f"with type={type(self.fg_color)}"
+        # )
         if self.fg_color is not None and isinstance(self.fg_color, Color):
             fgc = t.color_rgb(self.fg_color.r, self.fg_color.g, self.fg_color.b)
         return f"{bgc}{fgc}{self.model}\x1b[0m"
