@@ -150,8 +150,10 @@ class RandomActuator(Actuator):
 
             randomactuator.next_move()
         """
-        if self.state == constants.RUNNING:
+        if self.state == constants.RUNNING and self.moveset:
             return random.choice(self.moveset)
+        else:
+            return constants.NO_DIR
 
 
 class PathActuator(Actuator):
