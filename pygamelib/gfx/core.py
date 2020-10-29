@@ -294,12 +294,16 @@ class Sprixel(object):
     In that case, as we can really achieve transparency in the console, the sprixel will
     take the background color of whatever it is overlapping.
 
+    .. Important:: BREAKING CHANGE: in version 1.3.0 background and foreground colors
+       use the new :class:`Color` object. Therefor, Sprixel does not accept ANSI
+       sequences anymore for the bg_color and fg_color parameters.
+
     :param model: The model, it can be any string. Preferrably a single character.
     :type model: str
-    :param bg_color: An ANSI escape sequence to configure the background color.
-    :type bg_color: str
-    :param fg_color: An ANSI escape sequence to configure the foreground color.
-    :type fg_color: str
+    :param bg_color: A Color object to configure the background color.
+    :type bg_color: :class:`Color`
+    :param fg_color: A Color object to configure the foreground color.
+    :type fg_color: :class:`Color`
     :param is_bg_transparent: Set the background of the Sprixel to be transparent. It
        tells the engine to replace the background of the Sprixel by the background color
        of the overlapped sprixel.
