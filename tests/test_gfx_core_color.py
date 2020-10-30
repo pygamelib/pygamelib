@@ -78,6 +78,21 @@ class TestBase(unittest.TestCase):
         with self.assertRaises(gfx_core.base.PglInvalidTypeException):
             gfx_core.Color.load({"red": 25, "green": "nope"})
 
+    def test_color_randomize(self):
+        # Let's keep this simple: most often than not,
+        # the randomized value should be different from the default one
+        # and the previous one
+        default_color = gfx_core.Color()
+        c = gfx_core.Color()
+        criteria_match_count = 0
+        total_rolls = 100
+        for i in range(total_rolls):
+            previous_color = gfx_core.Color(c.r, c.g, c.b)
+            c.randomize()
+            if c != default_color and c != previous_color:
+                criteria_match_count += 1
+        self.assertGreater(criteria_match_count, total_rolls // 2)
+
 
 if __name__ == "__main__":
     unittest.main()
