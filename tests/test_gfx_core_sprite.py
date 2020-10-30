@@ -214,6 +214,12 @@ class TestBase(unittest.TestCase):
             gfx_core.SpriteCollection.load({"sprites_count": 2, "sprites": {}})
             self.assertEqual(e.error, "corrupted_sprite_data")
 
+    def test_color(self):
+        c = gfx_core.Color(1, 2, 3)
+        self.assertEqual(c.r, 1)
+        self.assertEqual(c.g, 2)
+        self.assertEqual(c.b, 3)
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -1,4 +1,5 @@
 import pygamelib.base as pgl_base
+import pygamelib.gfx.core as core
 import unittest
 
 
@@ -11,8 +12,8 @@ class TestBase(unittest.TestCase):
         self.vectors.append(pgl_base.Vector2D(2, 2))
         self.text = pgl_base.Text(
             "Test case",
-            pgl_base.Fore.WHITE,
-            pgl_base.Back.YELLOW,
+            core.Color(0, 0, 0),
+            core.Color(255, 255, 0),
             pgl_base.Style.BRIGHT,
         )
         self.math = pgl_base.Math()
@@ -110,42 +111,62 @@ class TestBase(unittest.TestCase):
         self.assertEqual(v, pgl_base.Vector2D(1, -1))
 
     def test_text(self):
-        self.assertEqual(
-            self.text.__repr__(), "\x1b[43m\x1b[37m\x1b[1mTest case\x1b[0m"
+        text = pgl_base.Text(
+            "Test case",
+            core.Color(0, 0, 0),
+            core.Color(255, 255, 0),
+            pgl_base.Style.BRIGHT,
         )
-        self.assertIn("TEST", self.text.black("TEST"))
-        self.assertIn("30m", self.text.black("TEST"))
-        self.assertIn("TEST", self.text.red("TEST"))
-        self.assertIn("31m", self.text.red("TEST"))
-        self.assertIn("TEST", self.text.green("TEST"))
-        self.assertIn("32m", self.text.green("TEST"))
-        self.assertIn("TEST", self.text.yellow("TEST"))
-        self.assertIn("33m", self.text.yellow("TEST"))
-        self.assertIn("TEST", self.text.blue("TEST"))
-        self.assertIn("34m", self.text.blue_bright("TEST"))
-        self.assertIn("TEST", self.text.red_bright("TEST"))
-        self.assertIn("TEST", self.text.green_bright("TEST"))
-        self.assertIn("TEST", self.text.yellow_bright("TEST"))
-        self.assertIn("TEST", self.text.magenta_bright("TEST"))
-        self.assertIn("TEST", self.text.cyan_bright("TEST"))
-        self.assertIn("TEST", self.text.white_bright("TEST"))
-        self.assertIn("TEST", self.text.black_bright("TEST"))
-        self.assertIn("TEST", self.text.magenta("TEST"))
-        self.assertIn("TEST", self.text.cyan("TEST"))
-        self.assertIn("TEST", self.text.white("TEST"))
-        self.assertIn("TEST", self.text.red_dim("TEST"))
-        self.assertIn("TEST", self.text.blue_dim("TEST"))
-        self.assertIn("TEST", self.text.green_dim("TEST"))
-        self.assertIn("TEST", self.text.yellow_dim("TEST"))
-        self.assertIn("TEST", self.text.magenta_dim("TEST"))
-        self.assertIn("TEST", self.text.cyan_dim("TEST"))
-        self.assertIn("TEST", self.text.white_dim("TEST"))
-        self.assertIn("TEST", self.text.black_dim("TEST"))
-        self.assertIsNone(self.text.warn("test"))
-        self.assertIsNone(self.text.fatal("test"))
-        self.assertIsNone(self.text.info("test"))
-        self.assertIsNone(self.text.debug("test"))
-        self.assertIsNone(self.text.print_white_on_red("test"))
+        t = pgl_base.Console.instance()
+        self.assertEqual(
+            text.__repr__(),
+            "".join(
+                [
+                    t.on_color_rgb(255, 255, 0),
+                    t.color_rgb(0, 0, 0),
+                    pgl_base.Style.BRIGHT,
+                    "Test case",
+                    "\x1b[0m",
+                ]
+            ),
+        )
+        self.assertIn("TEST", text.black("TEST"))
+        self.assertIn("30m", text.black("TEST"))
+        self.assertIn("TEST", text.red("TEST"))
+        self.assertIn("31m", text.red("TEST"))
+        self.assertIn("TEST", text.green("TEST"))
+        self.assertIn("32m", text.green("TEST"))
+        self.assertIn("TEST", text.yellow("TEST"))
+        self.assertIn("33m", text.yellow("TEST"))
+        self.assertIn("TEST", text.blue("TEST"))
+        self.assertIn("34m", text.blue_bright("TEST"))
+        self.assertIn("TEST", text.red_bright("TEST"))
+        self.assertIn("TEST", text.green_bright("TEST"))
+        self.assertIn("TEST", text.yellow_bright("TEST"))
+        self.assertIn("TEST", text.magenta_bright("TEST"))
+        self.assertIn("TEST", text.cyan_bright("TEST"))
+        self.assertIn("TEST", text.white_bright("TEST"))
+        self.assertIn("TEST", text.black_bright("TEST"))
+        self.assertIn("TEST", text.magenta("TEST"))
+        self.assertIn("TEST", text.cyan("TEST"))
+        self.assertIn("TEST", text.white("TEST"))
+        self.assertIn("TEST", text.red_dim("TEST"))
+        self.assertIn("TEST", text.blue_dim("TEST"))
+        self.assertIn("TEST", text.green_dim("TEST"))
+        self.assertIn("TEST", text.yellow_dim("TEST"))
+        self.assertIn("TEST", text.magenta_dim("TEST"))
+        self.assertIn("TEST", text.cyan_dim("TEST"))
+        self.assertIn("TEST", text.white_dim("TEST"))
+        self.assertIn("TEST", text.black_dim("TEST"))
+        self.assertIsNone(text.warn("test"))
+        self.assertIsNone(text.fatal("test"))
+        self.assertIsNone(text.info("test"))
+        self.assertIsNone(text.debug("test"))
+        self.assertIsNone(text.print_white_on_red("test"))
+        with self.assertRaises(pgl_base.PglInvalidTypeException):
+            pgl_base.Text("breaking", "pink")
+        with self.assertRaises(pgl_base.PglInvalidTypeException):
+            pgl_base.Text("breaking", None, "pink")
 
     def test_math_distance(self):
         self.assertEqual(self.math.distance(0, 0, 0, 0), 0)

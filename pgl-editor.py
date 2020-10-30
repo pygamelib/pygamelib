@@ -115,7 +115,6 @@ def color_picker():
 def custom_color_picker():
     # Custom color chooser.
     global game
-    r = g = b = 128
     step = 1
     base_char = ""
     print("What type of color block do you want:\n1 - Rectangle\n2 - Square")
@@ -124,37 +123,37 @@ def custom_color_picker():
         base_char = " "
     else:
         base_char = "  "
-    spr = gfx_core.Sprixel(base_char, game.terminal.on_color_rgb(r, g, b))
+    spr = gfx_core.Sprixel(base_char, gfx_core.Color(128, 128, 128))
     key = None
     while key != engine.key.ENTER:
         game.clear_screen()
         print(game.terminal.center("Build your color\n"))
-        spr.bg_color = game.terminal.on_color_rgb(r, g, b)
         print(
-            f"{base.Text.red('Red')}: {r} {base.Text.green_bright('Green')}: {g} "
-            f"{base.Text.blue_bright('Blue')}: {b}\n\nYour color: {spr}\n"
+            f"{base.Text.red('Red')}: {spr.bg_color.r} "
+            f"{base.Text.green_bright('Green')}: {spr.bg_color.g} "
+            f"{base.Text.blue_bright('Blue')}: {spr.bg_color.b}\n\nYour color: {spr}\n"
         )
         print("4/1 - Increase/decrease the red value")
         print("5/2 - Increase/decrease the green value")
         print("6/3 - Increase/decrease the blue value")
         print(f"+/- - Increase/decrease the increment step (current: {step})")
-        if key == "1" and r >= step:
-            r -= step
-        elif key == "4" and r + step <= 255:
-            r += step
-        if key == "2" and g >= step:
-            g -= step
-        elif key == "5" and g + step <= 255:
-            g += step
-        if key == "3" and b >= step:
-            b -= step
-        elif key == "6" and b + step <= 255:
-            b += step
+        key = game.get_key()
+        if key == "1" and spr.bg_color.r >= step:
+            spr.bg_color.r -= step
+        elif key == "4" and spr.bg_color.r + step <= 255:
+            spr.bg_color.r += step
+        if key == "2" and spr.bg_color.g >= step:
+            spr.bg_color.g -= step
+        elif key == "5" and spr.bg_color.g + step <= 255:
+            spr.bg_color.g += step
+        if key == "3" and spr.bg_color.b >= step:
+            spr.bg_color.b -= step
+        elif key == "6" and spr.bg_color.b + step <= 255:
+            spr.bg_color.b += step
         if key == "-":
             step -= 1
         elif key == "+":
             step += 1
-        key = game.get_key()
     return spr
 
 
@@ -981,10 +980,7 @@ for sp in dir(graphics):
         ):
             fct = getattr(gfx_core.Sprixel, f_name)
             game.add_menu_entry(
-                "graphics_utils",
-                str(i),
-                f'"{fct()}"',
-                fct(),
+                "graphics_utils", str(i), f'"{fct()}"', fct(),
             )
             i += 1
 

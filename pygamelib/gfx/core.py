@@ -1,22 +1,285 @@
 __docformat__ = "restructuredtext"
+
 """This module contains the core classes for the "graphic" system.
 
 .. autosummary::
    :toctree: .
 
+   Color
    Sprixel
    Sprite
    SpriteCollection
    Animation
 """
-from pygamelib import board_items
 from pygamelib import base
 from pygamelib import constants
 from pygamelib.assets import graphics
+from pygamelib.functions import pgl_isinstance
 import time
 from collections import UserDict
 from uuid import uuid4
 import json
+import re
+
+
+class Color(object):
+    """
+    .. versionadded:: 1.3.0
+
+    A color represented by red, green and blue (RGB) components.
+    Values are integer between 0 and 255 (both included).
+
+    :param r: The red component of the color.
+    :type r: int
+    :param g: The green component of the color.
+    :type g: int
+    :param b: The blue component of the color.
+    :type b: int
+
+    Example::
+
+        # color is blue
+        color = Color(0, 0, 255)
+        # and now color is pink
+        color.r = 255
+    """
+
+    def __init__(self, r=0, g=0, b=0):
+        super().__init__()
+        if type(r) is int:
+            self.__r = r
+        else:
+            raise base.PglInvalidTypeException(
+                "Color(r, g, b): all parameters must be integers."
+            )
+        if type(g) is int:
+            self.__g = g
+        else:
+            raise base.PglInvalidTypeException(
+                "Color(r, g, b): all parameters must be integers."
+            )
+        if type(b) is int:
+            self.__b = b
+        else:
+            raise base.PglInvalidTypeException(
+                "Color(r, g, b): all parameters must be integers."
+            )
+
+    @property
+    def r(self):
+        """
+        The r property controls the intensity of the red color. You can set it to an
+        integer between 0 and 255 (both included).
+
+        Example::
+
+           color = Color(128, 128, 0)
+           print(f"Value for r is {color.r}")
+           color.r = 255
+           print(f"New value for r is {color.r}")
+        """
+        return self.__r
+
+    @r.setter
+    def r(self, val):
+        if type(val) is int and val >= 0 and val <= 255:
+            self.__r = val
+        else:
+            raise base.PglInvalidTypeException(
+                "The value for red needs to be an integer between 0 and 255."
+            )
+
+    @property
+    def g(self):
+        """
+        The g property controls the intensity of the green color. You can set it to an
+        integer between 0 and 255 (both included).
+
+        Example::
+
+           color = Color(128, 128, 0)
+           print(f"Value for g is {color.g}")
+           color.g = 255
+           print(f"New value for g is {color.g}")
+        """
+        return self.__g
+
+    @g.setter
+    def g(self, val):
+        if type(val) is int and val >= 0 and val <= 255:
+            self.__g = val
+        else:
+            raise base.PglInvalidTypeException(
+                "The value for green needs to be an integer between 0 and 255."
+            )
+
+    @property
+    def b(self):
+        """
+        The b property controls the intensity of the blue color. You can set it to an
+        integer between 0 and 255 (both included).
+
+        Example::
+
+           color = Color(128, 128, 0)
+           print(f"Value for b is {color.b}")
+           color.b = 255
+           print(f"New value for b is {color.b}")
+        """
+        return self.__b
+
+    @b.setter
+    def b(self, val):
+        if type(val) is int and val >= 0 and val <= 255:
+            self.__b = val
+        else:
+            raise base.PglInvalidTypeException(
+                "The value for blue needs to be an integer between 0 and 255."
+            )
+
+    @classmethod
+    def from_ansi(cls, string):
+        """Create and return a Color object based on an ANSI color string.
+
+        .. IMPORTANT:: The string must be RGB, i.e '\x1b[38;2;RED;GREEN;BLUEm' or
+           '\x1b[48;2;RED;GREEN;BLUEm' for foreground and background colors. This
+           method will return None if the color string is not RGB.
+           It is also important to understand that Color is independent from the
+           foreground of background, it is just a color. Therefor '\x1b[38;2;89;32;93m'
+           and '\x1b[48;2;89;32;93m' will both be parsed into Color(89, 32, 93).
+
+        :param string: The ANSI color string to convert.
+        :type string: str
+
+        Example::
+
+            color = Color.from_ansi()
+        """
+        if re.search("\[4[01234567]{1}m", string):
+            # Here we deal with legacy colors,
+            if "[40m" in string:
+                return cls(0, 0, 0)
+            elif "[41m" in string:
+                return cls(255, 0, 0)
+            elif "[42m" in string:
+                return cls(0, 255, 0)
+            elif "[43m" in string:
+                return cls(255, 255, 0)
+            elif "[44m" in string:
+                return cls(0, 0, 255)
+            elif "[45m" in string:
+                return cls(255, 0, 255)
+            elif "[46m" in string:
+                return cls(0, 255, 255)
+            elif "[47m" in string:
+                return cls(255, 255, 255)
+        else:
+            match = re.findall(".*\[[34]8;2;(\d+);(\d+);(\d+)m.*", string)
+            if len(match) > 0:
+                return Color(int(match[0][0]), int(match[0][1]), int(match[0][2]))
+        return None
+
+    def __eq__(self, other):
+        if self.r == other.r and self.g == other.g and self.b == other.b:
+            return True
+        return False
+
+    def __ne__(self, other):
+        return not self == other
+
+    def __repr__(self):
+        return f"Color({self.r}, {self.g}, {self.b})"
+
+    def blend(self, other_color, fraction=0.5):
+        """
+        Blend the color with another one. Fraction controls the amount of other_color
+        that is included (0 means no inclusion at all).
+
+        :param other_color: The color to blend with.
+        :type other_color: :class:`~pygamelib.gfx.core.Color`
+        :param fraction: The blending modulation factor between 0 and 1.
+        :type fraction: float
+
+        Example::
+
+            a = Color(200, 200, 200)
+            b = Color(25, 25, 25)
+            # c is going to be Color(112, 112, 112)
+            c = a.blend(b, 0.5)
+        """
+        if type(fraction) is not float or fraction < 0.0 or fraction > 1.0:
+            raise base.PglInvalidTypeException(
+                "fraction needs to be a float between 0.0 and 1.0."
+            )
+        if not isinstance(other_color, Color):
+            raise base.PglInvalidTypeException(
+                "other_color needs to be a Color object."
+            )
+        return Color(
+            int((other_color.r - self.r) * fraction + self.r),
+            int((other_color.g - self.g) * fraction + self.g),
+            int((other_color.b - self.b) * fraction + self.b),
+        )
+
+    def serialize(self):
+        """Serialize a Color into a dictionary.
+
+        :returns: The class as a  dictionary
+        :rtype: dict
+
+        Example::
+
+            json.dump( color.serialize() )
+        """
+        return {
+            "red": self.r,
+            "green": self.g,
+            "blue": self.b,
+        }
+
+    @classmethod
+    def load(cls, data):
+        """
+        Create a new Color object based on serialized data.
+
+        If data is None, None is returned.
+
+        If a color component is missing from data, it is set to 0 (see examples).
+
+        Raises an exception if the color components are not integer.
+
+        :param data: Data loaded from JSON data (deserialized).
+        :type data: dict
+        :returns: Either a Color object or None if data where empty.
+        :rtype: :class:`Color`|NoneType
+        :raise: `~pygamelib.base.PglInvalidTypeException`
+
+        Example::
+
+            # Loading from parsed JSON data
+            new_color = Color.load(json_parsed_data['default_sprixel']['fg_color'])
+
+            # Loading from incomplete data
+            color = Color.load({'red':25,'green':35})
+            # Result in the following Color object:
+            # Color(25, 35, 0)
+        """
+        if data is None or data == "":
+            return
+        elif type(data) is str and (
+            ("[38;" in data or "[48;" in data) or re.search("\[4[01234567]{1}m", data)
+        ):
+            # This is for backward compatibility with 1.2.X
+            return cls.from_ansi(data)
+        # print(f"Color.load(): data received: '{data}'")
+        for c in ["red", "green", "blue"]:
+            if c not in data:
+                data[c] = 0
+            elif type(data[c]) is not int:
+                raise base.PglInvalidTypeException(
+                    f"In Color.load(data) the {c} component is not an integer."
+                )
+        return cls(data["red"], data["green"], data["blue"])
 
 
 class Sprixel(object):
@@ -32,54 +295,63 @@ class Sprixel(object):
     In that case, as we can really achieve transparency in the console, the sprixel will
     take the background color of whatever it is overlapping.
 
+    .. Important:: BREAKING CHANGE: in version 1.3.0 background and foreground colors
+       use the new :class:`Color` object. Therefor, Sprixel does not accept ANSI
+       sequences anymore for the bg_color and fg_color parameters.
+
     :param model: The model, it can be any string. Preferrably a single character.
     :type model: str
-    :param bg_color: An ANSI escape sequence to configure the background color.
-    :type bg_color: str
-    :param fg_color: An ANSI escape sequence to configure the foreground color.
-    :type fg_color: str
-    :param is_bg_transparent:
-    :type is_bg_transparent:
+    :param bg_color: A Color object to configure the background color.
+    :type bg_color: :class:`Color`
+    :param fg_color: A Color object to configure the foreground color.
+    :type fg_color: :class:`Color`
+    :param is_bg_transparent: Set the background of the Sprixel to be transparent. It
+       tells the engine to replace the background of the Sprixel by the background color
+       of the overlapped sprixel.
+    :type is_bg_transparent: bool
 
     Example::
 
         player = Player(sprixel=Sprixel(
                                         '#',
-                                        screen.terminal.on_color_rgb(128,56,32),
-                                        screen.terminal.color_rgb(255,255,0),
+                                        Color(128,56,32),
+                                        Color(255,255,0),
                                         ))
     """
 
-    def __init__(self, model="", bg_color="", fg_color="", is_bg_transparent=None):
+    def __init__(self, model="", bg_color=None, fg_color=None, is_bg_transparent=None):
         super().__init__()
         self.model = model
-        self.bg_color = bg_color
-        self.fg_color = fg_color
-        if (
-            (type(model) is not str and "FormattingString" not in str(type(model)))
-            or (
-                type(bg_color) is not str
-                and "FormattingString" not in str(type(bg_color))
-            )
-            or (
-                type(fg_color) is not str
-                and "FormattingString" not in str(type(fg_color))
-            )
-        ):
+        if bg_color is None or isinstance(bg_color, Color):
+            self.bg_color = bg_color
+        else:
             raise base.PglInvalidTypeException(
-                "Sprixel(model, bg_color, fg_color): all 3 variables needs to be a "
-                "string or an empty string."
+                "Sprixel(model, bg_color, fg_color): bg_color needs to be a Color "
+                "object."
             )
-
-        if (bg_color is None or bg_color == "") and (
+        if fg_color is None or isinstance(fg_color, Color):
+            self.fg_color = fg_color
+        else:
+            raise base.PglInvalidTypeException(
+                "Sprixel(model, bg_color, fg_color): fg_color needs to be a Color "
+                "object."
+            )
+        self.is_bg_transparent = False
+        if type(is_bg_transparent) is bool:
+            self.is_bg_transparent = is_bg_transparent
+        elif (bg_color is None) and (
             is_bg_transparent is None or is_bg_transparent == ""
         ):
             self.is_bg_transparent = True
-        else:
-            self.is_bg_transparent = False
 
     def __repr__(self):
-        return f"{self.bg_color}{self.fg_color}{self.model}\x1b[0m"
+        t = base.Console.instance()
+        bgc = fgc = ""
+        if self.bg_color is not None and isinstance(self.bg_color, Color):
+            bgc = t.on_color_rgb(self.bg_color.r, self.bg_color.g, self.bg_color.b)
+        if self.fg_color is not None and isinstance(self.fg_color, Color):
+            fgc = t.color_rgb(self.fg_color.r, self.fg_color.g, self.fg_color.b)
+        return f"{bgc}{fgc}{self.model}\x1b[0m"
 
     def __str__(self):  # pragma: no cover
         return self.__repr__()
@@ -125,22 +397,26 @@ class Sprixel(object):
             new_sprixel.model = "▄"
             for e in colors.split("m"):
                 if "[48;" in e:
-                    new_sprixel.bg_color = f"{e}m"
+                    # new_sprixel.bg_color = f"{e}m"
+                    new_sprixel.bg_color = Color.from_ansi(f"{e}m")
                 elif "[38;" in e:
-                    new_sprixel.fg_color = f"{e}m"
+                    # new_sprixel.fg_color = f"{e}m"
+                    new_sprixel.fg_color = Color.from_ansi(f"{e}m")
         elif "[38;" in string and "▄" in string:
             (colors, end) = string.split("▄")
             new_sprixel.model = "▄"
             for e in colors.split("m"):
                 if "[38;" in e:
-                    new_sprixel.fg_color = f"{e}m"
+                    # new_sprixel.fg_color = f"{e}m"
+                    new_sprixel.fg_color = Color.from_ansi(f"{e}m")
         elif "[48;" in string and "▄" in string:
             (colors, end) = string.split("▄")
             new_sprixel.model = "▄"
             for e in colors.split("m"):
                 if "[48;" in e:
-                    new_sprixel.bg_color = f"{e}m"
-        if new_sprixel.bg_color != "":
+                    # new_sprixel.bg_color = f"{e}m"
+                    new_sprixel.bg_color = Color.from_ansi(f"{e}m")
+        if new_sprixel.bg_color is not None:
             new_sprixel.is_bg_transparent = False
         return new_sprixel
 
@@ -163,11 +439,11 @@ class Sprixel(object):
 
     @bg_color.setter
     def bg_color(self, value):
-        if type(value) is str or "FormattingString" in str(type(value)):
+        if isinstance(value, Color) or value is None:
             self.__bg_color = value
         else:
             raise base.PglInvalidTypeException(
-                f"A Sprixel.bg_color must be a string. {value} is not a string."
+                "A Sprixel.bg_color must be a Color object."
             )
 
     @property
@@ -176,11 +452,11 @@ class Sprixel(object):
 
     @fg_color.setter
     def fg_color(self, value):
-        if type(value) is str or "FormattingString" in str(type(value)):
+        if isinstance(value, Color) or value is None:
             self.__fg_color = value
         else:
             raise base.PglInvalidTypeException(
-                f"A Sprixel.fg_color must be a string. {value} is not a string."
+                "A Sprixel.fg_color must be a Color object."
             )
 
     def serialize(self):
@@ -195,8 +471,8 @@ class Sprixel(object):
         """
         return {
             "model": self.model,
-            "bg_color": self.bg_color,
-            "fg_color": self.fg_color,
+            "bg_color": self.bg_color and self.bg_color.serialize() or None,
+            "fg_color": self.fg_color and self.fg_color.serialize() or None,
             "is_bg_transparent": self.is_bg_transparent,
         }
 
@@ -213,7 +489,9 @@ class Sprixel(object):
 
             new_sprite = Sprixel.load(json_parsed_data['default_sprixel'])
         """
-        sprix = cls(data["model"], data["bg_color"], data["fg_color"])
+        sprix = cls(
+            data["model"], Color.load(data["bg_color"]), Color.load(data["fg_color"])
+        )
         sprix.is_bg_transparent = bool(data["is_bg_transparent"])
         return sprix
 
@@ -229,7 +507,7 @@ class Sprixel(object):
 
             sprixel = Sprixel.black_rect()
         """
-        return cls(" ", "\x1b[40m")
+        return cls(" ", Color(0, 0, 0))
 
     @classmethod
     def black_square(cls):
@@ -243,7 +521,7 @@ class Sprixel(object):
 
             sprixel = Sprixel.black_square()
         """
-        return cls("  ", "\x1b[40m")
+        return cls("  ", Color(0, 0, 0))
 
     @classmethod
     def white_rect(cls):
@@ -257,7 +535,7 @@ class Sprixel(object):
 
             sprixel = Sprixel.white_rect()
         """
-        return cls(" ", "\x1b[47m")
+        return cls(" ", Color(255, 255, 255))
 
     @classmethod
     def white_square(cls):
@@ -271,7 +549,7 @@ class Sprixel(object):
 
             sprixel = Sprixel.white_square()
         """
-        return cls("  ", "\x1b[47m")
+        return cls("  ", Color(255, 255, 255))
 
     @classmethod
     def red_rect(cls):
@@ -285,7 +563,7 @@ class Sprixel(object):
 
             sprixel = Sprixel.red_rect()
         """
-        return cls(" ", "\x1b[41m")
+        return cls(" ", Color(255, 0, 0))
 
     @classmethod
     def red_square(cls):
@@ -299,7 +577,7 @@ class Sprixel(object):
 
             sprixel = Sprixel.red_square()
         """
-        return cls("  ", "\x1b[41m")
+        return cls("  ", Color(255, 0, 0))
 
     @classmethod
     def green_rect(cls):
@@ -313,7 +591,7 @@ class Sprixel(object):
 
             sprixel = Sprixel.green_rect()
         """
-        return cls(" ", "\x1b[42m")
+        return cls(" ", Color(0, 255, 0))
 
     @classmethod
     def green_square(cls):
@@ -327,7 +605,7 @@ class Sprixel(object):
 
             sprixel = Sprixel.green_square()
         """
-        return cls("  ", "\x1b[42m")
+        return cls("  ", Color(0, 255, 0))
 
     @classmethod
     def blue_rect(cls):
@@ -341,7 +619,7 @@ class Sprixel(object):
 
             sprixel = Sprixel.blue_rect()
         """
-        return cls(" ", "\x1b[44m")
+        return cls(" ", Color(0, 0, 255))
 
     @classmethod
     def blue_square(cls):
@@ -355,7 +633,7 @@ class Sprixel(object):
 
             sprixel = Sprixel.blue_square()
         """
-        return cls("  ", "\x1b[44m")
+        return cls("  ", Color(0, 0, 255))
 
     @classmethod
     def cyan_rect(cls):
@@ -369,7 +647,7 @@ class Sprixel(object):
 
             sprixel = Sprixel.cyan_rect()
         """
-        return cls(" ", "\x1b[46m")
+        return cls(" ", Color(0, 255, 255))
 
     @classmethod
     def cyan_square(cls):
@@ -383,7 +661,7 @@ class Sprixel(object):
 
             sprixel = Sprixel.cyan_square()
         """
-        return cls("  ", "\x1b[46m")
+        return cls("  ", Color(0, 255, 255))
 
     @classmethod
     def magenta_rect(cls):
@@ -397,7 +675,7 @@ class Sprixel(object):
 
             sprixel = Sprixel.magenta_rect()
         """
-        return cls(" ", "\x1b[45m")
+        return cls(" ", Color(255, 0, 255))
 
     @classmethod
     def magenta_square(cls):
@@ -411,7 +689,7 @@ class Sprixel(object):
 
             sprixel = Sprixel.magenta_square()
         """
-        return cls("  ", "\x1b[45m")
+        return cls("  ", Color(255, 0, 255))
 
     @classmethod
     def yellow_rect(cls):
@@ -427,7 +705,7 @@ class Sprixel(object):
 
             sprixel = Sprixel.yellow_rect()
         """
-        return cls(" ", "\x1b[43m")
+        return cls(" ", Color(255, 255, 0))
 
     @classmethod
     def yellow_square(cls):
@@ -443,7 +721,7 @@ class Sprixel(object):
 
             sprixel = Sprixel.yellow_square()
         """
-        return cls("  ", "\x1b[43m")
+        return cls("  ", Color(255, 255, 0))
 
 
 class Sprite(object):
@@ -700,6 +978,7 @@ class Sprite(object):
             notifications.push( f'You enter the dreaded village of {village_name}' )
         """
         sprixels = []
+        # TODO: why is it not style = text_object.style ?
         style = ""
         max_width = 0
         for line in text_object.text.splitlines():
@@ -745,7 +1024,7 @@ class Sprite(object):
             player_sprite = gfx_core.Sprite.load_from_ansi_file('gfx/models/player.ans')
         """
         if default_sprixel is None:
-            default_sprixel = Sprixel(" ", "", "")
+            default_sprixel = Sprixel(" ", None, None)
         new_sprite = cls(default_sprixel=default_sprixel)
         with open(filename, "r") as sprite_file:
             sprixels_list = []
@@ -1352,7 +1631,7 @@ class Animation(object):
             is attached to a :class:`~pygamelib.board_items.BoardComplexItem`.
 
         """
-        if not isinstance(self.parent, board_items.BoardItem):
+        if not pgl_isinstance(self.parent, "pygamelib.board_items.BoardItem"):
             raise base.PglInvalidTypeException(
                 "The parent needs to be a sub class of BoardItem."
             )
@@ -1407,7 +1686,7 @@ class Animation(object):
                 "The refresh_screen parameter needs to be a callback "
                 "function reference."
             )
-        if not isinstance(self.parent, board_items.BoardItem):
+        if not pgl_isinstance(self.parent, "pygamelib.board_items.BoardItem"):
             raise base.PglInvalidTypeException(
                 "The parent needs to be a sub class of BoardItem."
             )
@@ -1422,15 +1701,17 @@ class Animation(object):
                 # we don't want to let any one slip.
                 # Also: this is convoluted...
                 if (
-                    isinstance(self.parent, board_items.BoardComplexItem)
+                    pgl_isinstance(
+                        self.parent, "pygamelib.board_items.BoardComplexItem"
+                    )
                     and self.parent.parent is not None
                     and (
-                        isinstance(self.parent.parent, board_items.engine.Board)
-                        or isinstance(self.parent.parent, board_items.engine.Game)
+                        pgl_isinstance(self.parent.parent, "pygamelib.engine.Board")
+                        or pgl_isinstance(self.parent.parent, "pygamelib.engine.Game")
                     )
                 ):
                     b = None
-                    if isinstance(self.parent.parent, board_items.engine.Board):
+                    if pgl_isinstance(self.parent.parent, "pygamelib.engine.Board"):
                         b = self.parent.parent
                     else:
                         b = self.parent.parent.current_board()
