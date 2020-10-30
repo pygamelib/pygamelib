@@ -113,3 +113,6 @@ venv.bak/
 hac-maps/test-write-board.json
 settings-suparex*
 test-*
+
+# PyCharm
+.idea/
