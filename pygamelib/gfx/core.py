@@ -250,7 +250,8 @@ class Color(object):
 
         :param data: Data loaded from JSON data (deserialized).
         :type data: dict
-        :rtype: :class:`Color`
+        :returns: Either a Color object or None if data where empty.
+        :rtype: :class:`Color`|NoneType
         :raise: `~pygamelib.base.PglInvalidTypeException`
 
         Example::
@@ -977,6 +978,7 @@ class Sprite(object):
             notifications.push( f'You enter the dreaded village of {village_name}' )
         """
         sprixels = []
+        # TODO: why is it not style = text_object.style ?
         style = ""
         max_width = 0
         for line in text_object.text.splitlines():
