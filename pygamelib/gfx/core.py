@@ -1193,6 +1193,28 @@ class Sprite(object):
 
         return ret_dict
 
+    @property
+    def width(self):
+        """
+        Property that returns the width of the Sprite.
+
+        Contrary to Sprite.size[0], this property *always* calls Sprite.calculate_size()
+        before returning the width.
+        """
+        self.calculate_size()
+        return self.size[0]
+
+    @property
+    def height(self):
+        """
+        Property that returns the height of the Sprite.
+
+        Contrary to Sprite.size[0], this property *always* calls Sprite.calculate_size()
+        before returning the height.
+        """
+        self.calculate_size()
+        return self.size[1]
+
     @classmethod
     def load(cls, data):
         """

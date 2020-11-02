@@ -61,7 +61,7 @@ class Console:
         return cls.__instance
 
 
-class Text:
+class Text(object):
     """
     An object to manipulate and display text in multiple contexts.
 
@@ -90,6 +90,7 @@ class Text:
     """
 
     def __init__(self, text="", fg_color=None, bg_color=None, style=""):
+        super().__init__()
         self.text = text
         """The text attribute. It needs to be a str."""
         self.fg_color = None
@@ -421,6 +422,8 @@ class PglInvalidTypeException(Exception):
 
 class HacInvalidTypeException(PglInvalidTypeException):
     """A simple forward to PglInvalidTypeException
+
+    .. deprecated:: 1.3.0
     """
 
 
@@ -436,6 +439,8 @@ class PglException(Exception):
 
 class HacException(PglException):
     """A simple forward to PglException
+
+    .. deprecated:: 1.3.0
     """
 
 
@@ -459,6 +464,8 @@ class PglOutOfItemBoundException(Exception):
 
 class HacOutOfBoardBoundException(PglOutOfBoardBoundException):
     """Simple forward to PglOutOfBoardBoundException
+
+    .. deprecated:: 1.3.0
     """
 
 
@@ -473,6 +480,8 @@ class PglObjectIsNotMovableException(Exception):
 
 class HacObjectIsNotMovableException(PglObjectIsNotMovableException):
     """Simple forward to PglObjectIsNotMovableException
+
+    .. deprecated:: 1.3.0
     """
 
 
@@ -487,6 +496,8 @@ class PglInvalidLevelException(Exception):
 
 class HacInvalidLevelException(PglInvalidLevelException):
     """Forward to PglInvalidLevelException
+
+    .. deprecated:: 1.3.0
     """
 
 
@@ -503,10 +514,12 @@ class PglInventoryException(Exception):
 
 class HacInventoryException(PglInventoryException):
     """Forward to PglInventoryException.
+
+    .. deprecated:: 1.3.0
     """
 
 
-class Vector2D:
+class Vector2D(object):
     """A 2D vector class.
 
     .. versionadded:: 1.2.0
@@ -570,6 +583,7 @@ class Vector2D:
     """
 
     def __init__(self, row=0.0, column=0.0):
+        super().__init__()
         # column is x and row is y
         self.__row = row
         self.__column = column

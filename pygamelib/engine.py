@@ -3000,23 +3000,21 @@ class Screen(object):
         super().__init__()
         # get clear sequence for the terminal
         self.terminal = base.Console.instance()
-        # if terminal is None:
-        #     raise base.PglException(
-        #         "terminal_is_missing",
-        #         "Screen must be constructed with a terminal object.",
-        #     )
-        # elif "terminal.Terminal" in str(type(terminal)):
-        #     self.terminal = terminal
-        # else:
-        #     raise base.PglException(
-        #         "terminal_not_blessed",
-        #         "Screen: terminal must be from the blessed module\n"
-        #         "Please install blessed if it is not already installed:\n"
-        #         "     pip3 install blessed --user"
-        #         "And instantiate Screen with terminal=blessed.Terminal()"
-        #         "or let the Game object do it and use mygame.screen to access the "
-        #         "screen (assuming that mygame is your Game() instance).",
-        #     )
+        # input(f"Screen(): term.w={self.terminal.width} term.h={self.terminal.height}")
+        # self._display_buffer = np.array(
+        #     [
+        #         [core.Sprixel(" ") for i in range(0, self.terminal.height, 1)]
+        #         for j in range(0, self.terminal.width, 1)
+        #     ]
+        # )
+        self._display_buffer = np.array(
+            [
+                [core.Sprixel(" ") for i in range(0, self.terminal.width, 1)]
+                for j in range(0, self.terminal.height, 1)
+            ]
+        )
+        self._is_dirty = False
+        # input(f"Screen(): display buffer shape {self._display_buffer.shape}")
 
     def clear(self):
         """
@@ -3040,6 +3038,89 @@ class Screen(object):
         in number of characters.
         """
         return self.terminal.height
+
+    @property
+    def buffer(self):
+        """
+        The buffer property return a numpy.array as a writable screen buffer.
+
+        The buffer is a 2D plane (like a screen) and anything can render in it. However,
+        it is recommended to place objects through Screen.place() and update the screen
+        with Screen.update() (update calls render() if needed and do the actual
+        display).
+
+        .. WARNING:: Everything that is stored in the buffer *must* be printable.
+        """
+        return self._display_buffer
+
+    def update(self):
+        """
+        Update the screen. Update means write the display buffer on screen.
+
+        Example::
+
+            mygame = Game()
+            sc = core.SpriteCollection.load_json_file('title_screens.json')
+            mygame.screen.place(sc['welcome_screen'], 0, 0)
+            mygame.screen.update()
+        """
+        if self._is_dirty:
+            self.render()
+        print(self.terminal.home, end="")
+        for row in range(0, self._display_buffer.shape[0]):
+            for col in range(0, self._display_buffer.shape[1]):
+                print(self._display_buffer[row][col], end="")
+            if row < self._display_buffer.shape[0] - 1:
+                print()
+
+    def render(self):
+        for row in range(0, self._display_buffer.shape[0]):
+            for col in range(0, self._display_buffer.shape[1]):
+                i = self._display_buffer[row][col]
+                if type(i) is str and len(i) > 1:
+                    idx = 0
+                    for l in i:
+                        self._display_buffer[row][col + idx] = l
+                        idx += 1
+                elif isinstance(self._display_buffer[row][col], core.Sprite):
+                    for sr in range(0, i.height):
+                        for sc in range(0, i.width):
+                            sprix = i.sprixel(sr, sc)
+                            if sprix != core.Sprixel():
+                                self._display_buffer[row + sr][col + sc] = sprix
+                            else:
+                                continue
+                                # self._display_buffer[row + sr][col + sc] = core.Sprixel(
+                                #     " "
+                                # )
+                elif isinstance(i, Board):
+                    for br in range(0, i.height):
+                        for bc in range(0, i.width):
+                            pass
+
+        self._is_dirty = False
+
+    def place(self, item=None, row=None, column=None):
+        if item is None or row is None or column is None:
+            raise base.PglInvalidTypeException(
+                "Screen.place(item, row, column) none of the parameters can be None."
+            )
+        if (
+            isinstance(item, core.Sprixel)
+            or isinstance(item, Board)
+            or isinstance(item, core.Sprite)
+            or isinstance(item, base.Text)
+            or isinstance(item, board_items.BoardItem)
+            or isinstance(item, board_items.BoardComplexItem)
+            or type(item) is str
+        ):
+            self._display_buffer[row][column] = item
+            self._is_dirty = True
+        else:
+            raise base.PglInvalidTypeException(
+                f"Screen.place(item, row, column) : item type {type(item)} is not"
+                " supported."
+            )
 
     def display_line(self, *text, end="\n", file=sys.stdout, flush=False):
         """
