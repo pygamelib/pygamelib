@@ -3067,11 +3067,17 @@ class Screen(object):
         if self._is_dirty:
             self.render()
         print(self.terminal.home, end="")
-        for row in range(0, self._display_buffer.shape[0]):
-            for col in range(0, self._display_buffer.shape[1]):
-                print(self._display_buffer[row][col], end="")
-            if row < self._display_buffer.shape[0] - 1:
-                print()
+        for row in range(0, self._display_buffer.shape[0] - 1):
+            print("".join(str(col) for col in self._display_buffer[row].tolist()))
+        print(
+            "".join(
+                str(x)
+                for x in self._display_buffer[
+                    self._display_buffer.shape[0] - 1
+                ].tolist()
+            ),
+            end="",
+        )
 
     def render(self):
         for row in range(0, self._display_buffer.shape[0]):
@@ -3087,6 +3093,7 @@ class Screen(object):
                         for sc in range(0, i.width):
                             sprix = i.sprixel(sr, sc)
                             if sprix != core.Sprixel():
+                                # Need to check
                                 self._display_buffer[row + sr][col + sc] = sprix
                             else:
                                 continue
