@@ -33,6 +33,7 @@ import json
 import sys
 import time
 import numpy as np
+import multiprocessing
 
 # We need to ignore that one as it is used by user to compare keys (i.e Utils.key.UP)
 from readchar import readkey, key  # noqa: F401
@@ -565,6 +566,51 @@ class Board:
                 ]
             )
         )
+
+    def render_cell(self, row, column):
+        """
+        .. versionadded:: 1.3.0
+
+        Render the cell at given position.
+
+        This method always return a :class:`~pygamelib.gfx.core.Sprixel` (it could be an
+        empty one though). It automatically render the highest item (if items are
+        overlapping for example).
+
+        For basic usage of the library it is unlikely that you will use it. It is part
+        of the screen rendering stack introduced in version 1.3.0.
+
+        :param row: The row to render.
+        :type row: int
+        :param column: The column to render.
+        :type column: int
+
+        :rtype: pygamelib.gfx.core.Sprixel
+
+        :raise PglOutOfBoardBoundException: if row or column are
+            out of bound.
+
+        Example::
+
+            # This renders the board from the top left corner of the screen.
+            for row in range(0, myboard.height):
+                for column in range(0, myboard.height):
+                    myscreen.place(
+                        myboard.render_cell(row, column)
+                    ),
+                    row,
+                    column,
+        """
+        if row < self.size[1] and column < self.size[0]:
+            return self._matrix[row][column].sprixel
+        else:
+            raise base.PglOutOfBoardBoundException(
+                (
+                    f"Impossible to render cell at coordinates [{row},{column}] "
+                    "because it's out of the board boundaries "
+                    f"({self.size[0]}x{self.size[1]})."
+                )
+            )
 
     def item(self, row, column):
         """
@@ -2989,6 +3035,11 @@ class Screen(object):
     .. WARNING:: Starting with version 1.3.0 the terminal parameter has been removed.
        The Screen object now takes advantage of base.Console.instance() to get a
        reference to a blessed.Terminal object.
+    
+    Version 1.3.0 introduced a new way of managing the screen. It rely on an internally
+    managed display buffer that allows for easier positioning and more regular
+    rendering. This comes at a cost though as the performances takes a hit. The screen
+    should still be able to be refreshed over 60 times per seconds 
 
     Example::
 
@@ -3013,8 +3064,15 @@ class Screen(object):
                 for j in range(0, self.terminal.height, 1)
             ]
         )
+        self._screen_buffer = np.array(
+            [
+                [core.Sprixel(" ") for i in range(0, self.terminal.width, 1)]
+                for j in range(0, self.terminal.height, 1)
+            ]
+        )
         self._is_dirty = False
         # input(f"Screen(): display buffer shape {self._display_buffer.shape}")
+        self._process_pool = None
 
     def clear(self):
         """
@@ -3022,6 +3080,32 @@ class Screen(object):
         """
         sys.stdout.write(self.terminal.clear)
         sys.stdout.flush()
+
+    def clear_buffer(self):
+        """
+        .. versionadded:: 1.3.0
+
+        This methods clear the screen's buffer.
+
+        Make sure that you really want to clear the buffer before doing so, because this
+        is a slow operation.
+
+        Once the buffer is cleared nothing is left in it, you have to reposition (place)
+        everything.
+        """
+        self._display_buffer = np.array(
+            [
+                [core.Sprixel(" ") for i in range(0, self.terminal.width, 1)]
+                for j in range(0, self.terminal.height, 1)
+            ]
+        )
+        self._screen_buffer = np.array(
+            [
+                [core.Sprixel(" ") for i in range(0, self.terminal.width, 1)]
+                for j in range(0, self.terminal.height, 1)
+            ]
+        )
+        self._is_dirty = False
 
     @property
     def width(self):
@@ -3042,6 +3126,8 @@ class Screen(object):
     @property
     def buffer(self):
         """
+        .. versionadded:: 1.3.0
+
         The buffer property return a numpy.array as a writable screen buffer.
 
         The buffer is a 2D plane (like a screen) and anything can render in it. However,
@@ -3055,6 +3141,8 @@ class Screen(object):
 
     def update(self):
         """
+        .. versionadded:: 1.3.0
+
         Update the screen. Update means write the display buffer on screen.
 
         Example::
@@ -3067,34 +3155,111 @@ class Screen(object):
         if self._is_dirty:
             self.render()
         print(self.terminal.home, end="")
-        for row in range(0, self._display_buffer.shape[0] - 1):
-            print("".join(str(col) for col in self._display_buffer[row].tolist()))
+        for row in range(0, self._screen_buffer.shape[0] - 1):
+            # print("".join(str(col) for col in self._screen_buffer[row].tolist()))
+            print("".join(map(str, self._screen_buffer[row])))
+        # print(
+        #     "".join(
+        #         str(x)
+        #         for x in self._screen_buffer[
+        #             self._screen_buffer.shape[0] - 1
+        #         ].tolist()
+        #     ),
+        #     end="",
+        # )
         print(
-            "".join(
-                str(x)
-                for x in self._display_buffer[
-                    self._display_buffer.shape[0] - 1
-                ].tolist()
-            ),
+            "".join(map(str, self._screen_buffer[self._screen_buffer.shape[0] - 1])),
             end="",
         )
 
+    def __print_row(self, row):
+        # print(
+        #     self.terminal.move_xy(0, row)
+        #     + "".join(str(col) for col in self._display_buffer[row].tolist()),
+        # )
+        with self.terminal.location(0, row):
+            print(
+                "".join(str(col) for col in self._display_buffer[row].tolist()),
+                file=sys.stdout,
+                flush=True,
+            )
+
+    def update_mt(self):
+        """
+        .. versionadded:: 1.3.0
+
+        Update the screen. Update means write the display buffer on screen.
+
+        Example::
+
+            mygame = Game()
+            sc = core.SpriteCollection.load_json_file('title_screens.json')
+            mygame.screen.place(sc['welcome_screen'], 0, 0)
+            mygame.screen.update()
+        """
+        if self._process_pool is None:
+            self._process_pool = multiprocessing.Pool(multiprocessing.cpu_count() - 1)
+        if self._is_dirty:
+            self.render()
+        print(self.terminal.home, end="")
+        for row in range(0, self._display_buffer.shape[0] - 1):
+            # p = Process(target=__print_row, args=(self, row))
+            # p.start()
+            # p.join()
+            # self._process_pool.apply(Screen.__print_row, (self, row))
+            # sys.stdout.flush()
+            Screen.__print_row(self, row)
+        # print(
+        #     "".join(
+        #         str(x)
+        #         for x in self._display_buffer[
+        #             self._display_buffer.shape[0] - 1
+        #         ].tolist()
+        #     ),
+        #     end="",
+        # )
+
     def render(self):
-        for row in range(0, self._display_buffer.shape[0]):
-            for col in range(0, self._display_buffer.shape[1]):
+        """
+        .. versionadded:: 1.3.0
+
+        :param name: some param
+        :type name: str
+
+        Example::
+
+            method()
+        """
+        # WARNING: This is 1-pass rendering, if the _display_buffer contains things
+        # that should overlap (like a dialog) it will be overwritten by the element
+        # that should be overlapped. One way is to introduce deferred rendering (reserve
+        # space that is going to be rendered in a second pass) or priority rendering
+        # with pre-allocated space. A last way of doing so is to modify the rendering
+        # process so it skips parts that are overlapping (there will never be any
+        # overlap in that case)
+        for row in range(self._display_buffer.shape[0] - 1, -1, -1):
+            for col in range(self._display_buffer.shape[1] - 1, -1, -1):
                 i = self._display_buffer[row][col]
                 if type(i) is str and len(i) > 1:
                     idx = 0
-                    for l in i:
-                        self._display_buffer[row][col + idx] = l
+                    for line in i:
+                        self._screen_buffer[row][col + idx] = line
                         idx += 1
-                elif isinstance(self._display_buffer[row][col], core.Sprite):
+                # el
+                # if isinstance(i, core.Sprixel):
+                #     self._screen_buffer[row][col] = i.__repr__()
+                elif isinstance(i, core.Sprite):
                     for sr in range(0, i.height):
                         for sc in range(0, i.width):
                             sprix = i.sprixel(sr, sc)
                             if sprix != core.Sprixel():
-                                # Need to check
-                                self._display_buffer[row + sr][col + sc] = sprix
+                                # Need to check the empty/null sprixel in the sprite
+                                # because for the sprite we just skip and leave the
+                                # sprixel that is behind but when it comes to screen we
+                                # cannot leave a blank cell.
+                                self._screen_buffer[row + sr][
+                                    col + sc
+                                ] = sprix.__repr__()
                             else:
                                 continue
                                 # self._display_buffer[row + sr][col + sc] = core.Sprixel(
@@ -3103,8 +3268,12 @@ class Screen(object):
                 elif isinstance(i, Board):
                     for br in range(0, i.height):
                         for bc in range(0, i.width):
-                            pass
-
+                            continue
+                            # TODO: Code render_cell()
+                            # self._screen_buffer[row + br][col + bc] = i.render_cell(br, bc).__repr__()
+                elif hasattr(i, "__repr__"):
+                    self._screen_buffer[row][col] = i.__repr__()
+                # print(self._screen_buffer[row][col], end="")
         self._is_dirty = False
 
     def place(self, item=None, row=None, column=None):
