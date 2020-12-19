@@ -33,7 +33,6 @@ import json
 import sys
 import time
 import numpy as np
-import multiprocessing
 
 # We need to ignore that one as it is used by user to compare keys (i.e Utils.key.UP)
 from readchar import readkey, key  # noqa: F401
@@ -602,6 +601,11 @@ class Board:
                     column,
         """
         if row < self.size[1] and column < self.size[0]:
+            if self._matrix[row][column].sprixel is None:
+                # TODO: This is not the place to do that. If the value is None we return
+                #       core.Sprixel(). Converting model to Sprixel must be done at
+                #       board loading.
+                return core.Sprixel(self._matrix[row][column].model)
             return self._matrix[row][column].sprixel
         else:
             raise base.PglOutOfBoardBoundException(
@@ -3035,11 +3039,11 @@ class Screen(object):
     .. WARNING:: Starting with version 1.3.0 the terminal parameter has been removed.
        The Screen object now takes advantage of base.Console.instance() to get a
        reference to a blessed.Terminal object.
-    
+
     Version 1.3.0 introduced a new way of managing the screen. It rely on an internally
     managed display buffer that allows for easier positioning and more regular
     rendering. This comes at a cost though as the performances takes a hit. The screen
-    should still be able to be refreshed over 60 times per seconds 
+    should still be able to be refreshed over 60 times per seconds.
 
     Example::
 
@@ -3081,14 +3085,14 @@ class Screen(object):
         sys.stdout.write(self.terminal.clear)
         sys.stdout.flush()
 
-    def clear_buffer(self):
+    def clear_buffers(self):
         """
         .. versionadded:: 1.3.0
 
-        This methods clear the screen's buffer.
+        This methods clear the Screen's buffers (both rendering and screen buffer).
 
-        Make sure that you really want to clear the buffer before doing so, because this
-        is a slow operation.
+        Make sure that you really want to clear the buffers before doing so, because
+        this is a slow operation.
 
         Once the buffer is cleared nothing is left in it, you have to reposition (place)
         everything.
@@ -3106,6 +3110,27 @@ class Screen(object):
             ]
         )
         self._is_dirty = False
+
+    def clear_screen_buffer(self):
+        """
+        .. versionadded:: 1.3.0
+
+        This methods clear the screen buffer (but not the rendering buffer).
+
+        Make sure that you really want to clear the buffers before doing so, because
+        this is a slow operation. It might however be faster than manually update screen
+        cells.
+
+        Once the buffer is cleared nothing is left in it, it sets the Screen for a
+        rendering update.
+        """
+        self._screen_buffer = np.array(
+            [
+                [core.Sprixel(" ") for i in range(0, self.terminal.width, 1)]
+                for j in range(0, self.terminal.height, 1)
+            ]
+        )
+        self._is_dirty = True
 
     @property
     def width(self):
@@ -3156,67 +3181,13 @@ class Screen(object):
             self.render()
         print(self.terminal.home, end="")
         for row in range(0, self._screen_buffer.shape[0] - 1):
-            # print("".join(str(col) for col in self._screen_buffer[row].tolist()))
             print("".join(map(str, self._screen_buffer[row])))
-        # print(
-        #     "".join(
-        #         str(x)
-        #         for x in self._screen_buffer[
-        #             self._screen_buffer.shape[0] - 1
-        #         ].tolist()
-        #     ),
-        #     end="",
-        # )
         print(
             "".join(map(str, self._screen_buffer[self._screen_buffer.shape[0] - 1])),
             end="",
         )
-
-    def __print_row(self, row):
         # print(
-        #     self.terminal.move_xy(0, row)
-        #     + "".join(str(col) for col in self._display_buffer[row].tolist()),
-        # )
-        with self.terminal.location(0, row):
-            print(
-                "".join(str(col) for col in self._display_buffer[row].tolist()),
-                file=sys.stdout,
-                flush=True,
-            )
-
-    def update_mt(self):
-        """
-        .. versionadded:: 1.3.0
-
-        Update the screen. Update means write the display buffer on screen.
-
-        Example::
-
-            mygame = Game()
-            sc = core.SpriteCollection.load_json_file('title_screens.json')
-            mygame.screen.place(sc['welcome_screen'], 0, 0)
-            mygame.screen.update()
-        """
-        if self._process_pool is None:
-            self._process_pool = multiprocessing.Pool(multiprocessing.cpu_count() - 1)
-        if self._is_dirty:
-            self.render()
-        print(self.terminal.home, end="")
-        for row in range(0, self._display_buffer.shape[0] - 1):
-            # p = Process(target=__print_row, args=(self, row))
-            # p.start()
-            # p.join()
-            # self._process_pool.apply(Screen.__print_row, (self, row))
-            # sys.stdout.flush()
-            Screen.__print_row(self, row)
-        # print(
-        #     "".join(
-        #         str(x)
-        #         for x in self._display_buffer[
-        #             self._display_buffer.shape[0] - 1
-        #         ].tolist()
-        #     ),
-        #     end="",
+        #     "".join(["".join(map(str, row)) for row in self._screen_buffer]), end="",
         # )
 
     def render(self):
@@ -3237,17 +3208,18 @@ class Screen(object):
         # with pre-allocated space. A last way of doing so is to modify the rendering
         # process so it skips parts that are overlapping (there will never be any
         # overlap in that case)
-        for row in range(self._display_buffer.shape[0] - 1, -1, -1):
-            for col in range(self._display_buffer.shape[1] - 1, -1, -1):
+        # for row in range(self._display_buffer.shape[0] - 1, -1, -1):
+        #     for col in range(self._display_buffer.shape[1] - 1, -1, -1):
+        row = self._display_buffer.shape[0] - 1
+        while row >= 0:
+            col = self._display_buffer.shape[1] - 1
+            while col >= 0:
                 i = self._display_buffer[row][col]
                 if type(i) is str and len(i) > 1:
                     idx = 0
                     for line in i:
                         self._screen_buffer[row][col + idx] = line
                         idx += 1
-                # el
-                # if isinstance(i, core.Sprixel):
-                #     self._screen_buffer[row][col] = i.__repr__()
                 elif isinstance(i, core.Sprite):
                     for sr in range(0, i.height):
                         for sc in range(0, i.width):
@@ -3262,18 +3234,41 @@ class Screen(object):
                                 ] = sprix.__repr__()
                             else:
                                 continue
-                                # self._display_buffer[row + sr][col + sc] = core.Sprixel(
-                                #     " "
-                                # )
                 elif isinstance(i, Board):
                     for br in range(0, i.height):
-                        for bc in range(0, i.width):
-                            continue
-                            # TODO: Code render_cell()
-                            # self._screen_buffer[row + br][col + bc] = i.render_cell(br, bc).__repr__()
+                        bc = cidx = 0
+                        # # ==> Test
+                        # # For testing I'm using a board with emojis. I need to handle
+                        # # that correctly.
+                        # while bc < i.width:
+                        #     self._screen_buffer[row + br][col + cidx] = i.render_cell(
+                        #         br, bc
+                        #     ).__repr__()
+                        #     bc += 1
+                        #     self._screen_buffer[row + br][col + cidx + 1] = ""
+                        #     cidx += 2
+                        # # Test <==
+                        while bc < i.width:
+                            cell = i.render_cell(br, bc)
+                            encoded_cell = cell.__repr__()
+                            # TODO: Terminal.length() is super slow I need to cache the
+                            #       size of the character in Sprixel.
+                            # DONE: Implemented straight into Sprixel.
+                            incr = cell.length
+                            self._screen_buffer[row + br][col + cidx] = encoded_cell
+
+                            if incr > 1:
+                                for tmpiidx in range(1, incr):
+                                    self._screen_buffer[row + br][
+                                        col + cidx + tmpiidx
+                                    ] = ""
+                            bc += 1
+                            cidx += incr
                 elif hasattr(i, "__repr__"):
                     self._screen_buffer[row][col] = i.__repr__()
                 # print(self._screen_buffer[row][col], end="")
+                col -= 1
+            row -= 1
         self._is_dirty = False
 
     def place(self, item=None, row=None, column=None):
