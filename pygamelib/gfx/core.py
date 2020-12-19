@@ -321,10 +321,12 @@ class Sprixel(object):
 
     def __init__(self, model="", bg_color=None, fg_color=None, is_bg_transparent=None):
         super().__init__()
+        self.__color_cache = ""
+        self.__bg_color = None
+        self.__fg_color = None
+        self.__length = 0
         self.model = model
-        self.__bg_color = self.__fg_color = None
-        self._terminal = base.Console.instance()
-        self.__baked_bgc = self.__baked_fgc = ""
+        self.__length = base.Console.instance().length(model)
         if bg_color is None or isinstance(bg_color, Color):
             self.bg_color = bg_color
         else:
@@ -348,26 +350,19 @@ class Sprixel(object):
             self.is_bg_transparent = True
 
     def __repr__(self):
-        # t = base.Console.instance()
-        bgc = fgc = ""
-        if (
-            self.bg_color is not None
-            and isinstance(self.bg_color, Color)
-            and self.__baked_bgc is None
-        ):
-            self.__bake_colors__()
-        bgc = self.__baked_bgc
-        if (
-            self.fg_color is not None
-            and isinstance(self.fg_color, Color)
-            and self.__baked_fgc is None
-        ):
-            self.__bake_colors__()
-        fgc = self.__baked_fgc
-        return f"{bgc}{fgc}{self.model}\x1b[0m"
+        return f"{self.__color_cache}{self.model}\x1b[0m"
 
     def __str__(self):  # pragma: no cover
         return self.__repr__()
+
+    def __build_color_cache(self):
+        t = base.Console.instance()
+        bgc = fgc = ""
+        if self.bg_color is not None and isinstance(self.bg_color, Color):
+            bgc = t.on_color_rgb(self.bg_color.r, self.bg_color.g, self.bg_color.b)
+        if self.fg_color is not None and isinstance(self.fg_color, Color):
+            fgc = t.color_rgb(self.fg_color.r, self.fg_color.g, self.fg_color.b)
+        self.__color_cache = f"{bgc}{fgc}"
 
     def __eq__(self, other):
         if (
@@ -388,16 +383,6 @@ class Sprixel(object):
             return True
         else:
             return False
-
-    def __bake_colors__(self):
-        if self.bg_color is not None and isinstance(self.bg_color, Color):
-            self.__baked_bgc = self._terminal.on_color_rgb(
-                self.bg_color.r, self.bg_color.g, self.bg_color.b
-            )
-        if self.fg_color is not None and isinstance(self.fg_color, Color):
-            self.__baked_fgc = self._terminal.color_rgb(
-                self.fg_color.r, self.fg_color.g, self.fg_color.b
-            )
 
     @staticmethod
     def from_ansi(string):
@@ -444,6 +429,10 @@ class Sprixel(object):
         return new_sprixel
 
     @property
+    def length(self):
+        return self.__length
+
+    @property
     def model(self):
         return self.__model
 
@@ -451,6 +440,7 @@ class Sprixel(object):
     def model(self, value):
         if type(value) is str:
             self.__model = value
+            self.__length = base.Console.instance().length(self.__model)
         else:
             raise base.PglInvalidTypeException(
                 f"A Sprixel.model must be a string. {value} is not a string."
@@ -464,7 +454,7 @@ class Sprixel(object):
     def bg_color(self, value):
         if isinstance(value, Color) or value is None:
             self.__bg_color = value
-            self.__bake_colors__()
+            self.__build_color_cache()
         else:
             raise base.PglInvalidTypeException(
                 "A Sprixel.bg_color must be a Color object."
@@ -478,7 +468,7 @@ class Sprixel(object):
     def fg_color(self, value):
         if isinstance(value, Color) or value is None:
             self.__fg_color = value
-            self.__bake_colors__()
+            self.__build_color_cache()
         else:
             raise base.PglInvalidTypeException(
                 "A Sprixel.fg_color must be a Color object."
