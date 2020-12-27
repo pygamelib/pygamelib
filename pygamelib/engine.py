@@ -605,7 +605,8 @@ class Board:
                 # TODO: This is not the place to do that. If the value is None we return
                 #       core.Sprixel(). Converting model to Sprixel must be done at
                 #       board loading.
-                return core.Sprixel(self._matrix[row][column].model)
+                # return core.Sprixel(self._matrix[row][column].model)
+                return core.Sprixel()
             return self._matrix[row][column].sprixel
         else:
             raise base.PglOutOfBoardBoundException(
@@ -2431,6 +2432,17 @@ class Game:
             local_board.ui_border_right = data["ui_border_right"]
         if "ui_board_void_cell" in data_keys:
             local_board.ui_board_void_cell = data["ui_board_void_cell"]
+        if "ui_board_void_cell_sprixel" in data_keys:
+            local_board.ui_board_void_cell_sprixel = data["ui_board_void_cell_sprixel"]
+        # Now let's make it better: if we have a board_void_cell but not a
+        # board_void_cell_sprixel we convert it.
+        if local_board.ui_board_void_cell is not None and (
+            local_board.ui_board_void_cell_sprixel is None
+            or not isinstance(local_board.ui_board_void_cell_sprixel, core.Sprixel)
+        ):
+            local_board.ui_board_void_cell_sprixel = core.Sprixel(
+                local_board.ui_board_void_cell
+            )
         # Now we need to recheck for board sanity
         local_board.check_sanity()
         # and re-initialize the board (mainly to attribute a new model to the void cells
@@ -3237,23 +3249,9 @@ class Screen(object):
                 elif isinstance(i, Board):
                     for br in range(0, i.height):
                         bc = cidx = 0
-                        # # ==> Test
-                        # # For testing I'm using a board with emojis. I need to handle
-                        # # that correctly.
-                        # while bc < i.width:
-                        #     self._screen_buffer[row + br][col + cidx] = i.render_cell(
-                        #         br, bc
-                        #     ).__repr__()
-                        #     bc += 1
-                        #     self._screen_buffer[row + br][col + cidx + 1] = ""
-                        #     cidx += 2
-                        # # Test <==
                         while bc < i.width:
                             cell = i.render_cell(br, bc)
                             encoded_cell = cell.__repr__()
-                            # TODO: Terminal.length() is super slow I need to cache the
-                            #       size of the character in Sprixel.
-                            # DONE: Implemented straight into Sprixel.
                             incr = cell.length
                             self._screen_buffer[row + br][col + cidx] = encoded_cell
 
