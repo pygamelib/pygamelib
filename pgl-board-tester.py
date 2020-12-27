@@ -52,6 +52,9 @@ while idx < max_iter or max_iter == 0:
     g.display_board()
 
     if max_iter == 0:
+        g.screen.display_line(
+            f"Player at position (row,column): ({g.player.row},{g.player.column})"
+        )
         key = engine.Game.get_key()
     else:
         time.sleep(0.1)
