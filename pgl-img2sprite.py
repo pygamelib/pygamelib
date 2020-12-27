@@ -8,11 +8,18 @@ file = None
 tmp_file = None
 width = 48
 
+# TODO: use argparse to add more command line flexibility:
+#         - --width=<width:int>
+#         - --collection=<existing spr file:path> -> add the transformed sprite to a
+#                                                    given collection. If non existing
+#                                                    it's created
+#         - --out=<path to a dir or file> -> if a dir write the file here, if a file
+#                                            overwrite it.
 if len(sys.argv) <= 1:
     print("No image file provided.")
     print(
-        f"Usage: \n\t{sys.argv[0]} <image to convert> <width in characters "
-        f"(default: {width})>"
+        f"Usage: \n\t{sys.argv[0]} <image to convert> [width in characters "
+        f"(default: {width})]"
     )
     exit()
 
@@ -40,8 +47,10 @@ spr = core.Sprite.load_from_ansi_file(tmp_file)
 final = os.path.splitext(file)[0] + ".spr"
 spr_id = os.path.basename(final)
 spr_id = os.path.splitext(spr_id)[0]
-sc[spr_id] = spr
+spr.name = spr_id
+sc.add(spr)
 sc.to_json_file(final)
+os.remove(tmp_file)
 print(f"Converted {file} in a pygamelib usable sprite and saved it in: {final}")
 print(
     "Use pygamelib.gfx.core.SpriteCollection to import and use it in your code.\n"
