@@ -3065,7 +3065,7 @@ class Screen(object):
 
     def __init__(self):
         super().__init__()
-        # get clear sequence for the terminal
+        # get a terminal instance
         self.terminal = base.Console.instance()
         # input(f"Screen(): term.w={self.terminal.width} term.h={self.terminal.height}")
         # self._display_buffer = np.array(
@@ -3229,9 +3229,11 @@ class Screen(object):
                 i = self._display_buffer[row][col]
                 if type(i) is str and len(i) > 1:
                     idx = 0
-                    for line in i:
-                        self._screen_buffer[row][col + idx] = line
+                    for char in i:
+                        self._screen_buffer[row][col + idx] = char
                         idx += 1
+                        if idx >= self.width:
+                            break
                 elif isinstance(i, core.Sprite):
                     for sr in range(0, i.height):
                         for sc in range(0, i.width):
@@ -3270,6 +3272,16 @@ class Screen(object):
         self._is_dirty = False
 
     def place(self, item=None, row=None, column=None):
+        """
+        .. versionadded:: 1.3.0
+
+        :param name: some param
+        :type name: str
+
+        Example::
+
+            method()
+        """
         if item is None or row is None or column is None:
             raise base.PglInvalidTypeException(
                 "Screen.place(item, row, column) none of the parameters can be None."
