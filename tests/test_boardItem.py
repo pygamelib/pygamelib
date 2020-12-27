@@ -21,7 +21,7 @@ class TestBoard(unittest.TestCase):
         self.assertEqual(self.boardItem.type, "test_type")
         self.assertEqual(self.boardItem.pos, [10, 10])
         self.assertEqual(self.boardItem.model, "test_model")
-        self.assertEqual(self.boardItem.__repr__(), "test_model")
+        self.assertEqual(self.boardItem.__repr__(), "test_model\x1b[0m")
         self.assertIsNone(self.boardItem.display())
         self.assertIn("'model' = 'test_model'", self.boardItem.debug_info())
         self.assertEqual(self.boardItem.position_as_vector().row, 10)

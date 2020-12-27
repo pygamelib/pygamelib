@@ -66,21 +66,31 @@ class BoardItem(object):
         self.name = "Board item"
         self.type = "item"
         self.pos = [None, None]
-        self.model = "*"
+        # DEPRECATED
+        # self.model = "*"
         self.animation = None
         self.parent = None
-        self.sprixel = None
+        self.sprixel = core.Sprixel("*")
         self.size = [1, 1]
         # Setting class parameters
-        for item in ["name", "type", "pos", "model", "parent", "sprixel"]:
+        for item in ["name", "type", "pos", "parent", "sprixel"]:
             if item in kwargs:
                 setattr(self, item, kwargs[item])
+        if "model" in kwargs:
+            self.sprixel.model = kwargs["model"]
+
+    @property
+    def model(self):
+        return self.sprixel.model
+
+    @model.setter
+    def model(self, value):
+        self.sprixel.model = value
 
     def __str__(self):
         if self.sprixel is not None:
             return self.sprixel.__repr__()
-        else:
-            return self.model
+        return ""
 
     def __repr__(self):  # pragma: no cover
         return self.__str__()
@@ -107,6 +117,7 @@ class BoardItem(object):
                 )
             else:
                 string += f"'{key}' = '{getattr(self, key)}'\n"
+            string += f"'model' = '{self.model}'"
         return string
 
     def store_position(self, row, column):
