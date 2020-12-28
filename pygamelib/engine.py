@@ -3303,6 +3303,21 @@ class Screen(object):
                 " supported."
             )
 
+    def delete(self, row=None, column=None):
+        """
+        .. versionadded:: 1.3.0
+
+        :param name: some param
+        :type name: str
+
+        Example::
+
+            method()
+        """
+        if row is not None and column is not None:
+            self._display_buffer[row][column] = core.Sprixel(" ")
+            self._is_dirty = True
+
     def display_line(self, *text, end="\n", file=sys.stdout, flush=False):
         """
         .. versionadded:: 1.2.0
