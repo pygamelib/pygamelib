@@ -15,6 +15,8 @@ width = 48
 #                                                    it's created
 #         - --out=<path to a dir or file> -> if a dir write the file here, if a file
 #                                            overwrite it.
+#         - --no-code to not show the code example
+#         - --show to show the generated sprite
 if len(sys.argv) <= 1:
     print("No image file provided.")
     print(
