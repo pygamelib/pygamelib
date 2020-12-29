@@ -3235,6 +3235,15 @@ class Screen(object):
                         if idx >= self.width:
                             break
                 elif isinstance(i, core.Sprite):
+                    # Check if the text has changed to update the sprite...
+                    # I'm not so sure about all this update thing...
+                    if (
+                        i._initial_text_object is not None
+                        and i._initial_text_object._sprite_data
+                        != i._initial_text_object.text
+                    ):
+                        i = core.Sprite.from_text(i._initial_text_object)
+                        self._display_buffer[row][col] = i
                     for sr in range(0, i.height):
                         for sc in range(0, i.width):
                             sprix = i.sprixel(sr, sc)
@@ -3290,12 +3299,15 @@ class Screen(object):
             isinstance(item, core.Sprixel)
             or isinstance(item, Board)
             or isinstance(item, core.Sprite)
-            or isinstance(item, base.Text)
             or isinstance(item, board_items.BoardItem)
             or isinstance(item, board_items.BoardComplexItem)
             or type(item) is str
         ):
             self._display_buffer[row][column] = item
+            self._is_dirty = True
+        elif isinstance(item, base.Text):
+            # If it's a text object we need to convert it to a Sprite first.
+            self._display_buffer[row][column] = core.Sprite.from_text(item)
             self._is_dirty = True
         else:
             raise base.PglInvalidTypeException(
