@@ -86,3 +86,7 @@ MODE_TBT = 90000003
 # Path Finding Algorithm Constants
 ALGO_BFS = 90000100
 ALGO_ASTAR = 90000101
+
+# Text styling constants
+BOLD = "\x1b[1m"
+UNDERLINE = "\x1b[4m"
