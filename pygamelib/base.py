@@ -82,9 +82,9 @@ class Text(object):
     :param text: The text to manipulate
     :type text: str
     :param fg_color: The foreground color for the text.
-    :type fg_color: str
+    :type fg_color: :class:`~pygamelib.gfx.core.Color`
     :param bg_color: The background color for the text.
-    :type bg_color: str
+    :type bg_color: :class:`~pygamelib.gfx.core.Color`
     :param style: The style for the text.
     :type style: str
     """
@@ -118,7 +118,7 @@ class Text(object):
         self.parent = None
         """This object's parent. It needs to be a
         :class:`~pygamelib.board_items.BoardItem`."""
-        self._sprite = None
+        self._sprite_data = None
         self._item = None
 
     def __repr__(self):

@@ -863,6 +863,8 @@ class Sprite(object):
         self.parent = parent
         self.name = name
         self.default_sprixel = default_sprixel
+        # Double linking here, GC will hate it...
+        self._initial_text_object = None
         if self.name is None or type(self.name) is not str:
             self.name = str(uuid4())
         if sprixels is not None and len(sprixels) > 0:
@@ -994,7 +996,10 @@ class Sprite(object):
         """
         sprixels = []
         # TODO: why is it not style = text_object.style ?
-        style = ""
+        # style = ""
+        # NOTE: I leave this TODO because I'm not sure exactly why it was put here and
+        #       not changed immediately. There may be side effects.
+        style = text_object.style
         max_width = 0
         for line in text_object.text.splitlines():
             sprixels.append([])
@@ -1008,7 +1013,10 @@ class Sprite(object):
                         text_object.fg_color,
                     )
                 )
-        return cls(sprixels=sprixels)
+        obj = cls(sprixels=sprixels)
+        text_object._sprite_data = text_object.text
+        obj._initial_text_object = text_object
+        return obj
 
     @classmethod
     def load_from_ansi_file(cls, filename, default_sprixel=None):
