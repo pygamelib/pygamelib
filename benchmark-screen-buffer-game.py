@@ -135,9 +135,10 @@ with g.terminal.cbreak(), g.terminal.hidden_cursor(), g.terminal.fullscreen():
     g.screen.place("Progress: ", 38, 2)
     g.screen.place("FPS/Max. FPS: |", 39, 2)
     g.screen.place(core.Sprixel("|"), 39, 37)
-    g.screen.place("FPS graph:", 40, 2)
+    g.screen.place(
+        base.Text("FPS graph:", style=constants.BOLD + constants.UNDERLINE), 40, 2
+    )
     low_graph_row = round((35 + g.current_board().height) - panda.height - 2)
-
     g.start()
     max_fps = 0
     max_frames = 480
