@@ -1935,3 +1935,69 @@ class Tile(GenericStructure, BoardComplexItem):
         :rtype: bool
         """
         return False
+
+
+class Camera(Movable):
+    """
+    .. versionadded:: 1.3.0
+
+    A Camera is a special item: it does not appear on the Board and actually is not even
+    registered on it. It is only an item that you can center the board on (when using
+    partial display). It helps for cut scenes for example.
+
+    Example::
+
+        grass_sprite = Sprite.load_from_ansi_file('textures/grass.ans')
+        for pos in grass_positions:
+            outdoor_level.place_item( Tile(sprite=grass_sprite), pos[0], pos[1] )
+    """
+
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self.model = ""
+        self.sprixel = core.Sprixel("", None, None, True)
+        self.actuator = None
+        if "actuator" in kwargs:
+            self.actuator = kwargs["actuator"]
+
+    @property
+    def row(self):
+        """Convenience method to get the current stored row of the item.
+
+        This is absolutely equivalent to access to item.pos[0].
+
+        :return: The row coordinate
+        :rtype: int
+
+        Example::
+
+            if item.row != item.pos[0]:
+                print('Something extremely unlikely just happened...')
+        """
+        return self.pos[0]
+
+    @row.setter
+    def row(self, val):
+        if type(val) is int:
+            self.store_position(val, self.pos[1])
+
+    @property
+    def column(self):
+        """Convenience method to get the current stored column of the item.
+
+        This is absolutely equivalent to access to item.pos[1].
+
+        :return: The column coordinate
+        :rtype: int
+
+        Example::
+
+            if item.column != item.pos[1]:
+                print('Something extremely unlikely just happened...')
+        """
+        return self.pos[1]
+
+    @column.setter
+    def column(self, val):
+        if type(val) is int:
+            self.store_position(self.pos[0], val)
