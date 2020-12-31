@@ -295,8 +295,8 @@ class Sprixel(object):
     In that case, as we can really achieve transparency in the console, the sprixel will
     take the background color of whatever it is overlapping.
 
-    .. Important:: BREAKING CHANGE: in version 1.3.0 background and foreground colors
-       use the new :class:`Color` object. Therefor, Sprixel does not accept ANSI
+    .. Important:: **BREAKING CHANGE**: in version 1.3.0 background and foreground
+       colors use the new :class:`Color` object. Therefor, Sprixel does not accept ANSI
        sequences anymore for the bg_color and fg_color parameters.
 
     :param model: The model, it can be any string. Preferrably a single character.
@@ -430,10 +430,41 @@ class Sprixel(object):
 
     @property
     def length(self):
+        """Return the true length of the model.
+
+        With UTF8 and emojis the length of a string as returned by python's
+        :func:`len()` function is often very wrong.
+        For example, the len("\\x1b[48;2;139;22;19m\\x1b[38;2;160;26;23m▄\\x1b[0m")
+        returns 39 when it should return 1.
+
+        This method returns the actual printing/display size of the sprixel's model.
+
+        .. Note:: This is a read only value. It is automatically updated when the model
+           is changed.
+
+        Example::
+
+            if sprix.length > 2:
+                print(
+                    f'Warning: that sprixel {sprix} will disalign the rest of the board'
+                    )
+        """
         return self.__length
 
     @property
     def model(self):
+        """Access to the model part of the Sprixel.
+
+        :param value: The new model
+        :type value: str
+
+        Example::
+
+            # Access the sprixel's model
+            sprix.model
+            # Set the sprixel's model to "@"
+            sprix.model = "@"
+        """
         return self.__model
 
     @model.setter
@@ -448,6 +479,18 @@ class Sprixel(object):
 
     @property
     def bg_color(self):
+        """Access to the background color part of the Sprixel.
+
+        :param value: The new color
+        :type value: :class:`Color`
+
+        Example::
+
+            # Access the sprixel's color
+            sprix.bg_color
+            # Set the sprixel's color to some blue
+            sprix.bg_color = Color(0,128,255)
+        """
         return self.__bg_color
 
     @bg_color.setter
@@ -462,6 +505,18 @@ class Sprixel(object):
 
     @property
     def fg_color(self):
+        """Access to the foreground color part of the Sprixel.
+
+        :param value: The new color
+        :type value: :class:`Color`
+
+        Example::
+
+            # Access the sprixel's color
+            sprix.fg_color
+            # Set the sprixel's color to some green
+            sprix.fg_color = Color(0,255,128)
+        """
         return self.__fg_color
 
     @fg_color.setter
