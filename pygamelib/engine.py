@@ -48,6 +48,23 @@ class Board:
         you create a Board and then you add BoardItems
         (or objects derived from BoardItem).
 
+
+    .. Note:: In version 1.3.0 a new screen rendering stack was introduced. With this
+       came the need for some object to hold more information about their state. This is
+       the case for Board. To use partial display with the :class:`Screen` buffer system
+       the board itself needs to hold the information about were to draw and on what to
+       focus. The existing code will still work as the :class:`Game` object takes care
+       of forwarding the information to the Board. However, it is now possible to
+       exploit the :class:`~pygamelib.board_items.Camera` object to create cutscenes and
+       more interesting movements.
+
+    .. Important:: Partial display related parameters are information used by the
+       :func:`~pygamelib.engine.Board.display_around()` method and the :class:`Screen`
+       object to either display directly the board (display_around) or render the Board
+       in the screen buffer. **You have to make sure that the focus element's position
+       is updated**. If you use the player, you have nothing to do but the Camera object
+       needs to be manually updated for example.
+
     :param name: the name of the Board
     :type name: str
     :param size: array [width,height] with width and height being int.
@@ -76,6 +93,18 @@ class Board:
     :param DISPLAY_SIZE_WARNINGS: A boolean to show or hide the warning about boards
         bigger than 80 rows and columns.
     :type DISPLAY_SIZE_WARNINGS: bool
+    :param enable_partial_display: A boolean to tell the Board to enable or not partial
+        display of boards. Default: False.
+    :type enable_partial_display: bool
+    :param partial_display_viewport: A 2 int elements array that gives the **radius**
+        of the partial display in number of row and column. Please see
+        :func:`~pygamelib.engine.Board.display_around()`.
+    :type partial_display_viewport: list
+    :param partial_display_focus: An item to focus (i.e center) the view on. When
+        partial display is enabled the rendered view will be centered on this focus
+        point/item. It can be an item or a vector.
+    :type partial_display_focus: :class:`~pygamelib.board_items.BoardItem` or
+       :class:`~pygamelib.base.Vector2D`
     """
 
     def __init__(self, **kwargs):
@@ -91,6 +120,9 @@ class Board:
         self.DISPLAY_SIZE_WARNINGS = True
         self.parent = None
         self._matrix = np.array([])
+        self.partial_display_viewport = None
+        self.partial_display_focus = None
+        self.enable_partial_display = False
         # The overlapped matrix is used as an invisible layer were overlapped
         # restorable items are parked momentarily (until the cell they were on
         # is free again).
@@ -108,6 +140,9 @@ class Board:
             "player_starting_position",
             "DISPLAY_SIZE_WARNINGS",
             "parent",
+            "partial_display_viewport",
+            "partial_display_focus",
+            "enable_partial_display",
         ]:
             if item in kwargs:
                 setattr(self, item, kwargs[item])
@@ -578,6 +613,8 @@ class Board:
 
         For basic usage of the library it is unlikely that you will use it. It is part
         of the screen rendering stack introduced in version 1.3.0.
+        Actually unless you need to write a different rendering system you won't use
+        that method.
 
         :param row: The row to render.
         :type row: int
@@ -3246,6 +3283,8 @@ class Screen(object):
                         self._display_buffer[row][col] = i
                     for sr in range(0, i.height):
                         for sc in range(0, i.width):
+                            if col + sc >= self.width:
+                                break
                             sprix = i.sprixel(sr, sc)
                             if sprix != core.Sprixel():
                                 # Need to check the empty/null sprixel in the sprite
@@ -3257,14 +3296,70 @@ class Screen(object):
                                 ] = sprix.__repr__()
                             else:
                                 continue
+                        if row + sr >= self.height:
+                            break
                 elif isinstance(i, Board):
-                    for br in range(0, i.height):
-                        bc = cidx = 0
-                        while bc < i.width:
+                    row_start = 0
+                    row_end = i.height
+                    pos_row = 0
+                    pos_col = 0
+                    vp_height = 0
+                    vp_width = 0
+                    if i.enable_partial_display:
+                        # We still need to clamp the viewport if we want to avoid
+                        # crashes in case the progammer poorly calculated the viewport.
+                        vp_height = i.partial_display_viewport[0]
+                        vp_width = i.partial_display_viewport[1]
+                        if i.width < (2 * vp_width):
+                            vp_width = int(i.width / 2)
+                        if i.height < (2 * vp_height):
+                            vp_height = int(i.height / 2)
+                        pos_row = i.partial_display_focus.row
+                        pos_col = i.partial_display_focus.column
+                        if isinstance(
+                            i.partial_display_focus, board_items.BoardComplexItem
+                        ):
+                            pos_row = i.partial_display_focus.row + int(
+                                i.partial_display_focus.height / 2
+                            )
+                            pos_col = i.partial_display_focus.column + int(
+                                i.partial_display_focus.width / 2
+                            )
+                        # We don't want to many tests here for performances sake.
+                        # So if partial display is enabled we assume the rest of the
+                        # parameters are correct. If not, well it'll crash.
+                        row_start = pos_row - vp_height
+                        row_end = pos_row + vp_height
+                        if row_start < 0:
+                            row_start = 0
+                        if row_end > i.height:
+                            row_end = i.height
+                            row_start = i.height - (2 * vp_height)
+                        elif row_end < (2 * vp_height):
+                            row_end = 2 * vp_height
+                    for br in range(row_start, row_end):
+                        cidx = 0
+                        bc = 0
+                        column_end = i.width
+                        if i.enable_partial_display:
+                            bc = pos_col - vp_width
+                            column_end = pos_col + vp_width
+                            if bc < 0:
+                                bc = 0
+                            elif bc > i.width - (vp_width * 2):
+                                bc = i.width - (vp_width * 2)
+                            if column_end > i.width:
+                                column_end = i.width
+                                bc = i.width - vp_width * 2
+                            elif column_end < (vp_width * 2):
+                                column_end = vp_width * 2
+                        while bc < column_end:
                             cell = i.render_cell(br, bc)
                             encoded_cell = cell.__repr__()
                             incr = cell.length
-                            self._screen_buffer[row + br][col + cidx] = encoded_cell
+                            self._screen_buffer[row + br - row_start][
+                                col + cidx
+                            ] = encoded_cell
 
                             if incr > 1:
                                 for tmpiidx in range(1, incr):
@@ -3275,7 +3370,6 @@ class Screen(object):
                             cidx += incr
                 elif hasattr(i, "__repr__"):
                     self._screen_buffer[row][col] = i.__repr__()
-                # print(self._screen_buffer[row][col], end="")
                 col -= 1
             row -= 1
         self._is_dirty = False
