@@ -59,6 +59,7 @@ class TestBase(unittest.TestCase):
     def test_sprixel_update(self):
         sprix = gfx_core.Sprixel()
         self.assertEqual(sprix.model, "")
+        self.assertEqual(sprix.length, 0)
         self.assertIsNone(sprix.bg_color)
         self.assertIsNone(sprix.fg_color)
         sprix.model = "@"

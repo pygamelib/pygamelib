@@ -266,6 +266,15 @@ class TestBoard(unittest.TestCase):
         self.assertTrue(ci.pickable())
         self.assertFalse(ci.overlappable())
 
+    def test_camera(self):
+        cam = board_items.Camera()
+        cam = board_items.Camera(actuator=42)
+        self.assertEqual(cam.actuator, 42)
+        cam.row = 12
+        cam.column = 34
+        self.assertEqual(cam.row, 12)
+        self.assertEqual(cam.column, 34)
+
 
 if __name__ == "__main__":
     unittest.main()

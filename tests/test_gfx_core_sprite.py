@@ -5,10 +5,12 @@ import unittest
 
 
 class TestBase(unittest.TestCase):
-    def test_screen_create_empty(self):
+    def test_sprite_create_empty(self):
         spr = gfx_core.Sprite()
         self.assertEqual(spr.size[0], 2)
         self.assertEqual(spr.size[1], 2)
+        self.assertEqual(spr.width, 2)
+        self.assertEqual(spr.height, 2)
         self.assertEqual(spr.sprixel(1, 1), gfx_core.Sprixel())
         self.assertEqual(spr.__repr__(), "\x1b[0m\x1b[0m\n\x1b[0m\x1b[0m")
         with self.assertRaises(gfx_core.base.PglInvalidTypeException):
@@ -30,19 +32,19 @@ class TestBase(unittest.TestCase):
         with self.assertRaises(gfx_core.base.PglInvalidTypeException):
             spr.set_sprixel(1, 1, "bork")
 
-    def test_screen_create1(self):
+    def test_sprite_create1(self):
         spr = gfx_core.Sprite(size=[4, 4])
         self.assertEqual(spr.size[0], 4)
         self.assertEqual(spr.size[1], 4)
         self.assertEqual(spr.sprixel(1, 1), gfx_core.Sprixel())
 
-    def test_screen_create2(self):
+    def test_sprite_create2(self):
         spr = gfx_core.Sprite(default_sprixel=gfx_core.Sprixel.cyan_rect())
         self.assertEqual(spr.size[0], 2)
         self.assertEqual(spr.size[1], 2)
         self.assertEqual(spr.sprixel(1, 1), gfx_core.Sprixel.cyan_rect())
 
-    def test_screen_create3(self):
+    def test_sprite_create3(self):
         spr = gfx_core.Sprite(
             sprixels=[
                 [
@@ -61,7 +63,7 @@ class TestBase(unittest.TestCase):
         self.assertEqual(spr.size[1], 2)
         self.assertEqual(spr.sprixel(1, 1), gfx_core.Sprixel.blue_rect())
 
-    def test_screen_flip_horiz(self):
+    def test_sprite_flip_horiz(self):
         spr = gfx_core.Sprite(
             sprixels=[
                 [
@@ -80,7 +82,7 @@ class TestBase(unittest.TestCase):
         self.assertEqual(spr.sprixel(1, 0), gfx_core.Sprixel.yellow_rect())
         self.assertEqual(spr_flipped.sprixel(1, 0), gfx_core.Sprixel.white_rect())
 
-    def test_screen_flip_vert(self):
+    def test_sprite_flip_vert(self):
         spr = gfx_core.Sprite(
             sprixels=[
                 [
@@ -108,7 +110,7 @@ class TestBase(unittest.TestCase):
         self.assertEqual(spr.sprixel(0, 0).model, "▀")
         self.assertIsNone(spr.set_transparency(True))
 
-    def test_screen_empty(self):
+    def test_sprite_empty(self):
         spr = gfx_core.Sprite(
             sprixels=[
                 [
