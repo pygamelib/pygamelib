@@ -1,6 +1,7 @@
 from pygamelib import engine, board_items, functions, base
 from pygamelib.gfx.core import SpriteCollection, Sprixel, Color, Sprite
 import unittest
+import numpy as np
 
 
 # Test cases for all classes in pygamelib.gfx.core except for Animation.
@@ -66,6 +67,14 @@ class TestBase(unittest.TestCase):
         sprites_panda = SpriteCollection.load_json_file("tests/panda.spr")
         b = engine.Board(size=[20, 20])
         s = engine.Screen()
+        # This is a dirty hack for CircleCI as it returns a 0x0 screen size.
+        if s.width <= 0 or s.height <= 0:
+            s._display_buffer = np.array(
+                [[Sprixel(" ") for i in range(0, 50, 1)] for j in range(0, 50, 1)]
+            )
+            s._screen_buffer = np.array(
+                [[Sprixel(" ") for i in range(0, 50, 1)] for j in range(0, 50, 1)]
+            )
         b.place_item(board_items.Tile(sprite=sprites_panda["panda"]), 0, 0)
         self.assertIsInstance(b.render_cell(1, 1), Sprixel)
         b.item(19, 19).model = "@"
