@@ -37,12 +37,12 @@ def draw_box(game, row, column, height, width, title=""):
         )
 
 
-print("pygamelib benchmark\nLoading resources:", end="")
-print("Sprites...", end="")
-sc = core.SpriteCollection.load_json_file("tests/pgl-benchmark.spr")
-panda = core.SpriteCollection.load_json_file("tests/panda.spr")["panda"]
+print("pygamelib benchmark\nLoading resources: ", end="", flush=True)
+sprites = core.SpriteCollection.load_json_file("tests/pgl-benchmark.spr")
+panda = sprites["panda"]
+polus = sprites["Polus_Map"]
 print("done")
-print("Game engine...", end="")
+print("Game engine...", end="", flush=True)
 g = engine.Game(user_update=upd, mode=constants.MODE_TBT)
 print("done")
 if g.screen.width < 155:
@@ -63,44 +63,57 @@ if g.screen.height < 65:
     exit()
 g.player = board_items.Player(sprixel=core.Sprixel("@@", None, core.Color(0, 255, 255)))
 # g.load_board("hac-maps/test_editor.json", 1)
-print("Test Board...", end="")
+print("Generating Boards: ", end="", flush=True)
+print("Benchmark Board ", end="", flush=True)
 g.load_board("hac-maps/benchmark.json", 1)
-print("done")
+print("[ok] ", end="", flush=True)
 g.change_level(1)
-# g.display_board()
-# time.sleep(1)
+print("High Definition Board ", end="", flush=True)
+polus_cam = board_items.Camera()
+polus_map = engine.Board(
+    size=polus.size,
+    ui_borders="",
+    enable_partial_display=True,
+    partial_display_viewport=[
+        int(g.current_board().height / 2),
+        g.current_board().width,  # Tricky: The other board uses double characters.
+    ],
+    partial_display_focus=polus_cam,
+    DISPLAY_SIZE_WARNINGS=False,
+)
+polus_cam.row = 120
+polus_cam.column = 0
+polus_map.place_item(board_items.Tile(sprite=polus), 0, 0)
+print("[ok]...done")
+
 g.clear_screen()
 results.append(f"Benchmark runs at resolution: {g.screen.width}x{g.screen.height}")
-# g.screen.place("+", int(g.screen.width / 2), int(g.screen.height / 2))
 
-
-# g.screen.place(sc["panda"], 10, 10)
-# g.screen.place("This is a text", g.screen.height - 1, 25)
-# g.run()
-# g.screen.place(g.player, 10, 10)
 g.player.pos = [10, 10]
-# path
-# (5,19), (19,19), (24,32)
-# bg color 33, 99, 247
 for row in range(0, g.screen._display_buffer.shape[0]):
     for col in range(0, g.screen._display_buffer.shape[1]):
         g.screen.place(
             core.Sprixel(" ", core.Color(33, 99, 247)), row, col,
         )
 spr_start = time.time()
-g.screen.place(sc["pgl-benchmark"], int(g.screen.height / 2) - 14, 0)
+g.screen.place(
+    sprites["pgl-benchmark"],
+    int(g.screen.height / 2) - 14,
+    int(g.screen.width / 2 - sprites["pgl-benchmark"].width / 2),
+)
 g.screen.update()
 
-test_times = [0.001, 0.01, 0.02, 0.05]
 k = None
 go = True
 
+g.start()
 g.clear_screen()
 with g.terminal.cbreak(), g.terminal.hidden_cursor(), g.terminal.fullscreen():
     spr_stop = time.time()
     results.append(
-        f"Sprite (place, render and update screen), size ({sc['pgl-benchmark'].width}x"
-        f"{sc['pgl-benchmark'].height}): {round(spr_stop-spr_start, 2)*1000}"
+        f"Sprite (place, render and update screen), size "
+        f"({sprites['pgl-benchmark'].width}x"
+        f"{sprites['pgl-benchmark'].height}): {round(spr_stop-spr_start, 2)*1000}"
         f" msec. or {round(1/(spr_stop-spr_start))} FPS."
     )
     spr_start = time.time()
@@ -129,6 +142,35 @@ with g.terminal.cbreak(), g.terminal.hidden_cursor(), g.terminal.fullscreen():
 
     g.screen.place(g.current_board(), 35, 55)
     draw_box(g, 35, 1, g.current_board().height, 40, "Benchmark")
+    draw_box(
+        g,
+        2,
+        polus_map.partial_display_viewport[1] * 2 + 2,
+        polus_map.partial_display_viewport[0] * 2,
+        g.screen.width - polus_map.partial_display_viewport[1] * 2 - 2,
+        "More info",
+    )
+    g.screen.place(
+        "Currently running benchmark:", 3, polus_map.partial_display_viewport[1] * 2 + 3
+    )
+    text_phase = base.Text("Phase 1", core.Color(255, 128, 0))
+    g.screen.place(text_phase, 3, polus_map.partial_display_viewport[1] * 2 + 33)
+    bench_status = base.Text(
+        "One board, multiple sprites, NPC movement computed",
+        core.Color(0, 128, 255),
+        style=constants.BOLD,
+    )
+    g.screen.place(bench_status, 4, polus_map.partial_display_viewport[1] * 2 + 5)
+    g.screen.place(
+        f"Baseline FPS (calc. in splashscreen): {baseline_fps}",
+        6,
+        polus_map.partial_display_viewport[1] * 2 + 3,
+    )
+    g.screen.place(
+        "Remaining frames to render:", 8, polus_map.partial_display_viewport[1] * 2 + 3
+    )
+    bench_rem_frames = base.Text("N/A", core.Color(0, 255, 128))
+    g.screen.place(bench_rem_frames, 8, polus_map.partial_display_viewport[1] * 2 + 31)
     g.screen.place(panda, round((35 + g.current_board().height) - panda.height - 1), 2)
     panda.row = round((35 + g.current_board().height) - panda.height - 1)
     panda.column = 2
@@ -139,12 +181,14 @@ with g.terminal.cbreak(), g.terminal.hidden_cursor(), g.terminal.fullscreen():
         base.Text("FPS graph:", style=constants.BOLD + constants.UNDERLINE), 40, 2
     )
     low_graph_row = round((35 + g.current_board().height) - panda.height - 2)
-    g.start()
+    # g.start()
     max_fps = 0
     max_frames = 480
+    max_frames = 1000
     panda_steps = int(max_frames / (37 - panda.width))
     last_col = 0
     while frame_count < max_frames:
+        bench_rem_frames.text = str(max_frames - frame_count)
         current_fps = round(frame_count / ((time.time() - start) - dt * frame_count))
         if current_fps > max_fps:
             max_fps = current_fps
@@ -188,12 +232,22 @@ with g.terminal.cbreak(), g.terminal.hidden_cursor(), g.terminal.fullscreen():
                 f"{round(((stop-start)/frame_count - dt)*1000, 2)} "
                 f"msec.\n\tFPS: {round(1/((stop-start)/frame_count - dt))}"
             )
-            g.screen.place(g.current_board(), 2, 0)
+            g.screen.place(polus_map, 2, 0)
             phase2 = time.time()
+            bench_status.text = "Phase 1 + high definition board + camera movement"
         if frame_count % panda_steps == 0:
             g.screen.delete(panda.row, panda.column)
             g.screen.place(panda, panda.row, panda.column + 1)
             panda.column += 1
+        if frame_count > max_frames / 2:
+            text_phase.text = "Phase 2"
+            if (
+                polus_cam.column
+                < polus_map.width - polus_map.partial_display_viewport[1]
+            ):
+                polus_cam.column += 2
+            else:
+                polus_cam.row += 1
         g.actuate_npcs(1)
         g.screen.update()
         g.terminal.inkey(timeout=dt)
