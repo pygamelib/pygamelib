@@ -775,7 +775,8 @@ class Board:
                     if cc == item:
                         break
                     else:
-                        cc = None
+                        # I honestly think it's impossible to get there.
+                        cc = None  # pragma: no cover
                 if cc is not None:
                     break
         else:
@@ -3267,10 +3268,10 @@ class Screen(object):
                 if type(i) is str and len(i) > 1:
                     idx = 0
                     for char in i:
+                        if col + idx >= self.width:
+                            break
                         self._screen_buffer[row][col + idx] = char
                         idx += 1
-                        if idx >= self.width:
-                            break
                 elif isinstance(i, core.Sprite):
                     # Check if the text has changed to update the sprite...
                     # I'm not so sure about all this update thing...
@@ -3282,6 +3283,8 @@ class Screen(object):
                         i = core.Sprite.from_text(i._initial_text_object)
                         self._display_buffer[row][col] = i
                     for sr in range(0, i.height):
+                        if row + sr >= self.height:
+                            break
                         for sc in range(0, i.width):
                             if col + sc >= self.width:
                                 break
@@ -3296,8 +3299,6 @@ class Screen(object):
                                 ] = sprix.__repr__()
                             else:
                                 continue
-                        if row + sr >= self.height:
-                            break
                 elif isinstance(i, Board):
                     row_start = 0
                     row_end = i.height
