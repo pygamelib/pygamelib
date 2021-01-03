@@ -75,10 +75,6 @@ class TestBase(unittest.TestCase):
             s._screen_buffer = np.array(
                 [[Sprixel(" ") for i in range(0, 50, 1)] for j in range(0, 50, 1)]
             )
-        print(
-            f"Screen buffer shape is: {s._screen_buffer.shape} and "
-            f"Display buffer shape is: {s._display_buffer.shape}"
-        )
         b.place_item(board_items.Tile(sprite=sprites_panda["panda"]), 0, 0)
         self.assertIsInstance(b.render_cell(1, 1), Sprixel)
         b.item(19, 19).model = "@"
@@ -89,6 +85,14 @@ class TestBase(unittest.TestCase):
             b.render_cell(50, 50)
         self.assertIsNone(s.clear_buffers())
         self.assertIsNone(s.clear_screen_buffer())
+        # And again after clear buffers.
+        if s.width <= 0 or s.height <= 0:
+            s._display_buffer = np.array(
+                [[Sprixel(" ") for i in range(0, 50, 1)] for j in range(0, 50, 1)]
+            )
+            s._screen_buffer = np.array(
+                [[Sprixel(" ") for i in range(0, 50, 1)] for j in range(0, 50, 1)]
+            )
         self.assertTrue(s._is_dirty)
         self.assertTrue(functions.pgl_isinstance(s.buffer, "numpy.ndarray"))
         self.assertIsNone(s.update())
