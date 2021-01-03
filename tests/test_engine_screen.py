@@ -75,6 +75,19 @@ class TestBase(unittest.TestCase):
             s._screen_buffer = np.array(
                 [[Sprixel(" ") for i in range(0, 50, 1)] for j in range(0, 50, 1)]
             )
+        # Because CircleCI return a console with no size (most probably because we are
+        # not attached to any terminal), we need to make sure that the partial display
+        # tests work in that environment too
+        screen_width = 0
+        screen_height = 0
+        if s.width <= 0:
+            screen_width = 50
+        else:
+            screen_width = s.width
+        if s.height <= 0:
+            screen_height = 50
+        else:
+            screen_height = s.height
         b.place_item(board_items.Tile(sprite=sprites_panda["panda"]), 0, 0)
         self.assertIsInstance(b.render_cell(1, 1), Sprixel)
         b.item(19, 19).model = "@"
@@ -104,17 +117,23 @@ class TestBase(unittest.TestCase):
         self.assertIsNone(s.place(sprites_panda["panda"], 0, 5))
         s.update()
         t.text = "update"
-        self.assertIsNone(s.place(sprites_panda["panda"], s.height - 2, s.width - 2))
-        self.assertIsNone(s.place("test", 1, s.width - 2))
+        self.assertIsNone(
+            s.place(sprites_panda["panda"], screen_height - 2, screen_width - 2)
+        )
+        self.assertIsNone(s.place("test", 1, screen_width - 2))
         s.update()
         # Now testing partial display
         camera = board_items.Camera()
         camera.row = 0
         camera.column = 0
+
         b = engine.Board(
-            size=[s.width * 2, s.height * 2],
+            size=[screen_width * 2, screen_height * 2],
             enable_partial_display=True,
-            partial_display_viewport=[int(s.height / 2) - 1, int(s.width / 2) - 1],
+            partial_display_viewport=[
+                int(screen_height / 2) - 1,
+                int(screen_width / 2) - 1,
+            ],
             partial_display_focus=camera,
             DISPLAY_SIZE_WARNINGS=False,
         )
@@ -129,12 +148,18 @@ class TestBase(unittest.TestCase):
                 )
         self.assertIsNone(s.place(b, 0, 0))
         self.assertIsNone(s.update())
-        b.partial_display_viewport = [int(s.height * 3) - 1, int(s.width * 3) - 1]
+        b.partial_display_viewport = [
+            int(screen_height * 3) - 1,
+            int(screen_width * 3) - 1,
+        ]
         camera.row += 1
         with self.assertRaises(IndexError):
             s.render()
             s.update()
-        b.partial_display_viewport = [int(s.height / 2) - 1, int(s.width / 2) - 1]
+        b.partial_display_viewport = [
+            int(screen_height / 2) - 1,
+            int(screen_width / 2) - 1,
+        ]
         camera = board_items.Tile(
             sprite=Sprite(
                 sprixels=[[Sprixel("+"), Sprixel("+")], [Sprixel("+"), Sprixel("+")]]
@@ -143,12 +168,12 @@ class TestBase(unittest.TestCase):
         b.partial_display_focus = camera
         # Please never do that in real life...
         camera.pos = [1, 1]
-        s.render()
-        s.update()
+        self.assertIsNone(s.render())
+        self.assertIsNone(s.update())
         self.assertIsNone(s.place("test delete", 0, 0))
-        s.update()
+        self.assertIsNone(s.update())
         self.assertIsNone(s.delete(0, 0))
-        s.update()
+        self.assertIsNone(s.update())
 
 
 if __name__ == "__main__":
