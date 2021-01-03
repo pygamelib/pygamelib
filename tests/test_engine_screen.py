@@ -75,6 +75,10 @@ class TestBase(unittest.TestCase):
             s._screen_buffer = np.array(
                 [[Sprixel(" ") for i in range(0, 50, 1)] for j in range(0, 50, 1)]
             )
+        print(
+            f"Screen buffer shape is: {s._screen_buffer.shape} and "
+            f"Display buffer shape is: {s._display_buffer.shape}"
+        )
         b.place_item(board_items.Tile(sprite=sprites_panda["panda"]), 0, 0)
         self.assertIsInstance(b.render_cell(1, 1), Sprixel)
         b.item(19, 19).model = "@"
