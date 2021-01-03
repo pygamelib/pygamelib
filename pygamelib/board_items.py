@@ -1450,8 +1450,8 @@ class Wall(Immovable):
     """
 
     def __init__(self, **kwargs):
-        if "model" not in kwargs.keys():
-            kwargs["model"] = "#"
+        if "sprixel" not in kwargs.keys():
+            kwargs["sprixel"] = core.Sprixel("#")
         if "name" not in kwargs.keys():
             kwargs["name"] = "wall"
         if "size" not in kwargs.keys():
@@ -1557,8 +1557,8 @@ class GenericStructure(Immovable):
     """
 
     def __init__(self, **kwargs):
-        if "model" not in kwargs.keys():
-            kwargs["model"] = "#"
+        if "sprixel" not in kwargs.keys():
+            kwargs["sprixel"] = core.Sprixel("#")
         if "name" not in kwargs.keys():
             kwargs["name"] = "structure"
         if "value" not in kwargs.keys():
@@ -1712,8 +1712,8 @@ class Treasure(Immovable):
     """
 
     def __init__(self, **kwargs):
-        if "model" not in kwargs.keys():
-            kwargs["model"] = "¤"
+        if "sprixel" not in kwargs.keys():
+            kwargs["sprixel"] = core.Sprixel("¤")
         super().__init__(**kwargs)
         if "value" not in kwargs.keys():
             self.value = 10
@@ -1818,8 +1818,8 @@ class Door(GenericStructure):
     """
 
     def __init__(self, **kwargs):
-        if "model" not in kwargs.keys():
-            kwargs["model"] = "]"
+        if "sprixel" not in kwargs.keys():
+            kwargs["sprixel"] = core.Sprixel("]")
         super().__init__(**kwargs)
         if "value" not in kwargs.keys():
             self.value = 0
@@ -1945,11 +1945,29 @@ class Camera(Movable):
     registered on it. It is only an item that you can center the board on (when using
     partial display). It helps for cut scenes for example.
 
+    The main difference with a regular BoardItem is that the row and column properties
+    are writable. This means that you can directly manipulate its coordinates and
+    partially render a huge board around that focal point.
+
+    The :class:`~pygamelib.engine.Screen` buffer rendering system introduced in version
+    1.3.0 uses (actually require) a board item to be declared as the focus point of the
+    board if partial display is enabled.
+
+    The Camera object inherits from Movable and can accept an actuator parameter.
+    However, it is up to the developper to activate the actuators mechanics as the
+    Camera object does not register as a NPC or a Player.
+    The suport for actuators is mainly thought for pre-scripted cutscenes.
+
     Example::
 
-        grass_sprite = Sprite.load_from_ansi_file('textures/grass.ans')
-        for pos in grass_positions:
-            outdoor_level.place_item( Tile(sprite=grass_sprite), pos[0], pos[1] )
+        # This example leverage the Screen buffer system introduced in v1.3.0.
+        # It pans the camera over a huge map. The Screen.update() method automatically
+        # uses the Board.partial_display_focus coordinates to adjust the displayed area.
+        camera = Camera()
+        huge_board.partial_display_focus = camera
+        while camera.column < huge_board.width:
+            camera.column += 1
+            game.screen.update()
     """
 
     def __init__(self, **kwargs):
