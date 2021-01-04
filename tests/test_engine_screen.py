@@ -57,9 +57,9 @@ class TestBase(unittest.TestCase):
         self.assertIsNone(
             self.screen.display_sprite_at(
                 sprites_panda["panda"],
-                Sprixel(" "),
                 int(self.screen.height / 2),
                 int(self.screen.width / 2),
+                Sprixel(" "),
             )
         )
 
