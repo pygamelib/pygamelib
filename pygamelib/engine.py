@@ -3519,9 +3519,9 @@ class Screen(object):
     def display_sprite_at(
         self,
         sprite,
-        filler=core.Sprixel(" "),
         row=0,
         column=0,
+        filler=core.Sprixel(" "),
         file=sys.stdout,
         flush=False,
     ):
@@ -3533,12 +3533,12 @@ class Screen(object):
 
         :param sprite: The sprite object to display.
         :type sprite: :class:`~pygamelib.gfx.core.Sprite`
-        :param filler: A sprixel object to replace all empty sprixels in sprite.
-        :type filler: :class:`~pygamelib.gfx.core.Sprixel`
         :param row: The row position in the terminal window.
         :type row: int
         :param column: The column position in the terminal window.
         :type column: int
+        :param filler: A sprixel object to replace all empty sprixels in sprite.
+        :type filler: :class:`~pygamelib.gfx.core.Sprixel`
         :param file:
         :type file: stream
         :param flush: print() parameter to flush the stream after printing
