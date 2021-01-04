@@ -37,7 +37,7 @@ def draw_box(game, row, column, height, width, title=""):
         )
 
 
-print("pygamelib benchmark\nLoading resources: ", end="", flush=True)
+print("pygamelib Screen Buffer benchmark\nLoading resources: ", end="", flush=True)
 sprites = core.SpriteCollection.load_json_file("tests/pgl-benchmark.spr")
 panda = sprites["panda"]
 polus = sprites["Polus_Map"]
@@ -225,7 +225,7 @@ with g.terminal.cbreak(), g.terminal.hidden_cursor(), g.terminal.fullscreen():
         if frame_count == int(max_frames / 2):
             stop = time.time()
             results.append(
-                f"Benchmark (buffer - phase 1) for :\n\tdt={dt}\n\tframes rendered="
+                f"Benchmark (Screen Buffer - phase 1):\n\tdt={dt}\n\tframes rendered="
                 f"{frame_count} in "
                 f"{round(stop - start, 5)} sec. or {round((stop-start)/frame_count, 5)}"
                 f" sec. per frame\n\tActual rendering time per frame: "
@@ -254,7 +254,7 @@ with g.terminal.cbreak(), g.terminal.hidden_cursor(), g.terminal.fullscreen():
         frame_count += 1
     stop = time.time()
     results.append(
-        f"Benchmark (buffer - phase 2) for :\n\tdt={dt}\n\tframes rendered="
+        f"Benchmark (Screen Buffer - phase 2):\n\tdt={dt}\n\tframes rendered="
         f"{frame_count-int(max_frames/2)}"
         f" in {stop - phase2} sec. or {(stop-phase2)/(frame_count-int(max_frames/2))}"
         f" sec. per frame\n\t"
@@ -263,7 +263,7 @@ with g.terminal.cbreak(), g.terminal.hidden_cursor(), g.terminal.fullscreen():
         f"msec.\n\tFPS: {round(1/((stop-phase2)/(frame_count-int(max_frames/2)) - dt))}"
     )
     results.append(
-        f"Benchmark (buffer - overall) for :\n\tdt={dt}\n\tframes rendered="
+        f"Benchmark (Screen Buffer - overall):\n\tdt={dt}\n\tframes rendered="
         f"{frame_count}"
         f" in {stop - start} sec. or {(stop-start)/frame_count} sec. per frame\n\t"
         f"Actual rendering time per frame: "
@@ -271,6 +271,6 @@ with g.terminal.cbreak(), g.terminal.hidden_cursor(), g.terminal.fullscreen():
         f"msec.\n\tFPS: {round(1/((stop-start)/frame_count - dt))}"
     )
 
-print("\n=========== Benchmark results ===========")
+print("\n=========== Screen Buffer Benchmark results ===========")
 for r in results:
     print(r)
