@@ -1499,8 +1499,9 @@ class Animation(object):
         once the animation is played it stays on the last
         frame of the animation.
     :type auto_replay: bool
-    :param frames: an array of "frames" (string, sprixel or sprite)
-    :type frames: array[str|Sprixel|Sprite]
+    :param frames: an array of "frames" (string, sprixel, sprite) or a sprite collection
+    :type frames: array[str| :class:`Sprixel` | :class:`Sprite` ] |
+        :class:`SpriteCollection`
     :param animated_object: The object to animate. This parameter is deprecated.
         Please use parent instead. It is only kept for backward compatibility.
         The parent parameter always takes precedence over this one.
@@ -1511,6 +1512,11 @@ class Animation(object):
     :param refresh_screen: The callback function that controls the redrawing of
         the screen. This function reference should come from the main game.
     :type refresh_screen: function
+
+    .. Important:: When a :class:`SpriteCollection` is used as the *frames* parameter
+       the sprites' names are ordered so the frames are displayed in correct order. This
+       means that 'walk_1' is going to be displayed before 'walk_2'. Otherwise
+       SpriteCollection is un-ordered.
 
     Example ::
 
@@ -1542,7 +1548,7 @@ class Animation(object):
             frames = []
         elif isinstance(frames, SpriteCollection):
             nf = []
-            for sn in frames:
+            for sn in sorted(frames.keys()):
                 nf.append(frames[sn])
             frames = nf
 
