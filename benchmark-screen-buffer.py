@@ -37,19 +37,17 @@ def draw_box(game, row, column, height, width, title=""):
         )
 
 
-print("pygamelib Screen Buffer benchmark\nLoading resources: ", end="", flush=True)
-sprites = core.SpriteCollection.load_json_file("tests/pgl-benchmark.spr")
-panda = sprites["panda"]
-polus = sprites["Polus_Map"]
-print("done")
-print("Game engine...", end="", flush=True)
+print("pygamelib Screen Buffer benchmark\n")
+print("Loading game engine...", end="", flush=True)
+g_start = time.time()
 g = engine.Game(user_update=upd, mode=constants.MODE_TBT)
+g_stop = time.time()
 print("done")
 if g.screen.width < 155:
     print(
         base.Text.red_bright(
             "Your console/terminal needs to be at least 155 columns wide"
-            " to run that benchmark."
+            f" to run that benchmark (current width is {g.screen.width})."
         )
     )
     exit()
@@ -57,13 +55,20 @@ if g.screen.height < 65:
     print(
         base.Text.red_bright(
             "Your console/terminal needs to be at least 65 columns high"
-            " to run that benchmark."
+            f" to run that benchmark (current height is {g.screen.height})."
         )
     )
     exit()
 g.player = board_items.Player(sprixel=core.Sprixel("@@", None, core.Color(0, 255, 255)))
-# g.load_board("hac-maps/test_editor.json", 1)
+print("Loading resources: ", end="", flush=True)
+load_start = time.time()
+sprites = core.SpriteCollection.load_json_file("tests/pgl-benchmark.spr")
+panda = sprites["panda"]
+polus = sprites["Polus_Map"]
+load_stop = time.time()
+print("done")
 print("Generating Boards: ", end="", flush=True)
+gen_start = time.time()
 print("Benchmark Board ", end="", flush=True)
 g.load_board("hac-maps/benchmark.json", 1)
 print("[ok] ", end="", flush=True)
@@ -84,10 +89,16 @@ polus_map = engine.Board(
 polus_cam.row = 120
 polus_cam.column = 0
 polus_map.place_item(board_items.Tile(sprite=polus), 0, 0)
+gen_stop = time.time()
 print("[ok]...done")
 
 g.clear_screen()
 results.append(f"Benchmark runs at resolution: {g.screen.width}x{g.screen.height}")
+results.append(f"Resources loading time: {round(load_stop - load_start, 2)} secondes.")
+results.append(f"Game engine loading time: {round(g_stop - g_start,2)} secondes.")
+results.append(
+    f"Test board loading/generation time: {round(gen_stop - gen_start,2)} secondes."
+)
 
 g.player.pos = [10, 10]
 for row in range(0, g.screen._display_buffer.shape[0]):
