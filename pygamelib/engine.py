@@ -20,12 +20,9 @@ The Board class is the base class for all levels.
    Inventory
    Screen
 """
-from pygamelib import board_items
-from pygamelib import base
-from pygamelib import constants
+from pygamelib import board_items, base, constants, actuators
 from pygamelib.assets import graphics
 from pygamelib.gfx import core
-from pygamelib import actuators
 from blessed import Terminal
 import uuid
 import random
@@ -3083,8 +3080,6 @@ class Screen(object):
     """
     The screen object is pretty straightforward: it is an object that allow manipulation
     of the screen.
-    At the moment it relies heavily on the blessed module, but it wraps a lot of its
-    methods and provide easy calls to actions.
 
     .. WARNING:: Starting with version 1.3.0 the terminal parameter has been removed.
        The Screen object now takes advantage of base.Console.instance() to get a
@@ -3093,25 +3088,96 @@ class Screen(object):
     Version 1.3.0 introduced a new way of managing the screen. It rely on an internally
     managed display buffer that allows for easier positioning and more regular
     rendering. This comes at a cost though as the performances takes a hit. The screen
-    should still be able to be refreshed over 60 times per seconds.
+    should still be able to be refreshed between 50 and 60+ times per seconds (and still
+    around 30 times per second within a virtual machine).
+
+    This change introduce two ways of displaying things on the screen:
+
+       * The **Screen Buffer** stack.
+       * The **Direct Display** stack.
+
+    It is safer to consider them mutually incompatible. In reality the **Screen Buffer**
+    will always use the whole display but you can use the methods from the **Direct
+    Display** stack to write over the buffer. It is really **NOT** advised.
+
+    We introduced the **Screen Buffer** stack because the direct display is messy and
+    does not allow us to do what we want in term of positioning, UI, etc.
+
+    A typical usage consist of:
+
+       * Placing elements on the screen with :func:`place()`
+       * Update the screen with :func:`update()`
+
+    That's it! The screen maintain its own state and knows when to re-render the display
+    buffer. You don't need to manually call :func:`render()`. This helps with
+    performances as the screen buffer is only rendered when needed.
 
     Example::
 
         screen = Screen()
-        screen.display_at('This is centered', int(screen.height/2), int(screen.width/2))
+        # The next 2 lines do the same thing: display a message centered on the screen.
+        # Screen Buffer style
+        screen.place('This is centered', screen.vcenter, screen.hcenter)
+        screen.update()
+        # Direct Display style
+        screen.display_at('This is centered', screen.vcenter, screen.hcenter)
+        # The rest of this example uses the Screen Buffer.
+        # delete the previous message and place a Board at the center of the screen
+        screen.delete(screen.vcenter, screen.hcenter)
+        screen.place(
+            my_awesome_board,
+            screen.vcenter - int(my_awesome_board.height/2),
+            screen.hcenter - int(my_awesome_board.width/2)
+        )
+        screen.update()
+
+    **Precisions about the Screen Buffer stack:**
+
+    You don't need to know how the screen buffer works to use it. However, if you are
+    interested in more details, here they are.
+
+    The Screen Buffer stacks uses a double numpy buffer to represent the screen. One
+    buffer is used to place elements as objects (that's the buffer managed by
+    :func:`place()` or :func:`delete()`). It is never directly printed to the screen. It
+    is here to simplify screen maintenance.
+
+    For example, if you want to use a sprite on a title screen and wants to move it
+    around (or animate the screen). Normally (i.e with Direct Display) you would display
+    the sprite at a specific position and then would either call :func:`clear()` or
+    overwrite all the sprite with spaces to erase and replace and/or move it. And that's
+    very slow.
+
+    With the Screen Buffer you :func:`place()` the sprite and then just :func:`delete()`
+    it. And since it is only one object reference it is a very fast operation (we only
+    place or delete one cell of the buffer).
+
+    When :func:`update()` is called, it first look at the state of the buffers and call
+    :func:`render()` if needed (i.e: if something has change in the display buffer).
+
+    **TL;DR:** The **display buffer** hold the objects placed on the screen while the
+    **screen buffer** hold the rendered representation of the display buffer.
+
+    When :func:`render()` is called it goes through the the display buffer and render
+    each elements transforming it into a printable sequence that is stored in the
+    display buffer. The rendering is done from the bottom right corner of the screen to
+    the top left corner. This allows for cleaning junk characters at no additional cost.
+
+    In terms of performances, depending on your terminal emulator and CPU you will most
+    certainly achieve over 30 FPS. Here are a couple of benchmark results:
+
+     * On an Intel Core i7 @ 4.20 GHz: 45 to 65 FPS.
+     * On an AMD Ryzen 9 5900X @ 4.80 GHz: 60 to 80 FPS.
+
+    If these are not good enough for you, the Direct Display stack is for you. You just
+    need to deal with more stuff with less helper methods.
+
     """
 
     def __init__(self):
         super().__init__()
         # get a terminal instance
         self.terminal = base.Console.instance()
-        # input(f"Screen(): term.w={self.terminal.width} term.h={self.terminal.height}")
-        # self._display_buffer = np.array(
-        #     [
-        #         [core.Sprixel(" ") for i in range(0, self.terminal.height, 1)]
-        #         for j in range(0, self.terminal.width, 1)
-        #     ]
-        # )
+        # Create the 2 buffers.
         self._display_buffer = np.array(
             [
                 [core.Sprixel(" ") for i in range(0, self.terminal.width, 1)]
@@ -3125,12 +3191,10 @@ class Screen(object):
             ]
         )
         self._is_dirty = False
-        # input(f"Screen(): display buffer shape {self._display_buffer.shape}")
-        self._process_pool = None
 
     def clear(self):
         """
-        This methods clear the screen
+        This methods clear the screen.
         """
         sys.stdout.write(self.terminal.clear)
         sys.stdout.flush()
@@ -3138,6 +3202,10 @@ class Screen(object):
     def clear_buffers(self):
         """
         .. versionadded:: 1.3.0
+
+        .. NOTE:: This method is part of the **Screen Buffer** rendering stack and is
+           incompatible with the methods identified as being part of the **Direct
+           Display** stack.
 
         This methods clear the Screen's buffers (both rendering and screen buffer).
 
@@ -3165,7 +3233,12 @@ class Screen(object):
         """
         .. versionadded:: 1.3.0
 
-        This methods clear the screen buffer (but not the rendering buffer).
+        .. NOTE:: This method is part of the **Screen Buffer** rendering stack and is
+           incompatible with the methods identified as being part of the **Direct
+           Display** stack.
+
+        This methods clear the screen buffer (but not the display buffer). This means
+        that the next time :func:`update()` is called, rendering will be triggered.
 
         Make sure that you really want to clear the buffers before doing so, because
         this is a slow operation. It might however be faster than manually update screen
@@ -3199,9 +3272,29 @@ class Screen(object):
         return self.terminal.height
 
     @property
+    def need_rendering(self):
+        """
+        .. versionadded:: 1.3.0
+
+        .. NOTE:: This method is part of the **Screen Buffer** rendering stack and is
+           incompatible with the methods identified as being part of the **Direct
+           Display** stack.
+
+        This property return True if the display buffer has been updated since the last
+        rendering cycle and the screen needs to re-render the screen buffer.
+
+        It returns False otherwise.
+        """
+        return self._is_dirty
+
+    @property
     def buffer(self):
         """
         .. versionadded:: 1.3.0
+
+        .. NOTE:: This method is part of the **Screen Buffer** rendering stack and is
+           incompatible with the methods identified as being part of the **Direct
+           Display** stack.
 
         The buffer property return a numpy.array as a writable screen buffer.
 
@@ -3210,20 +3303,49 @@ class Screen(object):
         with Screen.update() (update calls render() if needed and do the actual
         display).
 
-        .. WARNING:: Everything that is stored in the buffer *must* be printable.
+        .. WARNING:: Everything that is stored in the buffer *must* be printable. Each
+           cell of the screen buffer represent a single character on screen, so you need
+           to take care of that when you write into that buffer or you will corrupt the
+           display. If :attr:`need_rendering` returns True, you need to manually call
+           :func:`render()` before writing anything into the screen buffer. Or else it
+           will be squashed in the next rendering cycle.
         """
-        return self._display_buffer
+        return self._screen_buffer
+
+    @property
+    def vcenter(self):
+        """Return the vertical center of the screen as an int.
+
+        Example::
+
+            screen.place('vertically centered', screen.vcenter, 0)
+        """
+        return int(self.height / 2)
+
+    @property
+    def hcenter(self):
+        """Return the horizontal center of the screen as an int.
+
+        Example::
+
+            screen.place('horizontally centered', 0, screen.hcenter)
+        """
+        return int(self.width / 2)
 
     def update(self):
         """
         .. versionadded:: 1.3.0
+
+        .. NOTE:: This method is part of the **Screen Buffer** rendering stack and is
+           incompatible with the methods identified as being part of the **Direct
+           Display** stack.
 
         Update the screen. Update means write the display buffer on screen.
 
         Example::
 
             mygame = Game()
-            sc = core.SpriteCollection.load_json_file('title_screens.json')
+            sc = core.SpriteCollection.load_json_file('title_screens.spr')
             mygame.screen.place(sc['welcome_screen'], 0, 0)
             mygame.screen.update()
         """
@@ -3236,13 +3358,14 @@ class Screen(object):
             "".join(map(str, self._screen_buffer[self._screen_buffer.shape[0] - 1])),
             end="",
         )
-        # print(
-        #     "".join(["".join(map(str, row)) for row in self._screen_buffer]), end="",
-        # )
 
     def render(self):
         """
         .. versionadded:: 1.3.0
+
+        .. NOTE:: This method is part of the **Screen Buffer** rendering stack and is
+           incompatible with the methods identified as being part of the **Direct
+           Display** stack.
 
         :param name: some param
         :type name: str
@@ -3258,6 +3381,8 @@ class Screen(object):
         # with pre-allocated space. A last way of doing so is to modify the rendering
         # process so it skips parts that are overlapping (there will never be any
         # overlap in that case)
+        if self._is_dirty is False:
+            return
         # for row in range(self._display_buffer.shape[0] - 1, -1, -1):
         #     for col in range(self._display_buffer.shape[1] - 1, -1, -1):
         row = self._display_buffer.shape[0] - 1
@@ -3265,7 +3390,17 @@ class Screen(object):
             col = self._display_buffer.shape[1] - 1
             while col >= 0:
                 i = self._display_buffer[row][col]
-                if type(i) is str and len(i) > 1:
+                if hasattr(i, "render_to_buffer"):
+                    # If the item is capable of rendering itself in the buffer, we let
+                    # it do so.
+                    i.render_to_buffer(
+                        self._screen_buffer,
+                        row,
+                        col,
+                        self._display_buffer.shape[0],
+                        self._display_buffer.shape[1],
+                    )
+                elif type(i) is str and len(i) > 1:
                     idx = 0
                     for char in i:
                         if col + idx >= self.width:
@@ -3379,6 +3514,10 @@ class Screen(object):
         """
         .. versionadded:: 1.3.0
 
+        .. NOTE:: This method is part of the **Screen Buffer** rendering stack and is
+           incompatible with the methods identified as being part of the **Direct
+           Display** stack.
+
         :param name: some param
         :type name: str
 
@@ -3397,6 +3536,7 @@ class Screen(object):
             or isinstance(item, board_items.BoardItem)
             or isinstance(item, board_items.BoardComplexItem)
             or type(item) is str
+            or hasattr(item, "render_to_buffer")
         ):
             self._display_buffer[row][column] = item
             self._is_dirty = True
@@ -3414,6 +3554,10 @@ class Screen(object):
         """
         .. versionadded:: 1.3.0
 
+        .. NOTE:: This method is part of the **Screen Buffer** rendering stack and is
+           incompatible with the methods identified as being part of the **Direct
+           Display** stack.
+
         :param name: some param
         :type name: str
 
@@ -3422,12 +3566,20 @@ class Screen(object):
             method()
         """
         if row is not None and column is not None:
+            if row == constants.SCREEN_V_CENTER:
+                row = int(self.height / 2)
+            if column == constants.SCREEN_H_CENTER:
+                column = int(self.width / 2)
             self._display_buffer[row][column] = core.Sprixel(" ")
             self._is_dirty = True
 
     def display_line(self, *text, end="\n", file=sys.stdout, flush=False):
         """
         .. versionadded:: 1.2.0
+
+        .. NOTE:: This method is part of the **Direct Display** rendering stack and is
+           incompatible with the methods identified as being part of the **Screen
+           Buffer** stack.
 
         A wrapper to Python's print() builtin function except it will always add an
         ANSI sequence to clear the end of the line. Making it more suitable to use in
@@ -3473,6 +3625,10 @@ class Screen(object):
         flush=False,
     ):
         """
+        .. NOTE:: This method is part of the **Direct Display** rendering stack and is
+           incompatible with the methods identified as being part of the **Screen
+           Buffer** stack.
+
         Displays text at a given position. If clear_eol is True, also clear the end of
         line.
         Additionally you can specify all the parameters of a regular print() if you
@@ -3527,6 +3683,11 @@ class Screen(object):
     ):
         """
         .. versionadded:: 1.3.0
+
+        .. NOTE:: This method is part of the **Direct Display** rendering stack and is
+           incompatible with the methods identified as being part of the **Screen
+           Buffer** stack.
+
         Displays sprite at a given position.
         If a :class:`~pygamelib.gfx.core.Sprixel` is empty, then it's going to be
         replaced by filler.
@@ -3569,6 +3730,11 @@ class Screen(object):
     ):
         """
         .. versionadded:: 1.3.0
+
+        .. NOTE:: This method is part of the **Direct Display** rendering stack and is
+           incompatible with the methods identified as being part of the **Screen
+           Buffer** stack.
+
         Displays sprite at the current cursor position.
         If a :class:`~pygamelib.gfx.core.Sprixel` is empty, then it's going to be
         replaced by filler.
