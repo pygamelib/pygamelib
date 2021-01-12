@@ -970,6 +970,7 @@ class Sprite(object):
         :type row: int
         :param column: The column to access within the sprite.
         :type column: int
+        :return: :class:`Sprixel`
 
         Example::
 
