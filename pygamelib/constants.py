@@ -30,6 +30,10 @@ UI positions:
  * POS_BOTTOM
  * ORIENTATION_HORIZONTAL
  * ORIENTATION_VERTICAL
+ * SCREEN_H_CENTER: when placing elements with Screen.place() automatically calculate
+    the horizontal center (use as the column parameter).
+ * SCREEN_V_CENTER: when placing elements with Screen.place() automatically calculate
+    the vertical center (use as the row parameter).
 
 Actions states (for Actuators for example):
  * RUNNING
@@ -71,6 +75,8 @@ POS_TOP = 30000001
 POS_BOTTOM = 30000010
 ORIENTATION_HORIZONTAL = 30000011
 ORIENTATION_VERTICAL = 30000100
+SCREEN_H_CENTER = 30000101
+SCREEN_V_CENTER = 30000110
 
 
 # Running states
