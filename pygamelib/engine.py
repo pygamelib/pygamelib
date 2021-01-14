@@ -1315,6 +1315,7 @@ class Game:
     def __init__(
         self,
         name="Game",
+        player=None,
         boards={},
         menu={},
         current_level=None,
@@ -1329,7 +1330,7 @@ class Game:
         self._boards = boards
         self._menu = menu
         self.current_level = current_level
-        self.player = None
+        self.player = player
         self.state = constants.RUNNING
         self.enable_partial_display = enable_partial_display
         self.partial_display_viewport = partial_display_viewport
