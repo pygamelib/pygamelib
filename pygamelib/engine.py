@@ -2575,7 +2575,7 @@ class Game:
 
         # Now we need to run through all the cells to store
         # anything that is not a BoardItemVoid
-        for x in self.current_board()._matrix:
+        for x in local_board._matrix:
             for y in x:
                 if not isinstance(y, board_items.BoardItemVoid) and not isinstance(
                     y, board_items.Player
