@@ -257,12 +257,42 @@ class BoardItem(object):
         """
         if isinstance(other, BoardItem):
             return base.Math.distance(
-                self.pos[0], self.pos[1], other.pos[0], other.pos[1],
+                self.pos[0],
+                self.pos[1],
+                other.pos[0],
+                other.pos[1],
             )
         else:
             raise base.PglInvalidTypeException(
                 "BoardItem.distance_to require a BoardItem as parameter."
             )
+
+    def render_to_buffer(self, buffer, row, column, height, width):
+        """Render the board item into a display buffer (not a screen buffer).
+
+        This method is automatically called by :func:`pygamelib.engine.Screen.render`.
+
+        :param buffer: A screen buffer to render the item into.
+        :type buffer: numpy.array
+        :param row: The row to render in.
+        :type row: int
+        :param column: The column to render in.
+        :type column: int
+        :param height: The total height of the display buffer.
+        :type height: int
+        :param width: The total width of the display buffer.
+        :type width: int
+
+        Example::
+
+            method()
+        """
+        buffer[row][column] = self.sprixel.__repr__()
+        incr = self.sprixel.length
+        if incr > 1:
+            end = min(column + incr, width)
+            for idx in range(column + 1, end):
+                buffer[row][idx] = ""
 
     def can_move(self):
         """
@@ -526,6 +556,30 @@ class BoardComplexItem(BoardItem):
                     f"({self.size[0]}x{self.size[1]})."
                 )
             )
+
+    def render_to_buffer(self, buffer, row, column, height, width):
+        """Render the complex board item into a display buffer (not a screen buffer).
+
+        This method is automatically called by :func:`pygamelib.engine.Screen.render`.
+
+        :param buffer: A screen buffer to render the item into.
+        :type buffer: numpy.array
+        :param row: The row to render in.
+        :type row: int
+        :param column: The column to render in.
+        :type column: int
+        :param height: The total height of the display buffer.
+        :type height: int
+        :param width: The total width of the display buffer.
+        :type width: int
+
+        """
+        # For optimization's sakes we directly loop through the right places in the
+        # buffer and simply translate the coordinates back to the sprite.
+        # The loops takes clamped value to not render anything out of the buffer.
+        for sr in range(row, min(self.sprite.size[1] + row, height)):
+            for sc in range(column, min(self.sprite.size[0] + column, width)):
+                buffer[sr][sc] = self.sprite.sprixel(sr - row, sc - column).__repr__()
 
 
 class Movable(BoardItem):
@@ -1000,7 +1054,7 @@ class Immovable(BoardItem):
             self._inventory_space = kwargs["inventory_space"]
 
     def can_move(self):
-        """ Return the capability of moving of an item.
+        """Return the capability of moving of an item.
 
         Obviously an Immovable item is not capable of moving. So that method
         always returns False.
@@ -1178,13 +1232,11 @@ class Player(Movable, Character):
             self.inventory = engine.Inventory(parent=self)
 
     def pickable(self):
-        """This method returns False (a player is obviously not pickable).
-        """
+        """This method returns False (a player is obviously not pickable)."""
         return False
 
     def has_inventory(self):
-        """This method returns True (a player has an inventory).
-        """
+        """This method returns True (a player has an inventory)."""
         return True
 
     def overlappable(self):
@@ -1459,7 +1511,7 @@ class Wall(Immovable):
         super().__init__(**kwargs)
 
     def pickable(self):
-        """ This represent the capacity for a :class:`~pygamelib.board_items.BoardItem` to
+        """This represent the capacity for a :class:`~pygamelib.board_items.BoardItem` to
         be pick-up by player or NPC.
 
         :return: False
@@ -1475,7 +1527,7 @@ class Wall(Immovable):
         return False
 
     def overlappable(self):
-        """ This represent the capacity for a :class:`~pygamelib.board_items.BoardItem` to
+        """This represent the capacity for a :class:`~pygamelib.board_items.BoardItem` to
         be overlapped by player or NPC.
 
         :return: False
@@ -1606,7 +1658,7 @@ class GenericStructure(Immovable):
             self.__is_pickable = val
 
     def overlappable(self):
-        """ This represent the capacity for a :class:`~pygamelib.board_items.BoardItem` to
+        """This represent the capacity for a :class:`~pygamelib.board_items.BoardItem` to
         be overlapped by player or NPC.
 
         To set this value please use :meth:`~.set_overlappable`
@@ -1725,7 +1777,7 @@ class Treasure(Immovable):
             self._inventory_space = kwargs["inventory_space"]
 
     def pickable(self):
-        """ This represent the capacity for a Treasure to be picked-up by player or NPC.
+        """This represent the capacity for a Treasure to be picked-up by player or NPC.
 
         A treasure is obviously pickable by the player and potentially NPCs.
         :class:`~pygamelib.engine.Board` puts the Treasure in the
@@ -1737,7 +1789,7 @@ class Treasure(Immovable):
         return True
 
     def overlappable(self):
-        """ This represent the capacity for a Treasure to be overlapped by player or NPC.
+        """This represent the capacity for a Treasure to be overlapped by player or NPC.
 
         A treasure is not overlappable.
 
@@ -1747,7 +1799,7 @@ class Treasure(Immovable):
         return False
 
     def restorable(self):
-        """ This represent the capacity for a Treasure to be restored after being overlapped.
+        """This represent the capacity for a Treasure to be restored after being overlapped.
 
         A treasure is not overlappable, therefor is not restorable.
 
