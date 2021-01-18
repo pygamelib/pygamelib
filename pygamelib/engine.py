@@ -896,7 +896,9 @@ class Board:
                                 ] = None
                     # Finally, place the item at its new position
                     self.place_item(
-                        item, projected_position.row, projected_position.column,
+                        item,
+                        projected_position.row,
+                        projected_position.column,
                     )
         else:  # pragma: no cover
             # This is actually test in tests/test_board.py in function test_move()
@@ -1118,7 +1120,9 @@ class Board:
                         self._overlapped_matrix[item.pos[0]][item.pos[1]] = None
                     else:
                         self.place_item(
-                            self.generate_void_cell(), item.pos[0], item.pos[1],
+                            self.generate_void_cell(),
+                            item.pos[0],
+                            item.pos[1],
                         )
                     self.place_item(item, new_row, new_column)
         else:
@@ -2189,7 +2193,8 @@ class Game:
                                 # nothing blocks its path. And that's where it will be
                                 # unless we detect a collision.
                                 pp = base.Vector2D(
-                                    proj.row + dm.row, proj.column + dm.column,
+                                    proj.row + dm.row,
+                                    proj.column + dm.column,
                                 )
                                 v = proj.position_as_vector()
                                 if (
@@ -3418,21 +3423,15 @@ class Screen(object):
                     ):
                         i = core.Sprite.from_text(i._initial_text_object)
                         self._display_buffer[row][col] = i
-                    for sr in range(0, i.height):
-                        if row + sr >= self.height:
-                            break
-                        for sc in range(0, i.width):
-                            if col + sc >= self.width:
-                                break
-                            sprix = i.sprixel(sr, sc)
+                    for sr in range(row, min(i.height + row, self.height)):
+                        for sc in range(col, min(i.width + col, self.width)):
+                            sprix = i.sprixel(sr - row, sc - col)
                             if sprix != core.Sprixel():
                                 # Need to check the empty/null sprixel in the sprite
                                 # because for the sprite we just skip and leave the
                                 # sprixel that is behind but when it comes to screen we
                                 # cannot leave a blank cell.
-                                self._screen_buffer[row + sr][
-                                    col + sc
-                                ] = sprix.__repr__()
+                                self._screen_buffer[sr][sc] = sprix.__repr__()
                             else:
                                 continue
                 elif isinstance(i, Board):
@@ -3612,7 +3611,11 @@ class Screen(object):
         """
         # Funny how the documentation is waaayyy bigger than the code ;)
         print(
-            *text, self.terminal.clear_eol, end=end, file=file, flush=flush,
+            *text,
+            self.terminal.clear_eol,
+            end=end,
+            file=file,
+            flush=flush,
         )
 
     def display_at(
@@ -3759,6 +3762,9 @@ class Screen(object):
                     print(filler, end="")
                 else:
                     print(
-                        sprite._sprixels[r][c], end="", file=file, flush=flush,
+                        sprite._sprixels[r][c],
+                        end="",
+                        file=file,
+                        flush=flush,
                     )
             print()
