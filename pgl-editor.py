@@ -893,7 +893,7 @@ while True:
         for ref in game.config("settings")["object_library"]:
             objlib.append(engine.Game._ref2obj(ref))
         game.config("settings")["object_library"] = objlib
-    print("Looking for existing maps in selected directories...", end="")
+    print("Looking for existing maps in selected directories...", end="", flush=True)
     default_map_dir = None
     hmaps = []
     for directory in game.config("settings")["directories"]:
@@ -980,7 +980,10 @@ for sp in dir(graphics):
         ):
             fct = getattr(gfx_core.Sprixel, f_name)
             game.add_menu_entry(
-                "graphics_utils", str(i), f'"{fct()}"', fct(),
+                "graphics_utils",
+                str(i),
+                f'"{fct()}"',
+                fct(),
             )
             i += 1
 
@@ -1450,10 +1453,14 @@ while True:
         key = engine.Game.get_key()
 
 # Before saving we need to transform the object library into reference that json can
-# understand
+# understand. We keep only 10 objects for performances and practicality reasons.
 reflib = []
+count = 0
 for o in game.config("settings")["object_library"]:
     reflib.append(engine.Game._obj2ref(o))
+    count += 1
+    if count > 10:
+        break
 game.config("settings")["object_library"] = reflib
 # Let's also save the partial display viewport
 game.config("settings")["partial_display_viewport"][0] = viewport_height
