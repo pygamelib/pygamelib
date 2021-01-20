@@ -21,7 +21,8 @@ width = 48
 #         - --unicode=<bool> to enable/disable unicode (passed down to climage)
 #         - --color=<true|256|16|8> for the color precision (passed down to climage)
 #         - --board / --no-board to generate a Board out of the sprite (default: false)
-#         - --sprite / --no-sprite to generate or not a sprite out of the image (default: true)
+#         - --sprite / --no-sprite to generate or not a sprite out of the image
+#                                  (default: true)
 parser = argparse.ArgumentParser(
     description="A tool to convert an image to a pygamelib usable Sprite and/or Board."
 )
@@ -74,7 +75,7 @@ parser.add_argument(
 #     required=False,
 #     choices=["true", "256", "16", "8"],
 #     default="true",
-#     help="Number of colors used to encode the image. 'true' stands for truecolors or 16"
+#   help="Number of colors used to encode the image. 'true' stands for truecolors or 16"
 #     " million colors.",
 # )
 parser.add_argument(
@@ -139,7 +140,9 @@ if output_dir == "":
 tmp_file = os.path.join(output_dir, spr_id + ".ans")
 
 not args.silent and print(
-    f"Converting {base.Text.blue(file)} to ANSI escape sequence...", end="", flush=True,
+    f"Converting {base.Text.blue(file)} to ANSI escape sequence...",
+    end="",
+    flush=True,
 )
 output = climage.to_file(
     file,
