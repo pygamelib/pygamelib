@@ -3490,8 +3490,13 @@ class Screen(object):
             col = display_buffer.shape[1] - 1
             while col >= 0:
                 i = display_buffer[row][col]
-                if hasattr(i, "__rendering_pass") and i.__rendering_pass == 2:
+                if (
+                    hasattr(i, "__rendering_pass")
+                    and getattr(i, "__rendering_pass") == 2
+                ):
+                    print(f"Deferred rendering for: {i}")
                     second_pass.append({"item": i, "row": row, "column": col})
+                    col -= 1
                     continue
                 if hasattr(i, "render_to_buffer"):
                     # If the item is capable of rendering itself in the buffer, we let
@@ -3608,10 +3613,7 @@ class Screen(object):
             # If it's a text object we need to convert it to a Sprite first.
             self._display_buffer[row][column] = core.Sprite.from_text(element)
             self._is_dirty = True
-            try:
-                self._display_buffer[row][column].__rendering_pass = rendering_pass
-            except AttributeError:
-                pass
+            setattr(element, "__rendering_pass", rendering_pass)
             return
         elif (
             isinstance(element, core.Sprixel)
@@ -3619,7 +3621,7 @@ class Screen(object):
             or hasattr(element, "render_to_buffer")
         ):
             try:
-                element.__rendering_pass = rendering_pass
+                setattr(element, "__rendering_pass", rendering_pass)
             except AttributeError:
                 pass
             self._display_buffer[row][column] = element
