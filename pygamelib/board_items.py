@@ -92,7 +92,7 @@ class BoardItem(object):
             return self.sprixel.__repr__()
         return ""
 
-    def __repr__(self):  # pragma: no cover
+    def __repr__(self):
         return self.__str__()
 
     def display(self):
@@ -579,6 +579,8 @@ class BoardComplexItem(BoardItem):
         # The loops takes clamped value to not render anything out of the buffer.
         for sr in range(row, min(self.sprite.size[1] + row, height)):
             for sc in range(column, min(self.sprite.size[0] + column, width)):
+                # TODO: If the Sprite has sprixels with length > 1 this is going to be
+                # A mess.
                 buffer[sr][sc] = self.sprite.sprixel(sr - row, sc - column).__repr__()
 
 

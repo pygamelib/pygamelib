@@ -1390,6 +1390,50 @@ class Sprite(object):
                 new_sprite.set_sprixel(i, j, self.sprixel(r2, c2))
         return new_sprite
 
+    def render_to_buffer(self, buffer, row, column, buffer_height, buffer_width):
+        """Render the sprite into a display buffer (not a screen buffer).
+
+        This method is automatically called by :func:`pygamelib.engine.Screen.render`.
+
+        :param buffer: A screen buffer to render the item into.
+        :type buffer: numpy.array
+        :param row: The row to render in.
+        :type row: int
+        :param column: The column to render in.
+        :type column: int
+        :param height: The total height of the display buffer.
+        :type height: int
+        :param width: The total width of the display buffer.
+        :type width: int
+
+        """
+        # Check if the text has changed to update the sprite...
+        # I'm not so sure about all this update thing...
+        if (
+            self._initial_text_object is not None
+            and self._initial_text_object._sprite_data != self._initial_text_object.text
+        ):
+            i = Sprite.from_text(self._initial_text_object)
+            self._sprixels = i._sprixels
+            self._initial_text_object._sprite_data = i._initial_text_object._sprite_data
+            self.size = i.size
+            # display_buffer[row][col] = i
+        # Attempt at optimization.
+        null_sprixel = Sprixel()
+        get_sprixel = self.sprixel
+        for sr in range(row, min(self.size[1] + row, buffer_height)):
+            for sc in range(column, min(self.size[0] + column, buffer_width)):
+                sprix = get_sprixel(sr - row, sc - column)
+                # Need to check the empty/null sprixel in the sprite
+                # because for the sprite we just skip and leave the
+                # sprixel that is behind but when it comes to screen we
+                # cannot leave a blank cell.
+                if sprix == null_sprixel:
+                    continue
+                # TODO: If the Sprite has sprixels with length > 1 this
+                # is going to be a mess.
+                buffer[sr][sc] = sprix.__repr__()
+
 
 class SpriteCollection(UserDict):
     """
