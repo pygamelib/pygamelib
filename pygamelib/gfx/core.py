@@ -15,6 +15,7 @@ from pygamelib import base
 from pygamelib import constants
 from pygamelib.assets import graphics
 from pygamelib.functions import pgl_isinstance
+import random
 import time
 from collections import UserDict
 from uuid import uuid4
@@ -280,6 +281,21 @@ class Color(object):
                     f"In Color.load(data) the {c} component is not an integer."
                 )
         return cls(data["red"], data["green"], data["blue"])
+
+    def randomize(self):
+        """Set a random value for each component
+
+        :returns: None
+        :rtype: NoneType
+
+        Example::
+
+            color = Color()
+            color.randomize()
+        """
+        self.r = random.randrange(256)
+        self.g = random.randrange(256)
+        self.b = random.randrange(256)
 
 
 class Sprixel(object):

@@ -137,6 +137,7 @@ def custom_color_picker():
         print("5/2 - Increase/decrease the green value")
         print("6/3 - Increase/decrease the blue value")
         print(f"+/- - Increase/decrease the increment step (current: {step})")
+        print("r - Randomize values")
         key = game.get_key()
         if key == "1" and spr.bg_color.r >= step:
             spr.bg_color.r -= step
@@ -154,6 +155,8 @@ def custom_color_picker():
             step -= 1
         elif key == "+":
             step += 1
+        elif key == "r":
+            spr.bg_color.randomize()
     return spr
 
 
