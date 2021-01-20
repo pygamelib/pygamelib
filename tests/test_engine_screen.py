@@ -4,6 +4,15 @@ import unittest
 import numpy as np
 
 
+class TB(object):
+    def __init__(self):
+        super().__init__()
+
+    def render_to_buffer(self, buff, r, c, h, w):
+        buff[r][c] = "T"
+        buff[r][c + 1] = "B"
+
+
 # Test cases for all classes in pygamelib.gfx.core except for Animation.
 
 
@@ -88,13 +97,15 @@ class TestBase(unittest.TestCase):
             screen_height = 50
         else:
             screen_height = s.height
+        self.assertEqual(s.vcenter, int(s.height / 2))
+        self.assertEqual(s.hcenter, int(s.width / 2))
         b.place_item(board_items.Tile(sprite=sprites_panda["panda"]), 0, 0)
         self.assertIsInstance(b.render_cell(1, 1), Sprixel)
         b.item(19, 19).model = "@"
         b.item(19, 19).sprixel = None
         self.assertIsInstance(b.render_cell(19, 19), Sprixel)
         self.assertEqual(b.render_cell(19, 19), Sprixel())
-        with self.assertRaises(engine.base.PglOutOfBoardBoundException):
+        with self.assertRaises(base.PglOutOfBoardBoundException):
             b.render_cell(50, 50)
         self.assertIsNone(s.clear_buffers())
         self.assertIsNone(s.clear_screen_buffer())
@@ -110,11 +121,30 @@ class TestBase(unittest.TestCase):
         self.assertTrue(functions.pgl_isinstance(s.buffer, "numpy.ndarray"))
         self.assertIsNone(s.update())
         b = engine.Board(size=[1, 1])
+        b.place_item(board_items.Wall(model="##"), 0, 0)
         self.assertIsNone(s.place("test", 0, 0))
         self.assertIsNone(s.place(b, 1, 0))
-        t = base.Text("test")
+        t = base.Text("test 2")
         self.assertIsNone(s.place(t, 2, 0))
         self.assertIsNone(s.place(sprites_panda["panda"], 0, 5))
+        self.assertIsNone(s.place(TB(), 3, 0))
+        self.assertIsNone(s.place(board_items.BoardItem(model="##"), 10, 0))
+        self.assertIsNone(
+            s.place(
+                board_items.Tile(
+                    sprixels=[
+                        [Sprixel("##"), Sprixel("##")],
+                        [Sprixel("##"), Sprixel("##")],
+                    ]
+                ),
+                4,
+                0,
+            )
+        )
+        with self.assertRaises(base.PglInvalidTypeException):
+            s.place(None, 0, 0)
+        with self.assertRaises(base.PglInvalidTypeException):
+            s.place(1, 0, 0)
         s.update()
         t.text = "update"
         self.assertIsNone(
@@ -122,6 +152,10 @@ class TestBase(unittest.TestCase):
         )
         self.assertIsNone(s.place("test", 1, screen_width - 2))
         s.update()
+        self.assertIsNone(s.render())  # Should not render
+        self.assertFalse(s.need_rendering)
+        s.trigger_rendering()
+        self.assertTrue(s.need_rendering)
         # Now testing partial display
         camera = board_items.Camera()
         camera.row = 0
@@ -154,7 +188,7 @@ class TestBase(unittest.TestCase):
         ]
         camera.row += 1
         with self.assertRaises(IndexError):
-            s.render()
+            s.force_render()
             s.update()
         b.partial_display_viewport = [
             int(screen_height / 2) - 1,

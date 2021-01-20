@@ -130,6 +130,11 @@ class TestBase(unittest.TestCase):
         self.assertEqual(spr.sprixel(1, 0), spr.default_sprixel)
 
     def test_load(self):
+        with self.assertRaises(gfx_core.base.PglException) as e:
+            gfx_core.Sprite.load_from_ansi_file("tests/house-red-borked.ans")
+            self.assertEqual(e.error, "sprite_file_format_not_supported")
+        spr = gfx_core.Sprite.load_from_ansi_file("tests/house-red-double.ans")
+        self.assertEqual(spr.width, 17)
         gfx_core.Sprite.load_from_ansi_file("tests/house-red.ans")
         with self.assertRaises(gfx_core.base.PglException) as e:
             gfx_core.Sprite.load(
@@ -215,6 +220,34 @@ class TestBase(unittest.TestCase):
         with self.assertRaises(gfx_core.base.PglException) as e:
             gfx_core.SpriteCollection.load({"sprites_count": 2, "sprites": {}})
             self.assertEqual(e.error, "corrupted_sprite_data")
+
+    def test_scale(self):
+        spr = gfx_core.Sprite(
+            sprixels=[
+                [
+                    gfx_core.Sprixel.cyan_rect(),
+                    gfx_core.Sprixel.red_rect(),
+                    gfx_core.Sprixel.green_rect(),
+                ],
+                [
+                    gfx_core.Sprixel.yellow_rect(),
+                    gfx_core.Sprixel.blue_rect(),
+                    gfx_core.Sprixel.white_rect(),
+                ],
+            ]
+        )
+        self.assertEqual(spr.width, 3)
+        self.assertEqual(spr.height, 2)
+        spr2 = spr.scale(2)
+        self.assertEqual(spr2.width, 6)
+        self.assertEqual(spr2.height, 4)
+        spr3 = spr2.scale(0.5)
+        self.assertEqual(spr3.width, 3)
+        self.assertEqual(spr3.height, 2)
+        self.assertEqual(spr3.width, spr.width)
+        self.assertEqual(spr3.height, spr.height)
+        self.assertEqual(spr, spr.scale(1))
+        self.assertIsNone(spr.scale(0))
 
     def test_color(self):
         c = gfx_core.Color(1, 2, 3)

@@ -12,6 +12,7 @@ class TestBoard(unittest.TestCase):
         self.assertEqual(self.boardItem.type, "item")
         self.assertEqual(self.boardItem.pos, [None, None])
         self.assertEqual(self.boardItem.model, "*")
+        self.assertEqual(self.boardItem.__str__(), self.boardItem.__repr__())
 
     def test_custom_boardItem(self):
         self.boardItem = board_items.BoardItem(
