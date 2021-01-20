@@ -598,6 +598,93 @@ class Board:
             )
         )
 
+    def render_to_buffer(self, buffer, row, column, buffer_height, buffer_width):
+        """Render the board into a display buffer (not a screen buffer).
+
+        This method is automatically called by :func:`pygamelib.engine.Screen.render`.
+
+        :param buffer: A screen buffer to render the item into.
+        :type buffer: numpy.array
+        :param row: The row to render in.
+        :type row: int
+        :param column: The column to render in.
+        :type column: int
+        :param height: The total height of the display buffer.
+        :type height: int
+        :param width: The total width of the display buffer.
+        :type width: int
+
+        """
+        row_start = 0
+        row_end = self.size[1]
+        bc_start = 0
+        column_end = self.size[0]
+        pos_row = 0
+        pos_col = 0
+        vp_height = 0
+        vp_width = 0
+        if self.enable_partial_display:
+            # We still need to clamp the viewport if we want to avoid
+            # crashes in case the progammer poorly calculated the viewport.
+            vp_height = self.partial_display_viewport[0]
+            vp_width = self.partial_display_viewport[1]
+            if self.size[0] < (2 * vp_width):
+                vp_width = int(self.size[0] / 2)
+            if self.height < (2 * vp_height):
+                vp_height = int(self.size[1] / 2)
+            pos_row = self.partial_display_focus.row
+            pos_col = self.partial_display_focus.column
+            if isinstance(self.partial_display_focus, board_items.BoardComplexItem):
+                pos_row = self.partial_display_focus.row + int(
+                    self.partial_display_focus.height / 2
+                )
+                pos_col = self.partial_display_focus.column + int(
+                    self.partial_display_focus.width / 2
+                )
+            # We don't want to many tests here for performances sake.
+            # So if partial display is enabled we assume the rest of the
+            # parameters are correct. If not, well it'll crash.
+            row_start = pos_row - vp_height
+            row_end = pos_row + vp_height
+            if row_start < 0:
+                row_start = 0
+            if row_end > self.size[1]:
+                row_end = self.size[1]
+                row_start = self.size[1] - (2 * vp_height)
+            elif row_end < (2 * vp_height):
+                row_end = 2 * vp_height
+
+            # compute start and stop coordinates before actually display the
+            # board.
+            bc_start = pos_col - vp_width
+            column_end = pos_col + vp_width
+            if bc_start < 0:
+                bc_start = 0
+            elif bc_start > self.size[0] - (vp_width * 2):
+                bc_start = self.size[0] - (vp_width * 2)
+            if column_end > self.size[0]:
+                column_end = self.size[0]
+                bc_start = self.size[0] - vp_width * 2
+            elif column_end < (vp_width * 2):
+                column_end = vp_width * 2
+        # Trying to remove as many dot notation as possible for performances
+        render_cell = self.render_cell
+        for br in range(row_start, row_end):
+            cidx = 0
+            bc = bc_start
+            while bc < column_end:
+                cell = render_cell(br, bc)
+                encoded_cell = cell.__repr__()
+                incr = cell.length
+                buffer[row + br - row_start][column + cidx] = encoded_cell
+
+                # That if serves no purpose aside from slowing us
+                # down... if incr > 1:
+                for tmpiidx in range(1, incr):
+                    buffer[row + br][column + cidx + tmpiidx] = ""
+                bc += 1
+                cidx += incr
+
     def render_cell(self, row, column):
         """
         .. versionadded:: 1.3.0
@@ -3358,10 +3445,11 @@ class Screen(object):
         if self._is_dirty:
             self.render()
         print(self.terminal.home, end="")
-        for row in range(0, self._screen_buffer.shape[0] - 1):
-            print("".join(map(str, self._screen_buffer[row])))
+        screen_buffer = self._screen_buffer
+        for row in range(0, screen_buffer.shape[0] - 1):
+            print("".join(map(str, screen_buffer[row])))
         print(
-            "".join(map(str, self._screen_buffer[self._screen_buffer.shape[0] - 1])),
+            "".join(map(str, screen_buffer[screen_buffer.shape[0] - 1])),
             end="",
         )
 
@@ -3389,164 +3477,157 @@ class Screen(object):
         # overlap in that case)
         if self._is_dirty is False:
             return
-        # for row in range(self._display_buffer.shape[0] - 1, -1, -1):
-        #     for col in range(self._display_buffer.shape[1] - 1, -1, -1):
+        second_pass = []
+        # All these variables are here for performances.
+        # https://wiki.python.org/moin/PythonSpeed/PerformanceTips (old but I do get
+        # better performances with that trick)
         row = self._display_buffer.shape[0] - 1
+        screen_buffer = self._screen_buffer
+        display_buffer = self._display_buffer
+        s_width = display_buffer.shape[1]
+        s_height = display_buffer.shape[0]
         while row >= 0:
-            col = self._display_buffer.shape[1] - 1
+            col = display_buffer.shape[1] - 1
             while col >= 0:
-                i = self._display_buffer[row][col]
+                i = display_buffer[row][col]
+                if hasattr(i, "__rendering_pass") and i.__rendering_pass == 2:
+                    second_pass.append({"item": i, "row": row, "column": col})
+                    continue
                 if hasattr(i, "render_to_buffer"):
                     # If the item is capable of rendering itself in the buffer, we let
                     # it do so.
                     i.render_to_buffer(
-                        self._screen_buffer,
+                        screen_buffer,
                         row,
                         col,
-                        self._display_buffer.shape[0],
-                        self._display_buffer.shape[1],
+                        s_height,
+                        s_width,
                     )
                 elif type(i) is str and len(i) > 1:
                     idx = 0
                     for char in i:
-                        if col + idx >= self.width:
+                        if col + idx >= s_width:
                             break
-                        self._screen_buffer[row][col + idx] = char
+                        screen_buffer[row][col + idx] = char
                         idx += 1
-                elif isinstance(i, core.Sprite):
-                    # Check if the text has changed to update the sprite...
-                    # I'm not so sure about all this update thing...
-                    if (
-                        i._initial_text_object is not None
-                        and i._initial_text_object._sprite_data
-                        != i._initial_text_object.text
-                    ):
-                        i = core.Sprite.from_text(i._initial_text_object)
-                        self._display_buffer[row][col] = i
-                    for sr in range(row, min(i.height + row, self.height)):
-                        for sc in range(col, min(i.width + col, self.width)):
-                            sprix = i.sprixel(sr - row, sc - col)
-                            if sprix != core.Sprixel():
-                                # Need to check the empty/null sprixel in the sprite
-                                # because for the sprite we just skip and leave the
-                                # sprixel that is behind but when it comes to screen we
-                                # cannot leave a blank cell.
-                                self._screen_buffer[sr][sc] = sprix.__repr__()
-                            else:
-                                continue
-                elif isinstance(i, Board):
-                    row_start = 0
-                    row_end = i.height
-                    pos_row = 0
-                    pos_col = 0
-                    vp_height = 0
-                    vp_width = 0
-                    if i.enable_partial_display:
-                        # We still need to clamp the viewport if we want to avoid
-                        # crashes in case the progammer poorly calculated the viewport.
-                        vp_height = i.partial_display_viewport[0]
-                        vp_width = i.partial_display_viewport[1]
-                        if i.width < (2 * vp_width):
-                            vp_width = int(i.width / 2)
-                        if i.height < (2 * vp_height):
-                            vp_height = int(i.height / 2)
-                        pos_row = i.partial_display_focus.row
-                        pos_col = i.partial_display_focus.column
-                        if isinstance(
-                            i.partial_display_focus, board_items.BoardComplexItem
-                        ):
-                            pos_row = i.partial_display_focus.row + int(
-                                i.partial_display_focus.height / 2
-                            )
-                            pos_col = i.partial_display_focus.column + int(
-                                i.partial_display_focus.width / 2
-                            )
-                        # We don't want to many tests here for performances sake.
-                        # So if partial display is enabled we assume the rest of the
-                        # parameters are correct. If not, well it'll crash.
-                        row_start = pos_row - vp_height
-                        row_end = pos_row + vp_height
-                        if row_start < 0:
-                            row_start = 0
-                        if row_end > i.height:
-                            row_end = i.height
-                            row_start = i.height - (2 * vp_height)
-                        elif row_end < (2 * vp_height):
-                            row_end = 2 * vp_height
-                    for br in range(row_start, row_end):
-                        cidx = 0
-                        bc = 0
-                        column_end = i.width
-                        if i.enable_partial_display:
-                            bc = pos_col - vp_width
-                            column_end = pos_col + vp_width
-                            if bc < 0:
-                                bc = 0
-                            elif bc > i.width - (vp_width * 2):
-                                bc = i.width - (vp_width * 2)
-                            if column_end > i.width:
-                                column_end = i.width
-                                bc = i.width - vp_width * 2
-                            elif column_end < (vp_width * 2):
-                                column_end = vp_width * 2
-                        while bc < column_end:
-                            cell = i.render_cell(br, bc)
-                            encoded_cell = cell.__repr__()
-                            incr = cell.length
-                            self._screen_buffer[row + br - row_start][
-                                col + cidx
-                            ] = encoded_cell
-
-                            if incr > 1:
-                                for tmpiidx in range(1, incr):
-                                    self._screen_buffer[row + br][
-                                        col + cidx + tmpiidx
-                                    ] = ""
-                            bc += 1
-                            cidx += incr
                 elif hasattr(i, "__repr__"):
-                    self._screen_buffer[row][col] = i.__repr__()
+                    screen_buffer[row][col] = i.__repr__()
                 col -= 1
             row -= 1
+        for i in second_pass:
+            if hasattr(i["item"], "render_to_buffer"):
+                i["item"].render_to_buffer(
+                    screen_buffer, i["row"], i["column"], s_height, s_width
+                )
+
         self._is_dirty = False
 
-    def place(self, item=None, row=None, column=None):
+    def force_render(self):
         """
+        Force the immediate rendering of the display buffer.
+
+        If you just want to mark the screen buffer for rendering before the next update
+        use :func:`trigger_rendering` instead.
+
+        Example::
+
+            screen.force_render()
+        """
+        self._is_dirty = True
+        return self.render()
+
+    def trigger_rendering(self):
+        """
+        Trigger the screen buffer for rendering at the next update.
+
+        Example::
+
+            screen.trigger_rendering()
+        """
+        self._is_dirty = True
+
+    def place(self, element=None, row=None, column=None, rendering_pass=1):
+        """Place an element on the screen.
+
         .. versionadded:: 1.3.0
 
         .. NOTE:: This method is part of the **Screen Buffer** rendering stack and is
            incompatible with the methods identified as being part of the **Direct
            Display** stack.
 
-        :param name: some param
-        :type name: str
+        This method places an element in the screen display buffer. The element is then
+        going to be rendered in the screen buffer before being printed on screen.
+
+        The following elements can be placed on screen:
+
+         * All BoardItem derivatives.
+         * All BoardComplexItem derivatives.
+         * :class:`Board` object.
+         * :class:`~pygamelib.base.Text` objects.
+         * :class:`~pygamelib.gfx.core.Sprite` objects.
+         * :class:`~pygamelib.gfx.core.Sprixel` objects.
+         * Regular Python str.
+         * Any object that expose a render_to_buffer() method.
+
+        Here is the required signature for render_to_buffer:
+
+        **render_to_buffer(self, buffer, row, column, buffer_height, buffer_width)**
+
+        The buffer parameter will always be a numpy array, row and column are the
+        position to render to. Finally buffer_height and buffer_width are the dimension
+        of the buffer.
+
+        The buffer is rendered in 2 passes. By default all elements are rendered in pass
+        1. But if for some reason something needs to be drawn over other elements (like
+        if a dialog/popup is needed for example), the element can be set to be rendered
+        only during the second pass.
+
+        :param element: The element to place.
+        :type element: various
+        :param row: The row to render to.
+        :type row: int
+        :param column: The column to render to.
+        :type column: int
+        :param rendering_pass: When to render the element (first or second pass).
+        :type rendering_pass: int
+
+        .. Warning:: to be rendered on the second pass an element *needs* to implement
+           render_to_buffer(...). This excludes all standard types (but not
+           :class:`~pygamelib.base.Text`). Regular Python strings and object that can be
+           print() can still be used in the first pass.
 
         Example::
 
-            method()
+            screen.place(my_sprite, 0, 0)
         """
-        if item is None or row is None or column is None:
+        if element is None or row is None or column is None:
             raise base.PglInvalidTypeException(
                 "Screen.place(item, row, column) none of the parameters can be None."
             )
-        if (
-            isinstance(item, core.Sprixel)
-            or isinstance(item, Board)
-            or isinstance(item, core.Sprite)
-            or isinstance(item, board_items.BoardItem)
-            or isinstance(item, board_items.BoardComplexItem)
-            or type(item) is str
-            or hasattr(item, "render_to_buffer")
-        ):
-            self._display_buffer[row][column] = item
-            self._is_dirty = True
-        elif isinstance(item, base.Text):
+        if isinstance(element, base.Text):
             # If it's a text object we need to convert it to a Sprite first.
-            self._display_buffer[row][column] = core.Sprite.from_text(item)
+            self._display_buffer[row][column] = core.Sprite.from_text(element)
             self._is_dirty = True
+            try:
+                self._display_buffer[row][column].__rendering_pass = rendering_pass
+            except AttributeError:
+                pass
+            return
+        elif (
+            isinstance(element, core.Sprixel)
+            or type(element) is str
+            or hasattr(element, "render_to_buffer")
+        ):
+            try:
+                element.__rendering_pass = rendering_pass
+            except AttributeError:
+                pass
+            self._display_buffer[row][column] = element
+            self._is_dirty = True
+            return
         else:
             raise base.PglInvalidTypeException(
-                f"Screen.place(item, row, column) : item type {type(item)} is not"
+                f"Screen.place(item, row, column) : item type {type(element)} is not"
                 " supported."
             )
 
@@ -3566,10 +3647,6 @@ class Screen(object):
             method()
         """
         if row is not None and column is not None:
-            if row == constants.SCREEN_V_CENTER:
-                row = int(self.height / 2)
-            if column == constants.SCREEN_H_CENTER:
-                column = int(self.width / 2)
             self._display_buffer[row][column] = core.Sprixel(" ")
             self._is_dirty = True
 
