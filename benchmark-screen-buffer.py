@@ -26,7 +26,9 @@ def draw_box(game, row, column, height, width, title=""):
     for r in range(1, height - 1):
         scr.place(vert_sprix, row + r, column)
         scr.place(
-            vert_sprix, row + r, column + width - 1,
+            vert_sprix,
+            row + r,
+            column + width - 1,
         )
         scr.place(
             f"{graphics.BoxDrawings.LIGHT_ARC_UP_AND_RIGHT}"
@@ -65,6 +67,7 @@ load_start = time.time()
 sprites = core.SpriteCollection.load_json_file("tests/pgl-benchmark.spr")
 panda = sprites["panda"]
 polus = sprites["Polus_Map"]
+# p4ter = polus.scale(0.1)
 load_stop = time.time()
 print("done")
 print("Generating Boards: ", end="", flush=True)
@@ -104,7 +107,9 @@ g.player.pos = [10, 10]
 for row in range(0, g.screen._display_buffer.shape[0]):
     for col in range(0, g.screen._display_buffer.shape[1]):
         g.screen.place(
-            core.Sprixel(" ", core.Color(33, 99, 247)), row, col,
+            core.Sprixel(" ", core.Color(33, 99, 247)),
+            row,
+            col,
         )
 spr_start = time.time()
 g.screen.place(
@@ -212,7 +217,9 @@ with g.terminal.cbreak(), g.terminal.hidden_cursor(), g.terminal.fullscreen():
             g.screen.delete(39, i)
         for i in range(16, 16 + int(current_fps * 20 / (baseline_fps + 10))):
             g.screen.place(
-                core.Sprixel(" ", core.Color(0, 0, 255)), 39, i,
+                core.Sprixel(" ", core.Color(0, 0, 255)),
+                39,
+                i,
             )
         fps_str = f"FPS: {current_fps}"
         g.screen.place(f"Frame count: {frame_count}", 1, 0)
@@ -230,7 +237,9 @@ with g.terminal.cbreak(), g.terminal.hidden_cursor(), g.terminal.fullscreen():
                 low_graph_row,
             ):
                 g.screen.place(
-                    core.Sprixel(" ", core.Color(0, 0, 255)), i, current_col,
+                    core.Sprixel(" ", core.Color(0, 0, 255)),
+                    i,
+                    current_col,
                 )
             last_col = current_col
         if frame_count == int(max_frames / 2):
@@ -244,6 +253,12 @@ with g.terminal.cbreak(), g.terminal.hidden_cursor(), g.terminal.fullscreen():
                 f"msec.\n\tFPS: {round(1/((stop-start)/frame_count - dt))}"
             )
             g.screen.place(polus_map, 2, 0)
+            # g.screen.place(
+            #     p4ter,
+            #     g.screen.vcenter - int(p4ter.height / 2),
+            #     g.screen.hcenter - int(p4ter.width / 2),
+            #     2,
+            # )
             phase2 = time.time()
             bench_status.text = "Phase 1 + high definition board + camera movement"
         if frame_count % panda_steps == 0:

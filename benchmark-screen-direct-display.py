@@ -26,7 +26,9 @@ def draw_box(game, row, column, height, width, title=""):
     for r in range(1, height - 1):
         scr.display_at(vert_sprix, row + r, column)
         scr.display_at(
-            vert_sprix, row + r, column + width - 1,
+            vert_sprix,
+            row + r,
+            column + width - 1,
         )
     scr.display_at(
         f"{graphics.BoxDrawings.LIGHT_ARC_UP_AND_RIGHT}"
@@ -112,7 +114,9 @@ with g.terminal.cbreak(), g.terminal.hidden_cursor(), g.terminal.fullscreen():
     for row in range(0, g.terminal.height):
         for col in range(0, g.terminal.width):
             g.screen.display_at(
-                core.Sprixel(" ", core.Color(33, 99, 247)), row, col,
+                core.Sprixel(" ", core.Color(33, 99, 247)),
+                row,
+                col,
             )
     g.screen.display_sprite_at(
         sprites["pgl-benchmark"],
@@ -258,7 +262,9 @@ with g.terminal.cbreak(), g.terminal.hidden_cursor(), g.terminal.fullscreen():
             offset + 15, offset + 15 + int(current_fps * 20 / (baseline_fps + 10))
         ):
             g.screen.display_at(
-                core.Sprixel(" ", core.Color(0, 0, 255)), 6, i,
+                core.Sprixel(" ", core.Color(0, 0, 255)),
+                6,
+                i,
             )
         fps_str = f"FPS: {current_fps}"
         g.screen.display_at(f"Frame count: {frame_count}", 1, 0)
@@ -274,7 +280,9 @@ with g.terminal.cbreak(), g.terminal.hidden_cursor(), g.terminal.fullscreen():
             last_col = current_col
         for c in range(offset, current_col + 1):
             g.screen.display_at(
-                core.Sprixel(" ", core.Color(0, 0, 255)), low_graph_row, c,
+                core.Sprixel(" ", core.Color(0, 0, 255)),
+                low_graph_row,
+                c,
             )
             for i in range(
                 low_graph_row
@@ -284,7 +292,9 @@ with g.terminal.cbreak(), g.terminal.hidden_cursor(), g.terminal.fullscreen():
                 low_graph_row,
             ):
                 g.screen.display_at(
-                    core.Sprixel(" ", core.Color(0, 0, 255)), i, c,
+                    core.Sprixel(" ", core.Color(0, 0, 255)),
+                    i,
+                    c,
                 )
 
         if frame_count == int(max_frames / 2):
