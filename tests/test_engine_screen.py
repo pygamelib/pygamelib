@@ -180,7 +180,8 @@ class TestBase(unittest.TestCase):
                     row,
                     col,
                 )
-        self.assertIsNone(s.place(b, 0, 0))
+        self.assertIsNone(s.place(b, 0, 0, 2))
+        s.trigger_rendering()
         self.assertIsNone(s.update())
         b.partial_display_viewport = [
             int(screen_height * 3) - 1,
@@ -194,6 +195,10 @@ class TestBase(unittest.TestCase):
             int(screen_height / 2) - 1,
             int(screen_width / 2) - 1,
         ]
+        camera.row = b.height - 1
+        camera.column = b.width - 1
+        self.assertIsNone(s.trigger_rendering())
+        self.assertIsNone(s.update())
         camera = board_items.Tile(
             sprite=Sprite(
                 sprixels=[[Sprixel("+"), Sprixel("+")], [Sprixel("+"), Sprixel("+")]]
@@ -202,9 +207,11 @@ class TestBase(unittest.TestCase):
         b.partial_display_focus = camera
         # Please never do that in real life...
         camera.pos = [1, 1]
+        self.assertIsNone(s.trigger_rendering())
         self.assertIsNone(s.render())
         self.assertIsNone(s.update())
-        self.assertIsNone(s.place("test delete", 0, 0))
+        # This will succeed but the str type cannot benefit from deferred rendering.
+        self.assertIsNone(s.place("test delete", 0, 0, 2))
         self.assertIsNone(s.update())
         self.assertIsNone(s.delete(0, 0))
         self.assertIsNone(s.update())

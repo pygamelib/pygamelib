@@ -87,8 +87,12 @@ class TestBase(unittest.TestCase):
 
     def test_board_management(self):
         b = engine.Board()
+        g = engine.Game(player=constants.NO_PLAYER)
+        self.assertIsNone(g.add_board(19, b))
+        self.assertIsNone(g.change_level(19))
+        self.assertIsNone(g.display_board())
+        # Reset
         g = engine.Game()
-        self.assertIsNone(g.add_board(1, b))
         with self.assertRaises(base.PglInvalidTypeException):
             g.add_board(1, 1)
         with self.assertRaises(base.PglInvalidTypeException):
@@ -286,7 +290,7 @@ class TestBase(unittest.TestCase):
     def test_singleton(self):
         mygame = engine.Game.instance()
         mygame.test_singleton = True
-        self.assertTrue(engine.Game.instance(), 'test_singleton')
+        self.assertTrue(engine.Game.instance(), "test_singleton")
         self.assertTrue(engine.Game.instance().test_singleton)
         self.assertTrue(mygame is engine.Game.instance())
 
