@@ -61,7 +61,7 @@ class Console:
         return cls.__instance
 
 
-class Text:
+class Text(object):
     """
     An object to manipulate and display text in multiple contexts.
 
@@ -82,59 +82,136 @@ class Text:
     :param text: The text to manipulate
     :type text: str
     :param fg_color: The foreground color for the text.
-    :type fg_color: str
+    :type fg_color: :class:`~pygamelib.gfx.core.Color`
     :param bg_color: The background color for the text.
-    :type bg_color: str
+    :type bg_color: :class:`~pygamelib.gfx.core.Color`
     :param style: The style for the text.
     :type style: str
     """
 
     def __init__(self, text="", fg_color=None, bg_color=None, style=""):
-        self.text = text
-        """The text attribute. It needs to be a str."""
-        self.fg_color = None
-        """The fg_color attribute sets the foreground color. It needs to be a
-           :class:`~pyagemlib.gfx.core.Color`."""
+        super().__init__()
+        self.__text = ""
+        self.__bg_color = None
+        self.__fg_color = None
+        self.__fgcc = ""
+        self.__bgcc = ""
+        if type(text) is str:
+            self.__text = text
         if fg_color is None or pgl_isinstance(fg_color, "pygamelib.gfx.core.Color"):
-            self.fg_color = fg_color
+            self.__fg_color = fg_color
         else:
             raise PglInvalidTypeException(
                 "Text(text, bg_color, fg_color, style): fg_color needs to be a "
                 "pygamelib.gfx.core.Color object."
             )
-        self.bg_color = None
-        """The bg_color attribute sets the background color. It needs to be a
-           :class:`~pyagemlib.gfx.core.Color`."""
         if bg_color is None or pgl_isinstance(bg_color, "pygamelib.gfx.core.Color"):
-            self.bg_color = bg_color
+            self.__bg_color = bg_color
         else:
             raise PglInvalidTypeException(
                 "Text(text, bg_color, fg_color, style): bg_color needs to be a "
                 "pygamelib.gfx.core.Color object."
             )
+        self.__build_color_cache()
         self.style = style
         """The style attribute sets the style of the text. It needs to be a str."""
         self.parent = None
         """This object's parent. It needs to be a
         :class:`~pygamelib.board_items.BoardItem`."""
-        self._sprite = None
+        self._sprite_data = None
         self._item = None
 
-    def __repr__(self):
+    @property
+    def text(self):
+        """The text attribute. It needs to be a str."""
+        return self.__text
+
+    @text.setter
+    def text(self, value):
+        if type(value) is str:
+            self.__text = value
+        elif isinstance(value, Text):
+            self.__text = value.text
+
+    @property
+    def bg_color(self):
+        """The bg_color attribute sets the background color. It needs to be a
+        :class:`~pyagemlib.gfx.core.Color`."""
+        return self.__bg_color
+
+    @bg_color.setter
+    def bg_color(self, value):
+        if pgl_isinstance(value, "pygamelib.gfx.core.Color"):
+            self.__bg_color = value
+        else:
+            raise PglInvalidTypeException(
+                "Text.bg_color can only be a pygamelib.gfx.core.Color object."
+            )
+        self.__build_color_cache()
+
+    @property
+    def fg_color(self):
+        """The bg_color attribute sets the foreground color. It needs to be a
+        :class:`~pyagemlib.gfx.core.Color`."""
+        return self.__fg_color
+
+    @fg_color.setter
+    def fg_color(self, value):
+        if pgl_isinstance(value, "pygamelib.gfx.core.Color"):
+            self.__fg_color = value
+        else:
+            raise PglInvalidTypeException(
+                "Text.fg_color can only be a pygamelib.gfx.core.Color object."
+            )
+        self.__build_color_cache()
+
+    def __build_color_cache(self):
         t = Console.instance()
-        bgc = fgc = ""
         if self.bg_color is not None and pgl_isinstance(
             self.bg_color, "pygamelib.gfx.core.Color"
         ):
-            bgc = t.on_color_rgb(self.bg_color.r, self.bg_color.g, self.bg_color.b)
+            self.__bgcc = t.on_color_rgb(
+                self.bg_color.r, self.bg_color.g, self.bg_color.b
+            )
         if self.fg_color is not None and pgl_isinstance(
             self.fg_color, "pygamelib.gfx.core.Color"
         ):
-            fgc = t.color_rgb(self.fg_color.r, self.fg_color.g, self.fg_color.b)
-        return "".join([bgc, fgc, self.style, self.text, "\x1b[0m"])
+            self.__fgcc = t.color_rgb(self.fg_color.r, self.fg_color.g, self.fg_color.b)
 
-    def __str__(self):  # pragma: no cover
+    def __repr__(self):
+        return "".join([self.__bgcc, self.__fgcc, self.style, self.text, "\x1b[0m"])
+
+    def __str__(self):
         return self.__repr__()
+
+    # Text is a special case in the buffer rendering system and I know special cases are
+    # bad but it works well... Text is automatically converted into a Sprite during
+    # rendering.
+    # def render_to_buffer(self, buffer, row, column, buffer_height, buffer_width):
+    #     """Render the Text object into a display buffer (not a screen buffer).
+
+    #     This method is automatically called by :func:`pygamelib.engine.Screen.render`.
+
+    #     :param buffer: A screen buffer to render the item into.
+    #     :type buffer: numpy.array
+    #     :param row: The row to render in.
+    #     :type row: int
+    #     :param column: The column to render in.
+    #     :type column: int
+    #     :param height: The total height of the display buffer.
+    #     :type height: int
+    #     :param width: The total width of the display buffer.
+    #     :type width: int
+
+    #     """
+    #     idx = 0
+    #     for char in self.text:
+    #         if column + idx >= buffer_width:
+    #             break
+    #         buffer[row][column + idx] = "".join(
+    #             [self.__bgcc, self.__fgcc, self.style, char, "\x1b[0m"]
+    #        )
+    #        idx += 1
 
     @staticmethod
     def warn(message):
@@ -421,6 +498,8 @@ class PglInvalidTypeException(Exception):
 
 class HacInvalidTypeException(PglInvalidTypeException):
     """A simple forward to PglInvalidTypeException
+
+    .. deprecated:: 1.3.0
     """
 
 
@@ -436,6 +515,8 @@ class PglException(Exception):
 
 class HacException(PglException):
     """A simple forward to PglException
+
+    .. deprecated:: 1.3.0
     """
 
 
@@ -459,6 +540,8 @@ class PglOutOfItemBoundException(Exception):
 
 class HacOutOfBoardBoundException(PglOutOfBoardBoundException):
     """Simple forward to PglOutOfBoardBoundException
+
+    .. deprecated:: 1.3.0
     """
 
 
@@ -473,6 +556,8 @@ class PglObjectIsNotMovableException(Exception):
 
 class HacObjectIsNotMovableException(PglObjectIsNotMovableException):
     """Simple forward to PglObjectIsNotMovableException
+
+    .. deprecated:: 1.3.0
     """
 
 
@@ -487,6 +572,8 @@ class PglInvalidLevelException(Exception):
 
 class HacInvalidLevelException(PglInvalidLevelException):
     """Forward to PglInvalidLevelException
+
+    .. deprecated:: 1.3.0
     """
 
 
@@ -503,10 +590,12 @@ class PglInventoryException(Exception):
 
 class HacInventoryException(PglInventoryException):
     """Forward to PglInventoryException.
+
+    .. deprecated:: 1.3.0
     """
 
 
-class Vector2D:
+class Vector2D(object):
     """A 2D vector class.
 
     .. versionadded:: 1.2.0
@@ -570,6 +659,7 @@ class Vector2D:
     """
 
     def __init__(self, row=0.0, column=0.0):
+        super().__init__()
         # column is x and row is y
         self.__row = row
         self.__column = column
@@ -581,7 +671,7 @@ class Vector2D:
     def __repr__(self):
         return f"{self.__class__.__name__} ({self.__row}, {self.__column})"
 
-    def __str__(self):  # pragma: no cover
+    def __str__(self):
         return self.__repr__()
 
     def __add__(self, other):

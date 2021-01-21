@@ -39,6 +39,7 @@ class TestBase(unittest.TestCase):
         v = self.vectors[2] + self.vectors[1]
         self.assertEqual(v.row, 3.0)
         self.assertEqual(v.column, 3.0)
+        self.assertEqual(v.__str__(), v.__repr__())
 
     def test_v2d_sub(self):
         v = self.vectors[0] - self.vectors[1]
@@ -130,6 +131,7 @@ class TestBase(unittest.TestCase):
                 ]
             ),
         )
+        self.assertEqual(text.__str__(), text.__repr__())
         self.assertIn("TEST", text.black("TEST"))
         self.assertIn("30m", text.black("TEST"))
         self.assertIn("TEST", text.red("TEST"))
@@ -167,6 +169,18 @@ class TestBase(unittest.TestCase):
             pgl_base.Text("breaking", "pink")
         with self.assertRaises(pgl_base.PglInvalidTypeException):
             pgl_base.Text("breaking", None, "pink")
+        text.text = pgl_base.Text("Another test")
+        self.assertEqual(text.text, "Another test")
+        text.text = 12
+        self.assertEqual(text.text, "Another test")
+        text.bg_color = core.Color(12, 34, 56)
+        self.assertEqual(text.bg_color, core.Color(12, 34, 56))
+        with self.assertRaises(pgl_base.PglInvalidTypeException):
+            text.bg_color = "pink"
+        text.fg_color = core.Color(56, 78, 90)
+        self.assertEqual(text.fg_color, core.Color(56, 78, 90))
+        with self.assertRaises(pgl_base.PglInvalidTypeException):
+            text.fg_color = "definitely not pink! (because tests are not copy/pasted)"
 
     def test_math_distance(self):
         self.assertEqual(self.math.distance(0, 0, 0, 0), 0)

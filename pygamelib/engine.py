@@ -20,12 +20,9 @@ The Board class is the base class for all levels.
    Inventory
    Screen
 """
-from pygamelib import board_items
-from pygamelib import base
-from pygamelib import constants
+from pygamelib import board_items, base, constants, actuators
 from pygamelib.assets import graphics
 from pygamelib.gfx import core
-from pygamelib import actuators
 from blessed import Terminal
 import uuid
 import random
@@ -47,6 +44,23 @@ class Board:
     The Board object is the base object to build a level :
         you create a Board and then you add BoardItems
         (or objects derived from BoardItem).
+
+
+    .. Note:: In version 1.3.0 a new screen rendering stack was introduced. With this
+       came the need for some object to hold more information about their state. This is
+       the case for Board. To use partial display with the :class:`Screen` buffer system
+       the board itself needs to hold the information about were to draw and on what to
+       focus. The existing code will still work as the :class:`Game` object takes care
+       of forwarding the information to the Board. However, it is now possible to
+       exploit the :class:`~pygamelib.board_items.Camera` object to create cutscenes and
+       more interesting movements.
+
+    .. Important:: Partial display related parameters are information used by the
+       :func:`~pygamelib.engine.Board.display_around()` method and the :class:`Screen`
+       object to either display directly the board (display_around) or render the Board
+       in the screen buffer. **You have to make sure that the focus element's position
+       is updated**. If you use the player, you have nothing to do but the Camera object
+       needs to be manually updated for example.
 
     :param name: the name of the Board
     :type name: str
@@ -76,6 +90,18 @@ class Board:
     :param DISPLAY_SIZE_WARNINGS: A boolean to show or hide the warning about boards
         bigger than 80 rows and columns.
     :type DISPLAY_SIZE_WARNINGS: bool
+    :param enable_partial_display: A boolean to tell the Board to enable or not partial
+        display of boards. Default: False.
+    :type enable_partial_display: bool
+    :param partial_display_viewport: A 2 int elements array that gives the **radius**
+        of the partial display in number of row and column. Please see
+        :func:`~pygamelib.engine.Board.display_around()`.
+    :type partial_display_viewport: list
+    :param partial_display_focus: An item to focus (i.e center) the view on. When
+        partial display is enabled the rendered view will be centered on this focus
+        point/item. It can be an item or a vector.
+    :type partial_display_focus: :class:`~pygamelib.board_items.BoardItem` or
+       :class:`~pygamelib.base.Vector2D`
     """
 
     def __init__(self, **kwargs):
@@ -91,6 +117,9 @@ class Board:
         self.DISPLAY_SIZE_WARNINGS = True
         self.parent = None
         self._matrix = np.array([])
+        self.partial_display_viewport = None
+        self.partial_display_focus = None
+        self.enable_partial_display = False
         # The overlapped matrix is used as an invisible layer were overlapped
         # restorable items are parked momentarily (until the cell they were on
         # is free again).
@@ -108,6 +137,9 @@ class Board:
             "player_starting_position",
             "DISPLAY_SIZE_WARNINGS",
             "parent",
+            "partial_display_viewport",
+            "partial_display_focus",
+            "enable_partial_display",
         ]:
             if item in kwargs:
                 setattr(self, item, kwargs[item])
@@ -566,6 +598,146 @@ class Board:
             )
         )
 
+    def render_to_buffer(self, buffer, row, column, buffer_height, buffer_width):
+        """Render the board into a display buffer (not a screen buffer).
+
+        This method is automatically called by :func:`pygamelib.engine.Screen.render`.
+
+        :param buffer: A screen buffer to render the item into.
+        :type buffer: numpy.array
+        :param row: The row to render in.
+        :type row: int
+        :param column: The column to render in.
+        :type column: int
+        :param height: The total height of the display buffer.
+        :type height: int
+        :param width: The total width of the display buffer.
+        :type width: int
+
+        """
+        row_start = 0
+        row_end = self.size[1]
+        bc_start = 0
+        column_end = self.size[0]
+        pos_row = 0
+        pos_col = 0
+        vp_height = 0
+        vp_width = 0
+        if self.enable_partial_display:
+            # We still need to clamp the viewport if we want to avoid
+            # crashes in case the progammer poorly calculated the viewport.
+            vp_height = self.partial_display_viewport[0]
+            vp_width = self.partial_display_viewport[1]
+            if self.size[0] < (2 * vp_width):
+                vp_width = int(self.size[0] / 2)
+            if self.height < (2 * vp_height):
+                vp_height = int(self.size[1] / 2)
+            pos_row = self.partial_display_focus.row
+            pos_col = self.partial_display_focus.column
+            if isinstance(self.partial_display_focus, board_items.BoardComplexItem):
+                pos_row = self.partial_display_focus.row + int(
+                    self.partial_display_focus.height / 2
+                )
+                pos_col = self.partial_display_focus.column + int(
+                    self.partial_display_focus.width / 2
+                )
+            # We don't want to many tests here for performances sake.
+            # So if partial display is enabled we assume the rest of the
+            # parameters are correct. If not, well it'll crash.
+            row_start = pos_row - vp_height
+            row_end = pos_row + vp_height
+            if row_start < 0:
+                row_start = 0
+            if row_end > self.size[1]:
+                row_end = self.size[1]
+                row_start = self.size[1] - (2 * vp_height)
+            elif row_end < (2 * vp_height):
+                row_end = 2 * vp_height
+
+            # compute start and stop coordinates before actually display the
+            # board.
+            bc_start = pos_col - vp_width
+            column_end = pos_col + vp_width
+            if bc_start < 0:
+                bc_start = 0
+            elif bc_start > self.size[0] - (vp_width * 2):
+                bc_start = self.size[0] - (vp_width * 2)
+            if column_end > self.size[0]:
+                column_end = self.size[0]
+                bc_start = self.size[0] - vp_width * 2
+            elif column_end < (vp_width * 2):
+                column_end = vp_width * 2
+        # Trying to remove as many dot notation as possible for performances
+        render_cell = self.render_cell
+        for br in range(row_start, row_end):
+            cidx = 0
+            bc = bc_start
+            while bc < column_end:
+                cell = render_cell(br, bc)
+                encoded_cell = cell.__repr__()
+                incr = cell.length
+                buffer[row + br - row_start][column + cidx] = encoded_cell
+
+                # That if serves no purpose aside from slowing us
+                # down... if incr > 1:
+                for tmpiidx in range(1, incr):
+                    buffer[row + br][column + cidx + tmpiidx] = ""
+                bc += 1
+                cidx += incr
+
+    def render_cell(self, row, column):
+        """
+        .. versionadded:: 1.3.0
+
+        Render the cell at given position.
+
+        This method always return a :class:`~pygamelib.gfx.core.Sprixel` (it could be an
+        empty one though). It automatically render the highest item (if items are
+        overlapping for example).
+
+        For basic usage of the library it is unlikely that you will use it. It is part
+        of the screen rendering stack introduced in version 1.3.0.
+        Actually unless you need to write a different rendering system you won't use
+        that method.
+
+        :param row: The row to render.
+        :type row: int
+        :param column: The column to render.
+        :type column: int
+
+        :rtype: pygamelib.gfx.core.Sprixel
+
+        :raise PglOutOfBoardBoundException: if row or column are
+            out of bound.
+
+        Example::
+
+            # This renders the board from the top left corner of the screen.
+            for row in range(0, myboard.height):
+                for column in range(0, myboard.height):
+                    myscreen.place(
+                        myboard.render_cell(row, column)
+                    ),
+                    row,
+                    column,
+        """
+        if row < self.size[1] and column < self.size[0]:
+            if self._matrix[row][column].sprixel is None:
+                # TODO: This is not the place to do that. If the value is None we return
+                #       core.Sprixel(). Converting model to Sprixel must be done at
+                #       board loading.
+                # return core.Sprixel(self._matrix[row][column].model)
+                return core.Sprixel()
+            return self._matrix[row][column].sprixel
+        else:
+            raise base.PglOutOfBoardBoundException(
+                (
+                    f"Impossible to render cell at coordinates [{row},{column}] "
+                    "because it's out of the board boundaries "
+                    f"({self.size[0]}x{self.size[1]})."
+                )
+            )
+
     def item(self, row, column):
         """
         Return the item at the row, column position if within
@@ -687,7 +859,8 @@ class Board:
                     if cc == item:
                         break
                     else:
-                        cc = None
+                        # I honestly think it's impossible to get there.
+                        cc = None  # pragma: no cover
                 if cc is not None:
                     break
         else:
@@ -810,7 +983,9 @@ class Board:
                                 ] = None
                     # Finally, place the item at its new position
                     self.place_item(
-                        item, projected_position.row, projected_position.column,
+                        item,
+                        projected_position.row,
+                        projected_position.column,
                     )
         else:  # pragma: no cover
             # This is actually test in tests/test_board.py in function test_move()
@@ -1032,7 +1207,9 @@ class Board:
                         self._overlapped_matrix[item.pos[0]][item.pos[1]] = None
                     else:
                         self.place_item(
-                            self.generate_void_cell(), item.pos[0], item.pos[1],
+                            self.generate_void_cell(),
+                            item.pos[0],
+                            item.pos[1],
                         )
                     self.place_item(item, new_row, new_column)
         else:
@@ -1229,6 +1406,7 @@ class Game:
     def __init__(
         self,
         name="Game",
+        player=None,
         boards={},
         menu={},
         current_level=None,
@@ -1243,7 +1421,7 @@ class Game:
         self._boards = boards
         self._menu = menu
         self.current_level = current_level
-        self.player = None
+        self.player = player
         self.state = constants.RUNNING
         self.enable_partial_display = enable_partial_display
         self.partial_display_viewport = partial_display_viewport
@@ -1358,7 +1536,7 @@ class Game:
                         self.player.dtmove += elapsed
                     print(self.terminal.home, end="")
                     self.user_update(self, in_key, elapsed)
-                    print(self.terminal.clear_eos)
+                    print(self.terminal.clear_eos, end="")
                     self.actuate_npcs(self.current_level, elapsed)
                     self.actuate_projectiles(self.current_level, elapsed)
                     self.animate_items(self.current_level, elapsed)
@@ -2102,7 +2280,8 @@ class Game:
                                 # nothing blocks its path. And that's where it will be
                                 # unless we detect a collision.
                                 pp = base.Vector2D(
-                                    proj.row + dm.row, proj.column + dm.column,
+                                    proj.row + dm.row,
+                                    proj.column + dm.column,
                                 )
                                 v = proj.position_as_vector()
                                 if (
@@ -2381,6 +2560,17 @@ class Game:
             local_board.ui_border_right = data["ui_border_right"]
         if "ui_board_void_cell" in data_keys:
             local_board.ui_board_void_cell = data["ui_board_void_cell"]
+        if "ui_board_void_cell_sprixel" in data_keys:
+            local_board.ui_board_void_cell_sprixel = data["ui_board_void_cell_sprixel"]
+        # Now let's make it better: if we have a board_void_cell but not a
+        # board_void_cell_sprixel we convert it.
+        if local_board.ui_board_void_cell is not None and (
+            local_board.ui_board_void_cell_sprixel is None
+            or not isinstance(local_board.ui_board_void_cell_sprixel, core.Sprixel)
+        ):
+            local_board.ui_board_void_cell_sprixel = core.Sprixel(
+                local_board.ui_board_void_cell
+            )
         # Now we need to recheck for board sanity
         local_board.check_sanity()
         # and re-initialize the board (mainly to attribute a new model to the void cells
@@ -2478,7 +2668,7 @@ class Game:
 
         # Now we need to run through all the cells to store
         # anything that is not a BoardItemVoid
-        for x in self.current_board()._matrix:
+        for x in local_board._matrix:
             for y in x:
                 if not isinstance(y, board_items.BoardItemVoid) and not isinstance(
                     y, board_items.Player
@@ -2983,47 +3173,180 @@ class Screen(object):
     """
     The screen object is pretty straightforward: it is an object that allow manipulation
     of the screen.
-    At the moment it relies heavily on the blessed module, but it wraps a lot of its
-    methods and provide easy calls to actions.
 
     .. WARNING:: Starting with version 1.3.0 the terminal parameter has been removed.
        The Screen object now takes advantage of base.Console.instance() to get a
        reference to a blessed.Terminal object.
 
+    Version 1.3.0 introduced a new way of managing the screen. It rely on an internally
+    managed display buffer that allows for easier positioning and more regular
+    rendering. This comes at a cost though as the performances takes a hit. The screen
+    should still be able to be refreshed between 50 and 60+ times per seconds (and still
+    around 30 times per second within a virtual machine).
+
+    This change introduce two ways of displaying things on the screen:
+
+       * The **Screen Buffer** stack.
+       * The **Direct Display** stack.
+
+    It is safer to consider them mutually incompatible. In reality the **Screen Buffer**
+    will always use the whole display but you can use the methods from the **Direct
+    Display** stack to write over the buffer. It is really **NOT** advised.
+
+    We introduced the **Screen Buffer** stack because the direct display is messy and
+    does not allow us to do what we want in term of positioning, UI, etc.
+
+    A typical usage consist of:
+
+       * Placing elements on the screen with :func:`place()`
+       * Update the screen with :func:`update()`
+
+    That's it! The screen maintain its own state and knows when to re-render the display
+    buffer. You don't need to manually call :func:`render()`. This helps with
+    performances as the screen buffer is only rendered when needed.
+
     Example::
 
         screen = Screen()
-        screen.display_at('This is centered', int(screen.height/2), int(screen.width/2))
+        # The next 2 lines do the same thing: display a message centered on the screen.
+        # Screen Buffer style
+        screen.place('This is centered', screen.vcenter, screen.hcenter)
+        screen.update()
+        # Direct Display style
+        screen.display_at('This is centered', screen.vcenter, screen.hcenter)
+        # The rest of this example uses the Screen Buffer.
+        # delete the previous message and place a Board at the center of the screen
+        screen.delete(screen.vcenter, screen.hcenter)
+        screen.place(
+            my_awesome_board,
+            screen.vcenter - int(my_awesome_board.height/2),
+            screen.hcenter - int(my_awesome_board.width/2)
+        )
+        screen.update()
+
+    **Precisions about the Screen Buffer stack:**
+
+    You don't need to know how the screen buffer works to use it. However, if you are
+    interested in more details, here they are.
+
+    The Screen Buffer stacks uses a double numpy buffer to represent the screen. One
+    buffer is used to place elements as objects (that's the buffer managed by
+    :func:`place()` or :func:`delete()`). It is never directly printed to the screen. It
+    is here to simplify screen maintenance.
+
+    For example, if you want to use a sprite on a title screen and wants to move it
+    around (or animate the screen). Normally (i.e with Direct Display) you would display
+    the sprite at a specific position and then would either call :func:`clear()` or
+    overwrite all the sprite with spaces to erase and replace and/or move it. And that's
+    very slow.
+
+    With the Screen Buffer you :func:`place()` the sprite and then just :func:`delete()`
+    it. And since it is only one object reference it is a very fast operation (we only
+    place or delete one cell of the buffer).
+
+    When :func:`update()` is called, it first look at the state of the buffers and call
+    :func:`render()` if needed (i.e: if something has change in the display buffer).
+
+    **TL;DR:** The **display buffer** hold the objects placed on the screen while the
+    **screen buffer** hold the rendered representation of the display buffer.
+
+    When :func:`render()` is called it goes through the the display buffer and render
+    each elements transforming it into a printable sequence that is stored in the
+    display buffer. The rendering is done from the bottom right corner of the screen to
+    the top left corner. This allows for cleaning junk characters at no additional cost.
+
+    In terms of performances, depending on your terminal emulator and CPU you will most
+    certainly achieve over 30 FPS. Here are a couple of benchmark results:
+
+     * On an Intel Core i7 @ 4.20 GHz: 45 to 65 FPS.
+     * On an AMD Ryzen 9 5900X @ 4.80 GHz: 60 to 80 FPS.
+
+    If these are not good enough for you, the Direct Display stack is for you. You just
+    need to deal with more stuff with less helper methods.
+
     """
 
     def __init__(self):
         super().__init__()
-        # get clear sequence for the terminal
+        # get a terminal instance
         self.terminal = base.Console.instance()
-        # if terminal is None:
-        #     raise base.PglException(
-        #         "terminal_is_missing",
-        #         "Screen must be constructed with a terminal object.",
-        #     )
-        # elif "terminal.Terminal" in str(type(terminal)):
-        #     self.terminal = terminal
-        # else:
-        #     raise base.PglException(
-        #         "terminal_not_blessed",
-        #         "Screen: terminal must be from the blessed module\n"
-        #         "Please install blessed if it is not already installed:\n"
-        #         "     pip3 install blessed --user"
-        #         "And instantiate Screen with terminal=blessed.Terminal()"
-        #         "or let the Game object do it and use mygame.screen to access the "
-        #         "screen (assuming that mygame is your Game() instance).",
-        #     )
+        # Create the 2 buffers.
+        self._display_buffer = np.array(
+            [
+                [core.Sprixel(" ") for i in range(0, self.terminal.width, 1)]
+                for j in range(0, self.terminal.height, 1)
+            ]
+        )
+        self._screen_buffer = np.array(
+            [
+                [core.Sprixel(" ") for i in range(0, self.terminal.width, 1)]
+                for j in range(0, self.terminal.height, 1)
+            ]
+        )
+        self._is_dirty = False
 
     def clear(self):
         """
-        This methods clear the screen
+        This methods clear the screen.
         """
         sys.stdout.write(self.terminal.clear)
         sys.stdout.flush()
+
+    def clear_buffers(self):
+        """
+        .. versionadded:: 1.3.0
+
+        .. NOTE:: This method is part of the **Screen Buffer** rendering stack and is
+           incompatible with the methods identified as being part of the **Direct
+           Display** stack.
+
+        This methods clear the Screen's buffers (both rendering and screen buffer).
+
+        Make sure that you really want to clear the buffers before doing so, because
+        this is a slow operation.
+
+        Once the buffer is cleared nothing is left in it, you have to reposition (place)
+        everything.
+        """
+        self._display_buffer = np.array(
+            [
+                [core.Sprixel(" ") for i in range(0, self.terminal.width, 1)]
+                for j in range(0, self.terminal.height, 1)
+            ]
+        )
+        self._screen_buffer = np.array(
+            [
+                [core.Sprixel(" ") for i in range(0, self.terminal.width, 1)]
+                for j in range(0, self.terminal.height, 1)
+            ]
+        )
+        self._is_dirty = False
+
+    def clear_screen_buffer(self):
+        """
+        .. versionadded:: 1.3.0
+
+        .. NOTE:: This method is part of the **Screen Buffer** rendering stack and is
+           incompatible with the methods identified as being part of the **Direct
+           Display** stack.
+
+        This methods clear the screen buffer (but not the display buffer). This means
+        that the next time :func:`update()` is called, rendering will be triggered.
+
+        Make sure that you really want to clear the buffers before doing so, because
+        this is a slow operation. It might however be faster than manually update screen
+        cells.
+
+        Once the buffer is cleared nothing is left in it, it sets the Screen for a
+        rendering update.
+        """
+        self._screen_buffer = np.array(
+            [
+                [core.Sprixel(" ") for i in range(0, self.terminal.width, 1)]
+                for j in range(0, self.terminal.height, 1)
+            ]
+        )
+        self._is_dirty = True
 
     @property
     def width(self):
@@ -3041,9 +3364,301 @@ class Screen(object):
         """
         return self.terminal.height
 
+    @property
+    def need_rendering(self):
+        """
+        .. versionadded:: 1.3.0
+
+        .. NOTE:: This method is part of the **Screen Buffer** rendering stack and is
+           incompatible with the methods identified as being part of the **Direct
+           Display** stack.
+
+        This property return True if the display buffer has been updated since the last
+        rendering cycle and the screen needs to re-render the screen buffer.
+
+        It returns False otherwise.
+        """
+        return self._is_dirty
+
+    @property
+    def buffer(self):
+        """
+        .. versionadded:: 1.3.0
+
+        .. NOTE:: This method is part of the **Screen Buffer** rendering stack and is
+           incompatible with the methods identified as being part of the **Direct
+           Display** stack.
+
+        The buffer property return a numpy.array as a writable screen buffer.
+
+        The buffer is a 2D plane (like a screen) and anything can render in it. However,
+        it is recommended to place objects through Screen.place() and update the screen
+        with Screen.update() (update calls render() if needed and do the actual
+        display).
+
+        .. WARNING:: Everything that is stored in the buffer *must* be printable. Each
+           cell of the screen buffer represent a single character on screen, so you need
+           to take care of that when you write into that buffer or you will corrupt the
+           display. If :attr:`need_rendering` returns True, you need to manually call
+           :func:`render()` before writing anything into the screen buffer. Or else it
+           will be squashed in the next rendering cycle.
+        """
+        return self._screen_buffer
+
+    @property
+    def vcenter(self):
+        """Return the vertical center of the screen as an int.
+
+        Example::
+
+            screen.place('vertically centered', screen.vcenter, 0)
+        """
+        return int(self.height / 2)
+
+    @property
+    def hcenter(self):
+        """Return the horizontal center of the screen as an int.
+
+        Example::
+
+            screen.place('horizontally centered', 0, screen.hcenter)
+        """
+        return int(self.width / 2)
+
+    def update(self):
+        """
+        .. versionadded:: 1.3.0
+
+        .. NOTE:: This method is part of the **Screen Buffer** rendering stack and is
+           incompatible with the methods identified as being part of the **Direct
+           Display** stack.
+
+        Update the screen. Update means write the display buffer on screen.
+
+        Example::
+
+            mygame = Game()
+            sc = core.SpriteCollection.load_json_file('title_screens.spr')
+            mygame.screen.place(sc['welcome_screen'], 0, 0)
+            mygame.screen.update()
+        """
+        if self._is_dirty:
+            self.render()
+        print(self.terminal.home, end="")
+        screen_buffer = self._screen_buffer
+        for row in range(0, screen_buffer.shape[0] - 1):
+            print("".join(map(str, screen_buffer[row])))
+        print(
+            "".join(map(str, screen_buffer[screen_buffer.shape[0] - 1])),
+            end="",
+        )
+
+    def render(self):
+        """
+        .. versionadded:: 1.3.0
+
+        .. NOTE:: This method is part of the **Screen Buffer** rendering stack and is
+           incompatible with the methods identified as being part of the **Direct
+           Display** stack.
+
+        :param name: some param
+        :type name: str
+
+        Example::
+
+            method()
+        """
+        # WARNING: This is 1-pass rendering, if the _display_buffer contains things
+        # that should overlap (like a dialog) it will be overwritten by the element
+        # that should be overlapped. One way is to introduce deferred rendering (reserve
+        # space that is going to be rendered in a second pass) or priority rendering
+        # with pre-allocated space. A last way of doing so is to modify the rendering
+        # process so it skips parts that are overlapping (there will never be any
+        # overlap in that case)
+        if self._is_dirty is False:
+            return
+        second_pass = []
+        # All these variables are here for performances.
+        # https://wiki.python.org/moin/PythonSpeed/PerformanceTips (old but I do get
+        # better performances with that trick)
+        row = self._display_buffer.shape[0] - 1
+        screen_buffer = self._screen_buffer
+        display_buffer = self._display_buffer
+        s_width = display_buffer.shape[1]
+        s_height = display_buffer.shape[0]
+        while row >= 0:
+            col = display_buffer.shape[1] - 1
+            while col >= 0:
+                i = display_buffer[row][col]
+                if (
+                    hasattr(i, "__rendering_pass")
+                    and getattr(i, "__rendering_pass") == 2
+                ):
+                    print(f"Deferred rendering for: {i}")
+                    second_pass.append({"item": i, "row": row, "column": col})
+                    col -= 1
+                    continue
+                if hasattr(i, "render_to_buffer"):
+                    # If the item is capable of rendering itself in the buffer, we let
+                    # it do so.
+                    i.render_to_buffer(
+                        screen_buffer,
+                        row,
+                        col,
+                        s_height,
+                        s_width,
+                    )
+                elif type(i) is str and len(i) > 1:
+                    idx = 0
+                    for char in i:
+                        if col + idx >= s_width:
+                            break
+                        screen_buffer[row][col + idx] = char
+                        idx += 1
+                elif hasattr(i, "__repr__"):
+                    screen_buffer[row][col] = i.__repr__()
+                col -= 1
+            row -= 1
+        for i in second_pass:
+            if hasattr(i["item"], "render_to_buffer"):
+                i["item"].render_to_buffer(
+                    screen_buffer, i["row"], i["column"], s_height, s_width
+                )
+
+        self._is_dirty = False
+
+    def force_render(self):
+        """
+        Force the immediate rendering of the display buffer.
+
+        If you just want to mark the screen buffer for rendering before the next update
+        use :func:`trigger_rendering` instead.
+
+        Example::
+
+            screen.force_render()
+        """
+        self._is_dirty = True
+        return self.render()
+
+    def trigger_rendering(self):
+        """
+        Trigger the screen buffer for rendering at the next update.
+
+        Example::
+
+            screen.trigger_rendering()
+        """
+        self._is_dirty = True
+
+    def place(self, element=None, row=None, column=None, rendering_pass=1):
+        """Place an element on the screen.
+
+        .. versionadded:: 1.3.0
+
+        .. NOTE:: This method is part of the **Screen Buffer** rendering stack and is
+           incompatible with the methods identified as being part of the **Direct
+           Display** stack.
+
+        This method places an element in the screen display buffer. The element is then
+        going to be rendered in the screen buffer before being printed on screen.
+
+        The following elements can be placed on screen:
+
+         * All BoardItem derivatives.
+         * All BoardComplexItem derivatives.
+         * :class:`Board` object.
+         * :class:`~pygamelib.base.Text` objects.
+         * :class:`~pygamelib.gfx.core.Sprite` objects.
+         * :class:`~pygamelib.gfx.core.Sprixel` objects.
+         * Regular Python str.
+         * Any object that expose a render_to_buffer() method.
+
+        Here is the required signature for render_to_buffer:
+
+        **render_to_buffer(self, buffer, row, column, buffer_height, buffer_width)**
+
+        The buffer parameter will always be a numpy array, row and column are the
+        position to render to. Finally buffer_height and buffer_width are the dimension
+        of the buffer.
+
+        The buffer is rendered in 2 passes. By default all elements are rendered in pass
+        1. But if for some reason something needs to be drawn over other elements (like
+        if a dialog/popup is needed for example), the element can be set to be rendered
+        only during the second pass.
+
+        :param element: The element to place.
+        :type element: various
+        :param row: The row to render to.
+        :type row: int
+        :param column: The column to render to.
+        :type column: int
+        :param rendering_pass: When to render the element (first or second pass).
+        :type rendering_pass: int
+
+        .. Warning:: to be rendered on the second pass an element *needs* to implement
+           render_to_buffer(...). This excludes all standard types (but not
+           :class:`~pygamelib.base.Text`). Regular Python strings and object that can be
+           print() can still be used in the first pass.
+
+        Example::
+
+            screen.place(my_sprite, 0, 0)
+        """
+        if element is None or row is None or column is None:
+            raise base.PglInvalidTypeException(
+                "Screen.place(item, row, column) none of the parameters can be None."
+            )
+        if isinstance(element, base.Text):
+            # If it's a text object we need to convert it to a Sprite first.
+            self._display_buffer[row][column] = core.Sprite.from_text(element)
+            self._is_dirty = True
+            setattr(element, "__rendering_pass", rendering_pass)
+            return
+        elif (
+            isinstance(element, core.Sprixel)
+            or type(element) is str
+            or hasattr(element, "render_to_buffer")
+        ):
+            try:
+                setattr(element, "__rendering_pass", rendering_pass)
+            except AttributeError:
+                pass
+            self._display_buffer[row][column] = element
+            self._is_dirty = True
+            return
+        else:
+            raise base.PglInvalidTypeException(
+                f"Screen.place(item, row, column) : item type {type(element)} is not"
+                " supported."
+            )
+
+    def delete(self, row=None, column=None):
+        """
+        .. versionadded:: 1.3.0
+
+        .. NOTE:: This method is part of the **Screen Buffer** rendering stack and is
+           incompatible with the methods identified as being part of the **Direct
+           Display** stack.
+
+        :param name: some param
+        :type name: str
+
+        Example::
+
+            method()
+        """
+        if row is not None and column is not None:
+            self._display_buffer[row][column] = core.Sprixel(" ")
+            self._is_dirty = True
+
     def display_line(self, *text, end="\n", file=sys.stdout, flush=False):
         """
         .. versionadded:: 1.2.0
+
+        .. NOTE:: This method is part of the **Direct Display** rendering stack and is
+           incompatible with the methods identified as being part of the **Screen
+           Buffer** stack.
 
         A wrapper to Python's print() builtin function except it will always add an
         ANSI sequence to clear the end of the line. Making it more suitable to use in
@@ -3075,7 +3690,11 @@ class Screen(object):
         """
         # Funny how the documentation is waaayyy bigger than the code ;)
         print(
-            *text, self.terminal.clear_eol, end=end, file=file, flush=flush,
+            *text,
+            self.terminal.clear_eol,
+            end=end,
+            file=file,
+            flush=flush,
         )
 
     def display_at(
@@ -3089,6 +3708,10 @@ class Screen(object):
         flush=False,
     ):
         """
+        .. NOTE:: This method is part of the **Direct Display** rendering stack and is
+           incompatible with the methods identified as being part of the **Screen
+           Buffer** stack.
+
         Displays text at a given position. If clear_eol is True, also clear the end of
         line.
         Additionally you can specify all the parameters of a regular print() if you
@@ -3135,26 +3758,31 @@ class Screen(object):
     def display_sprite_at(
         self,
         sprite,
-        filler=core.Sprixel(" "),
         row=0,
         column=0,
+        filler=core.Sprixel(" "),
         file=sys.stdout,
         flush=False,
     ):
         """
         .. versionadded:: 1.3.0
+
+        .. NOTE:: This method is part of the **Direct Display** rendering stack and is
+           incompatible with the methods identified as being part of the **Screen
+           Buffer** stack.
+
         Displays sprite at a given position.
         If a :class:`~pygamelib.gfx.core.Sprixel` is empty, then it's going to be
         replaced by filler.
 
         :param sprite: The sprite object to display.
         :type sprite: :class:`~pygamelib.gfx.core.Sprite`
-        :param filler: A sprixel object to replace all empty sprixels in sprite.
-        :type filler: :class:`~pygamelib.gfx.core.Sprixel`
         :param row: The row position in the terminal window.
         :type row: int
         :param column: The column position in the terminal window.
         :type column: int
+        :param filler: A sprixel object to replace all empty sprixels in sprite.
+        :type filler: :class:`~pygamelib.gfx.core.Sprixel`
         :param file:
         :type file: stream
         :param flush: print() parameter to flush the stream after printing
@@ -3185,6 +3813,11 @@ class Screen(object):
     ):
         """
         .. versionadded:: 1.3.0
+
+        .. NOTE:: This method is part of the **Direct Display** rendering stack and is
+           incompatible with the methods identified as being part of the **Screen
+           Buffer** stack.
+
         Displays sprite at the current cursor position.
         If a :class:`~pygamelib.gfx.core.Sprixel` is empty, then it's going to be
         replaced by filler.
@@ -3208,6 +3841,9 @@ class Screen(object):
                     print(filler, end="")
                 else:
                     print(
-                        sprite._sprixels[r][c], end="", file=file, flush=flush,
+                        sprite._sprixels[r][c],
+                        end="",
+                        file=file,
+                        flush=flush,
                     )
             print()

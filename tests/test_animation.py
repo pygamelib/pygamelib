@@ -2,6 +2,7 @@ import pygamelib.gfx.core as gfx_core
 import pygamelib.base as pgl_base
 import pygamelib.board_items as pgl_board_items
 import pygamelib.constants as pgl_constants
+import pygamelib.engine as pgl_engine
 import unittest
 
 
@@ -197,6 +198,72 @@ class TestAnimation(unittest.TestCase):
         with self.assertRaises(pgl_base.PglInvalidTypeException):
             i.animation.next_frame()
             i.animation.next_frame()
+
+    def test_with_sprite(self):
+        spr = gfx_core.Sprite(
+            sprixels=[
+                [
+                    gfx_core.Sprixel.cyan_rect(),
+                    gfx_core.Sprixel.red_rect(),
+                    gfx_core.Sprixel.green_rect(),
+                ],
+                [
+                    gfx_core.Sprixel.yellow_rect(),
+                    gfx_core.Sprixel.blue_rect(),
+                    gfx_core.Sprixel.white_rect(),
+                ],
+            ]
+        )
+        blue_spr = gfx_core.Sprite(
+            sprixels=[
+                [
+                    gfx_core.Sprixel.blue_rect(),
+                    gfx_core.Sprixel.blue_rect(),
+                    gfx_core.Sprixel.blue_rect(),
+                ],
+                [
+                    gfx_core.Sprixel.blue_rect(),
+                    gfx_core.Sprixel.blue_rect(),
+                    gfx_core.Sprixel.blue_rect(),
+                ],
+            ]
+        )
+        red_spr = gfx_core.Sprite(
+            sprixels=[
+                [
+                    gfx_core.Sprixel.red_rect(),
+                    gfx_core.Sprixel.red_rect(),
+                    gfx_core.Sprixel.red_rect(),
+                ],
+                [
+                    gfx_core.Sprixel.red_rect(),
+                    gfx_core.Sprixel.red_rect(),
+                    gfx_core.Sprixel.red_rect(),
+                ],
+            ]
+        )
+        b = pgl_engine.Board(size=[30, 30])
+        i = pgl_board_items.ComplexNPC(sprite=spr, parent=b)
+        i.animation = gfx_core.Animation(
+            parent=i, refresh_screen=self.redraw, display_time=0.1
+        )
+        i.animation.add_frame(blue_spr)
+        i.animation.add_frame(red_spr)
+        b.place_item(i, 2, 2)
+        self.assertTrue(i.animation.play_all())
+        # Now with Game
+        g = pgl_engine.Game()
+        g.add_board(1, b)
+        g.player = pgl_constants.NO_PLAYER
+        g.change_level(1)
+        i = pgl_board_items.ComplexNPC(sprite=spr, parent=g)
+        i.animation = gfx_core.Animation(
+            parent=i, refresh_screen=self.redraw, display_time=0.1
+        )
+        i.animation.add_frame(blue_spr)
+        i.animation.add_frame(red_spr)
+        # b.place_item(i, 2, 2)
+        self.assertIsNone(i.animation.play_all())
 
     def test_dtdisplay(self):
         a = gfx_core.Animation()

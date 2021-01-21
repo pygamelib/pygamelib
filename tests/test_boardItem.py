@@ -12,6 +12,7 @@ class TestBoard(unittest.TestCase):
         self.assertEqual(self.boardItem.type, "item")
         self.assertEqual(self.boardItem.pos, [None, None])
         self.assertEqual(self.boardItem.model, "*")
+        self.assertEqual(self.boardItem.__str__(), self.boardItem.__repr__())
 
     def test_custom_boardItem(self):
         self.boardItem = board_items.BoardItem(
@@ -21,7 +22,7 @@ class TestBoard(unittest.TestCase):
         self.assertEqual(self.boardItem.type, "test_type")
         self.assertEqual(self.boardItem.pos, [10, 10])
         self.assertEqual(self.boardItem.model, "test_model")
-        self.assertEqual(self.boardItem.__repr__(), "test_model")
+        self.assertEqual(self.boardItem.__repr__(), "test_model\x1b[0m")
         self.assertIsNone(self.boardItem.display())
         self.assertIn("'model' = 'test_model'", self.boardItem.debug_info())
         self.assertEqual(self.boardItem.position_as_vector().row, 10)
@@ -265,6 +266,15 @@ class TestBoard(unittest.TestCase):
         ci = board_items.ComplexTreasure()
         self.assertTrue(ci.pickable())
         self.assertFalse(ci.overlappable())
+
+    def test_camera(self):
+        cam = board_items.Camera()
+        cam = board_items.Camera(actuator=42)
+        self.assertEqual(cam.actuator, 42)
+        cam.row = 12
+        cam.column = 34
+        self.assertEqual(cam.row, 12)
+        self.assertEqual(cam.column, 34)
 
 
 if __name__ == "__main__":
