@@ -1536,7 +1536,7 @@ class Game:
                         self.player.dtmove += elapsed
                     print(self.terminal.home, end="")
                     self.user_update(self, in_key, elapsed)
-                    print(self.terminal.clear_eos)
+                    print(self.terminal.clear_eos, end="")
                     self.actuate_npcs(self.current_level, elapsed)
                     self.actuate_projectiles(self.current_level, elapsed)
                     self.animate_items(self.current_level, elapsed)
