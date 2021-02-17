@@ -2962,7 +2962,7 @@ class Inventory:
                 types[self.__items[k].type]["size"] += self.__items[k].inventory_space()
             else:
                 types[self.__items[k].type] = {
-                    "size": self.__items[k].inventory_space(),
+                    "size": self.__items[k].inventory_space,
                     "model": self.__items[k].model,
                 }
         for k in types.keys():
@@ -3022,7 +3022,7 @@ class Inventory:
                         + ", current inventory size: "
                         + str(self.size())
                         + " and item size: "
-                        + str(item.inventory_space()),
+                        + str(item.inventory_space),
                     )
             else:
                 raise base.PglInventoryException(
