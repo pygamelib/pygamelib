@@ -11,8 +11,9 @@ class TestBase(unittest.TestCase):
         self.inv = engine.Inventory()
 
     def test_add_item(self):
-        self.inv.add_item(Treasure(inventory_space=9, name=None, value=10))
+        self.inv.add_item(Treasure(inventory_space=9, name="test", value=10))
         self.assertEqual(self.inv.value(), 10)
+        self.assertEqual(self.inv.get_item("test").inventory_space, 9)
         with self.assertRaises(engine.base.PglInventoryException):
             self.inv.add_item(Treasure(inventory_space=9, name=None))
         with self.assertRaises(engine.base.PglInvalidTypeException):
