@@ -159,7 +159,7 @@ class TestBoard(unittest.TestCase):
     def test_immovable(self):
         bi = board_items.Immovable(inventory_space=2)
         self.assertFalse(bi.can_move())
-        self.assertEqual(bi.inventory_space(), 2)
+        self.assertEqual(bi.inventory_space, 2)
         with self.assertRaises(NotImplementedError):
             bi.restorable()
 

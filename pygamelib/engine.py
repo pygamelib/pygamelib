@@ -3011,7 +3011,7 @@ class Inventory:
                     item.name = f"{item.name}_{uuid.uuid4().hex}"
                 if (
                     hasattr(item, "_inventory_space")
-                    and self.max_size >= self.size() + item.inventory_space()
+                    and self.max_size >= self.size() + item.inventory_space
                 ):
                     self.__items[item.name] = item
                 else:
