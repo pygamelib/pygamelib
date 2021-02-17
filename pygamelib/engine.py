@@ -2736,7 +2736,7 @@ class Game:
             obj, board_items.GenericStructure
         ):
             ref["value"] = obj.value
-            ref["inventory_space"] = obj.inventory_space()
+            ref["inventory_space"] = obj.inventory_space
             ref["overlappable"] = obj.overlappable()
             ref["pickable"] = obj.pickable()
             ref["restorable"] = obj.restorable()
