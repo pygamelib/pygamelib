@@ -164,6 +164,8 @@ class TestBoard(unittest.TestCase):
             bi.restorable()
         with self.assertRaises(board_items.base.PglInvalidTypeException):
             bi.inventory_space = "2"
+        bi.inventory_space = 3
+        self.assertEqual(bi.inventory_space, 3)
 
     def test_actionable(self):
         bi = board_items.Actionable()
