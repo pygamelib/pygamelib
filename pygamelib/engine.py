@@ -2728,10 +2728,10 @@ class Game:
             ref["sprixel"] = obj.sprixel.serialize()
 
         if isinstance(obj, board_items.Wall):
-            ref["inventory_space"] = obj.inventory_space()
+            ref["inventory_space"] = obj.inventory_space
         elif isinstance(obj, board_items.Treasure):
             ref["value"] = obj.value
-            ref["inventory_space"] = obj.inventory_space()
+            ref["inventory_space"] = obj.inventory_space
         elif isinstance(obj, board_items.GenericActionableStructure) or isinstance(
             obj, board_items.GenericStructure
         ):
@@ -2742,7 +2742,7 @@ class Game:
             ref["restorable"] = obj.restorable()
         elif isinstance(obj, board_items.Door):
             ref["value"] = obj.value
-            ref["inventory_space"] = obj.inventory_space()
+            ref["inventory_space"] = obj.inventory_space
             ref["overlappable"] = obj.overlappable()
             ref["pickable"] = obj.pickable()
             ref["restorable"] = obj.restorable()
@@ -3052,7 +3052,7 @@ class Inventory:
         val = 0
         for k in self.__items.keys():
             if hasattr(self.__items[k], "_inventory_space"):
-                val += self.__items[k].inventory_space()
+                val += self.__items[k].inventory_space
         return val
 
     def empty(self):
