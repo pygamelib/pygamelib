@@ -1066,6 +1066,7 @@ class Immovable(BoardItem):
         """
         return False
 
+    @property
     def inventory_space(self):
         """Return the size of the Immovable Item for the
         :class:`~pygamelib.engine.Inventory`.
@@ -1074,6 +1075,16 @@ class Immovable(BoardItem):
         :rtype: int
         """
         return self._inventory_space
+    
+    @inventory_space.setter
+    def inventory_space(self, value):
+        if type(value) is int:
+            self._inventory_space = value
+        else:
+            raise base.PglInvalidTypeException(
+                "Immovable.inventory_space.(value): value needs to be an int."
+            )
+    
 
     def restorable(self):
         """
