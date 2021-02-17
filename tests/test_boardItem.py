@@ -252,6 +252,7 @@ class TestBoard(unittest.TestCase):
             overlappable=False,
             restorable=True,
         )
+        self.assertEqual(bi.inventory_space, 5)
         self.assertFalse(bi.pickable())
         self.assertFalse(bi.overlappable())
         self.assertTrue(bi.restorable())
