@@ -2959,7 +2959,7 @@ class Inventory:
         types = {}
         for k in self.__items.keys():
             if self.__items[k].type in types.keys():
-                types[self.__items[k].type]["size"] += self.__items[k].inventory_space()
+                types[self.__items[k].type]["size"] += self.__items[k].inventory_space
             else:
                 types[self.__items[k].type] = {
                     "size": self.__items[k].inventory_space,
