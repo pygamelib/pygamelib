@@ -1068,8 +1068,8 @@ class Immovable(BoardItem):
 
     @property
     def inventory_space(self):
-        """Return the size of the Immovable Item for the
-        :class:`~pygamelib.engine.Inventory`.
+        """Return the size that the Immovable item takes 
+        in the :class:`~pygamelib.engine.Inventory`.
 
         :return: The size of the item.
         :rtype: int

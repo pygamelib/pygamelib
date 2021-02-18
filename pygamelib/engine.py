@@ -2732,15 +2732,15 @@ class Game:
         elif isinstance(obj, board_items.Treasure):
             ref["value"] = obj.value
             ref["inventory_space"] = obj.inventory_space
-        elif isinstance(obj, board_items.GenericActionableStructure) or isinstance(
-            obj, board_items.GenericStructure
-        ):
+        elif isinstance(obj, board_items.Door):
             ref["value"] = obj.value
             ref["inventory_space"] = obj.inventory_space
             ref["overlappable"] = obj.overlappable()
             ref["pickable"] = obj.pickable()
             ref["restorable"] = obj.restorable()
-        elif isinstance(obj, board_items.Door):
+        elif isinstance(obj, board_items.GenericActionableStructure) or isinstance(
+            obj, board_items.GenericStructure
+        ):
             ref["value"] = obj.value
             ref["inventory_space"] = obj.inventory_space
             ref["overlappable"] = obj.overlappable()
