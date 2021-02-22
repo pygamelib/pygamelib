@@ -7,5 +7,6 @@ The gfx (for graphics) sub-module holds all the classes related to the graphics 
 
 .. toctree::
     gfx_core
+    gfx_ui
     gfx_particles
 
