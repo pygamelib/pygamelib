@@ -1,5 +1,5 @@
 from pygamelib import base, engine, constants, board_items
-from pygamelib.gfx import core
+from pygamelib.gfx import core, ui
 from pygamelib.assets import graphics
 import argparse
 import os
@@ -35,68 +35,44 @@ nav_increments = {
     "KEY_LEFT": -1,
     "KEY_RIGHT": 1,
 }
+ui_config = None
+ui_config_selected = None
+ui_config_popup = None
 
 
 def draw_box(row, column, height, width, group="", title=""):
-    global boxes_idx
-    global boxes
-    scr = engine.Game.instance().screen
-    color = core.Color(255, 255, 255)
+    global boxes_idx, boxes, ui_config, ui_config_selected
+    box = ui.Box(width, height, title, ui_config)
     if boxes[boxes_idx % len(boxes)] == group:
-        color = core.Color(0, 255, 0)
-    vert_sprix = core.Sprixel(graphics.BoxDrawings.LIGHT_VERTICAL, fg_color=color)
-    horiz_sprix = core.Sprixel(graphics.BoxDrawings.LIGHT_HORIZONTAL, fg_color=color)
-    scr.place(
-        core.Sprixel(graphics.BoxDrawings.LIGHT_ARC_DOWN_AND_RIGHT, fg_color=color),
-        row,
-        column,
+        box.config = ui_config_selected
+    engine.Game.instance().screen.place(box, row, column)
+
+
+def draw_progress_bar(
+    row,
+    column,
+    length,
+    value,
+    total,
+    progress_marker=graphics.GeometricShapes.BLACK_RECTANGLE,
+    empty_marker=" ",
+    fg_color=core.Color(0, 0, 0),
+    bg_color=core.Color(0, 128, 128),
+):
+    g = engine.Game.instance()
+    prog = int((value * length) / total)
+    pb = base.Text(
+        progress_marker * prog + " " * (length - prog),
+        fg_color=fg_color,
+        bg_color=bg_color,
     )
-    if title == "":
-        for c in range(column + 1, column + width - 1):
-            scr.place(horiz_sprix, row, c)
-    else:
-        for c in range(column + 1, column + 1 + round(width / 2 - len(title) / 2)):
-            scr.place(horiz_sprix, row, c)
-        scr.place(
-            base.Text(title, fg_color=color),
-            row,
-            column + 1 + int(width / 2 - 1 - len(title) / 2),
-        )
-        cs = column + 1 + int(width / 2 - 1 - len(title) / 2) + len(title)
-        for c in range(cs, cs + int(width / 2 - len(title) / 2)):
-            scr.place(horiz_sprix, row, c)
-    scr.place(
-        core.Sprixel(graphics.BoxDrawings.LIGHT_ARC_DOWN_AND_LEFT, fg_color=color),
-        row,
-        column + width - 1,
-    )
-    vert_sprix = core.Sprixel(graphics.BoxDrawings.LIGHT_VERTICAL, fg_color=color)
-    for r in range(1, height - 1):
-        scr.place(vert_sprix, row + r, column)
-        scr.place(
-            vert_sprix,
-            row + r,
-            column + width - 1,
-        )
-    scr.place(
-        core.Sprixel(graphics.BoxDrawings.LIGHT_ARC_UP_AND_RIGHT, fg_color=color),
-        row + height - 1,
-        column,
-    )
-    for c in range(column + 1, column + width - 1):
-        scr.place(horiz_sprix, row + height - 1, c)
-    scr.place(
-        core.Sprixel(graphics.BoxDrawings.LIGHT_ARC_UP_AND_LEFT, fg_color=color),
-        row + height - 1,
-        column + width - 1,
-    )
+    g.screen.place(core.Sprite.from_text(pb), row, column, 2)
+    g.screen.trigger_rendering()
+    g.screen.update()
 
 
 def draw_ui():
-    global filename
-    global collection
-    global screen_dimensions
-    global ui_init
+    global filename, collection, screen_dimensions, ui_init
     g = engine.Game.instance()
     screen = g.screen
     spr_l_c_idx = sprite_list_idx % len(sprite_list)
@@ -222,36 +198,49 @@ def update_sprixel_under_cursor(g, v_move):
             g.screen.place(core.Sprixel(), 7, c)
         g.screen.place(f"Model: '{cell.model}'", 8, first_col)
         if cell.fg_color is not None:
+            color = base.Text(
+                f"({cell.fg_color.r},{cell.fg_color.g},{cell.fg_color.b})",
+                fg_color=cell.fg_color,
+            )
             g.screen.place(
-                f"FG: ({cell.fg_color.r},{cell.fg_color.g},{cell.fg_color.b})",
+                "FG:",
                 9,
                 first_col,
             )
-        else:
-            g.screen.place("No foreground", 9, first_col)
-        if cell.bg_color is not None:
             g.screen.place(
-                f"BG: ({cell.bg_color.r},{cell.bg_color.g},{cell.bg_color.b})",
+                color,
+                9,
+                first_col + 4,
+            )
+        else:
+            g.screen.place("No foreground     ", 9, first_col)
+        if cell.bg_color is not None:
+            color = base.Text(
+                f"({cell.bg_color.r},{cell.bg_color.g},{cell.bg_color.b})",
+                fg_color=cell.bg_color,
+            )
+            g.screen.place(
+                "BG:",
                 10,
                 first_col,
             )
+            g.screen.place(
+                color,
+                10,
+                first_col + 4,
+            )
         else:
-            g.screen.place("No background", 10, first_col)
+            # In case you read this and wonder why the spaces, the answer is what you
+            # think: lazy programming.
+            g.screen.place("No background     ", 10, first_col)
         # g.screen.place(f"{cell.bg_color}", 9, first_col)
 
 
 def load_sprite_to_board(g):
-    global sprite_list
-    global sprite_list_idx
-    global ui_init
+    global sprite_list, sprite_list_idx, ui_init, ui_config
     spr_c_idx = sprite_list_idx % len(sprite_list)
     spr_name = sprite_list[spr_c_idx]
     if ui_init:
-        g.screen.place(
-            f"{spr_name} ui_init is True",
-            g.screen.height - 3,
-            3,
-        )
         diag = base.Text(
             f" Please wait, loading {spr_name} ",
             core.Color(0, 0, 0),
@@ -260,7 +249,8 @@ def load_sprite_to_board(g):
         tl = base.Console.instance().length(diag.text)
         dr = int((g.screen.height - 7) / 2)
         dc = int((g.screen.width - 21) / 2) - int(tl / 2)
-        g.screen.place(core.Sprite.from_text(diag), dr, dc, 2)
+        progress_bar = ui.ProgressDialog(diag, 0, tl, tl, config=ui_config)
+        g.screen.place(progress_bar, dr, dc, 2)
         g.screen.trigger_rendering()
         g.screen.update()
     void_sprixel_model = "X"
@@ -294,52 +284,169 @@ def load_sprite_to_board(g):
             player_starting_position=[0, 0],
         ),
     )
-    g.get_board(1 + spr_c_idx).place_item(
-        board_items.Tile(sprite=collection[spr_name], null_sprixel=core.Sprixel()),
-        0,
-        0,
-    )
+
+    board = g.get_board(1 + spr_c_idx)
+    total = board.width * board.height
+    if ui_init:
+        progress_bar.value = 1
+        g.screen.update()
+        progress_bar.maximum = total
+    cidx = 0
+    null_sprixel = core.Sprixel()
+    last_prog = 0
+    for r in range(board.height):
+        for c in range(board.width):
+            if collection[spr_name].sprixel(r, c) == null_sprixel:
+                cidx += 1
+                continue
+            board.place_item(
+                board_items.Door(sprixel=collection[spr_name].sprixel(r, c)), r, c
+            )
+            if ui_init:
+                cidx += 1
+                prog = int((cidx * tl) / total)
+                if prog > last_prog:
+                    # draw_progress_bar(dr + 1, dc, tl, cidx, total)
+                    progress_bar.value = cidx
+                    g.screen.update()
+                    last_prog = prog
     if (
         collection[spr_name].size[0] >= g.screen.height - 12
         or collection[spr_name].size[1] >= g.screen.width - 23
     ):
-        g.get_board(1 + spr_c_idx).enable_partial_display = True
-        g.get_board(1 + spr_c_idx).partial_display_viewport = [
+        board.enable_partial_display = True
+        board.partial_display_viewport = [
             int((g.screen.height - 12) / 2),
             int((g.screen.width - 23) / 2),
         ]
-        g.get_board(1 + spr_c_idx).partial_display_focus = g.player
+        board.partial_display_focus = g.player
+    # [DIRTY HACK]
+    # There is a bug somewhere in the code that place the player on the board and the
+    # arrival position's sprixel is lost. By doing that swap, we ensure that the board
+    # loads correctly and is correctly displayed.
+    player = g.player
+    g.player = constants.NO_PLAYER
     g.change_level(1 + spr_c_idx)
+    g.player = player
+    # Reset the background color so we don have any artifact
+    g.player.sprixel.bg_color = None
+    g.current_board().place_item(g.player, 0, 0)
+    # [/DIRTY HACK]
     update_sprite_info(g, spr_name)
     if ui_init:
         g.screen.delete(dr, dc)
+        g.screen.delete(dr + 1, dc)
 
 
 def erase_cell(g, row, column):
-    g.current_board().place_item(
-        board_items.BoardItemVoid(
-            sprixel=core.Sprixel(g.current_board().ui_board_void_cell_sprixel.model)
-        ),
-        row,
-        column,
-    )
+    g.current_board().clear_cell(row, column)
 
 
 def update_screen(g, inkey, dt):
-    global boxes_idx
-    global frames
-    global boxes
-    global sprite_list_idx
-    global collection
-    global start
-    global nav_increments
-    global eraser_mode
-    global current_sprixel
+    global boxes_idx, frames, boxes, sprite_list_idx, collection, start, nav_increments
+    global eraser_mode, current_sprixel, filename, sprite_list, ui_config_popup
+    global palette_idx
     redraw_ui = True
     screen = g.screen
     boxes_current_id = boxes_idx % len(boxes)
     if inkey == "Q":
         g.stop()
+    elif inkey == "S":
+        screen.place(
+            f"Saving current sprite into {filename}",
+            screen.height - 4,
+            3,
+        )
+        for spr_id in range(0, len(sprite_list)):
+            spr_name = sprite_list[spr_id]
+            sprite = collection[spr_name]
+            try:
+                board = g.get_board(1 + spr_id)
+            except Exception:
+                continue
+            sprite_set_sprixel = sprite.set_sprixel
+            board_item = board.item
+            if ui_init:
+                diag = base.Text(
+                    f" Please wait, saving {spr_name} ",
+                    core.Color(0, 0, 0),
+                    core.Color(0, 128, 128),
+                )
+                tl = diag.length
+                dr = int((screen.height - 7) / 2)
+                dc = int((screen.width - 21) / 2) - int(tl / 2)
+                progress_bar = ui.ProgressDialog(diag, 0, tl, tl, config=ui_config)
+                screen.place(progress_bar, dr, dc, 2)
+                screen.trigger_rendering()
+                screen.update()
+                total = board.width * board.height
+                screen.update()
+                progress_bar.maximum = total
+            cidx = 0
+            prog = 0
+            last_prog = 0
+            for r in range(sprite.height):
+                for c in range(sprite.width):
+                    csprix = board_item(r, c).sprixel
+                    if board_item(r, c) == g.player:
+                        cidx += 1
+                        csprix = current_sprixel
+                    if csprix is None or csprix.model == "X" or csprix.model == "XX":
+                        sprite_set_sprixel(r, c, core.Sprixel())
+                    else:
+                        sprite_set_sprixel(r, c, csprix)
+                    if ui_init:
+                        cidx += 1
+                        prog = int((cidx * tl) / total)
+                        if prog > last_prog:
+                            # draw_progress_bar(dr + 1, dc, tl, cidx, total)
+                            progress_bar.value = cidx
+                            g.screen.update()
+                            last_prog = prog
+            if ui_init:
+                screen.delete(dr, dc)
+        # TODO: create a wait dialog
+        collection.to_json_file("collection.spr")
+        redraw_ui = False
+    elif inkey == "N":
+        fields = [
+            {
+                "label": "Enter the height of the new sprite:",
+                "default": "",
+                "filter": constants.INTEGER_FILTER,
+            },
+            {
+                "label": "Enter the width of the new sprite:",
+                "default": "",
+                "filter": constants.INTEGER_FILTER,
+            },
+            {
+                "label": "Enter the name of the new sprite:",
+                "default": f"Sprite {len(sprite_list)}",
+                "filter": constants.PRINTABLE_FILTER,
+            },
+        ]
+        minp = ui.MultiLineInputDialog(fields=fields, config=ui_config_popup)
+        screen.place(minp, screen.vcenter - len(fields), screen.hcenter - 18)
+        filled_fields = minp.show()
+        screen.delete(screen.vcenter - len(fields), screen.hcenter - 18)
+        if (
+            filled_fields[0]["user_input"] != ""
+            and filled_fields[1]["user_input"] != ""
+            and filled_fields[2]["user_input"] != ""
+        ):
+            nn = filled_fields[2]["user_input"]
+            collection[nn] = core.Sprite(
+                size=[
+                    int(filled_fields[1]["user_input"]),
+                    int(filled_fields[0]["user_input"]),
+                ]
+            )
+            collection[nn].name = nn
+            sprite_list = list(collection.keys())
+            sprite_list_idx = sprite_list.index(nn)
+            load_sprite_to_board(g)
+            boxes_idx = boxes.index("sprite")
     elif inkey.name == "KEY_TAB":
         boxes_idx += 1
     elif inkey.name == "KEY_ENTER":
@@ -353,8 +460,6 @@ def update_screen(g, inkey, dt):
             update_cursor_info(g)
             pos = g.player.pos
             g.move_player(constants.UP, 1)
-            if eraser_mode:
-                erase_cell(g, pos[0], pos[1])
         elif inkey == engine.key.DOWN:
             update_sprixel_under_cursor(
                 g, base.Vector2D.from_direction(constants.DOWN, 1)
@@ -362,8 +467,6 @@ def update_screen(g, inkey, dt):
             update_cursor_info(g)
             pos = g.player.pos
             g.move_player(constants.DOWN, 1)
-            if eraser_mode:
-                erase_cell(g, pos[0], pos[1])
         elif inkey == engine.key.LEFT:
             update_sprixel_under_cursor(
                 g, base.Vector2D.from_direction(constants.LEFT, 1)
@@ -371,8 +474,6 @@ def update_screen(g, inkey, dt):
             update_cursor_info(g)
             pos = g.player.pos
             g.move_player(constants.LEFT, 1)
-            if eraser_mode:
-                erase_cell(g, pos[0], pos[1])
         elif inkey == engine.key.RIGHT:
             update_sprixel_under_cursor(
                 g, base.Vector2D.from_direction(constants.RIGHT, 1)
@@ -380,12 +481,59 @@ def update_screen(g, inkey, dt):
             update_cursor_info(g)
             pos = g.player.pos
             g.move_player(constants.RIGHT, 1)
+        elif inkey == "j":
+            pos = g.player.pos
+            g.move_player(constants.LEFT, 1)
             if eraser_mode:
                 erase_cell(g, pos[0], pos[1])
+            elif len(palette) > 0:
+                g.current_board().place_item(
+                    board_items.Door(sprixel=palette[palette_idx]), pos[0], pos[1]
+                )
+        elif inkey == "l":
+            pos = g.player.pos
+            g.move_player(constants.RIGHT, 1)
+            if eraser_mode:
+                erase_cell(g, pos[0], pos[1])
+            elif len(palette) > 0:
+                g.current_board().place_item(
+                    board_items.Door(sprixel=palette[palette_idx]), pos[0], pos[1]
+                )
+        elif inkey == "i":
+            pos = g.player.pos
+            g.move_player(constants.UP, 1)
+            if eraser_mode:
+                erase_cell(g, pos[0], pos[1])
+            elif len(palette) > 0:
+                g.current_board().place_item(
+                    board_items.Door(sprixel=palette[palette_idx]), pos[0], pos[1]
+                )
+        elif inkey == "k":
+            pos = g.player.pos
+            g.move_player(constants.DOWN, 1)
+            if eraser_mode:
+                erase_cell(g, pos[0], pos[1])
+            elif len(palette) > 0:
+                g.current_board().place_item(
+                    board_items.Door(sprixel=palette[palette_idx]), pos[0], pos[1]
+                )
         elif inkey == "E":
             eraser_mode = not eraser_mode
+            if eraser_mode:
+                txt = base.Text(
+                    "ERASER MODE ON",
+                    fg_color=core.Color(255, 0, 0),
+                    style=constants.BOLD,
+                )
+                screen.place(txt, 1, screen.hcenter)
+            else:
+                screen.delete(1, screen.hcenter)
         elif inkey == "A" and current_sprixel is not None:
             palette.append(current_sprixel)
+        elif inkey == "+":
+            palette_idx += 1
+        elif inkey == "-":
+            palette_idx -= 1
         else:
             redraw_ui = False
     elif boxes[boxes_current_id] == "sprite_list" and (
@@ -397,6 +545,11 @@ def update_screen(g, inkey, dt):
             g.change_level(1 + spr_c_idx)
         except Exception:
             load_sprite_to_board(g)
+    elif (
+        screen.height != screen.buffer.shape[0]
+        or screen.width != screen.buffer.shape[1]
+    ):
+        screen.clear_buffers()
     else:
         redraw_ui = False
     if redraw_ui or (frames % 60) == 0:
@@ -414,50 +567,66 @@ def update_screen(g, inkey, dt):
     frames += 1
 
 
-parser = argparse.ArgumentParser(
-    description="A tool to create/edit pygamelib's sprites."
-)
-parser.add_argument("sprite_file", help="An sprite file to load and edit.", default="")
-args = parser.parse_args()
-collection = None
-if args.sprite_file != "" and os.path.exists(args.sprite_file):
-    collection = core.SpriteCollection.load_json_file(args.sprite_file)
-    sprite_list = list(collection.keys())
-    filename = args.sprite_file
-else:
-    collection = core.SpriteCollection()
-    if args.sprite_file != "":
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser(
+        description="A tool to create/edit pygamelib's sprites."
+    )
+    parser.add_argument(
+        "sprite_file", help="An sprite file to load and edit.", nargs="?", default=""
+    )
+    args = parser.parse_args()
+    collection = None
+    if args.sprite_file != "" and os.path.exists(args.sprite_file):
+        collection = core.SpriteCollection.load_json_file(args.sprite_file)
+        sprite_list = list(collection.keys())
         filename = args.sprite_file
-g = engine.Game.instance(
-    player=board_items.Player(
-        sprixel=core.Sprixel(
-            graphics.BoxDrawings.HEAVY_VERTICAL_AND_HORIZONTAL,
-            fg_color=core.Color(255, 0, 0),
+    else:
+        collection = core.SpriteCollection()
+        collection["default"] = core.Sprite(size=[16, 8])
+        collection["default"].name = "default"
+        sprite_list = list(collection.keys())
+        if args.sprite_file != "":
+            filename = args.sprite_file
+    g = engine.Game.instance(
+        player=board_items.Player(
+            sprixel=core.Sprixel(
+                graphics.BoxDrawings.HEAVY_VERTICAL_AND_HORIZONTAL,
+                fg_color=core.Color(255, 0, 0),
+            ),
+            movement_speed=0.01,
         ),
-        movement_speed=0.01,
-    ),
-    user_update=update_screen,
-    mode=constants.MODE_RT,
-    input_lag=0.0001,
-)
-# Default empty board.
-g.add_board(
-    1,
-    engine.Board(
-        ui_borders="",
-        size=[g.screen.width - 23, g.screen.height - 12],
-        ui_board_void_cell_sprixel=core.Sprixel(" "),
-        DISPLAY_SIZE_WARNINGS=False,
-        player_starting_position=[0, 0],
-    ),
-)
-g.change_level(1)
-screen_dimensions["central_zone"] = g.screen.height - 10
-if len(collection) > 0:
-    load_sprite_to_board(g)
-start = time.time()
-g.run()
-# print(
-#     f"{frames} frames in {round(time.time()-start,2)} secondes or "
-#     f"{round(frames/(time.time()-start))} FPS"
-# )
+        user_update=update_screen,
+        mode=constants.MODE_RT,
+        input_lag=0.0001,
+    )
+    ui_config = ui.UiConfig(
+        game=g, fg_color=core.Color(0, 0, 0), bg_color=core.Color(0, 128, 128)
+    )
+    ui_config_selected = ui.UiConfig(game=g, border_fg_color=core.Color(0, 255, 0))
+    ui_config_popup = ui.UiConfig(
+        game=g,
+        fg_color=core.Color(0, 0, 0),
+        bg_color=core.Color(0, 128, 128),
+        borderless_dialog=False,
+    )
+    # Default empty board.
+    g.add_board(
+        1,
+        engine.Board(
+            ui_borders="",
+            size=[g.screen.width - 23, g.screen.height - 12],
+            ui_board_void_cell_sprixel=core.Sprixel(" "),
+            DISPLAY_SIZE_WARNINGS=False,
+            player_starting_position=[0, 0],
+        ),
+    )
+    g.change_level(1)
+    screen_dimensions["central_zone"] = g.screen.height - 10
+    if len(collection) > 0:
+        load_sprite_to_board(g)
+    start = time.time()
+    g.run()
+    # print(
+    #     f"{frames} frames in {round(time.time()-start,2)} secondes or "
+    #     f"{round(frames/(time.time()-start))} FPS"
+    # )
