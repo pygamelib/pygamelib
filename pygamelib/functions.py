@@ -33,3 +33,25 @@ def pgl_isinstance(obj, obj_type):
     return obj_type in [
         x.__module__ + "." + x.__name__ for x in inspect.getmro(type(obj))
     ]
+
+
+def clamp(minimum, maximum, value):
+    """Return the value clamped between the min and max boundaries.
+
+    If value is between min and max, this returns value. If it's outside, it returns the
+    closer boundary (either min or max).
+
+    :param minimum: The lower boundary.
+    :type minimum: int|float
+    :param maximum: The lower boundary.
+    :type maximum: int|float
+    :param value: The value to clamp.
+    :type value: int|float
+    :returns: The clamped value.
+    :rtype: int|float
+
+    Example::
+
+        safe_row = clamp(0, board.height, projected_position.row)
+    """
+    return max(minimum, min(maximum, value))
