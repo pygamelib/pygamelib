@@ -286,6 +286,13 @@ class TestBase(unittest.TestCase):
         self.assertEqual(g._string_to_constant("DRDOWN"), constants.DRDOWN)
         self.assertEqual(g._string_to_constant("DLUP"), constants.DLUP)
         self.assertEqual(g._string_to_constant("DLDOWN"), constants.DLDOWN)
+        test_wall = g._obj2ref(board_items.Wall(inventory_space=1))
+        self.assertEqual(test_wall["name"], "wall")
+        self.assertEqual(test_wall["inventory_space"], 1)
+        test_door = g._obj2ref(board_items.Door(value=10, inventory_space=1))
+        self.assertEqual(test_door["name"], "Door")
+        self.assertEqual(test_door["value"], 10)
+        self.assertEqual(test_door["inventory_space"], 1)
 
     def test_singleton(self):
         mygame = engine.Game.instance()

@@ -2728,21 +2728,21 @@ class Game:
             ref["sprixel"] = obj.sprixel.serialize()
 
         if isinstance(obj, board_items.Wall):
-            ref["inventory_space"] = obj.inventory_space()
+            ref["inventory_space"] = obj.inventory_space
         elif isinstance(obj, board_items.Treasure):
             ref["value"] = obj.value
-            ref["inventory_space"] = obj.inventory_space()
+            ref["inventory_space"] = obj.inventory_space
+        elif isinstance(obj, board_items.Door):
+            ref["value"] = obj.value
+            ref["inventory_space"] = obj.inventory_space
+            ref["overlappable"] = obj.overlappable()
+            ref["pickable"] = obj.pickable()
+            ref["restorable"] = obj.restorable()
         elif isinstance(obj, board_items.GenericActionableStructure) or isinstance(
             obj, board_items.GenericStructure
         ):
             ref["value"] = obj.value
-            ref["inventory_space"] = obj.inventory_space()
-            ref["overlappable"] = obj.overlappable()
-            ref["pickable"] = obj.pickable()
-            ref["restorable"] = obj.restorable()
-        elif isinstance(obj, board_items.Door):
-            ref["value"] = obj.value
-            ref["inventory_space"] = obj.inventory_space()
+            ref["inventory_space"] = obj.inventory_space
             ref["overlappable"] = obj.overlappable()
             ref["pickable"] = obj.pickable()
             ref["restorable"] = obj.restorable()
@@ -2959,10 +2959,10 @@ class Inventory:
         types = {}
         for k in self.__items.keys():
             if self.__items[k].type in types.keys():
-                types[self.__items[k].type]["size"] += self.__items[k].inventory_space()
+                types[self.__items[k].type]["size"] += self.__items[k].inventory_space
             else:
                 types[self.__items[k].type] = {
-                    "size": self.__items[k].inventory_space(),
+                    "size": self.__items[k].inventory_space,
                     "model": self.__items[k].model,
                 }
         for k in types.keys():
@@ -3011,7 +3011,7 @@ class Inventory:
                     item.name = f"{item.name}_{uuid.uuid4().hex}"
                 if (
                     hasattr(item, "_inventory_space")
-                    and self.max_size >= self.size() + item.inventory_space()
+                    and self.max_size >= self.size() + item.inventory_space
                 ):
                     self.__items[item.name] = item
                 else:
@@ -3022,7 +3022,7 @@ class Inventory:
                         + ", current inventory size: "
                         + str(self.size())
                         + " and item size: "
-                        + str(item.inventory_space()),
+                        + str(item.inventory_space),
                     )
             else:
                 raise base.PglInventoryException(
@@ -3052,7 +3052,7 @@ class Inventory:
         val = 0
         for k in self.__items.keys():
             if hasattr(self.__items[k], "_inventory_space"):
-                val += self.__items[k].inventory_space()
+                val += self.__items[k].inventory_space
         return val
 
     def empty(self):
