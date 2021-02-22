@@ -96,8 +96,10 @@ class Text(object):
         self.__fg_color = None
         self.__fgcc = ""
         self.__bgcc = ""
+        self.__length = 0
         if type(text) is str:
             self.__text = text
+            self.__length = self.__length = Console.instance().length(self.__text)
         if fg_color is None or pgl_isinstance(fg_color, "pygamelib.gfx.core.Color"):
             self.__fg_color = fg_color
         else:
@@ -183,6 +185,26 @@ class Text(object):
 
     def __str__(self):
         return self.__repr__()
+
+    @property
+    def length(self):
+        """Return the true length of the text.
+
+        With UTF8 and emojis the length of a string as returned by python's
+        :func:`len()` function is often very wrong.
+        For example, the len("\\x1b[48;2;139;22;19m\\x1b[38;2;160;26;23m▄\\x1b[0m")
+        returns 39 when it should return 1.
+
+        This method returns the actual printing/display size of the text.
+
+        .. Note:: This is a read only value. It is automatically updated when the text
+           property is changed.
+
+        Example::
+
+            game.screen.place(my_text, 0, game.screen.width - my_text.length)
+        """
+        return self.__length
 
     # Text is a special case in the buffer rendering system and I know special cases are
     # bad but it works well... Text is automatically converted into a Sprite during
