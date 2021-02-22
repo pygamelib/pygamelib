@@ -768,10 +768,10 @@ class Board:
         """
         Place an item at coordinates row and column.
 
-        If row or column are our of the board boundaries,
-        an PglOutOfBoardBoundException is raised.
+        If row or column are out of the board boundaries,
+        a PglOutOfBoardBoundException is raised.
 
-        If the item is not a subclass of BoardItem, an PglInvalidTypeException
+        If the item is not a subclass of BoardItem, a PglInvalidTypeException
 
         .. warning:: Nothing prevents you from placing an object on top of
             another. Be sure to check that. This method will check for items that
@@ -3494,7 +3494,7 @@ class Screen(object):
                     hasattr(i, "__rendering_pass")
                     and getattr(i, "__rendering_pass") == 2
                 ):
-                    print(f"Deferred rendering for: {i}")
+                    # print(f"Deferred rendering for: {i}")
                     second_pass.append({"item": i, "row": row, "column": col})
                     col -= 1
                     continue
