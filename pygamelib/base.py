@@ -134,6 +134,7 @@ class Text(object):
             self.__text = value
         elif isinstance(value, Text):
             self.__text = value.text
+        self.__length = self.__length = Console.instance().length(self.__text)
 
     @property
     def bg_color(self):
