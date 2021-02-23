@@ -23,6 +23,7 @@ The Board class is the base class for all levels.
 from pygamelib import board_items, base, constants, actuators
 from pygamelib.assets import graphics
 from pygamelib.gfx import core
+from pygamelib.functions import pgl_isinstance
 from blessed import Terminal
 import uuid
 import random
@@ -3609,6 +3610,8 @@ class Screen(object):
             raise base.PglInvalidTypeException(
                 "Screen.place(item, row, column) none of the parameters can be None."
             )
+        if pgl_isinstance(element, "pygamelib.gfx.ui.Dialog"):
+            rendering_pass = 2
         if isinstance(element, base.Text):
             # If it's a text object we need to convert it to a Sprite first.
             self._display_buffer[row][column] = core.Sprite.from_text(element)
