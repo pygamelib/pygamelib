@@ -1435,6 +1435,7 @@ class Game:
         self.mode = mode
         self.user_update = user_update
         self.input_lag = input_lag
+        self._logs = []
         # TODO : In future release I'll add physic
         # self.enable_physic = enable_physic
         # # If physic is enabled we turn the mode to realtime (we need time integration)
@@ -1542,6 +1543,40 @@ class Game:
                     self.actuate_projectiles(self.current_level, elapsed)
                     self.animate_items(self.current_level, elapsed)
                     # TODO: Take care of particles.
+
+    def log(self, line: str) -> None:
+        """Add a line to the logs.
+
+        :param line: The line to add to the logs.
+        :type line: str
+
+        Example::
+
+            game = Game.instance()
+            game.log('Game engine initialized')
+        """
+        self._logs.append(line)
+
+    def logs(self) -> list:
+        """Return the complete logs since instantiation.
+
+        Example::
+
+            game = Game.instance()
+            for line in game.logs():
+                print(line)
+        """
+        return self._logs
+
+    def clear_logs(self) -> None:
+        """Delete all the log lines from the logs.
+
+        Example::
+
+            game = Game.instance()
+            game.clear_logs()
+        """
+        self._logs = list()
 
     def add_menu_entry(self, category, shortcut, message, data=None):
         """Add a new entry to the menu.
@@ -1731,7 +1766,7 @@ class Game:
         # Not testable automatically
         return readkey()  # pragma: no cover
 
-    def load_config(self, filename, section="main"):
+    def load_config(self, filename: str, section: str = "main") -> dict:
         """
         Load a configuration file from the disk.
         The configuration file must respect the INI syntax.
@@ -1773,7 +1808,7 @@ class Game:
                 self._configuration_internals[section]["loaded_from"] = filename
                 return config_content
 
-    def config(self, section="main"):
+    def config(self, section: str = "main") -> dict:
         """Get the content of a previously loaded configuration section.
 
         :param section: The name of the section.
@@ -1788,7 +1823,7 @@ class Game:
         if section in self._configuration:
             return self._configuration[section]
 
-    def create_config(self, section):
+    def create_config(self, section: str) -> None:
         """Initialize a new config section.
 
         The new section is a dictionary.
@@ -1809,7 +1844,9 @@ class Game:
         self._configuration[section] = {}
         self._configuration_internals[section] = {}
 
-    def save_config(self, section=None, filename=None, append=False):
+    def save_config(
+        self, section: str = None, filename: str = None, append: bool = False
+    ) -> None:
         """
         Save a configuration section.
 
@@ -1850,7 +1887,7 @@ class Game:
         with open(filename, mode) as file:
             json.dump(self._configuration[section], file)
 
-    def add_board(self, level_number, board):
+    def add_board(self, level_number: int, board: Board) -> None:
         """Add a board for the level number.
 
         This method associate a Board (:class:`pygamelib.engine.Board`) to a level
@@ -1885,7 +1922,7 @@ class Game:
         else:
             raise base.PglInvalidTypeException("The level number must be an int.")
 
-    def get_board(self, level_number):
+    def get_board(self, level_number: int) -> Board:
         """
         This method returns the board associated with a level number.
         :param level_number: The number of the level.
@@ -1902,7 +1939,7 @@ class Game:
         else:
             raise base.PglInvalidTypeException("The level number must be an int.")
 
-    def current_board(self):
+    def current_board(self) -> Board:
         """
         This method return the board object corresponding to the current_level.
 
@@ -1920,7 +1957,7 @@ class Game:
                 "The current level does not correspond to any board."
             )
 
-    def change_level(self, level_number):
+    def change_level(self, level_number: int) -> None:
         """
         Change the current level, load the board and place the player to the right
         place.
