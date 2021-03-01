@@ -1,6 +1,8 @@
 from pygamelib import base, engine, constants, board_items
 from pygamelib.gfx import core, ui
 from pygamelib.assets import graphics
+from pygamelib.functions import clamp
+from pathlib import Path
 import argparse
 import os
 import time
@@ -29,6 +31,7 @@ screen_dimensions = {"menu": 3, "central_zone": 15, "palette": 7}
 ui_init = False
 eraser_mode = False
 current_sprixel = None
+previous_cursor_pos = [None, None]
 nav_increments = {
     "KEY_UP": -1,
     "KEY_DOWN": 1,
@@ -40,7 +43,9 @@ ui_config_selected = None
 ui_config_popup = None
 
 
-def draw_box(row, column, height, width, group="", title=""):
+def draw_box(
+    row: int, column: int, height: int, width: int, group: str = "", title: str = ""
+):
     global boxes_idx, boxes, ui_config, ui_config_selected
     box = ui.Box(width, height, title, ui_config)
     if boxes[boxes_idx % len(boxes)] == group:
@@ -49,13 +54,13 @@ def draw_box(row, column, height, width, group="", title=""):
 
 
 def draw_progress_bar(
-    row,
-    column,
-    length,
-    value,
-    total,
+    row: int,
+    column: int,
+    length: int,
+    value: int,
+    total: int,
     progress_marker=graphics.GeometricShapes.BLACK_RECTANGLE,
-    empty_marker=" ",
+    empty_marker: str = " ",
     fg_color=core.Color(0, 0, 0),
     bg_color=core.Color(0, 128, 128),
 ):
@@ -72,7 +77,8 @@ def draw_progress_bar(
 
 
 def draw_ui():
-    global filename, collection, screen_dimensions, ui_init
+    global filename, collection, screen_dimensions, ui_init, palette
+    global previous_cursor_pos
     g = engine.Game.instance()
     screen = g.screen
     spr_l_c_idx = sprite_list_idx % len(sprite_list)
@@ -140,23 +146,50 @@ def draw_ui():
         "palette",
         "Palette",
     )
+    pal_idx = 2
+    nl = 0
     for i in range(0, len(palette)):
         screen.place(
             palette[i],
-            screen.height - screen_dimensions["palette"] + 1,
-            1 + i,
+            screen.height - screen_dimensions["palette"] + 2 + nl,
+            pal_idx,
         )
-        # g.screen.place(cell, 7, last_col)
-        for c in range(1 + i + 1, 1 + i + palette[i].length):
-            g.screen.place(
-                core.Sprixel(), screen.height - screen_dimensions["palette"] + 1, c
+        # TODO: Adjust!!
+        g.log(
+            f'Place sprixel at {screen.height - screen_dimensions["palette"] + 2 + nl} '
+            f", {pal_idx} trying to fill null sprixels between {1 + pal_idx} and { 1 + pal_idx + palette[i].length} i={i}"
+        )
+        # for c in range(1 + i + 1, 1 + i + palette[i].length):
+        # for c in range(1 + pal_idx, 1 + pal_idx + palette[i].length):
+        #     screen.place(
+        #         core.Sprixel(), screen.height - screen_dimensions["palette"] + 2 + nl, c
+        #     )
+        # Draw the selector
+        if palette_idx == i:
+            sel = ui.Box(palette[i].length + 2, 3, config=ui_config_selected)
+            screen.place(
+                sel,
+                screen.height - screen_dimensions["palette"] + 1 + nl,
+                pal_idx - 1,
             )
+            previous_cursor_pos = [
+                screen.height - screen_dimensions["palette"] + 1 + nl,
+                pal_idx - 1,
+            ]
+        pal_idx += 2
+        if pal_idx >= screen.width - 23:
+            if nl == 2:
+                palette = palette[0:i]
+                break
+            else:
+                nl += 2
+                pal_idx = 2
     # not testing and affecting all the time might be faster than testing before
     # affectation
     ui_init = True
 
 
-def update_sprite_info(g, sprite_name):
+def update_sprite_info(g: engine.Game, sprite_name: str):
     global collection
     g.screen.place(
         base.Text("Sprite size (WxH):", style=constants.BOLD),
@@ -178,7 +211,7 @@ def update_cursor_info(g):
     )
 
 
-def update_sprixel_under_cursor(g, v_move):
+def update_sprixel_under_cursor(g: engine.Game, v_move: base.Vector2D):
     global current_sprixel
     b = g.current_board()
     r = g.player.row + v_move.row
@@ -236,7 +269,7 @@ def update_sprixel_under_cursor(g, v_move):
         # g.screen.place(f"{cell.bg_color}", 9, first_col)
 
 
-def load_sprite_to_board(g):
+def load_sprite_to_board(g: engine.Game):
     global sprite_list, sprite_list_idx, ui_init, ui_config
     spr_c_idx = sprite_list_idx % len(sprite_list)
     spr_name = sprite_list[spr_c_idx]
@@ -338,11 +371,11 @@ def load_sprite_to_board(g):
         g.screen.delete(dr + 1, dc)
 
 
-def erase_cell(g, row, column):
+def erase_cell(g: engine.Game, row: int, column: int):
     g.current_board().clear_cell(row, column)
 
 
-def update_screen(g, inkey, dt):
+def update_screen(g: engine.Game, inkey, dt: float):
     global boxes_idx, frames, boxes, sprite_list_idx, collection, start, nav_increments
     global eraser_mode, current_sprixel, filename, sprite_list, ui_config_popup
     global palette_idx
@@ -351,62 +384,86 @@ def update_screen(g, inkey, dt):
     boxes_current_id = boxes_idx % len(boxes)
     if inkey == "Q":
         g.stop()
+    elif inkey == "P":
+        if boxes[boxes_current_id] != "palette":
+            boxes_idx = boxes.index("palette")
+    elif inkey == "L":
+        if boxes[boxes_current_id] != "sprite_list":
+            boxes_idx = boxes.index("sprite_list")
+    elif inkey == "T":
+        if boxes[boxes_current_id] != "toolbox":
+            boxes_idx = boxes.index("toolbox")
     elif inkey == "S":
-        screen.place(
-            f"Saving current sprite into {filename}",
-            screen.height - 4,
-            3,
+        width = int(screen.width / 3)
+        default = Path()
+        fid = ui.FileDialog(
+            default, width, 10, "Save as", filter="*.spr", config=ui_config_popup
         )
-        for spr_id in range(0, len(sprite_list)):
-            spr_name = sprite_list[spr_id]
-            sprite = collection[spr_name]
-            try:
-                board = g.get_board(1 + spr_id)
-            except Exception:
-                continue
-            sprite_set_sprixel = sprite.set_sprixel
-            board_item = board.item
-            if ui_init:
-                diag = base.Text(
-                    f" Please wait, saving {spr_name} ",
-                    core.Color(0, 0, 0),
-                    core.Color(0, 128, 128),
-                )
-                tl = diag.length
-                dr = int((screen.height - 7) / 2)
-                dc = int((screen.width - 21) / 2) - int(tl / 2)
-                progress_bar = ui.ProgressDialog(diag, 0, tl, tl, config=ui_config)
-                screen.place(progress_bar, dr, dc, 2)
-                screen.trigger_rendering()
-                screen.update()
-                total = board.width * board.height
-                screen.update()
-                progress_bar.maximum = total
-            cidx = 0
-            prog = 0
-            last_prog = 0
-            for r in range(sprite.height):
-                for c in range(sprite.width):
-                    csprix = board_item(r, c).sprixel
-                    if board_item(r, c) == g.player:
-                        cidx += 1
-                        csprix = current_sprixel
-                    if csprix is None or csprix.model == "X" or csprix.model == "XX":
-                        sprite_set_sprixel(r, c, core.Sprixel())
-                    else:
-                        sprite_set_sprixel(r, c, csprix)
-                    if ui_init:
-                        cidx += 1
-                        prog = int((cidx * tl) / total)
-                        if prog > last_prog:
-                            # draw_progress_bar(dr + 1, dc, tl, cidx, total)
-                            progress_bar.value = cidx
-                            g.screen.update()
-                            last_prog = prog
-            if ui_init:
-                screen.delete(dr, dc)
-        # TODO: create a wait dialog
-        collection.to_json_file("collection.spr")
+        screen.place(fid, screen.vcenter - 5, screen.hcenter - int(width / 2))
+        file = fid.show()
+        g.log(f"Got file={file} from FileDialog")
+        screen.delete(screen.vcenter - 5, screen.hcenter - int(width / 2))
+        if file != default and not file.is_dir():
+            filename = str(file)
+            screen.place(
+                f"Saving current sprite into {filename}",
+                screen.height - 4,
+                3,
+            )
+            for spr_id in range(0, len(sprite_list)):
+                spr_name = sprite_list[spr_id]
+                sprite = collection[spr_name]
+                try:
+                    board = g.get_board(1 + spr_id)
+                except Exception:
+                    continue
+                sprite_set_sprixel = sprite.set_sprixel
+                board_item = board.item
+                if ui_init:
+                    diag = base.Text(
+                        f" Please wait, saving {spr_name} ",
+                        core.Color(0, 0, 0),
+                        core.Color(0, 128, 128),
+                    )
+                    tl = diag.length
+                    dr = int((screen.height - 7) / 2)
+                    dc = int((screen.width - 21) / 2) - int(tl / 2)
+                    progress_bar = ui.ProgressDialog(diag, 0, tl, tl, config=ui_config)
+                    screen.place(progress_bar, dr, dc, 2)
+                    screen.trigger_rendering()
+                    screen.update()
+                    total = board.width * board.height
+                    screen.update()
+                    progress_bar.maximum = total
+                cidx = 0
+                prog = 0
+                last_prog = 0
+                for r in range(sprite.height):
+                    for c in range(sprite.width):
+                        csprix = board_item(r, c).sprixel
+                        if board_item(r, c) == g.player:
+                            cidx += 1
+                            csprix = current_sprixel
+                        if (
+                            csprix is None
+                            or csprix.model == "X"
+                            or csprix.model == "XX"
+                        ):
+                            sprite_set_sprixel(r, c, core.Sprixel())
+                        else:
+                            sprite_set_sprixel(r, c, csprix)
+                        if ui_init:
+                            cidx += 1
+                            prog = int((cidx * tl) / total)
+                            if prog > last_prog:
+                                # draw_progress_bar(dr + 1, dc, tl, cidx, total)
+                                progress_bar.value = cidx
+                                g.screen.update()
+                                last_prog = prog
+                if ui_init:
+                    screen.delete(dr, dc)
+            # TODO: create a wait dialog
+            collection.to_json_file(filename)
         redraw_ui = False
     elif inkey == "N":
         fields = [
@@ -530,12 +587,28 @@ def update_screen(g, inkey, dt):
                 screen.delete(1, screen.hcenter)
         elif inkey == "A" and current_sprixel is not None:
             palette.append(current_sprixel)
-        elif inkey == "+":
-            palette_idx += 1
-        elif inkey == "-":
-            palette_idx -= 1
         else:
             redraw_ui = False
+    elif boxes[boxes_current_id] == "palette":
+        clean_cursor = True
+        if inkey.name == "KEY_RIGHT":
+            palette_idx += 1
+        elif inkey.name == "KEY_LEFT":
+            palette_idx -= 1
+        elif inkey.name == "KEY_DOWN":
+            # TODO : the -1 should probably be "- palette[palette_idx].length"
+            palette_idx += int((screen.width - 23) / 2) - 1
+        elif inkey.name == "KEY_UP":
+            palette_idx -= int((screen.width - 23) / 2) - 1
+        else:
+            redraw_ui = False
+            clean_cursor = False
+        if clean_cursor and (
+            previous_cursor_pos[0] is not None and previous_cursor_pos[1] is not None
+        ):
+            screen.delete(previous_cursor_pos[0], previous_cursor_pos[1])
+        # Clamp the palette_idx between 0 and len of the list
+        palette_idx = clamp(palette_idx, 0, len(palette) - 1)
     elif boxes[boxes_current_id] == "sprite_list" and (
         inkey == engine.key.UP or inkey == engine.key.DOWN
     ):
@@ -577,9 +650,11 @@ if __name__ == "__main__":
     args = parser.parse_args()
     collection = None
     if args.sprite_file != "" and os.path.exists(args.sprite_file):
+        print(f"Loading sprite collection: {args.sprite_file}...", end="", flush=True)
         collection = core.SpriteCollection.load_json_file(args.sprite_file)
         sprite_list = list(collection.keys())
         filename = args.sprite_file
+        print("done")
     else:
         collection = core.SpriteCollection()
         collection["default"] = core.Sprite(size=[16, 8])
@@ -630,3 +705,5 @@ if __name__ == "__main__":
     #     f"{frames} frames in {round(time.time()-start,2)} secondes or "
     #     f"{round(frames/(time.time()-start))} FPS"
     # )
+    for log in g.logs():
+        print(log)
