@@ -21,6 +21,8 @@ games (or applications).
 from pygamelib.assets import graphics
 from pygamelib.gfx import core
 from pygamelib import base, constants
+from pygamelib import functions
+from pathlib import Path
 
 
 class UiConfig(object):
@@ -35,6 +37,8 @@ class UiConfig(object):
         box_top_right_corner=graphics.BoxDrawings.LIGHT_ARC_DOWN_AND_LEFT,
         box_bottom_left_corner=graphics.BoxDrawings.LIGHT_ARC_UP_AND_RIGHT,
         box_bottom_right_corner=graphics.BoxDrawings.LIGHT_ARC_UP_AND_LEFT,
+        box_vertical_and_right=graphics.BoxDrawings.LIGHT_VERTICAL_AND_RIGHT,
+        box_vertical_and_left=graphics.BoxDrawings.LIGHT_VERTICAL_AND_LEFT,
         fg_color=core.Color(255, 255, 255),
         bg_color=core.Color(0, 128, 128),
         border_fg_color=core.Color(255, 255, 255),
@@ -53,6 +57,8 @@ class UiConfig(object):
         self.box_top_right_corner = box_top_right_corner
         self.box_bottom_left_corner = box_bottom_left_corner
         self.box_bottom_right_corner = box_bottom_right_corner
+        self.box_vertical_and_right = box_vertical_and_right
+        self.box_vertical_and_left = box_vertical_and_left
         self.fg_color = fg_color
         self.bg_color = bg_color
         self.border_fg_color = border_fg_color
@@ -115,11 +121,21 @@ class Dialog(object):
 
 
 class Box(object):
-    def __init__(self, width, height, title="", config=None):
+    def __init__(
+        self,
+        width: int,
+        height: int,
+        title: str = "",
+        config: UiConfig = None,
+        fill: bool = False,
+        filling_sprixel: core.Sprixel = None,
+    ):
         super().__init__()
         self.__width = width
         self.__height = height
         self.__title = title
+        self.__fill = fill
+        self.__filling_sprixel = filling_sprixel
         self.__config = config
         self._cache = {}
         self._build_cache()
@@ -266,6 +282,10 @@ class Box(object):
         buffer[row + self.__height - 1][column + self.__width - 1] = self._cache[
             "bottom_left_corner"
         ]
+        if self.__fill:
+            for r in range(row + 1, row + self.__height - 1):
+                for c in range(column + 1, column + self.__width - 1):
+                    buffer[r][c] = self.__filling_sprixel
 
 
 class ProgressBar(object):
@@ -737,11 +757,18 @@ class MultiLineInputDialog(Dialog):
         lc = 0
         fidx = 0
         for field in self.__fields:
+            if self.__cache[fidx].length < max_text_width:
+                self.__cache[fidx].text = self.__cache[fidx].text + " " * (
+                    max_text_width - self.__cache[fidx].length
+                )
             lbl = core.Sprite.from_text(self.__cache[fidx])
             lbl.render_to_buffer(
                 buffer, row + offset + lc, column + offset, buffer_height, buffer_width
             )
-            t = base.Text(f"> {field['user_input']}")
+            t = base.Text(
+                f"> {field['user_input']}"
+                f"{' '*(max_text_width-len(field['user_input'])-2)}"
+            )
             if fidx == self.__current_field:
                 t.fg_color = core.Color(0, 255, 0)
             inp = core.Sprite.from_text(t)
@@ -796,3 +823,343 @@ class MultiLineInputDialog(Dialog):
                     screen.update()
             inkey = term.inkey(timeout=0.1)
         return self.__fields
+
+
+class FileDialog(Dialog):
+    def __init__(
+        self,
+        path: Path = None,
+        width: int = 20,
+        height: int = 10,
+        title: str = "File dialog",
+        show_hidden_files: bool = False,
+        filter: str = "*",
+        config: UiConfig = None,
+    ) -> None:
+        super().__init__(config=config)
+        self.__path = None
+        if path is not None and isinstance(path, Path):
+            self.__path = path
+        self.__original_path = self.__path
+        self.__show_hidden_files = False
+        if show_hidden_files is not None and type(show_hidden_files) is bool:
+            self.__show_hidden_files = show_hidden_files
+        self.__filter = ""
+        if filter is not None and type(filter) is str:
+            self.__filter = filter
+        self.__width = 20
+        if width is not None and type(width) is int:
+            self.__width = width
+        self.__height = 10
+        if height is not None and type(height) is int:
+            self.__height = height
+        self.__title = "File dialog"
+        if title is not None and type(title) is str:
+            self.__title = title
+        self.__browsing_position = 0
+        self.__current_selection = ""
+        self.__current_pannel = 0
+        self.user_input = ""
+        self.__file_icon = core.Sprite(
+            size=[1, 1], sprixels=[[core.Sprixel(graphics.Models.PAGE_FACING_UP)]]
+        )
+        self.__dir_icon = core.Sprite(
+            size=[1, 1], sprixels=[[core.Sprixel(graphics.Models.FILE_FOLDER)]]
+        )
+        # Files/directory cache
+        self.__files = []
+        self._build_file_cache()
+        # Sprite/Sprixel cache
+        self.__cache = {}
+        self._build_cache()
+
+    def _build_file_cache(self):
+        # We are only accessing the filesystem when we change directory.
+        self.__files = []
+        self.__files = sorted(
+            [
+                x
+                for x in self.__path.iterdir()
+                if (
+                    x.is_dir()
+                    and (
+                        (self.__show_hidden_files and x.name.startswith("."))
+                        or (not self.__show_hidden_files and not x.name.startswith("."))
+                    )
+                )
+            ]
+        )
+        self.__files.extend(
+            sorted(
+                [
+                    x
+                    for x in self.__path.glob(self.__filter)
+                    if (
+                        x.is_file()
+                        and (
+                            (self.__show_hidden_files and x.name.startswith("."))
+                            or (
+                                not self.__show_hidden_files
+                                and not x.name.startswith(".")
+                            )
+                        )
+                    )
+                ]
+            )
+        )
+
+    def _build_cache(self):
+        self.__cache = {}
+        self.__cache["vertical_and_right"] = core.Sprixel(
+            self.config.box_vertical_and_right,
+            self.config.border_bg_color,
+            self.config.border_fg_color,
+        )
+        self.__cache["vertical_and_left"] = core.Sprixel(
+            self.config.box_vertical_and_left,
+            self.config.border_bg_color,
+            self.config.border_fg_color,
+        )
+        self.__cache["vertical_border"] = core.Sprixel(
+            self.config.box_vertical_border,
+            self.config.border_bg_color,
+            self.config.border_fg_color,
+        )
+        self.__cache["horizontal_border"] = core.Sprixel(
+            self.config.box_horizontal_border,
+            self.config.border_bg_color,
+            self.config.border_fg_color,
+        )
+        self.__cache["bottom_right_corner"] = core.Sprixel(
+            self.config.box_bottom_left_corner,
+            self.config.border_bg_color,
+            self.config.border_fg_color,
+        )
+        self.__cache["bottom_left_corner"] = core.Sprixel(
+            self.config.box_bottom_right_corner,
+            self.config.border_bg_color,
+            self.config.border_fg_color,
+        )
+
+    @property
+    def path(self):
+        """
+        Return the current path.
+
+        :returns: The dialog's current path.
+        :rtype: :class:`pathlib.Path`
+        """
+        return self.__path
+
+    @path.setter
+    def path(self, new_path: Path) -> None:
+        if isinstance(new_path, Path):
+            self.__path = new_path
+        else:
+            raise base.PglInvalidTypeException(
+                "FileDialog.path = new_path -> new_path must be a Path object."
+            )
+        self.config.game.screen.trigger_rendering()
+
+    @property
+    def filter(self):
+        """
+        Return the current file filter.
+
+        :returns: The dialog's current filter.
+        :rtype: str
+        """
+        return self.__filter
+
+    @filter.setter
+    def filter(self, new_filter: str) -> None:
+        if type(new_filter) is str:
+            self.__filter = new_filter
+        else:
+            raise base.PglInvalidTypeException(
+                "FileDialog.filter = new_filter -> new_filter must be a string."
+            )
+        self.config.game.screen.trigger_rendering()
+
+    @property
+    def show_hidden_files(self):
+        """
+        Return a boolean, if True the file dialog is going to show hidden files, and, if
+        False, it won't.
+
+        :returns: The dialog's current show_hidden_files value.
+        :rtype: bool
+        """
+        return self.__show_hidden_files
+
+    @show_hidden_files.setter
+    def show_hidden_files(self, value: bool) -> None:
+        if type(value) is bool:
+            self.__show_hidden_files = value
+        else:
+            raise base.PglInvalidTypeException(
+                "FileDialog.show_hidden_files = value -> value must be a boolean."
+            )
+        self.config.game.screen.trigger_rendering()
+
+    # properties for width and height
+
+    def render_to_buffer(
+        self, buffer, row: int, column: int, buffer_height: int, buffer_width: int
+    ) -> None:
+        # TODO: The actual dialog size is bigger than the the one passed in parameter
+        #       because I had to the size (for the file name) instead of drawing INTO
+        #       the alloted height.
+        offset = 0
+        if not self.config.borderless_dialog:
+            offset = 1
+            # We need to account for the borders in the box size
+            box = Box(
+                self.__width,
+                self.__height,
+                self.__title,
+                self.config,
+                True,
+                core.Sprixel(" ", bg_color=None),
+            )
+            box.render_to_buffer(buffer, row, column, buffer_height, buffer_width)
+            buffer[row + self.__height - 1][column] = self.__cache["vertical_and_right"]
+            buffer[row + self.__height - 1][column + self.__width - 1] = self.__cache[
+                "vertical_and_left"
+            ]
+            buffer[row + self.__height][column] = self.__cache["vertical_border"]
+            buffer[row + self.__height][column + self.__width - 1] = self.__cache[
+                "vertical_border"
+            ]
+            buffer[row + self.__height + 1][column] = self.__cache[
+                "bottom_right_corner"
+            ]
+            buffer[row + self.__height + 1][column + self.__width - 1] = self.__cache[
+                "bottom_left_corner"
+            ]
+            for tc in range(column + 1, column + self.__width - 1):
+                buffer[row + self.__height + 1][tc] = self.__cache["horizontal_border"]
+        # For files: graphics.Model.PAGE_FACING_UP
+        # For folders: graphics.Model.FILE_FOLDER ou graphics.Models.OPEN_FILE_FOLDER
+        r = row + offset
+        c = column + offset
+        idx = 0
+        # files = sorted([x for x in self.__path.iterdir() if x.is_dir()])
+        # self.config.game.log(f"FileDialog.render_to_buffer: dirs={files}")
+        # files.extend(
+        #     sorted([x for x in self.__path.glob(self.__filter) if x.is_file()])
+        # )
+        # for i in self.__files:
+        # for idx in range(self.__browsing_position, len(self.__files)):
+        start = int(self.__browsing_position / (self.__height - 2)) * (
+            self.__height - 2
+        )
+        for idx in range(start, len(self.__files)):
+            i = self.__files[idx]
+            icon = core.Sprite()
+            if i.is_dir():
+                icon = self.__dir_icon
+            elif i.is_file():
+                icon = self.__file_icon
+                # if idx == self.__browsing_position:
+                #     self.__user_input = i.name
+            icon.render_to_buffer(buffer, r, c, buffer_height, buffer_width)
+            txt = base.Text(i.name)
+            if idx == self.__browsing_position:
+                txt.fg_color = core.Color(0, 255, 0)
+                txt.style = constants.BOLD
+                self.__current_selection = i
+            lbl = core.Sprite.from_text(txt)
+            lbl.render_to_buffer(
+                buffer,
+                r,
+                c + self.__dir_icon.sprixel(0, 0).length,
+                buffer_height,
+                buffer_width,
+            )
+            r += 1
+            if r >= self.__height + row - 1:
+                break
+
+        # Write the user input in the buffer
+        tidx = 1
+        for c in self.user_input:
+            buffer[row + self.__height][column + tidx] = c
+            tidx += 1
+            if tidx >= self.__width - 1:
+                break
+        for c in range(tidx, self.__width - 1):
+            buffer[row + self.__height][column + c] = " "
+
+    def show(self) -> Path:
+        screen = self.config.game.screen
+        game = self.config.game
+        term = game.terminal
+        inkey = ""
+        screen.trigger_rendering()
+        screen.update()
+        self.__current_field = 0
+        while 1:
+            if inkey != "":
+                tmpp = self.__path / self.__current_selection
+                if inkey.name == "KEY_ENTER":
+                    # tmpp = self.__path / self.__current_selection
+                    # This is not ideal at all... TODO: use SPACE to select a file in the dialog.
+                    # TODO 2: remove the check for '.spr' this is silly... Check for empty
+                    if tmpp.is_dir():
+                        self.__path = tmpp.resolve()
+                        self.user_input = ""
+                        self._build_file_cache()
+                        self.__browsing_position = 0
+                        screen.trigger_rendering()
+                        screen.update()
+                    elif self.user_input is not None and self.user_input != "":
+                        if self.__path.is_file():
+                            self.__path = self.__path.parent / self.user_input
+                        break
+                elif tmpp.is_file() and inkey == " ":
+                    self.__path = tmpp
+                    self.user_input = tmpp.name
+                    screen.trigger_rendering()
+                    screen.update()
+                elif inkey.name == "KEY_TAB":
+                    self.__current_pannel += 1
+                    self.__current_pannel = self.__current_pannel % 2
+                    screen.trigger_rendering()
+                    screen.update()
+                elif inkey.name == "KEY_ESCAPE":
+                    self.__path = self.__original_path
+                    break
+                elif inkey.name == "KEY_UP":
+                    self.__browsing_position -= 1
+                    self.__browsing_position = functions.clamp(
+                        self.__browsing_position, 0, len(self.__files) - 1
+                    )
+                    screen.trigger_rendering()
+                    screen.update()
+                elif inkey.name == "KEY_DOWN":
+                    self.__browsing_position += 1
+                    self.__browsing_position = functions.clamp(
+                        self.__browsing_position, 0, len(self.__files) - 1
+                    )
+                    screen.trigger_rendering()
+                    screen.update()
+                elif inkey.name == "KEY_LEFT":
+                    if self.__path.is_dir():
+                        self.__path = self.__path.parent
+                    else:
+                        self.__path = self.__path.parent.parent
+                    self._build_file_cache()
+                    screen.trigger_rendering()
+                    screen.update()
+                elif inkey.name == "KEY_BACKSPACE" or inkey.name == "KEY_DELETE":
+                    self.user_input = self.user_input[:-1]
+                    screen.trigger_rendering()
+                    screen.update()
+                elif inkey.isprintable():
+                    self.config.game.log(f"Got inkey={inkey}")
+                    self.user_input += str(inkey)
+                    screen.trigger_rendering()
+                    screen.update()
+            inkey = term.inkey(timeout=0.1)
+        return self.__path
