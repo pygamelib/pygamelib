@@ -35,7 +35,7 @@ def pgl_isinstance(obj, obj_type):
     ]
 
 
-def clamp(minimum, maximum, value):
+def clamp(value, minimum, maximum):
     """Return the value clamped between the min and max boundaries.
 
     If value is between min and max, this returns value. If it's outside, it returns the
@@ -52,6 +52,6 @@ def clamp(minimum, maximum, value):
 
     Example::
 
-        safe_row = clamp(0, board.height, projected_position.row)
+        safe_row = clamp(projected_position.row, 0, board.height)
     """
     return max(minimum, min(maximum, value))
