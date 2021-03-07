@@ -3577,7 +3577,18 @@ class Screen(object):
             screen.force_render()
         """
         self._is_dirty = True
-        return self.render()
+        self.render()
+
+    def force_update(self):
+        """
+        Same as :func:`force_render()` but also force the screen update.
+
+        Example::
+
+            screen.force_update()
+        """
+        self._is_dirty = True
+        self.update()
 
     def trigger_rendering(self):
         """
