@@ -1103,9 +1103,6 @@ class FileDialog(Dialog):
             if inkey != "":
                 tmpp = self.__path / self.__current_selection
                 if inkey.name == "KEY_ENTER":
-                    # tmpp = self.__path / self.__current_selection
-                    # This is not ideal at all... TODO: use SPACE to select a file in the dialog.
-                    # TODO 2: remove the check for '.spr' this is silly... Check for empty
                     if tmpp.is_dir():
                         self.__path = tmpp.resolve()
                         self.user_input = ""
@@ -1163,3 +1160,501 @@ class FileDialog(Dialog):
                     screen.update()
             inkey = term.inkey(timeout=0.1)
         return self.__path
+
+
+class GridSelector(object):
+    def __init__(
+        self,
+        choices: list = None,
+        max_height: int = None,
+        max_width: int = None,
+        config: UiConfig = None,
+    ) -> None:
+        super().__init__()
+        self.__choices = []
+        if choices is not None and type(choices) is list:
+            self.__choices = choices
+        self.__max_height = 5
+        if max_height is not None and type(max_height) is int:
+            self.__max_height = max_height
+        self.__max_width = 10
+        if max_width is not None and type(max_width) is int:
+            self.__max_width = max_width
+        self._config = config
+        self.__current_choice = 0
+        self.__current_page = 0
+        self.__cache = []
+        self._build_cache()
+        self.__items_per_page = int(self.__max_height / 2 * self.__max_width / 2)
+        config.game.log(f"items per page={self.__items_per_page}")
+
+    def _build_cache(self):
+        self.__cache = []
+        for choice in self.__choices:
+            s = choice
+            if type(s) is str:
+                s = core.Sprixel(choice)
+            # TODO: For v1 we only support sprixels of size=1
+            # Reason is that some emojis are returning a length of 1 when it's actually
+            # 2. And for the moment I have no idea why.
+            if s.length > 1:
+                continue
+            if not isinstance(s, core.Sprixel):
+                raise base.PglInvalidTypeException(
+                    "GridSelector: the choices must be strings or Sprixels."
+                )
+            self.__cache.append(s)
+        self.__items_per_page = int(self.__max_height / 2 * self.__max_width / 2)
+
+    @property
+    def choices(self):
+        return self.__choices
+
+    @choices.setter
+    def choices(self, value):
+        if type(value) is list:
+            self.__choices = value
+            self._build_cache()
+        else:
+            raise base.PglInvalidTypeException(
+                "GridSelector.choices = value: 'value' must be a list. "
+                f"'{value}' is not a list"
+            )
+
+    @property
+    def max_height(self):
+        return self.__max_height
+
+    @max_height.setter
+    def max_height(self, value):
+        if type(value) is int:
+            self.__max_height = value
+        else:
+            raise base.PglInvalidTypeException(
+                "GridSelector.max_height = value: 'value' must be an int. "
+                f"'{value}' is not an int"
+            )
+
+    @property
+    def max_width(self):
+        return self.__max_width
+
+    @max_width.setter
+    def max_width(self, value):
+        if type(value) is int:
+            self.__max_width = value
+        else:
+            raise base.PglInvalidTypeException(
+                "GridSelector.max_width = value: 'value' must be an int. "
+                f"'{value}' is not an int"
+            )
+
+    @property
+    def current_choice(self) -> int:
+        return self.__current_choice
+
+    @current_choice.setter
+    def current_choice(self, index: int = None):
+        if type(index) is int:
+            self.__current_choice = index
+        else:
+            raise base.PglInvalidTypeException(
+                "GridSelector.set_selected(index): 'index' must be an int. "
+                f"'{index}' is not an int"
+            )
+
+    @property
+    def current_page(self):
+        return self.__current_page
+
+    @current_page.setter
+    def current_page(self, value: int):
+        if type(value) is int:
+            self.__current_page = value
+            start = self.__current_page * self.__items_per_page
+            if self.__current_choice < start:
+                self.__current_choice = start
+            elif self.__current_choice + self.__items_per_page > start:
+                self.__current_choice = start
+        else:
+            raise base.PglInvalidTypeException(
+                "GridSelector.current_page = value: 'value' must be an int. "
+                f"'{value}' is not an int"
+            )
+
+    def current_sprixel(self):
+        return self.__cache[self.__current_choice]
+
+    def items_per_page(self):
+        return self.__items_per_page
+
+    def render_to_buffer(
+        self, buffer, row: int, column: int, buffer_height: int, buffer_width: int
+    ) -> None:
+        self.__max_width = functions.clamp(self.__max_width, 0, buffer_width - 2)
+        self.__max_height = functions.clamp(self.__max_height, 0, buffer_height - 2)
+        crow = 1
+        ccol = 1
+        col_offset = 1
+        row_offset = 1
+        start = self.__current_page * self.__items_per_page
+        for i in range(start, len(self.__cache)):
+            buffer[row + row_offset][column + col_offset] = self.__cache[i]
+            if i == self.__current_choice % len(self.__choices):
+                border_fg_color = self._config.border_fg_color
+                self._config.border_fg_color = core.Color(0, 255, 0)
+                sel = Box(self.__cache[i].length + 2, 3, config=self._config)
+                sel.render_to_buffer(
+                    buffer,
+                    row + row_offset - 1,
+                    column + col_offset - 1,
+                    buffer_height,
+                    buffer_width,
+                )
+                self._config.border_fg_color = border_fg_color
+            for xtr in range(1, self.__cache[i].length):
+                buffer[row + row_offset][column + col_offset + xtr] = ""
+                col_offset += 1
+            col_offset += self.__cache[i].length + 1
+            ccol += 1
+            if col_offset > self.__max_width:
+                crow += 1
+                row_offset += 2
+                ccol = 1
+                col_offset = 1
+            if (
+                row + row_offset >= buffer_height
+                or column + col_offset >= buffer_width
+                or row_offset > self.__max_height
+                or i >= start + self.__items_per_page
+            ):
+                break
+
+
+class GridSelectorDialog(Dialog):
+    def __init__(
+        self,
+        choices: list = None,
+        max_height: int = None,
+        max_width: int = None,
+        title: str = None,
+        config: UiConfig = None,
+    ) -> None:
+        super().__init__(config=config)
+        self.__grid_selector = None
+        if not config.borderless_dialog:
+            self.__grid_selector = GridSelector(
+                choices, max_height - 3, max_width - 3, config
+            )
+        else:
+            self.__grid_selector = GridSelector(choices, max_height, max_width, config)
+        self.__title = ""
+        if title is not None and type(title) is str:
+            self.__title = title
+
+    @property
+    def title(self):
+        return self.__title
+
+    @title.setter
+    def title(self, value):
+        if value is not None and type(value) is str:
+            self.__title = value
+        else:
+            raise base.PglInvalidTypeException(
+                "GridSelectorDialog.title = value: 'value' must be a str. "
+                f"'{value}' is not a str"
+            )
+
+    @property
+    def grid_selector(self):
+        return self.__grid_selector
+
+    @grid_selector.setter
+    def grid_selector(self, value):
+        if isinstance(value, GridSelector):
+            self.__grid_selector = value
+        else:
+            raise base.PglInvalidTypeException(
+                "GridSelectorDialog.grid_selector = value: 'value' must be a "
+                "GridSelector object. "
+            )
+
+    def show(self):
+        screen = self.config.game.screen
+        game = self.config.game
+        term = game.terminal
+        inkey = ""
+        screen.trigger_rendering()
+        screen.update()
+        self.__current_field = 0
+        ret_sprixel = core.Sprixel()
+        while 1:
+            if inkey != "":
+                if inkey.name == "KEY_ENTER":
+                    ret_sprixel = self.__grid_selector.current_sprixel()
+                    break
+                elif inkey.name == "KEY_ESCAPE":
+                    ret_sprixel = core.Sprixel()
+                    break
+                elif inkey.name == "KEY_UP":
+                    self.__grid_selector.current_choice -= int(
+                        self.__grid_selector.max_width / 2
+                    )
+                    screen.force_update()
+                elif inkey.name == "KEY_DOWN":
+                    self.__grid_selector.current_choice += int(
+                        self.__grid_selector.max_width / 2
+                    )
+                    screen.force_update()
+                elif inkey.name == "KEY_LEFT":
+                    self.__grid_selector.current_choice -= 1
+                    screen.force_update()
+                elif inkey.name == "KEY_RIGHT":
+                    self.__grid_selector.current_choice += 1
+                    screen.force_update()
+                elif inkey.name == "KEY_PGDOWN":
+                    self.__grid_selector.current_page += 1
+                    if (
+                        self.__grid_selector.current_page
+                        * self.__grid_selector.items_per_page()
+                        >= len(self.__grid_selector.choices)
+                    ):
+                        self.__grid_selector.current_page -= 1
+                    screen.force_update()
+                elif inkey.name == "KEY_PGUP":
+                    self.__grid_selector.current_page -= 1
+                    if self.__grid_selector.current_page < 0:
+                        self.__grid_selector.current_page = 0
+                    screen.force_update()
+            inkey = term.inkey(timeout=0.1)
+        return ret_sprixel
+
+    def render_to_buffer(
+        self, buffer, row: int, column: int, buffer_height: int, buffer_width: int
+    ) -> None:
+        offset = 0
+        if not self.config.borderless_dialog:
+            offset = 1
+            # We need to account for the borders in the box size
+            box = Box(
+                self.__grid_selector.max_width + 3,
+                self.__grid_selector.max_height + 3,
+                self.__title,
+                self.config,
+                True,
+                core.Sprixel(" ", bg_color=None),
+            )
+            box.render_to_buffer(buffer, row, column, buffer_height, buffer_width)
+            pagination = f"{self.__grid_selector.current_page+1}/{round(len(self.__grid_selector.choices)/self.__grid_selector.items_per_page())}"
+            lp = len(pagination)
+            for c in range(0, lp):
+                buffer[row + self.__grid_selector.max_height + 2][
+                    column + self.__grid_selector.max_width + 2 - lp + c
+                ] = pagination[c]
+        self.__grid_selector.render_to_buffer(
+            buffer, row + offset, column + offset, buffer_height, buffer_width
+        )
+
+
+class ColorPicker(object):
+    def __init__(self, orientation: int = None, config: UiConfig = None) -> None:
+        super().__init__()
+        self.__orientation = constants.ORIENTATION_HORIZONTAL
+        if orientation is not None and type(orientation) is int:
+            self.__orientation = orientation
+        self._config = None
+        if isinstance(config, UiConfig):
+            self._config = config
+        self.__color = core.Color()
+        self.__sprixel = core.Sprixel(" ")
+        self.__red = 128
+        self.__green = 128
+        self.__blue = 128
+        self.__selection = 0
+
+    @property
+    def color(self):
+        return self.__color
+
+    @color.setter
+    def color(self, value):
+        if isinstance(value, core.Color):
+            self.__color = value
+        else:
+            raise base.PglInvalidTypeException(
+                'ColorPicker.color = value: "value" needs to be a Color object.'
+                f"{type(value)} is not a color object."
+            )
+
+    @property
+    def red(self):
+        return self.__red
+
+    @red.setter
+    def red(self, value):
+        if type(value) is int:
+            self.__red = value
+            self.__red = functions.clamp(self.__red, 0, 255)
+        else:
+            raise base.PglInvalidTypeException(
+                'ColorPicker.red = value: "value" needs to be an integer.'
+                f"{type(value)} is not an integer."
+            )
+
+    @property
+    def green(self):
+        return self.__green
+
+    @green.setter
+    def green(self, value):
+        if type(value) is int:
+            self.__green = value
+            self.__green = functions.clamp(self.__green, 0, 255)
+        else:
+            raise base.PglInvalidTypeException(
+                'ColorPicker.green = value: "value" needs to be an integer.'
+                f"{type(value)} is not an integer."
+            )
+
+    @property
+    def blue(self):
+        return self.__blue
+
+    @blue.setter
+    def blue(self, value):
+        if type(value) is int:
+            self.__blue = value
+            self.__blue = functions.clamp(self.__blue, 0, 255)
+        else:
+            raise base.PglInvalidTypeException(
+                'ColorPicker.blue = value: "value" needs to be an integer.'
+                f"{type(value)} is not an integer."
+            )
+
+    @property
+    def selection(self):
+        return self.__selection
+
+    @selection.setter
+    def selection(self, value):
+        if type(value) is int:
+            self.__selection = value
+            self.__selection = functions.clamp(self.__selection, 0, 2)
+        else:
+            raise base.PglInvalidTypeException(
+                'ColorPicker.selection = value: "value" needs to be an integer.'
+                f"{type(value)} is not an integer."
+            )
+
+    def render_to_buffer(
+        self, buffer, row: int, column: int, buffer_height: int, buffer_width: int
+    ) -> None:
+        # Red: 128 Green: 24 Blue: 128
+        colors_data = [
+            [core.Sprixel(" ", core.Color(255, 0, 0)), str(self.__red)],
+            [core.Sprixel(" ", core.Color(0, 255, 0)), str(self.__green)],
+            [core.Sprixel(" ", core.Color(0, 0, 255)), str(self.__blue)],
+        ]
+        offset = 0
+        row += 1
+        for idx in range(0, len(colors_data)):
+            data = colors_data[idx]
+            col_str = str(data[1])
+            buffer[row][column + offset] = data[0]
+            offset += 1
+            buffer[row][column + offset] = ":"
+            offset += 2
+            if idx == self.__selection:
+                sel = Box(len(col_str) + 2, 3, config=self._config)
+                sel.render_to_buffer(
+                    buffer, row - 1, column + offset - 1, buffer_height, buffer_width
+                )
+            for c in range(offset, offset + len(col_str)):
+                buffer[row][column + c] = data[1][c - offset]
+            offset += len(col_str) + 1
+        color = core.Color(self.__red, self.__green, self.__blue)
+        self.__sprixel.bg_color = color
+        buffer[row][column + offset + 1] = "="
+        buffer[row][column + offset + 3] = self.__sprixel
+
+
+class ColorPickerDialog(Dialog):
+    def __init__(self, config) -> None:
+        super().__init__(config=config)
+        self.__color_picker = ColorPicker(
+            orientation=constants.ORIENTATION_HORIZONTAL, config=config
+        )
+
+    def render_to_buffer(
+        self, buffer, row: int, column: int, buffer_height: int, buffer_width: int
+    ) -> None:
+        """
+        :param name: some param
+        :type name: str
+
+        Example::
+
+            method()
+        """
+        offset = 0
+        if not self.config.borderless_dialog:
+            offset = 1
+            # We need to account for the borders in the box size
+            box = Box(
+                27,
+                5,
+                "Pick a color",
+                self.config,
+                True,
+                core.Sprixel(" ", bg_color=None),
+            )
+            box.render_to_buffer(buffer, row, column, buffer_height, buffer_width)
+        self.__color_picker.render_to_buffer(
+            buffer, row + offset, column + offset, buffer_height, buffer_width
+        )
+
+    def show(self):
+        screen = self.config.game.screen
+        game = self.config.game
+        term = game.terminal
+        inkey = ""
+        screen.force_update()
+        self.__current_field = 0
+        ret_color = core.Color()
+        while 1:
+            if inkey != "":
+                if inkey.name == "KEY_ENTER":
+                    ret_color = core.Color(
+                        self.__color_picker.red,
+                        self.__color_picker.green,
+                        self.__color_picker.blue,
+                    )
+                    break
+                elif inkey.name == "KEY_ESCAPE":
+                    ret_color = core.Color()
+                    break
+                elif inkey.name == "KEY_UP":
+                    if self.__color_picker.selection == 0:
+                        self.__color_picker.red += 1
+                    elif self.__color_picker.selection == 1:
+                        self.__color_picker.green += 1
+                    elif self.__color_picker.selection == 2:
+                        self.__color_picker.blue += 1
+                    screen.force_update()
+                elif inkey.name == "KEY_DOWN":
+                    if self.__color_picker.selection == 0:
+                        self.__color_picker.red -= 1
+                    elif self.__color_picker.selection == 1:
+                        self.__color_picker.green -= 1
+                    elif self.__color_picker.selection == 2:
+                        self.__color_picker.blue -= 1
+                    screen.force_update()
+                elif inkey.name == "KEY_LEFT":
+                    self.__color_picker.selection -= 1
+                    screen.force_update()
+                elif inkey.name == "KEY_RIGHT":
+                    self.__color_picker.selection += 1
+                    screen.force_update()
+            inkey = term.inkey(timeout=0.1)
+        return ret_color
