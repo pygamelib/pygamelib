@@ -1606,6 +1606,24 @@ class SpriteCollection(UserDict):
                 "SpriteCollection.add(sprite): require a Sprite object."
             )
 
+    def rename(self, old_key, new_key):
+        """Rename a key in the collection.
+
+        This methods also takes care of renaming the Sprite associated with the old key
+        name.
+
+        :param old_key: The key to rename
+        :type old_key: str
+        :param new_key: The new key name
+        :type new_key: str
+
+        Example::
+
+            my_collection.rename('panda', 'panda walk 01')
+        """
+        self.data[new_key] = self.data.pop(old_key)
+        self.data[new_key].name = new_key
+
 
 class Animation(object):
     """
