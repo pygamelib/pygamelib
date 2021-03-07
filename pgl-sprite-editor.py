@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 
+from colorama import initialise
 from pygamelib import base, engine, constants, board_items
 from pygamelib.gfx import core, ui
 from pygamelib.assets import graphics
@@ -597,7 +598,7 @@ def update_screen(g: engine.Game, inkey, dt: float):
                 ]
             )
             collection[nn].name = nn
-            sprite_list = list(collection.keys())
+            sprite_list = sorted(list(collection.keys()))
             sprite_list_idx = sprite_list.index(nn)
             load_sprite_to_board(g)
             boxes_idx = boxes.index("sprite")
@@ -728,6 +729,8 @@ def update_screen(g: engine.Game, inkey, dt: float):
             screen.delete(screen.vcenter, screen.hcenter - 13)
             collection.rename(old_name, new_name)
             sprite_list[sprite_list_idx % len(sprite_list)] = new_name
+            sprite_list = sorted(sprite_list)
+            sprite_list_idx = 0
         elif (
             inkey.name == "KEY_ENTER"
             and tools[tools_idx % len(tools)] == "Select FG color"
@@ -761,10 +764,14 @@ def update_screen(g: engine.Game, inkey, dt: float):
             and tools[tools_idx % len(tools)] == "Duplicate sprite"
         ):
             spr_c_idx = sprite_list_idx % len(sprite_list)
-            new_sprite = copy.deepcopy(collection[sprite_list[spr_c_idx]])
+            initial_sprite = collection[sprite_list[spr_c_idx]]
+            new_sprite = copy.deepcopy(initial_sprite)
             new_sprite.name += " copy"
+            for sr in range(initial_sprite.height):
+                for sc in range(initial_sprite.width):
+                    new_sprite.set_sprixel(sr, sc, initial_sprite.sprixel(sr, sc))
             collection.add(new_sprite)
-            sprite_list = list(collection.keys())
+            sprite_list = sorted(list(collection.keys()))
             sprite_list_idx = sprite_list.index(new_sprite.name)
             load_sprite_to_board(g)
             boxes_idx = boxes.index("sprite")
@@ -826,6 +833,15 @@ def update_screen(g: engine.Game, inkey, dt: float):
 
 
 if __name__ == "__main__":
+    print(
+        base.Text(
+            "The sprite editor is under heavy development and is not production ready."
+            "If you find bugs or have feature requests please go to "
+            "https://github.com/arnauddupuis/pygamelib/issues",
+            core.Color(255, 0, 0),
+            style=constants.BOLD,
+        )
+    )
     parser = argparse.ArgumentParser(
         description="A tool to create/edit pygamelib's sprites."
     )
@@ -837,14 +853,14 @@ if __name__ == "__main__":
     if args.sprite_file != "" and os.path.exists(args.sprite_file):
         print(f"Loading sprite collection: {args.sprite_file}...", end="", flush=True)
         collection = core.SpriteCollection.load_json_file(args.sprite_file)
-        sprite_list = list(collection.keys())
+        sprite_list = sorted(list(collection.keys()))
         filename = args.sprite_file
         print("done")
     else:
         collection = core.SpriteCollection()
         collection["default"] = core.Sprite(size=[16, 8])
         collection["default"].name = "default"
-        sprite_list = list(collection.keys())
+        sprite_list = sorted(list(collection.keys()))
         if args.sprite_file != "":
             filename = args.sprite_file
     g = engine.Game.instance(
