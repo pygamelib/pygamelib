@@ -1,12 +1,5 @@
 __docformat__ = "restructuredtext"
 """
-The ui module contains the classes to easily build full screen user interface for your
-games (or applications).
-
-.. Important:: It works exclusively with the screen buffer system (place, delete,
-   render, update, etc.).
-   It doesn't work with Screen functions tagged "direct display" like display_at().
-
 .. autosummary::
    :toctree: .
 
@@ -1585,6 +1578,12 @@ class ColorPickerDialog(Dialog):
         self.__color_picker = ColorPicker(
             orientation=constants.ORIENTATION_HORIZONTAL, config=config
         )
+
+    def set_color(self, color: core.Color) -> None:
+        if isinstance(color, core.Color):
+            self.__color_picker.red = color.r
+            self.__color_picker.blue = color.b
+            self.__color_picker.green = color.g
 
     def render_to_buffer(
         self, buffer, row: int, column: int, buffer_height: int, buffer_width: int
