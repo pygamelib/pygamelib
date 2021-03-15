@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
 
-from colorama import initialise
 from pygamelib import base, engine, constants, board_items
 from pygamelib.gfx import core, ui
 from pygamelib.assets import graphics
@@ -294,6 +293,29 @@ def update_cursor_info(g):
         6,
         g.screen.width - 19,
     )
+
+
+def sync_sprite(g: engine.Game, sprite_name: str, collection: core.SpriteCollection):
+    # Synchronize the edition canvas with the actual Sprite object.
+    global sprite_list, current_sprixel
+    try:
+        spr_c_idx = sprite_list.index(sprite_name)
+        sprite: core.Sprite = collection[sprite_name]
+        board = g.get_board(1 + spr_c_idx)
+        for row in range(board.height):
+            for col in range(board.width):
+                sprix = board.render_cell(row, col)
+                if (
+                    g.current_level == 1 + spr_c_idx
+                    and g.player.row == row
+                    and g.player.column == col
+                ):
+                    sprix = current_sprixel
+                sprite.set_sprixel(row, col, sprix)
+        return True
+    except Exception:
+        g.screen.place(base.Text("Sprite not synced"), 1, 40)
+        return False
 
 
 def update_sprixel_under_cursor(g: engine.Game, v_move: base.Vector2D):
@@ -736,6 +758,7 @@ def update_screen(g: engine.Game, inkey, dt: float):
             and tools[tools_idx % len(tools)] == "Select FG color"
         ):
             cp = ui.ColorPickerDialog(config=ui_config_popup)
+            cp.set_color(palette[palette_idx].fg_color)
             screen.place(cp, screen.vcenter - 2, screen.hcenter - 13)
             color = cp.show()
             if (
@@ -750,6 +773,7 @@ def update_screen(g: engine.Game, inkey, dt: float):
             and tools[tools_idx % len(tools)] == "Select BG color"
         ):
             cp = ui.ColorPickerDialog(config=ui_config_popup)
+            cp.set_color(palette[palette_idx].bg_color)
             screen.place(cp, screen.vcenter - 2, screen.hcenter - 13)
             color = cp.show()
             if (
@@ -764,17 +788,18 @@ def update_screen(g: engine.Game, inkey, dt: float):
             and tools[tools_idx % len(tools)] == "Duplicate sprite"
         ):
             spr_c_idx = sprite_list_idx % len(sprite_list)
-            initial_sprite = collection[sprite_list[spr_c_idx]]
-            new_sprite = copy.deepcopy(initial_sprite)
-            new_sprite.name += " copy"
-            for sr in range(initial_sprite.height):
-                for sc in range(initial_sprite.width):
-                    new_sprite.set_sprixel(sr, sc, initial_sprite.sprixel(sr, sc))
-            collection.add(new_sprite)
-            sprite_list = sorted(list(collection.keys()))
-            sprite_list_idx = sprite_list.index(new_sprite.name)
-            load_sprite_to_board(g)
-            boxes_idx = boxes.index("sprite")
+            if sync_sprite(g, sprite_list[spr_c_idx], collection):
+                initial_sprite = collection[sprite_list[spr_c_idx]]
+                new_sprite = copy.deepcopy(initial_sprite)
+                new_sprite.name += " copy"
+                for sr in range(initial_sprite.height):
+                    for sc in range(initial_sprite.width):
+                        new_sprite.set_sprixel(sr, sc, initial_sprite.sprixel(sr, sc))
+                collection.add(new_sprite)
+                sprite_list = sorted(list(collection.keys()))
+                sprite_list_idx = sprite_list.index(new_sprite.name)
+                load_sprite_to_board(g)
+                boxes_idx = boxes.index("sprite")
         elif inkey.name == "KEY_UP":
             tools_idx -= 1
         elif inkey.name == "KEY_DOWN":
