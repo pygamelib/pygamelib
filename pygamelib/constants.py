@@ -53,7 +53,7 @@ Special constants:
 """
 
 # Main version
-PYGAMELIB_VERSION = "1.2.3"
+PYGAMELIB_VERSION = "1.2.99"
 
 # Directions
 NO_DIR = 10000000
