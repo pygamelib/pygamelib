@@ -1152,6 +1152,8 @@ class FileDialog(Dialog):
                     elif self.user_input is not None and self.user_input != "":
                         if self.__path.is_file():
                             self.__path = self.__path.parent / self.user_input
+                        elif self.__path.is_dir():
+                            self.__path = self.__path / self.user_input
                         break
                 elif tmpp.is_file() and inkey == " ":
                     self.__path = tmpp
