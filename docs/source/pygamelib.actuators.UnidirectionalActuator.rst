@@ -1,9 +1,13 @@
-pygamelib.actuators.UnidirectionalActuator
-==========================================
+UnidirectionalActuator
+======================
 
 .. currentmodule:: pygamelib.actuators
 
 .. autoclass:: UnidirectionalActuator
+   :members:
+   :inherited-members:
+   :undoc-members:
+   :show-inheritance:
 
    
    .. automethod:: __init__

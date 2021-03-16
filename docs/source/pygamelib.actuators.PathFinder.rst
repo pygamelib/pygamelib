@@ -1,9 +1,13 @@
-pygamelib.actuators.PathFinder
-==============================
+PathFinder
+==========
 
 .. currentmodule:: pygamelib.actuators
 
 .. autoclass:: PathFinder
+   :members:
+   :inherited-members:
+   :undoc-members:
+   :show-inheritance:
 
    
    .. automethod:: __init__

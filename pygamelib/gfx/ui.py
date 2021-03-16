@@ -3,13 +3,21 @@ __docformat__ = "restructuredtext"
 .. autosummary::
    :toctree: .
 
-   UiConfig
-   Dialog
-   Box
-   ProgressBar
-   ProgressDialog
-   VerticalProgressBar
-   MessageDialog
+   pygamelib.gfx.ui.UiConfig
+   pygamelib.gfx.ui.Dialog
+   pygamelib.gfx.ui.Box
+   pygamelib.gfx.ui.ProgressBar
+   pygamelib.gfx.ui.ProgressDialog
+   pygamelib.gfx.ui.VerticalProgressBar
+   pygamelib.gfx.ui.MessageDialog
+   pygamelib.gfx.ui.LineInputDialog
+   pygamelib.gfx.ui.MultiLineInputDialog
+   pygamelib.gfx.ui.FileDialog
+   pygamelib.gfx.ui.GridSelector
+   pygamelib.gfx.ui.GridSelectorDialog
+   pygamelib.gfx.ui.ColorPicker
+   pygamelib.gfx.ui.ColorPickerDialog
+
 """
 from pygamelib.assets import graphics
 from pygamelib.gfx import core
@@ -19,6 +27,44 @@ from pathlib import Path
 
 
 class UiConfig(object):
+    """A configuration object for the UI module. TEST
+
+    This object's function is to configure the look and feel of the UI widgets.
+
+    :param game: The game object.
+    :type game: :class:`~pygamelib.engine.Game`
+    :param box_vertical_border: The vertical border of a box.
+    :type box_vertical_border: str
+    :param box_horizontal_border: The horizontal border of a box.
+    :type box_horizontal_border: str
+    :param box_top_left_corner: The top left corner of a box.
+    :type box_top_left_corner: str
+    :param box_top_right_corner: The top right corner of a box.
+    :type box_top_right_corner: str
+    :param box_bottom_left_corner: The bottom left corner of a box.
+    :type box_bottom_left_corner: str
+    :param box_bottom_right_corner: The bottom right corner of a box.
+    :type box_bottom_right_corner: str
+    :param box_vertical_and_right: The left junction between two boxes.
+    :type box_vertical_and_right: str
+    :param box_vertical_and_left: The right junction between two boxes.
+    :type box_vertical_and_left: str
+    :param fg_color: The foreground color (for text and content).
+    :type fg_color: :class:`~pygamelib.gfx.core.Color`
+    :param bg_color: The background color (for text and content).
+    :type bg_color: :class:`~pygamelib.gfx.core.Color`
+    :param border_fg_color: The foreground color (for borders).
+    :type border_fg_color: :class:`~pygamelib.gfx.core.Color`
+    :param border_bg_color: The background color (for borders).
+    :type border_bg_color: :class:`~pygamelib.gfx.core.Color`
+    :param borderless_dialog: Is the dialog borderless or not.
+    :type borderless_dialog: bool
+
+    Example::
+
+        method()
+    """
+
     __instance = None
 
     def __init__(

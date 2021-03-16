@@ -1,9 +1,13 @@
-pygamelib.actuators.PathActuator
-================================
+PathActuator
+============
 
 .. currentmodule:: pygamelib.actuators
 
 .. autoclass:: PathActuator
+   :members:
+   :inherited-members:
+   :undoc-members:
+   :show-inheritance:
 
    
    .. automethod:: __init__

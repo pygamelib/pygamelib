@@ -1,9 +1,13 @@
-pygamelib.assets.graphics.Models
-================================
+Models
+======
 
 .. currentmodule:: pygamelib.assets.graphics
 
 .. autoclass:: Models
+   :members:
+   :inherited-members:
+   :undoc-members:
+   :show-inheritance:
 
    
    .. automethod:: __init__

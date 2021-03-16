@@ -1,9 +1,13 @@
-pygamelib.assets.graphics.GeometricShapes
-=========================================
+GeometricShapes
+===============
 
 .. currentmodule:: pygamelib.assets.graphics
 
 .. autoclass:: GeometricShapes
+   :members:
+   :inherited-members:
+   :undoc-members:
+   :show-inheritance:
 
    
    .. automethod:: __init__

@@ -1,9 +1,13 @@
-pygamelib.assets.graphics.Blocks
-================================
+Blocks
+======
 
 .. currentmodule:: pygamelib.assets.graphics
 
 .. autoclass:: Blocks
+   :members:
+   :inherited-members:
+   :undoc-members:
+   :show-inheritance:
 
    
    .. automethod:: __init__

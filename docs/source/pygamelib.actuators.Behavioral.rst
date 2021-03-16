@@ -1,9 +1,13 @@
-pygamelib.actuators.Behavioral
-==============================
+Behavioral
+==========
 
 .. currentmodule:: pygamelib.actuators
 
 .. autoclass:: Behavioral
+   :members:
+   :inherited-members:
+   :undoc-members:
+   :show-inheritance:
 
    
    .. automethod:: __init__

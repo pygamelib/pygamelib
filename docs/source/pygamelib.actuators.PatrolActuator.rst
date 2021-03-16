@@ -1,9 +1,13 @@
-pygamelib.actuators.PatrolActuator
-==================================
+PatrolActuator
+==============
 
 .. currentmodule:: pygamelib.actuators
 
 .. autoclass:: PatrolActuator
+   :members:
+   :inherited-members:
+   :undoc-members:
+   :show-inheritance:
 
    
    .. automethod:: __init__
