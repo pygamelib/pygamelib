@@ -150,6 +150,68 @@ def draw_progress_bar(
     g.screen.update()
 
 
+def display_help():
+    global ui_config_popup
+    g = engine.Game.instance()
+    screen = g.screen
+    bgc = ui_config_popup.bg_color
+    ui_config_popup.bg_color = None
+    msg = ui.MessageDialog(width=screen.width - 6, config=ui_config_popup)
+    msg.add_line("")
+    msg.add_line(
+        base.Text(
+            "Help", core.Color(0, 200, 200), style=constants.BOLD + constants.UNDERLINE
+        ),
+        constants.ALIGN_CENTER,
+    )
+    msg.add_line("")
+    msg.add_line(
+        base.Text("Shortcuts", core.Color(0, 175, 175), style=constants.UNDERLINE)
+    )
+    msg.add_line("Tab: cycle through the panels.")
+    msg.add_line("Shift + H: Display this help.")
+    msg.add_line("Shift + S: Save the current sprite as (i.e: ask for the location).")
+    msg.add_line("Shift + O: Open a sprite collection.")
+    msg.add_line("Shift + P: Select the Palette panel.")
+    msg.add_line("Shift + L: Select the Sprite List panel.")
+    msg.add_line("Shift + T: Select the Tools panel.")
+    msg.add_line(
+        "Shift + A: Add the current sprixel (see the info pannel) to the Palette."
+    )
+    msg.add_line("Shift + R: Create a random brush and add it to the Palette.")
+    msg.add_line("Esc.: Closes most of the dialog windows (including that one). ")
+    msg.add_line("      A dialog does not return anything when closed with escape.")
+    msg.add_line(
+        "Enter: In most panels execute the action and return to the sprite canvas."
+    )
+    msg.add_line("       In dialogs (like this one) close and return the selection.")
+
+    msg.add_line("")
+    msg.add_line(
+        base.Text(
+            "Sprite canvas specific shortcuts",
+            core.Color(0, 175, 175),
+            style=constants.UNDERLINE,
+        )
+    )
+    msg.add_line("Shift + E: Switch between Edit and Erase mode.")
+    msg.add_line("i/j/k/l: Place the selected sprixel on the sprite canvas an ")
+    msg.add_line("         move up/left/right/up.")
+    msg.add_line("")
+    msg.add_line("")
+    # msg.add_line("")
+    # msg.add_line("")
+    # msg.add_line("")
+    # msg.add_line("")
+    # msg.add_line("")
+    # msg.add_line("")
+    # msg.add_line("")
+    screen.place(msg, screen.vcenter - int(msg.height / 2), 3)
+    msg.show()
+    screen.delete(screen.vcenter - int(msg.height / 2), 3)
+    ui_config_popup.bg_color = bgc
+
+
 def draw_ui():
     global filename, collection, screen_dimensions, ui_init, palette
     global previous_cursor_pos
@@ -512,12 +574,29 @@ def update_screen(g: engine.Game, inkey, dt: float):
     elif inkey == "T":
         if boxes[boxes_current_id] != "toolbox":
             boxes_idx = boxes.index("toolbox")
-    elif inkey == "S":
-        # FIXME: It looks like there is a bug, I have instances were the file is not saved
+    elif inkey == "H":
+        display_help()
+    elif inkey == "O":
         width = int(screen.width / 3)
-        default = Path()
+        default = Path(filename)
         fid = ui.FileDialog(
-            default, width, 10, "Save as", filter="*.spr", config=ui_config_popup
+            default.parent, width, 10, "Save as", filter="*.spr", config=ui_config_popup
+        )
+        screen.place(fid, screen.vcenter - 5, screen.hcenter - int(width / 2))
+        file = fid.show()
+        # g.log(f"Got file={file} from FileDialog")
+        screen.delete(screen.vcenter - 5, screen.hcenter - int(width / 2))
+        if file != default and not file.is_dir():
+            collection = core.SpriteCollection.load_json_file(file)
+            sprite_list = sorted(list(collection.keys()))
+            filename = str(file)
+            if len(collection) > 0:
+                load_sprite_to_board(g)
+    elif inkey == "S":
+        width = int(screen.width / 3)
+        default = Path(filename)
+        fid = ui.FileDialog(
+            default.parent, width, 10, "Save as", filter="*.spr", config=ui_config_popup
         )
         screen.place(fid, screen.vcenter - 5, screen.hcenter - int(width / 2))
         file = fid.show()
@@ -900,6 +979,7 @@ if __name__ == "__main__":
         mode=constants.MODE_RT,
         input_lag=0.0001,
     )
+    # TODO check for minimum size (84x34)
     ui_config = ui.UiConfig(
         game=g, fg_color=core.Color(0, 0, 0), bg_color=core.Color(0, 128, 128)
     )
