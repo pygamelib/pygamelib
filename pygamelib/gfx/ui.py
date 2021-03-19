@@ -25,6 +25,9 @@ from pygamelib import base, constants
 from pygamelib import functions
 from pathlib import Path
 
+# TODO: make sure that Sprixels works as parameters for UiConfig (and are correctly
+# processed)
+
 
 class UiConfig(object):
     """A configuration object for the UI module. TEST
@@ -528,20 +531,6 @@ class ProgressDialog(Dialog):
                 self.__width, 2, self._cache["label"], config=self.config
             )
 
-    # @property
-    # def config(self):
-    #     return self.__config
-
-    # @config.setter
-    # def config(self, value):
-    #     if isinstance(value, UiConfig):
-    #         self.__config = value
-    #         self._build_cache()
-    #     else:
-    #         raise base.PglInvalidTypeException(
-    #             "Box.config(value): value needs to be an UiConfig object."
-    #         )
-
     @property
     def label(self):
         return self.__label
@@ -632,8 +621,144 @@ class VerticalProgressBar(object):
 
 
 class MessageDialog(Dialog):
-    def __init__(self) -> None:
-        super().__init__()
+    def __init__(
+        self,
+        data: list = None,
+        width: int = 20,
+        height: int = None,
+        adaptive_height: bool = True,
+        alignement: int = None,
+        config: UiConfig = None,
+    ) -> None:
+        super().__init__(config=config)
+        if alignement is None:
+            alignement = constants.ALIGN_LEFT
+        if adaptive_height is False and height is None:
+            adaptive_height = True
+        self.__cache = {"data": []}
+        # TODO: add height and width?
+        self.__width = width
+        self.__height = height
+        self.__adaptive_height = adaptive_height
+        self.__data = list()
+        if data is not None:
+            for d in data:
+                self.add_line(d, alignement)
+
+    def _build_cache(self) -> None:
+        self.__cache = {"data": []}
+        height = self.__height
+        if height is None:
+            height = len(self.__data)
+        for e in self.__data:
+            if isinstance(e[0], core.Sprixel) or type(e[0]) is str:
+                self.__cache["data"].append(e[0])
+            elif isinstance(e[0], base.Text):
+                self.__cache["data"].append(core.Sprite.from_text(e[0]))
+            elif hasattr(e[0], "render_to_buffer"):
+                self.__cache["data"].append(e[0])
+        if not self.config.borderless_dialog:
+            self.__cache["border"] = Box(
+                self.__width,
+                height + 2,
+                config=self.config,
+                fill=True,
+                filling_sprixel=core.Sprixel(" ", bg_color=self.config.bg_color),
+            )
+
+    @property
+    def height(self):
+        if self.__adaptive_height:
+            h = 0
+            if not self.config.borderless_dialog:
+                h += 2
+            return len(self.__data) + h
+        else:
+            return self.__height
+
+    @height.setter
+    def height(self, value):
+        if type(value) is int:
+            self.__height = value
+        else:
+            raise base.PglInvalidTypeException(
+                "MessageDialog.height = value: value needs to be an int. It is a "
+                f"{type(value)}"
+            )
+
+    def add_line(self, data, alignement=constants.ALIGN_LEFT) -> None:
+        if (
+            isinstance(data, core.Sprixel)
+            or type(data) is str
+            or isinstance(data, base.Text)
+            or hasattr(data, "render_to_buffer")
+        ):
+            self.__data.append([data, alignement])
+            self._build_cache()
+        else:
+            raise base.PglInvalidTypeException(
+                f"MessageDialog.add_line(data, alignement): 'data' type {type(data)} is"
+                " not supported"
+            )
+
+    def render_to_buffer(
+        self, buffer, row, column, buffer_height, buffer_width
+    ) -> None:
+        render_string = functions.render_string_to_buffer
+        offset = 0
+        if not self.config.borderless_dialog:
+            offset = 1
+            self.__cache["border"].render_to_buffer(
+                buffer, row, column, buffer_height, buffer_width
+            )
+        for idx in range(len(self.__cache["data"])):
+            padding = 0
+            alignement = self.__data[idx][1]
+            data = self.__data[idx][0]
+            if alignement == constants.ALIGN_RIGHT:
+                if type(data) is str:
+                    padding = self.__width - len(data) - 2
+                elif hasattr(data, "length"):
+                    padding = self.__width - data.length - 2
+            elif alignement == constants.ALIGN_CENTER:
+                if type(data) is str:
+                    padding = int((self.__width - len(data) - 2) / 2)
+                elif hasattr(data, "length"):
+                    padding = int((self.__width - data.length - 2) / 2)
+            if isinstance(self.__cache["data"][idx], core.Sprixel):
+                buffer[row + offset + idx][column + offset + padding] = self.__cache[
+                    "data"
+                ][idx]
+            elif hasattr(self.__cache["data"][idx], "render_to_buffer"):
+                self.__cache["data"][idx].render_to_buffer(
+                    buffer,
+                    row + offset + idx,
+                    column + offset + padding,
+                    buffer_height,
+                    buffer_width,
+                )
+            elif type(self.__cache["data"][idx]) is str:
+                render_string(
+                    self.__cache["data"][idx],
+                    buffer,
+                    row + offset + idx,
+                    column + offset + padding,
+                    buffer_height,
+                    buffer_width,
+                )
+
+    def show(self) -> None:
+        screen = self.config.game.screen
+        game = self.config.game
+        term = game.terminal
+        inkey = ""
+        screen.update()
+        while 1:
+            if inkey != "":
+                if inkey.name == "KEY_ENTER" or inkey.name == "KEY_ESCAPE":
+                    break
+            inkey = term.inkey(timeout=0.1)
+        return None
 
 
 class LineInputDialog(Dialog):
