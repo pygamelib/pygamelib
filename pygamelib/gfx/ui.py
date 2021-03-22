@@ -1320,7 +1320,6 @@ class FileDialog(Dialog):
                     screen.trigger_rendering()
                     screen.update()
                 elif inkey.isprintable():
-                    self.config.game.log(f"Got inkey={inkey}")
                     self.user_input += str(inkey)
                     screen.trigger_rendering()
                     screen.update()
@@ -1612,7 +1611,11 @@ class GridSelectorDialog(Dialog):
                 core.Sprixel(" ", bg_color=None),
             )
             box.render_to_buffer(buffer, row, column, buffer_height, buffer_width)
-            pagination = f"{self.__grid_selector.current_page+1}/{round(len(self.__grid_selector.choices)/self.__grid_selector.items_per_page())}"
+            # TODO: It looks like there is a bug in the pagination.
+            gs = self.__grid_selector
+            pagination = (
+                f"{gs.current_page+1}/{round(len(gs.choices)/gs.items_per_page())}"
+            )
             lp = len(pagination)
             for c in range(0, lp):
                 buffer[row + self.__grid_selector.max_height + 2][
