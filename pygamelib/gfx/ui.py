@@ -1804,7 +1804,7 @@ class ColorPickerDialog(Dialog):
                     )
                     break
                 elif inkey.name == "KEY_ESCAPE":
-                    ret_color = core.Color()
+                    ret_color = None
                     break
                 elif inkey.name == "KEY_UP":
                     if self.__color_picker.selection == 0:
