@@ -304,13 +304,16 @@ def draw_ui():
         )
         # TODO: Adjust!!
         # g.log(
-        #     f'Place sprixel at {screen.height - screen_dimensions["palette"] + 2 + nl} '
-        #     f", {pal_idx} trying to fill null sprixels between {1 + pal_idx} and { 1 + pal_idx + palette[i].length} i={i}"
+        #     'Place sprixel at '
+        #     f'{screen.height - screen_dimensions["palette"] + 2 + nl} '
+        #     f", {pal_idx} trying to fill null sprixels between {1 + pal_idx} and "
+        #     f"{ 1 + pal_idx + palette[i].length} i={i}"
         # )
         # for c in range(1 + i + 1, 1 + i + palette[i].length):
         # for c in range(1 + pal_idx, 1 + pal_idx + palette[i].length):
         #     screen.place(
-        #         core.Sprixel(), screen.height - screen_dimensions["palette"] + 2 + nl, c
+        #         core.Sprixel(),
+        #         screen.height - screen_dimensions["palette"] + 2 + nl, c
         #     )
         # Draw the selector
         if palette_idx == i:
