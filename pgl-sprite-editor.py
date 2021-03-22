@@ -602,6 +602,7 @@ def update_screen(g: engine.Game, inkey, dt: float):
         file = fid.show()
         # g.log(f"Got file={file} from FileDialog")
         screen.delete(screen.vcenter - 5, screen.hcenter - int(width / 2))
+        # TODO: change that so the file dialog return None if escape is pressed.
         if file != default and not file.is_dir():
             filename = str(file)
             # screen.place(
@@ -840,11 +841,7 @@ def update_screen(g: engine.Game, inkey, dt: float):
             cp.set_color(palette[palette_idx].fg_color)
             screen.place(cp, screen.vcenter - 2, screen.hcenter - 13)
             color = cp.show()
-            if (
-                len(palette) > palette_idx
-                and color is not None
-                and color != core.Color()
-            ):
+            if len(palette) > palette_idx and color is not None:
                 palette[palette_idx].fg_color = color
             screen.delete(screen.vcenter - 2, screen.hcenter - 13)
         elif (
@@ -855,11 +852,7 @@ def update_screen(g: engine.Game, inkey, dt: float):
             cp.set_color(palette[palette_idx].bg_color)
             screen.place(cp, screen.vcenter - 2, screen.hcenter - 13)
             color = cp.show()
-            if (
-                len(palette) > palette_idx
-                and color is not None
-                and color != core.Color()
-            ):
+            if len(palette) > palette_idx and color is not None:
                 palette[palette_idx].bg_color = color
             screen.delete(screen.vcenter - 2, screen.hcenter - 13)
         elif (
