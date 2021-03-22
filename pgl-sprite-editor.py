@@ -21,6 +21,8 @@ tools = [
     "Select model",
     "Select FG color",
     "Select BG color",
+    "Remove BG color",
+    "Remove FG color",
     "(E)raser mode",
     "(A)dd to palette",
     "(R)andom brush",
@@ -546,6 +548,20 @@ def erase_cell(g: engine.Game, row: int, column: int):
     g.current_board().clear_cell(row, column)
 
 
+def toggle_eraser_mode(screen: engine.Screen):
+    global eraser_mode
+    eraser_mode = not eraser_mode
+    if eraser_mode:
+        txt = base.Text(
+            "ERASER MODE ON",
+            fg_color=core.Color(255, 0, 0),
+            style=constants.BOLD,
+        )
+        screen.place(txt, 1, screen.hcenter)
+    else:
+        screen.delete(1, screen.hcenter)
+
+
 def update_screen(g: engine.Game, inkey, dt: float):
     global boxes_idx, frames, boxes, sprite_list_idx, collection, start, nav_increments
     global eraser_mode, current_sprixel, filename, sprite_list, ui_config_popup
@@ -772,16 +788,7 @@ def update_screen(g: engine.Game, inkey, dt: float):
                     board_items.Door(sprixel=palette[palette_idx]), pos[0], pos[1]
                 )
         elif inkey == "E":
-            eraser_mode = not eraser_mode
-            if eraser_mode:
-                txt = base.Text(
-                    "ERASER MODE ON",
-                    fg_color=core.Color(255, 0, 0),
-                    style=constants.BOLD,
-                )
-                screen.place(txt, 1, screen.hcenter)
-            else:
-                screen.delete(1, screen.hcenter)
+            toggle_eraser_mode(screen)
         elif inkey == "A" and current_sprixel is not None:
             palette.append(current_sprixel)
         else:
@@ -857,6 +864,31 @@ def update_screen(g: engine.Game, inkey, dt: float):
             screen.delete(screen.vcenter - 2, screen.hcenter - 13)
         elif (
             inkey.name == "KEY_ENTER"
+            and tools[tools_idx % len(tools)] == "(E)raser mode"
+        ):
+            toggle_eraser_mode(screen)
+            boxes_idx = boxes.index("sprite")
+        elif (
+            inkey.name == "KEY_ENTER"
+            and tools[tools_idx % len(tools)] == "Remove BG color"
+        ):
+            if len(palette) > palette_idx:
+                palette[palette_idx].bg_color = None
+        elif (
+            inkey.name == "KEY_ENTER"
+            and tools[tools_idx % len(tools)] == "Remove FG color"
+        ):
+            if len(palette) > palette_idx:
+                palette[palette_idx].fg_color = None
+        elif (
+            inkey.name == "KEY_ENTER"
+            and tools[tools_idx % len(tools)] == "(A)dd to palette"
+        ):
+            if current_sprixel is not None:
+                palette.append(current_sprixel)
+            boxes_idx = boxes.index("sprite")
+        elif (
+            inkey.name == "KEY_ENTER"
             and tools[tools_idx % len(tools)] == "Duplicate sprite"
         ):
             spr_c_idx = sprite_list_idx % len(sprite_list)
@@ -876,6 +908,8 @@ def update_screen(g: engine.Game, inkey, dt: float):
             tools_idx -= 1
         elif inkey.name == "KEY_DOWN":
             tools_idx += 1
+        elif inkey.name == "KEY_ESCAPE":
+            boxes_idx = boxes.index("sprite")
     elif boxes[boxes_current_id] == "palette":
         clean_cursor = True
         if inkey.name == "KEY_RIGHT":
