@@ -794,6 +794,9 @@ def update_screen(g: engine.Game, inkey, dt: float):
             toggle_eraser_mode(screen)
         elif inkey == "A" and current_sprixel is not None:
             palette.append(current_sprixel)
+        elif inkey.isdigit() and int(inkey) < len(palette):
+            screen.delete(previous_cursor_pos[0], previous_cursor_pos[1])
+            palette_idx = int(inkey)
         else:
             redraw_ui = False
     elif boxes[boxes_current_id] == "toolbox":
@@ -913,6 +916,8 @@ def update_screen(g: engine.Game, inkey, dt: float):
             tools_idx += 1
         elif inkey.name == "KEY_ESCAPE":
             boxes_idx = boxes.index("sprite")
+        else:
+            redraw_ui = False
     elif boxes[boxes_current_id] == "palette":
         clean_cursor = True
         if inkey.name == "KEY_RIGHT":
