@@ -32,7 +32,8 @@ from pathlib import Path
 class UiConfig(object):
     """A configuration object for the UI module. TEST
 
-    This object's function is to configure the look and feel of the UI widgets.
+    This object's purpose is to configure the look and feel of the UI widgets.
+    It does nothing by itself.
 
     :param game: The game object.
     :type game: :class:`~pygamelib.engine.Game`
@@ -65,7 +66,10 @@ class UiConfig(object):
 
     Example::
 
-        method()
+        config_ui_red = UiConfig(
+            fg_color=Color(255,0,0),
+            border_fg_color=Color(255,0,0)
+        )
     """
 
     __instance = None
@@ -112,7 +116,9 @@ class UiConfig(object):
         """Returns the instance of the UiConfig object
 
         Creates an UiConfig object on first call an then returns the same instance
-        on further calls
+        on further calls.
+        Useful for a default configuration. It accepts all the parameters from the
+        constructor.
 
         :return: Instance of Game object
 
@@ -123,7 +129,26 @@ class UiConfig(object):
 
 
 class Dialog(object):
+    """
+    Dialog is a virtual class that can be subclassed to create actual dialogs.
+
+    All classes that inheritates from Dialog have the following constraints:
+
+     * They need to implement a show() method.
+     * They are automatically rendered on the second pass by the
+       :class:`~pygamelib.engine.Screen` object.
+
+    It stores the :class:`UiConfig` object and provide a helper attribute for user
+    inputs.
+    """
+
     def __init__(self, config=None) -> None:
+        """
+        This constructor takes only one parameter.
+
+        :param config: The config object.
+        :type config: :class:`UiConfig`.
+        """
         super().__init__()
         if config is None or not isinstance(config, UiConfig):
             raise base.PglInvalidTypeException(
@@ -134,6 +159,9 @@ class Dialog(object):
 
     @property
     def config(self):
+        """
+        Access the config object (read/write).
+        """
         return self._config
 
     @config.setter
@@ -147,6 +175,9 @@ class Dialog(object):
 
     @property
     def user_input(self):
+        """
+        Facility to store and retrieve the user input.
+        """
         return self._user_input
 
     @user_input.setter
@@ -159,6 +190,11 @@ class Dialog(object):
             )
 
     def show():
+        """
+        This is a virtual method, calling it directly will only raise a
+        NotImplementedError. Each class that inheritate Dialog needs to implement
+        show().
+        """
         raise NotImplementedError
 
 
@@ -1719,6 +1755,7 @@ class ColorPicker(object):
     def render_to_buffer(
         self, buffer, row: int, column: int, buffer_height: int, buffer_width: int
     ) -> None:
+        # TODO: implement the vertical orientation
         # Red: 128 Green: 24 Blue: 128
         colors_data = [
             [core.Sprixel(" ", core.Color(255, 0, 0)), str(self.__red)],
