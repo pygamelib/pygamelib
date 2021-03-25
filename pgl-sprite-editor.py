@@ -244,17 +244,26 @@ def draw_ui():
     # Draw the info box
     draw_box(info_row, screen.width - 20, spr_lst_row - info_row, 20, "info", "Infos")
     # Draw the sprite list
+    sprite_list_box_height = int((screen.height - 10) / 3) + 1
+    # Sprite list is fairly dynamic so we clear it first
+    for idx in range(len(sprite_list)):
+        screen.delete(spr_lst_row + 1 + idx, screen.width - 18)
     draw_box(
         spr_lst_row,
         screen.width - 20,
-        int((screen.height - 10) / 3) + 1,
+        sprite_list_box_height,
         20,
         "sprite_list",
         "Sprites list",
     )
-    idx = 0
-    for s in sprite_list:
-        if idx == spr_l_c_idx:
+    idx = rs = 0
+    if len(sprite_list) > sprite_list_box_height - 2:
+        rs = int(spr_l_c_idx / (sprite_list_box_height - 2)) * (
+            sprite_list_box_height - 2
+        )
+    for k in range(rs, len(sprite_list)):
+        s = sprite_list[k]
+        if idx + rs == spr_l_c_idx:
             screen.place(
                 base.Text(s, fg_color=core.Color(0, 255, 0), style=constants.BOLD),
                 spr_lst_row + 1 + idx,
@@ -362,29 +371,6 @@ def update_cursor_info(g):
     )
 
 
-def sync_sprite(g: engine.Game, sprite_name: str, collection: core.SpriteCollection):
-    # Synchronize the edition canvas with the actual Sprite object.
-    global sprite_list, current_sprixel
-    try:
-        spr_c_idx = sprite_list.index(sprite_name)
-        sprite: core.Sprite = collection[sprite_name]
-        board = g.get_board(1 + spr_c_idx)
-        for row in range(board.height):
-            for col in range(board.width):
-                sprix = board.render_cell(row, col)
-                if (
-                    g.current_level == 1 + spr_c_idx
-                    and g.player.row == row
-                    and g.player.column == col
-                ):
-                    sprix = current_sprixel
-                sprite.set_sprixel(row, col, sprix)
-        return True
-    except Exception:
-        g.screen.place(base.Text("Sprite not synced"), 1, 40)
-        return False
-
-
 def update_sprixel_under_cursor(g: engine.Game, v_move: base.Vector2D):
     global current_sprixel
     b = g.current_board()
@@ -443,11 +429,11 @@ def update_sprixel_under_cursor(g: engine.Game, v_move: base.Vector2D):
         # g.screen.place(f"{cell.bg_color}", 9, first_col)
 
 
-def load_sprite_to_board(g: engine.Game):
+def load_sprite_to_board(g: engine.Game, spr_c_idx: int):
     global sprite_list, sprite_list_idx, ui_init, ui_config
     if g.current_board() is not None:
         g.current_board().remove_item(g.player)
-    spr_c_idx = sprite_list_idx % len(sprite_list)
+    spr_c_idx = spr_c_idx % len(sprite_list)
     spr_name = sprite_list[spr_c_idx]
     if ui_init:
         diag = base.Text(
@@ -529,6 +515,7 @@ def load_sprite_to_board(g: engine.Game):
             int((g.screen.width - 23) / 2),
         ]
         board.partial_display_focus = g.player
+
     # [DIRTY HACK]
     # There is a bug somewhere in the code that place the player on the board and the
     # arrival position's sprixel is lost. By doing that swap, we ensure that the board
@@ -572,6 +559,7 @@ def update_screen(g: engine.Game, inkey, dt: float):
     redraw_ui = True
     screen = g.screen
     boxes_current_id = boxes_idx % len(boxes)
+    _current_sprite = collection[sprite_list[sprite_list_idx % len(sprite_list)]]
     if inkey == "Q":
         g.stop()
     elif inkey == "R" or (
@@ -612,10 +600,11 @@ def update_screen(g: engine.Game, inkey, dt: float):
         screen.delete(screen.vcenter - 5, screen.hcenter - int(width / 2))
         if file is not None and not file.is_dir():
             collection = core.SpriteCollection.load_json_file(file)
-            sprite_list = sorted(list(collection.keys()))
+            # sprite_list = sorted(list(collection.keys()))
+            sprite_list = list(collection.keys())
             filename = str(file)
             if len(collection) > 0:
-                load_sprite_to_board(g)
+                load_sprite_to_board(g, 0)
     elif inkey == "S":
         width = int(screen.width / 3)
         default = Path(filename)
@@ -626,14 +615,8 @@ def update_screen(g: engine.Game, inkey, dt: float):
         file = fid.show()
         # g.log(f"Got file={file} from FileDialog")
         screen.delete(screen.vcenter - 5, screen.hcenter - int(width / 2))
-        # TODO: change that so the file dialog return None if escape is pressed.
         if file is not None and not file.is_dir():
             filename = str(file)
-            # screen.place(
-            #     f"Saving current sprite into {filename}",
-            #     screen.height - 4,
-            #     3,
-            # )
             for spr_id in range(0, len(sprite_list)):
                 spr_name = sprite_list[spr_id]
                 sprite = collection[spr_name]
@@ -724,9 +707,11 @@ def update_screen(g: engine.Game, inkey, dt: float):
                 ]
             )
             collection[nn].name = nn
-            sprite_list = sorted(list(collection.keys()))
+            # TODO: FIX THAT MESS
+            # sprite_list = sorted(list(collection.keys()))
+            sprite_list = list(collection.keys())
             sprite_list_idx = sprite_list.index(nn)
-            load_sprite_to_board(g)
+            load_sprite_to_board(g, sprite_list_idx)
             boxes_idx = boxes.index("sprite")
     elif inkey.name == "KEY_TAB":
         boxes_idx += 1
@@ -764,37 +749,45 @@ def update_screen(g: engine.Game, inkey, dt: float):
             g.move_player(constants.LEFT, 1)
             if eraser_mode:
                 erase_cell(g, pos[0], pos[1])
+                _current_sprite.set_sprixel(pos[0], pos[1], core.Sprixel())
             elif len(palette) > 0:
                 g.current_board().place_item(
                     board_items.Door(sprixel=palette[palette_idx]), pos[0], pos[1]
                 )
+                _current_sprite.set_sprixel(pos[0], pos[1], palette[palette_idx])
         elif inkey == "l":
             pos = g.player.pos
             g.move_player(constants.RIGHT, 1)
             if eraser_mode:
                 erase_cell(g, pos[0], pos[1])
+                _current_sprite.set_sprixel(pos[0], pos[1], core.Sprixel())
             elif len(palette) > 0:
                 g.current_board().place_item(
                     board_items.Door(sprixel=palette[palette_idx]), pos[0], pos[1]
                 )
+                _current_sprite.set_sprixel(pos[0], pos[1], palette[palette_idx])
         elif inkey == "i":
             pos = g.player.pos
             g.move_player(constants.UP, 1)
             if eraser_mode:
                 erase_cell(g, pos[0], pos[1])
+                _current_sprite.set_sprixel(pos[0], pos[1], core.Sprixel())
             elif len(palette) > 0:
                 g.current_board().place_item(
                     board_items.Door(sprixel=palette[palette_idx]), pos[0], pos[1]
                 )
+                _current_sprite.set_sprixel(pos[0], pos[1], palette[palette_idx])
         elif inkey == "k":
             pos = g.player.pos
             g.move_player(constants.DOWN, 1)
             if eraser_mode:
                 erase_cell(g, pos[0], pos[1])
+                _current_sprite.set_sprixel(pos[0], pos[1], core.Sprixel())
             elif len(palette) > 0:
                 g.current_board().place_item(
                     board_items.Door(sprixel=palette[palette_idx]), pos[0], pos[1]
                 )
+                _current_sprite.set_sprixel(pos[0], pos[1], palette[palette_idx])
         elif inkey == "E":
             toggle_eraser_mode(screen)
         elif inkey == "A" and current_sprixel is not None:
@@ -849,7 +842,7 @@ def update_screen(g: engine.Game, inkey, dt: float):
             screen.delete(screen.vcenter, screen.hcenter - 13)
             collection.rename(old_name, new_name)
             sprite_list[sprite_list_idx % len(sprite_list)] = new_name
-            sprite_list = sorted(sprite_list)
+            # sprite_list = sorted(sprite_list)
             sprite_list_idx = 0
         elif (
             inkey.name == "KEY_ENTER"
@@ -903,18 +896,18 @@ def update_screen(g: engine.Game, inkey, dt: float):
             and tools[tools_idx % len(tools)] == "Duplicate sprite"
         ):
             spr_c_idx = sprite_list_idx % len(sprite_list)
-            if sync_sprite(g, sprite_list[spr_c_idx], collection):
-                initial_sprite = collection[sprite_list[spr_c_idx]]
-                new_sprite = copy.deepcopy(initial_sprite)
-                new_sprite.name += " copy"
-                for sr in range(initial_sprite.height):
-                    for sc in range(initial_sprite.width):
-                        new_sprite.set_sprixel(sr, sc, initial_sprite.sprixel(sr, sc))
-                collection.add(new_sprite)
-                sprite_list = sorted(list(collection.keys()))
-                sprite_list_idx = sprite_list.index(new_sprite.name)
-                load_sprite_to_board(g)
-                boxes_idx = boxes.index("sprite")
+            initial_sprite = collection[sprite_list[spr_c_idx]]
+            new_sprite = copy.deepcopy(initial_sprite)
+            new_sprite.name += " copy"
+            for sr in range(initial_sprite.height):
+                for sc in range(initial_sprite.width):
+                    new_sprite.set_sprixel(sr, sc, initial_sprite.sprixel(sr, sc))
+            collection.add(new_sprite)
+            # rebuild_sprite_list(g)x
+            sprite_list = list(collection.keys())
+            sprite_list_idx = sprite_list.index(new_sprite.name)
+            load_sprite_to_board(g, sprite_list_idx)
+            boxes_idx = boxes.index("sprite")
         elif inkey.name == "KEY_UP":
             tools_idx -= 1
         elif inkey.name == "KEY_DOWN":
@@ -950,11 +943,14 @@ def update_screen(g: engine.Game, inkey, dt: float):
         inkey == engine.key.UP or inkey == engine.key.DOWN
     ):
         sprite_list_idx += nav_increments[inkey.name]
+        # spr_c_idx = sprite_list.index(
+        #     sorted(sprite_list)[sprite_list_idx % len(sprite_list)]
+        # )
         spr_c_idx = sprite_list_idx % len(sprite_list)
         try:
             g.change_level(1 + spr_c_idx)
         except Exception:
-            load_sprite_to_board(g)
+            load_sprite_to_board(g, spr_c_idx)
         update_sprite_info(g, sprite_list[spr_c_idx])
     elif (
         screen.height != screen.buffer.shape[0]
@@ -997,14 +993,16 @@ if __name__ == "__main__":
     if args.sprite_file != "" and os.path.exists(args.sprite_file):
         print(f"Loading sprite collection: {args.sprite_file}...", end="", flush=True)
         collection = core.SpriteCollection.load_json_file(args.sprite_file)
-        sprite_list = sorted(list(collection.keys()))
+        # sprite_list = sorted(list(collection.keys()))
+        sprite_list = list(collection.keys())
         filename = args.sprite_file
         print("done")
     else:
         collection = core.SpriteCollection()
         collection["default"] = core.Sprite(size=[16, 8])
         collection["default"].name = "default"
-        sprite_list = sorted(list(collection.keys()))
+        # sprite_list = sorted(list(collection.keys()))
+        sprite_list = list(collection.keys())
         if args.sprite_file != "":
             filename = args.sprite_file
     g = engine.Game.instance(
@@ -1044,7 +1042,7 @@ if __name__ == "__main__":
     g.change_level(1)
     screen_dimensions["central_zone"] = g.screen.height - 10
     if len(collection) > 0:
-        load_sprite_to_board(g)
+        load_sprite_to_board(g, 0)
     start = time.time()
     g.run()
     # print(
