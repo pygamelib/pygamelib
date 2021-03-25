@@ -1922,6 +1922,56 @@ class Game:
         else:
             raise base.PglInvalidTypeException("The level number must be an int.")
 
+    def __rename_level(self, init_lvl_num, dest_lvl_num):
+        # Recursive method to find the first available position to re-index down all
+        # boards.
+        init_level = self._boards[init_lvl_num]
+        if dest_lvl_num in self._boards.keys():
+            self.__rename_level(dest_lvl_num, dest_lvl_num + 1)
+            self._boards[dest_lvl_num] = init_level
+        else:
+            self._boards[dest_lvl_num] = init_level
+
+    def insert_board(self, level_number: int, board: Board) -> None:
+        """Insert a board for the level number.
+
+        This method does basically the same thing than :meth:`add_board` except that if
+        the level number is already associated it re-affect the numbers down.
+
+        Example::
+
+            game.insert_board(1,myboard_1)
+            # level number 1 is associated with myboard_1
+            game.insert_board(2,myboard_2)
+            # level number 1 is associated with myboard_1
+            # level number 2 is associated with myboard_2
+            game.insert_board(2,myboard_3)
+            # level number 1 is associated with myboard_1
+            # level number 2 is now associated with myboard_3
+            # level number 3 is associated with myboard_2
+
+        :param level_number: the level number to associate the board to.
+        :type level_number: int
+        :param board: a Board object corresponding to the level number.
+        :type board: pygamelib.engine.Board
+
+        :raises PglInvalidTypeException: If either of these parameters are not of the
+            correct type.
+        """
+        if type(level_number) is int:
+            if isinstance(board, Board):
+                if level_number in self._boards.keys():
+                    self.__rename_level(level_number, level_number + 1)
+                    self.add_board(level_number, board)
+                else:
+                    self.add_board(level_number, board)
+            else:
+                raise base.PglInvalidTypeException(
+                    "The board paramater must be a pygamelib.engine.Board() object."
+                )
+        else:
+            raise base.PglInvalidTypeException("The level number must be an int.")
+
     def get_board(self, level_number: int) -> Board:
         """
         This method returns the board associated with a level number.
@@ -1950,7 +2000,9 @@ class Game:
         If current_level is set to a value with no corresponding board a PglException
         exception is raised with an invalid_level error.
         """
-        if self.current_level in self._boards.keys():
+        if len(self._boards) <= 0:
+            return None
+        elif self.current_level in self._boards.keys():
             return self._boards[self.current_level]["board"]
         else:
             raise base.PglInvalidLevelException(
@@ -2006,6 +2058,47 @@ class Game:
             raise base.PglInvalidTypeException(
                 "level_number needs to be an int in change_level(level_number)."
             )
+
+    def delete_level(self, lvl_number: int = None):
+        """Delete a level and its associated Board from the game object.
+
+        Both the level and the board can't be used after that (unless they are reloaded
+        or replaced of course).
+
+        :param lvl_number: The number of the level to remove.
+        :type lvl_number: int
+
+        :raises base.PglInvalidTypeException: If parameter is not an int.
+        :raises base.PglInvalidLevelException: If parameter is not a valid level.
+
+        Example::
+
+            my_game.delete_level(1)
+        """
+        if lvl_number is not None:
+            if lvl_number in self._boards.keys():
+                del self._boards[lvl_number]
+            else:
+                base.PglInvalidLevelException(
+                    f"Game.delete_level(lvl_number) : {lvl_number} is not a previously"
+                    " associated level."
+                )
+        else:
+            base.PglInvalidTypeException(
+                "Game.delete_level(lvl_number) : lvl_number needs to be an int. "
+                f"{type(lvl_number)} is not an int."
+            )
+
+    def delete_all_levels(self):
+        """Delete all boards and their associated levels from the game object.
+
+        You might want to think twice before using that function...
+
+        Example::
+
+            game.delete_all_levels()
+        """
+        self._boards = {}
 
     def add_npc(self, level_number, npc, row=None, column=None):
         """
