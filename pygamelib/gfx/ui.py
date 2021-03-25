@@ -207,6 +207,7 @@ class Box(object):
         config: UiConfig = None,
         fill: bool = False,
         filling_sprixel: core.Sprixel = None,
+        title_alignement: int = constants.ALIGN_CENTER,
     ):
         super().__init__()
         self.__width = width
@@ -216,6 +217,7 @@ class Box(object):
         self.__filling_sprixel = filling_sprixel
         self.__config = config
         self._cache = {}
+        self.__title_alignement = title_alignement
         self._build_cache()
 
     def _build_cache(self):
@@ -1303,14 +1305,7 @@ class FileDialog(Dialog):
             if inkey != "":
                 tmpp = self.__path / self.__current_selection
                 if inkey.name == "KEY_ENTER":
-                    if tmpp.is_dir():
-                        self.__path = tmpp.resolve()
-                        self.user_input = ""
-                        self._build_file_cache()
-                        self.__browsing_position = 0
-                        screen.trigger_rendering()
-                        screen.update()
-                    elif self.user_input is not None and self.user_input != "":
+                    if self.user_input is not None and self.user_input != "":
                         if self.__path.is_file():
                             self.__path = self.__path.parent / self.user_input
                         elif self.__path.is_dir():
@@ -1327,13 +1322,17 @@ class FileDialog(Dialog):
                     screen.trigger_rendering()
                     screen.update()
                 elif inkey.name == "KEY_ESCAPE":
-                    self.__path = self.__original_path
+                    self.__path = None
                     break
                 elif inkey.name == "KEY_UP":
                     self.__browsing_position -= 1
                     self.__browsing_position = functions.clamp(
                         self.__browsing_position, 0, len(self.__files) - 1
                     )
+                    next_file = self.__path / self.__files[self.__browsing_position]
+                    if next_file.is_file():
+                        self.user_input = next_file.name
+                    screen.trigger_rendering()
                     screen.trigger_rendering()
                     screen.update()
                 elif inkey.name == "KEY_DOWN":
@@ -1341,6 +1340,9 @@ class FileDialog(Dialog):
                     self.__browsing_position = functions.clamp(
                         self.__browsing_position, 0, len(self.__files) - 1
                     )
+                    next_file = self.__path / self.__files[self.__browsing_position]
+                    if next_file.is_file():
+                        self.user_input = next_file.name
                     screen.trigger_rendering()
                     screen.update()
                 elif inkey.name == "KEY_LEFT":
@@ -1351,6 +1353,14 @@ class FileDialog(Dialog):
                     self._build_file_cache()
                     screen.trigger_rendering()
                     screen.update()
+                elif inkey.name == "KEY_RIGHT":
+                    if tmpp.is_dir():
+                        self.__path = tmpp.resolve()
+                        self.user_input = ""
+                        self._build_file_cache()
+                        self.__browsing_position = 0
+                        screen.trigger_rendering()
+                        screen.update()
                 elif inkey.name == "KEY_BACKSPACE" or inkey.name == "KEY_DELETE":
                     self.user_input = self.user_input[:-1]
                     screen.trigger_rendering()

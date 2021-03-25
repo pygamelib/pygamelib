@@ -599,13 +599,18 @@ def update_screen(g: engine.Game, inkey, dt: float):
         width = int(screen.width / 3)
         default = Path(filename)
         fid = ui.FileDialog(
-            default.parent, width, 10, "Save as", filter="*.spr", config=ui_config_popup
+            default.parent,
+            width,
+            10,
+            "Open a sprite collection",
+            filter="*.spr",
+            config=ui_config_popup,
         )
         screen.place(fid, screen.vcenter - 5, screen.hcenter - int(width / 2))
         file = fid.show()
         # g.log(f"Got file={file} from FileDialog")
         screen.delete(screen.vcenter - 5, screen.hcenter - int(width / 2))
-        if file != default and not file.is_dir():
+        if file is not None and not file.is_dir():
             collection = core.SpriteCollection.load_json_file(file)
             sprite_list = sorted(list(collection.keys()))
             filename = str(file)
@@ -622,7 +627,7 @@ def update_screen(g: engine.Game, inkey, dt: float):
         # g.log(f"Got file={file} from FileDialog")
         screen.delete(screen.vcenter - 5, screen.hcenter - int(width / 2))
         # TODO: change that so the file dialog return None if escape is pressed.
-        if file != default and not file.is_dir():
+        if file is not None and not file.is_dir():
             filename = str(file)
             # screen.place(
             #     f"Saving current sprite into {filename}",
