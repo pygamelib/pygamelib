@@ -3785,16 +3785,47 @@ class Screen(object):
            incompatible with the methods identified as being part of the **Direct
            Display** stack.
 
-        :param name: some param
-        :type name: str
+        Delete a element on screen. Pay attention that if you placed a multi cells
+        element on screen, you only need to erase that specific spot.
+
+        :param row: The row to render to.
+        :type row: int
+        :param column: The column to render to.
+        :type column: int
 
         Example::
 
-            method()
+            board = Board(size=[20,20])
+            screen.place(board, 2, 2)
+            # With this we have placed a board at screen coordinates 2,2 and the board
+            # will display on screen coordinates from 2,2 to 22,22.
+            # However, to delete the board we don't need to clean all these cells.
+            # Just the one where we placed the board:
+            screen.delete(2, 2)
         """
         if row is not None and column is not None:
             self._display_buffer[row][column] = core.Sprixel(" ")
             self._is_dirty = True
+
+    def get(self, row: int = None, column: int = None):
+        """
+        Get an element at the specified screen coordinates.
+
+        The element is returned from the display buffer (pre-rendering).
+
+        :param row: The row to render to.
+        :type row: int
+        :param column: The column to render to.
+        :type column: int
+
+        Example::
+
+            board = Board(size=[20,20])
+            screen.place(board, 2, 2)
+            ny_board = screen.get(2,2)
+        """
+        if row is not None and column is not None:
+            return self._display_buffer[row][column]
 
     def display_line(self, *text, end="\n", file=sys.stdout, flush=False):
         """
