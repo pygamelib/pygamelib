@@ -1325,26 +1325,27 @@ class FileDialog(Dialog):
                     self.__path = None
                     break
                 elif inkey.name == "KEY_UP":
-                    self.__browsing_position -= 1
-                    self.__browsing_position = functions.clamp(
-                        self.__browsing_position, 0, len(self.__files) - 1
-                    )
-                    next_file = self.__path / self.__files[self.__browsing_position]
-                    if next_file.is_file():
-                        self.user_input = next_file.name
-                    screen.trigger_rendering()
-                    screen.trigger_rendering()
-                    screen.update()
+                    if len(self.__files) > 0:
+                        self.__browsing_position -= 1
+                        self.__browsing_position = functions.clamp(
+                            self.__browsing_position, 0, len(self.__files) - 1
+                        )
+                        next_file = self.__path / self.__files[self.__browsing_position]
+                        if next_file.is_file():
+                            self.user_input = next_file.name
+                        screen.trigger_rendering()
+                        screen.update()
                 elif inkey.name == "KEY_DOWN":
-                    self.__browsing_position += 1
-                    self.__browsing_position = functions.clamp(
-                        self.__browsing_position, 0, len(self.__files) - 1
-                    )
-                    next_file = self.__path / self.__files[self.__browsing_position]
-                    if next_file.is_file():
-                        self.user_input = next_file.name
-                    screen.trigger_rendering()
-                    screen.update()
+                    if len(self.__files) > 0:
+                        self.__browsing_position += 1
+                        self.__browsing_position = functions.clamp(
+                            self.__browsing_position, 0, len(self.__files) - 1
+                        )
+                        next_file = self.__path / self.__files[self.__browsing_position]
+                        if next_file.is_file():
+                            self.user_input = next_file.name
+                        screen.trigger_rendering()
+                        screen.update()
                 elif inkey.name == "KEY_LEFT":
                     if self.__path.is_dir():
                         self.__path = self.__path.parent
