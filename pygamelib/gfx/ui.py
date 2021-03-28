@@ -1856,21 +1856,20 @@ class ColorPickerDialog(Dialog):
                 elif inkey.name == "KEY_ESCAPE":
                     ret_color = None
                     break
-                elif inkey.name == "KEY_UP":
+                elif inkey.name in ["KEY_UP", "KEY_DOWN", "KEY_PGDOWN", "KEY_PGUP"]:
+                    value = 0
+                    if "PG" in inkey.name:
+                        value = 10
+                    else:
+                        value = 1
+                    if "DOWN" in inkey.name:
+                        value *= -1
                     if self.__color_picker.selection == 0:
-                        self.__color_picker.red += 1
+                        self.__color_picker.red += value
                     elif self.__color_picker.selection == 1:
-                        self.__color_picker.green += 1
+                        self.__color_picker.green += value
                     elif self.__color_picker.selection == 2:
-                        self.__color_picker.blue += 1
-                    screen.force_update()
-                elif inkey.name == "KEY_DOWN":
-                    if self.__color_picker.selection == 0:
-                        self.__color_picker.red -= 1
-                    elif self.__color_picker.selection == 1:
-                        self.__color_picker.green -= 1
-                    elif self.__color_picker.selection == 2:
-                        self.__color_picker.blue -= 1
+                        self.__color_picker.blue += value
                     screen.force_update()
                 elif inkey.name == "KEY_LEFT":
                     self.__color_picker.selection -= 1
