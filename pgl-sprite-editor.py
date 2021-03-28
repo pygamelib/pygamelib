@@ -23,6 +23,8 @@ tools = [
     "Select BG color",
     "Remove BG color",
     "Remove FG color",
+    "Fill w/ FG color",
+    "Fill w/ BG color",
     "(E)raser mode",
     "(A)dd to palette",
     "(R)andom brush",
@@ -118,6 +120,28 @@ brush_models.extend(
 #         brush_models.append(e)
 
 test = 0
+
+
+def flood_fill(
+    board: engine.Board,
+    sprite: core.Sprite,
+    r,
+    c,
+    replace: core.Sprixel,
+    sprixel: core.Sprixel,
+):
+    # if not isinstance(board.item(r, c), board_items.BoardItemVoid):
+    if board.item(r, c).sprixel != replace:
+
+        return
+    # if isinstance(board.item(r, c), board_items.BoardItemVoid):
+    if board.item(r, c).sprixel == replace:
+        board.place_item(board_items.Door(sprixel=sprixel), r, c)
+        sprite.set_sprixel(r, c, sprixel)
+    flood_fill(board, sprite, r + 1, c, replace, sprixel)
+    flood_fill(board, sprite, r - 1, c, replace, sprixel)
+    flood_fill(board, sprite, r, c + 1, replace, sprixel)
+    flood_fill(board, sprite, r, c - 1, replace, sprixel)
 
 
 def draw_box(
@@ -378,56 +402,60 @@ def update_sprixel_under_cursor(g: engine.Game, v_move: base.Vector2D):
     r = g.player.row + v_move.row
     c = g.player.column + v_move.column
     if r >= 0 and r < b.height and c >= 0 and c < b.width:
-        first_col = g.screen.width - 19
         current_sprixel = cell = b.render_cell(r, c)
-        txt = "Sprixel:"
+        update_sprixel_info(g, cell)
+
+
+def update_sprixel_info(g: engine.Game, cell: core.Sprixel):
+    first_col = g.screen.width - 19
+    txt = "Sprixel:"
+    g.screen.place(
+        base.Text(txt, style=constants.BOLD),
+        7,
+        first_col,
+    )
+    last_col = g.screen.width - 10
+    g.screen.place(cell, 7, last_col)
+    for c in range(last_col + 1, last_col + cell.length):
+        g.screen.place(core.Sprixel(), 7, c)
+    g.screen.place(f"Model: '{cell.model}'", 8, first_col)
+    if cell.fg_color is not None:
+        color = base.Text(
+            f"({cell.fg_color.r},{cell.fg_color.g},{cell.fg_color.b})",
+            fg_color=cell.fg_color,
+        )
         g.screen.place(
-            base.Text(txt, style=constants.BOLD),
-            7,
+            "FG:",
+            9,
             first_col,
         )
-        last_col = g.screen.width - 10
-        g.screen.place(cell, 7, last_col)
-        for c in range(last_col + 1, last_col + cell.length):
-            g.screen.place(core.Sprixel(), 7, c)
-        g.screen.place(f"Model: '{cell.model}'", 8, first_col)
-        if cell.fg_color is not None:
-            color = base.Text(
-                f"({cell.fg_color.r},{cell.fg_color.g},{cell.fg_color.b})",
-                fg_color=cell.fg_color,
-            )
-            g.screen.place(
-                "FG:",
-                9,
-                first_col,
-            )
-            g.screen.place(
-                color,
-                9,
-                first_col + 4,
-            )
-        else:
-            g.screen.place("No foreground     ", 9, first_col)
-        if cell.bg_color is not None:
-            color = base.Text(
-                f"({cell.bg_color.r},{cell.bg_color.g},{cell.bg_color.b})",
-                fg_color=cell.bg_color,
-            )
-            g.screen.place(
-                "BG:",
-                10,
-                first_col,
-            )
-            g.screen.place(
-                color,
-                10,
-                first_col + 4,
-            )
-        else:
-            # In case you read this and wonder why the spaces, the answer is what you
-            # think: lazy programming.
-            g.screen.place("No background     ", 10, first_col)
-        # g.screen.place(f"{cell.bg_color}", 9, first_col)
+        g.screen.place(
+            color,
+            9,
+            first_col + 4,
+        )
+    else:
+        g.screen.place("No foreground     ", 9, first_col)
+    if cell.bg_color is not None:
+        color = base.Text(
+            f"({cell.bg_color.r},{cell.bg_color.g},{cell.bg_color.b})",
+            fg_color=cell.bg_color,
+        )
+        g.screen.place(
+            "BG:",
+            10,
+            first_col,
+        )
+        g.screen.place(
+            color,
+            10,
+            first_col + 4,
+        )
+    else:
+        # In case you read this and wonder why the spaces, the answer is what you
+        # think: lazy programming.
+        g.screen.place("No background     ", 10, first_col)
+    # g.screen.place(f"{cell.bg_color}", 9, first_col)
 
 
 def load_sprite_to_board(g: engine.Game, spr_c_idx: int):
@@ -902,6 +930,27 @@ def update_screen(g: engine.Game, inkey, dt: float):
             if len(palette) > palette_idx and color is not None:
                 palette[palette_idx].bg_color = color
             screen.delete(screen.vcenter - 2, screen.hcenter - 13)
+        elif inkey.name == "KEY_ENTER" and (
+            tools[tools_idx % len(tools)] == "Fill w/ FG color"
+            or tools[tools_idx % len(tools)] == "Fill w/ BG color"
+        ):
+            color = palette[palette_idx].fg_color
+            if "BG" in tools[tools_idx % len(tools)]:
+                color = palette[palette_idx].bg_color
+            sprx = core.Sprixel(" ", color)
+            g.current_board().clear_cell(g.player.row, g.player.column)
+            flood_fill(
+                g.current_board(),
+                _current_sprite,
+                g.player.row,
+                g.player.column,
+                current_sprixel,
+                sprx,
+            )
+            g.current_board().place_item(g.player, g.player.row, g.player.column)
+            current_sprixel = sprx
+            update_sprixel_info(g, current_sprixel)
+            boxes_idx = boxes.index("sprite")
         elif (
             inkey.name == "KEY_ENTER"
             and tools[tools_idx % len(tools)] == "(E)raser mode"
