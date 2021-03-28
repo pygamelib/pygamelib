@@ -28,6 +28,7 @@ tools = [
     "(R)andom brush",
     "Rename sprite",
     "Duplicate sprite",
+    "Delete sprite",
 ]
 tools_idx = 0
 sprite_list = []
@@ -246,7 +247,7 @@ def draw_ui():
     # Draw the sprite list
     sprite_list_box_height = int((screen.height - 10) / 3) + 1
     # Sprite list is fairly dynamic so we clear it first
-    for idx in range(len(sprite_list)):
+    for idx in range(sprite_list_box_height):
         screen.delete(spr_lst_row + 1 + idx, screen.width - 18)
     draw_box(
         spr_lst_row,
@@ -431,8 +432,19 @@ def update_sprixel_under_cursor(g: engine.Game, v_move: base.Vector2D):
 
 def load_sprite_to_board(g: engine.Game, spr_c_idx: int):
     global sprite_list, sprite_list_idx, ui_init, ui_config
-    if g.current_board() is not None:
-        g.current_board().remove_item(g.player)
+    try:
+        # This can fail if we just removed the board. We need to change level but we
+        # can't yet. So let it fail silently.
+        if g.current_board() is not None:
+            try:
+                # This call can fail if we just delete the sprite/board. In that case we
+                # just have to ignore the error since it just means that we don't have
+                # to care about it ;)
+                g.current_board().remove_item(g.player)
+            except base.PglException:
+                pass
+    except base.PglInvalidLevelException:
+        pass
     spr_c_idx = spr_c_idx % len(sprite_list)
     spr_name = sprite_list[spr_c_idx]
     if ui_init:
@@ -550,6 +562,28 @@ def toggle_eraser_mode(screen: engine.Screen):
         screen.place(txt, 1, screen.hcenter)
     else:
         screen.delete(1, screen.hcenter)
+
+
+def delete_current_sprite(g: engine.Game):
+    global sprite_list, sprite_list_idx
+    _current_sprite_idx = sprite_list_idx % len(sprite_list)
+    del collection[sprite_list[_current_sprite_idx]]
+    g.delete_level(_current_sprite_idx + 1)
+    last_moved_idx = None
+    moved = 0
+    try:
+        for lvl in range(_current_sprite_idx + 2, len(sprite_list)):
+            if g.get_board(lvl) is not None:
+                g.add_board(lvl - 1, g.get_board(lvl))
+                moved += 1
+                last_moved_idx = lvl
+    except KeyError:
+        pass
+    if moved > 1:
+        g.delete_level(last_moved_idx)
+    sprite_list = list(collection.keys())
+    sprite_list_idx = _current_sprite_idx
+    load_sprite_to_board(g, sprite_list_idx)
 
 
 def update_screen(g: engine.Game, inkey, dt: float):
@@ -792,9 +826,11 @@ def update_screen(g: engine.Game, inkey, dt: float):
             toggle_eraser_mode(screen)
         elif inkey == "A" and current_sprixel is not None:
             palette.append(current_sprixel)
-        elif inkey.isdigit() and int(inkey) < len(palette):
+        elif inkey.isdigit() and int(inkey) < len(palette) + 1:
             screen.delete(previous_cursor_pos[0], previous_cursor_pos[1])
-            palette_idx = int(inkey)
+            palette_idx = int(inkey) - 1
+            if palette_idx < 0:
+                palette_idx = 9
         else:
             redraw_ui = False
     elif boxes[boxes_current_id] == "toolbox":
@@ -908,6 +944,37 @@ def update_screen(g: engine.Game, inkey, dt: float):
             sprite_list_idx = sprite_list.index(new_sprite.name)
             load_sprite_to_board(g, sprite_list_idx)
             boxes_idx = boxes.index("sprite")
+        elif (
+            inkey.name == "KEY_ENTER"
+            and tools[tools_idx % len(tools)] == "Delete sprite"
+        ):
+            delete_current_sprite(g)
+        elif (
+            inkey.name == "KEY_ENTER"
+            and tools[tools_idx % len(tools)] == "Create new brush"
+        ):
+            bgc = ui_config_popup.bg_color
+            ui_config_popup.bg_color = None
+            msg = ui.MessageDialog(width=screen.width - 6, config=ui_config_popup)
+            msg.add_line("")
+            msg.add_line(
+                base.Text(
+                    "Create brush",
+                    core.Color(0, 200, 200),
+                    style=constants.BOLD + constants.UNDERLINE,
+                ),
+                constants.ALIGN_CENTER,
+            )
+            msg.add_line("")
+            msg.add_line("This wizard will guide you into creating a new brush.")
+            msg.add_line(
+                "You will need to select a model, a forground color and a background "
+                "color."
+            )
+            screen.place(msg, screen.vcenter - int(msg.height / 2), 3)
+            msg.show()
+            screen.delete(screen.vcenter - int(msg.height / 2), 3)
+            ui_config_popup.bg_color = bgc
         elif inkey.name == "KEY_UP":
             tools_idx -= 1
         elif inkey.name == "KEY_DOWN":
