@@ -1398,7 +1398,7 @@ class GridSelector(object):
         self.__cache = []
         self._build_cache()
         self.__items_per_page = int(self.__max_height / 2 * self.__max_width / 2)
-        config.game.log(f"items per page={self.__items_per_page}")
+        # config.game.log(f"items per page={self.__items_per_page}")
 
     def _build_cache(self):
         self.__cache = []
@@ -1639,6 +1639,14 @@ class GridSelectorDialog(Dialog):
                     if self.__grid_selector.current_page < 0:
                         self.__grid_selector.current_page = 0
                     screen.force_update()
+                cc = self.__grid_selector.current_choice % (
+                    self.__grid_selector.current_page
+                    + 1 * self.__grid_selector.items_per_page()
+                )
+                if cc != self.__grid_selector.current_choice:
+                    self.__grid_selector.current_choice = cc
+                    screen.force_update()
+
             inkey = term.inkey(timeout=0.1)
         return ret_sprixel
 
