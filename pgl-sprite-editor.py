@@ -57,7 +57,9 @@ ui_config_popup = None
 brush_models = [
     " ",
     "!",
+    "¡",
     "?",
+    "¿",
     "@",
     "#",
     "$",
@@ -69,6 +71,8 @@ brush_models = [
     ")",
     "-",
     "_",
+    "¯",
+    "¸",
     "=",
     "+",
     "{",
@@ -78,12 +82,18 @@ brush_models = [
     ";",
     ":",
     ",",
-    "'",
-    '"',
     "/",
     "\\",
     "|",
     "`",
+    "'",
+    "´",
+    "‘",
+    "’",
+    "“",
+    '"',
+    "”",
+    "¨",
     "~",
 ]
 brush_models.extend(
@@ -622,6 +632,8 @@ def update_screen(g: engine.Game, inkey, dt: float):
     screen = g.screen
     boxes_current_id = boxes_idx % len(boxes)
     _current_sprite = collection[sprite_list[sprite_list_idx % len(sprite_list)]]
+    # if inkey.is_sequence:
+    #     g.log("got sequence: {0}.".format((str(inkey), inkey.name, inkey.code)))
     if inkey == "Q":
         g.stop()
     elif inkey == "R" or (
@@ -782,33 +794,34 @@ def update_screen(g: engine.Game, inkey, dt: float):
             update_sprixel_under_cursor(
                 g, base.Vector2D.from_direction(constants.UP, 1)
             )
-            update_cursor_info(g)
             pos = g.player.pos
             g.move_player(constants.UP, 1)
+            update_cursor_info(g)
         elif inkey == engine.key.DOWN:
             update_sprixel_under_cursor(
                 g, base.Vector2D.from_direction(constants.DOWN, 1)
             )
-            update_cursor_info(g)
             pos = g.player.pos
             g.move_player(constants.DOWN, 1)
+            update_cursor_info(g)
         elif inkey == engine.key.LEFT:
             update_sprixel_under_cursor(
                 g, base.Vector2D.from_direction(constants.LEFT, 1)
             )
-            update_cursor_info(g)
             pos = g.player.pos
             g.move_player(constants.LEFT, 1)
+            update_cursor_info(g)
         elif inkey == engine.key.RIGHT:
             update_sprixel_under_cursor(
                 g, base.Vector2D.from_direction(constants.RIGHT, 1)
             )
-            update_cursor_info(g)
             pos = g.player.pos
             g.move_player(constants.RIGHT, 1)
+            update_cursor_info(g)
         elif inkey == "j":
             pos = g.player.pos
             g.move_player(constants.LEFT, 1)
+            update_cursor_info(g)
             if eraser_mode:
                 erase_cell(g, pos[0], pos[1])
                 _current_sprite.set_sprixel(pos[0], pos[1], core.Sprixel())
@@ -820,6 +833,7 @@ def update_screen(g: engine.Game, inkey, dt: float):
         elif inkey == "l":
             pos = g.player.pos
             g.move_player(constants.RIGHT, 1)
+            update_cursor_info(g)
             if eraser_mode:
                 erase_cell(g, pos[0], pos[1])
                 _current_sprite.set_sprixel(pos[0], pos[1], core.Sprixel())
@@ -831,6 +845,7 @@ def update_screen(g: engine.Game, inkey, dt: float):
         elif inkey == "i":
             pos = g.player.pos
             g.move_player(constants.UP, 1)
+            update_cursor_info(g)
             if eraser_mode:
                 erase_cell(g, pos[0], pos[1])
                 _current_sprite.set_sprixel(pos[0], pos[1], core.Sprixel())
@@ -842,6 +857,7 @@ def update_screen(g: engine.Game, inkey, dt: float):
         elif inkey == "k":
             pos = g.player.pos
             g.move_player(constants.DOWN, 1)
+            update_cursor_info(g)
             if eraser_mode:
                 erase_cell(g, pos[0], pos[1])
                 _current_sprite.set_sprixel(pos[0], pos[1], core.Sprixel())
@@ -859,6 +875,28 @@ def update_screen(g: engine.Game, inkey, dt: float):
             palette_idx = int(inkey) - 1
             if palette_idx < 0:
                 palette_idx = 9
+        elif inkey.name == "KEY_BACKSPACE":
+            if g.player.column - 1 >= 0:
+                g.current_board().clear_cell(g.player.row, g.player.column - 1)
+                _current_sprite.set_sprixel(
+                    g.player.row, g.player.column - 1, core.Sprixel()
+                )
+                g.move_player(constants.LEFT)
+                update_cursor_info(g)
+        elif inkey is not None and inkey != "" and inkey.isprintable():
+            # If the character is printable we just add it to the canvas
+            sprixel = core.Sprixel(str(inkey))
+            # look for available position to put the cursor: to the right by default,
+            # else to the left
+            pos = g.player.pos
+            if g.player.column + 1 < g.current_board().width:
+                g.move_player(constants.RIGHT)
+            else:
+                g.move_player(constants.LEFT)
+            g.current_board().place_item(
+                board_items.Door(sprixel=sprixel), pos[0], pos[1]
+            )
+            _current_sprite.set_sprixel(pos[0], pos[1], sprixel)
         else:
             redraw_ui = False
     elif boxes[boxes_current_id] == "toolbox":
@@ -934,11 +972,15 @@ def update_screen(g: engine.Game, inkey, dt: float):
             tools[tools_idx % len(tools)] == "Fill w/ FG color"
             or tools[tools_idx % len(tools)] == "Fill w/ BG color"
         ):
+            # Get the right color
             color = palette[palette_idx].fg_color
             if "BG" in tools[tools_idx % len(tools)]:
                 color = palette[palette_idx].bg_color
+            # Create a sprixel with no model to fill the space with
             sprx = core.Sprixel(" ", color)
+            # Clear the cursor so the flood fill algo doesn't stop right away
             g.current_board().clear_cell(g.player.row, g.player.column)
+            # Fill
             flood_fill(
                 g.current_board(),
                 _current_sprite,
@@ -947,9 +989,12 @@ def update_screen(g: engine.Game, inkey, dt: float):
                 current_sprixel,
                 sprx,
             )
+            # Re place the cursor
             g.current_board().place_item(g.player, g.player.row, g.player.column)
+            # Update the current sprixel info
             current_sprixel = sprx
             update_sprixel_info(g, current_sprixel)
+            # Got to the edition canvas
             boxes_idx = boxes.index("sprite")
         elif (
             inkey.name == "KEY_ENTER"
@@ -1094,7 +1139,7 @@ if __name__ == "__main__":
             "The sprite editor is under heavy development and is not production ready."
             "If you find bugs or have feature requests please go to "
             "https://github.com/arnauddupuis/pygamelib/issues",
-            core.Color(255, 0, 0),
+            core.Color(255, 125, 0),
             style=constants.BOLD,
         )
     )

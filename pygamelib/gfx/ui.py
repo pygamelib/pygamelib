@@ -1639,6 +1639,9 @@ class GridSelectorDialog(Dialog):
                     if self.__grid_selector.current_page < 0:
                         self.__grid_selector.current_page = 0
                     screen.force_update()
+                # Make sure that the cursor is within the boundaries of the box.
+                # NOTE: I can live with the double update if I don't have to copy/paste
+                # these 7 lines in all the previous ifs...
                 cc = self.__grid_selector.current_choice % (
                     self.__grid_selector.current_page
                     + 1 * self.__grid_selector.items_per_page()
