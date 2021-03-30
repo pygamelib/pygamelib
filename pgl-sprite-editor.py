@@ -619,7 +619,8 @@ def delete_current_sprite(g: engine.Game):
         pass
     if moved > 1:
         g.delete_level(last_moved_idx)
-    sprite_list = list(collection.keys())
+    # sprite_list = list(collection.keys())
+    del sprite_list[_current_sprite_idx]
     sprite_list_idx = _current_sprite_idx
     load_sprite_to_board(g, sprite_list_idx)
 
@@ -677,6 +678,7 @@ def update_screen(g: engine.Game, inkey, dt: float):
             # sprite_list = sorted(list(collection.keys()))
             sprite_list = list(collection.keys())
             filename = str(file)
+            g.delete_all_levels()
             if len(collection) > 0:
                 load_sprite_to_board(g, 0)
     elif inkey == "S":
@@ -781,10 +783,12 @@ def update_screen(g: engine.Game, inkey, dt: float):
                 ]
             )
             collection[nn].name = nn
-            # TODO: FIX THAT MESS
+            # TODO: FIX THAT MESS. DONE, if only I could think before coding...
             # sprite_list = sorted(list(collection.keys()))
-            sprite_list = list(collection.keys())
-            sprite_list_idx = sprite_list.index(nn)
+            # sprite_list = list(collection.keys())
+            # sprite_list_idx = sprite_list.index(nn)
+            sprite_list.append(nn)
+            sprite_list_idx = len(sprite_list) - 1
             load_sprite_to_board(g, sprite_list_idx)
             boxes_idx = boxes.index("sprite")
     elif inkey.name == "KEY_TAB":
@@ -1058,8 +1062,10 @@ def update_screen(g: engine.Game, inkey, dt: float):
                     new_sprite.set_sprixel(sr, sc, initial_sprite.sprixel(sr, sc))
             collection.add(new_sprite)
             # rebuild_sprite_list(g)x
-            sprite_list = list(collection.keys())
-            sprite_list_idx = sprite_list.index(new_sprite.name)
+            sprite_list.append(new_sprite.name)
+            sprite_list_idx = len(sprite_list) - 1
+            # sprite_list = list(collection.keys())
+            # sprite_list_idx = sprite_list.index(new_sprite.name)
             load_sprite_to_board(g, sprite_list_idx)
             boxes_idx = boxes.index("sprite")
         elif (
