@@ -824,7 +824,10 @@ def update_screen(g: engine.Game, inkey, dt: float):
             update_cursor_info(g)
         elif inkey == "j":
             pos = g.player.pos
-            g.move_player(constants.LEFT, 1)
+            if g.player.column - 1 >= 0:
+                g.move_player(constants.LEFT)
+            else:
+                g.move_player(constants.RIGHT)
             update_cursor_info(g)
             if eraser_mode:
                 erase_cell(g, pos[0], pos[1])
@@ -836,7 +839,10 @@ def update_screen(g: engine.Game, inkey, dt: float):
                 _current_sprite.set_sprixel(pos[0], pos[1], palette[palette_idx])
         elif inkey == "l":
             pos = g.player.pos
-            g.move_player(constants.RIGHT, 1)
+            if g.player.column + 1 < g.current_board().width:
+                g.move_player(constants.RIGHT)
+            else:
+                g.move_player(constants.LEFT)
             update_cursor_info(g)
             if eraser_mode:
                 erase_cell(g, pos[0], pos[1])
@@ -848,7 +854,10 @@ def update_screen(g: engine.Game, inkey, dt: float):
                 _current_sprite.set_sprixel(pos[0], pos[1], palette[palette_idx])
         elif inkey == "i":
             pos = g.player.pos
-            g.move_player(constants.UP, 1)
+            if g.player.row - 1 >= 0:
+                g.move_player(constants.UP)
+            else:
+                g.move_player(constants.DOWN)
             update_cursor_info(g)
             if eraser_mode:
                 erase_cell(g, pos[0], pos[1])
@@ -860,7 +869,10 @@ def update_screen(g: engine.Game, inkey, dt: float):
                 _current_sprite.set_sprixel(pos[0], pos[1], palette[palette_idx])
         elif inkey == "k":
             pos = g.player.pos
-            g.move_player(constants.DOWN, 1)
+            if g.player.row + 1 < g.current_board().height:
+                g.move_player(constants.DOWN)
+            else:
+                g.move_player(constants.UP)
             update_cursor_info(g)
             if eraser_mode:
                 erase_cell(g, pos[0], pos[1])
