@@ -892,17 +892,12 @@ def update_screen(g: engine.Game, inkey, dt: float):
         # that it'll work.
         elif inkey.name == "KEY_DELETE":
             pos = g.player.pos
-            g.log(f"1) player.pos = {g.player.pos} pos={pos}")
             if g.player.column + 1 < g.current_board().width:
                 g.move_player(constants.RIGHT)
             else:
                 g.move_player(constants.LEFT)
-            g.log(f"2) player.pos = {g.player.pos} pos={pos}")
             g.current_board().clear_cell(pos[0], pos[1])
             _current_sprite.set_sprixel(pos[0], pos[1], core.Sprixel())
-            g.log(
-                f"pos[1]={pos[1]} pl col={g.player.column} => {pos[1] - g.player.column}"
-            )
             # Trying to move the player so fast makes is impossible in MODE_RT, so we
             # temporarily go to turn by turn and restore RT after.
             g.mode = constants.MODE_TBT
