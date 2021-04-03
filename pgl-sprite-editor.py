@@ -1,12 +1,14 @@
 #!/usr/bin/env python3
 
 from pygamelib import base, engine, constants, board_items
+from pygamelib import functions
 from pygamelib.gfx import core, ui
 from pygamelib.assets import graphics
 from pygamelib.functions import clamp
 from pathlib import Path
 import argparse
 import os
+import sys
 import time
 import random
 import copy
@@ -23,14 +25,19 @@ tools = [
     "Select BG color",
     "Remove BG color",
     "Remove FG color",
+    "     ------     ",
     "Fill w/ FG color",
     "Fill w/ BG color",
+    "     ------     ",
     "(E)raser mode",
     "(A)dd to palette",
     "(R)andom brush",
+    "     ------     ",
     "Rename sprite",
     "Duplicate sprite",
     "Delete sprite",
+    "     ------     ",
+    "Play animation",
 ]
 tools_idx = 0
 sprite_list = []
@@ -292,11 +299,13 @@ def draw_ui():
         "Sprites list",
     )
     idx = rs = 0
+    end = len(sprite_list)
     if len(sprite_list) > sprite_list_box_height - 2:
         rs = int(spr_l_c_idx / (sprite_list_box_height - 2)) * (
             sprite_list_box_height - 2
         )
-    for k in range(rs, len(sprite_list)):
+    end = functions.clamp(end, rs, sprite_list_box_height - 2 + rs)
+    for k in range(rs, end):
         s = sprite_list[k]
         if idx + rs == spr_l_c_idx:
             screen.place(
@@ -310,25 +319,35 @@ def draw_ui():
     # Draw the toolbox
     # tb_start_row = int((screen.height - 10) / 3) + 4
     tb_start_col = screen.width - 20
+    tb_box_height = screen.height - tb_start_row
+    # Sprite list is fairly dynamic so we clear it first
+    for idx in range(tb_box_height - 1):
+        screen.delete(tb_start_row + 1 + idx, tb_start_col + 2)
     draw_box(
         tb_start_row,
         tb_start_col,
-        screen.height - tb_start_row,
+        tb_box_height,
         20,
         "toolbox",
         "Tools",
     )
-    for i in range(0, len(tools)):
-        if i == tb_c_idx:
+    idx = rt = 0
+    end = len(tools)
+    if len(tools) > tb_box_height - 2:
+        rt = int(tb_c_idx / (tb_box_height - 2)) * (tb_box_height - 2)
+    end = functions.clamp(end, rt, tb_box_height - 2 + rt)
+    for i in range(rt, end):
+        if idx + rt == tb_c_idx:
             screen.place(
                 base.Text(
                     tools[i], fg_color=core.Color(0, 255, 0), style=constants.BOLD
                 ),
-                tb_start_row + i + 1,
+                tb_start_row + idx + 1,
                 tb_start_col + 2,
             )
         else:
-            screen.place(tools[i], tb_start_row + i + 1, tb_start_col + 2)
+            screen.place(tools[i], tb_start_row + idx + 1, tb_start_col + 2)
+        idx += 1
     # Draw the palette box
     draw_box(
         screen.height - screen_dimensions["palette"],
@@ -980,7 +999,7 @@ def update_screen(g: engine.Game, inkey, dt: float):
             collection.rename(old_name, new_name)
             sprite_list[sprite_list_idx % len(sprite_list)] = new_name
             # sprite_list = sorted(sprite_list)
-            sprite_list_idx = 0
+            # sprite_list_idx = sprite_list.index(new_name)
         elif (
             inkey.name == "KEY_ENTER"
             and tools[tools_idx % len(tools)] == "Select FG color"
@@ -1106,6 +1125,101 @@ def update_screen(g: engine.Game, inkey, dt: float):
             msg.show()
             screen.delete(screen.vcenter - int(msg.height / 2), 3)
             ui_config_popup.bg_color = bgc
+        elif (
+            inkey.name == "KEY_ENTER"
+            and tools[tools_idx % len(tools)] == "Play animation"
+        ):
+            # a ui widget could be better here...
+            anim = core.Animation(frames=collection)
+            loop = True
+            # find the largest sprite name (and sprite)
+            max_sprite_width = 0
+            max_sprite_height = 0
+            max_sprite_name_length = 0
+            for f in anim.frames:
+                if f.width - 2 >= screen.width or f.height - 4 >= screen.height:
+                    err = f"The sprite '{f.name}' is too large to be displayed in full."
+                    ts = len(err)
+                    loop = False
+                    bg = ui_config_popup.bg_color
+                    ui_config_popup.bg_color = None
+                    msg = ui.MessageDialog(
+                        [
+                            base.Text(err),
+                            base.Text("Cancelling animation preview."),
+                        ],
+                        width=ts + 2,
+                        config=ui_config_popup,
+                    )
+                    screen.place(
+                        msg,
+                        screen.vcenter - 2,
+                        screen.hcenter - int(ts / 2),
+                    )
+                    msg.show()
+                    screen.delete(screen.vcenter - 2, screen.hcenter - int(ts / 2))
+                    ui_config_popup.bg_color = bg
+                    break
+                if f.width > max_sprite_width:
+                    max_sprite_width = f.width
+                if f.height > max_sprite_height:
+                    max_sprite_height = f.height
+                if len(f.name) > max_sprite_name_length:
+                    max_sprite_name_length = len(f.name)
+            key = None
+
+            if loop:
+                box_width = max([max_sprite_name_length + 17, max_sprite_width + 2, 29])
+                # -3 to account for the extra lines of info we're adding to the box
+                arow = screen.vcenter - int(max_sprite_height / 2) - 3
+                acol = screen.hcenter - int(box_width / 2)
+                box = ui.Box(
+                    width=box_width,
+                    height=max_sprite_height + 7,
+                    config=ui_config_popup,
+                    fill=False,
+                    filling_sprixel=core.Sprixel(" "),
+                )
+                screen.place(box, arow, acol, 2)
+            while loop:
+                if key is not None:
+                    if (
+                        key.name == "KEY_ESCAPE"
+                        or key == " "
+                        or key.name == "KEY_ENTER"
+                    ):
+                        loop = False
+                    elif key == "+":
+                        anim.display_time += 0.01
+                    elif key == "-":
+                        anim.display_time -= 0.01
+                        if anim.display_time < 0:
+                            anim.display_time = 0
+                    elif key.lower() == "r":
+                        anim.frames.reverse()
+                    for f in anim.frames:
+                        screen.place(f"Current frame: {f.name}", arow + 1, acol + 1, 2)
+                        screen.place(
+                            f"Frame time: {round(anim.display_time,2)} sec.",
+                            arow + 2,
+                            acol + 1,
+                            2,
+                        )
+                        screen.place(
+                            "+ or -: change frame speed.", arow + 3, acol + 1, 2
+                        )
+                        screen.place("r to reverse frame order.", arow + 4, acol + 1, 2)
+                        screen.place(
+                            f, arow + 5, acol + int(box_width / 2) - int(f.width / 2), 2
+                        )
+                        screen.force_update()
+                        time.sleep(anim.display_time)
+                key = g.terminal.inkey(timeout=0.1)
+            screen.delete(arow, acol)
+            screen.delete(arow + 5, acol + int(box_width / 2) - int(f.width / 2))
+            for r in range(1, 5):
+                screen.delete(arow + r, acol + 1)
+
         elif inkey.name == "KEY_UP":
             tools_idx -= 1
         elif inkey.name == "KEY_DOWN":
@@ -1176,10 +1290,33 @@ if __name__ == "__main__":
             "The sprite editor is under heavy development and is not production ready."
             "If you find bugs or have feature requests please go to "
             "https://github.com/arnauddupuis/pygamelib/issues",
-            core.Color(255, 125, 0),
+            core.Color(0, 150, 255),
             style=constants.BOLD,
         )
     )
+    g = engine.Game.instance(
+        player=board_items.Player(
+            sprixel=core.Sprixel(
+                graphics.BoxDrawings.HEAVY_VERTICAL_AND_HORIZONTAL,
+                fg_color=core.Color(255, 0, 0),
+            ),
+            movement_speed=0.01,
+        ),
+        user_update=update_screen,
+        mode=constants.MODE_RT,
+        input_lag=0.0001,
+    )
+    if g.screen.width < 102 or g.screen.height < 42:
+        print(
+            base.Text(
+                "Your terminal window is too small, the sprite editor requires a"
+                "console of 42 rows by 102 columns at minimum. Your terminal is "
+                f"currently {g.screen.height} rows by {g.screen.width} columns",
+                core.Color(255, 0, 0),
+                style=constants.BOLD,
+            )
+        )
+        sys.exit()
     parser = argparse.ArgumentParser(
         description="A tool to create/edit pygamelib's sprites."
     )
@@ -1203,18 +1340,7 @@ if __name__ == "__main__":
         sprite_list = list(collection.keys())
         if args.sprite_file != "":
             filename = args.sprite_file
-    g = engine.Game.instance(
-        player=board_items.Player(
-            sprixel=core.Sprixel(
-                graphics.BoxDrawings.HEAVY_VERTICAL_AND_HORIZONTAL,
-                fg_color=core.Color(255, 0, 0),
-            ),
-            movement_speed=0.01,
-        ),
-        user_update=update_screen,
-        mode=constants.MODE_RT,
-        input_lag=0.0001,
-    )
+
     # TODO check for minimum size (84x34)
     ui_config = ui.UiConfig(
         game=g, fg_color=core.Color(0, 0, 0), bg_color=core.Color(0, 128, 128)
