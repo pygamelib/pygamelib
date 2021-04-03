@@ -2226,9 +2226,10 @@ class Game:
                             # amplitude can be different so we proceed in 2 steps:
                             #  1 - build a unit direction vector
                             #  2 - use its component to build a movement vector
-                            d = base.Vector2D.from_direction(
-                                npc.actuator.next_move(), 1
-                            )
+                            nm = npc.actuator.next_move()
+                            d = nm
+                            if not isinstance(nm, base.Vector2D):
+                                d = base.Vector2D.from_direction(nm, 1)
                             self._boards[level_number]["board"].move(
                                 npc,
                                 base.Vector2D(
@@ -2397,10 +2398,12 @@ class Game:
                                 continue
                             proj.dtmove = 0.0
                             if proj.range > 0:
-                                # Build a unit movement vector
-                                umv = base.Vector2D.from_direction(
-                                    proj.actuator.next_move(), 1
-                                )
+                                umv = proj.actuator.next_move()
+                                if not isinstance(umv, base.Vector2D):
+                                    # Build a unit movement vector
+                                    umv = base.Vector2D.from_direction(
+                                        proj.actuator.next_move(), 1
+                                    )
                                 # Build a movement vector
                                 dm = base.Vector2D(
                                     umv.row * proj.step_vertical,
