@@ -820,7 +820,7 @@ def update_screen(g: engine.Game, inkey, dt: float):
             pos = g.player.pos
             g.move_player(constants.UP, 1)
             update_cursor_info(g)
-        elif inkey == engine.key.DOWN:
+        elif inkey == engine.key.DOWN or inkey.name == "KEY_ENTER":
             update_sprixel_under_cursor(
                 g, base.Vector2D.from_direction(constants.DOWN, 1)
             )
@@ -936,7 +936,20 @@ def update_screen(g: engine.Game, inkey, dt: float):
             g.current_board().move(g.player, v)
             g.mode = constants.MODE_RT
             update_cursor_info(g)
-
+        elif inkey.name == "KEY_HOME":
+            if g.player.column > 0:
+                mvt = base.Vector2D(0, -g.player.column)
+                g.move_player(mvt)
+            else:
+                mvt = base.Vector2D(-g.player.row, 0)
+                g.move_player(mvt)
+        elif inkey.name == "KEY_END":
+            if g.player.column < g.current_board().width - 1:
+                mvt = base.Vector2D(0, g.current_board().width - 1 - g.player.column)
+                g.move_player(mvt)
+            else:
+                mvt = base.Vector2D(g.current_board().height - 1 - g.player.row, 0)
+                g.move_player(mvt)
         elif inkey is not None and inkey != "" and inkey.isprintable():
             # If the character is printable we just add it to the canvas
             sprixel = core.Sprixel(str(inkey))
