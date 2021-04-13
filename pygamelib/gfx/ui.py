@@ -1468,7 +1468,17 @@ class GridSelector(object):
     @current_choice.setter
     def current_choice(self, index: int = None):
         if type(index) is int:
-            self.__current_choice = index
+            # self.__current_choice = functions.clamp(index, 0, len(self.__cache) - 1)
+            clp = functions.clamp(
+                index,
+                self.current_page * self.items_per_page(),
+                min(
+                    (self.current_page + 1) * self.items_per_page() - 1,
+                    len(self.__cache) - 1,
+                ),
+            )
+            if clp == index:
+                self.__current_choice = clp
         else:
             raise base.PglInvalidTypeException(
                 "GridSelector.set_selected(index): 'index' must be an int. "
@@ -1482,7 +1492,12 @@ class GridSelector(object):
     @current_page.setter
     def current_page(self, value: int):
         if type(value) is int:
-            self.__current_page = value
+            self.__current_page = functions.clamp(
+                value, 0, round(len(self.__cache) / self.__items_per_page)
+            )
+            # There's on particular case: when we have less items than space per page
+            if len(self.__cache) <= self.__items_per_page:
+                self.__current_page = 0
             start = self.__current_page * self.__items_per_page
             if self.__current_choice < start:
                 self.__current_choice = start
@@ -1494,11 +1509,65 @@ class GridSelector(object):
                 f"'{value}' is not an int"
             )
 
-    def current_sprixel(self):
+    def cursor_up(self):
+        """
+        Move the selection cursor one row up.
+        """
+        self.current_choice -= int(self.max_width / 2)
+
+    def cursor_down(self):
+        """
+        Move the selection cursor one row down.
+        """
+        self.current_choice += int(self.max_width / 2)
+
+    def cursor_left(self):
+        """
+        Move the selection cursor one column to the left.
+        """
+        self.current_choice -= 1
+
+    def cursor_right(self):
+        """
+        Move the selection cursor one column to the right.
+        """
+        self.current_choice += 1
+
+    def page_up(self):
+        """
+        Change the current page to the one immediately up (current_page - 1).
+        """
+        self.current_page -= 1
+
+    def page_down(self):
+        """
+        Change the current page to the one immediately down (current_page + 1).
+        """
+        self.current_page += 1
+
+    def current_sprixel(self) -> core.Sprixel:
+        """
+        Returns the currently selected sprixel.
+        """
         return self.__cache[self.__current_choice]
 
-    def items_per_page(self):
+    def items_per_page(self) -> int:
+        """
+        Returns the number of items per page.
+
+        """
         return self.__items_per_page
+
+    def nb_pages(self) -> int:
+        """
+        Returns the number of pages.
+        """
+        count = len(self.__cache) / self.items_per_page()
+        if count > int(count):
+            count = int(count) + 1
+        else:
+            count = round(count)
+        return count
 
     def render_to_buffer(
         self, buffer, row: int, column: int, buffer_height: int, buffer_width: int
@@ -1610,44 +1679,22 @@ class GridSelectorDialog(Dialog):
                     ret_sprixel = core.Sprixel()
                     break
                 elif inkey.name == "KEY_UP":
-                    self.__grid_selector.current_choice -= int(
-                        self.__grid_selector.max_width / 2
-                    )
+                    self.__grid_selector.cursor_up()
                     screen.force_update()
                 elif inkey.name == "KEY_DOWN":
-                    self.__grid_selector.current_choice += int(
-                        self.__grid_selector.max_width / 2
-                    )
+                    self.__grid_selector.cursor_down()
                     screen.force_update()
                 elif inkey.name == "KEY_LEFT":
-                    self.__grid_selector.current_choice -= 1
+                    self.__grid_selector.cursor_left()
                     screen.force_update()
                 elif inkey.name == "KEY_RIGHT":
-                    self.__grid_selector.current_choice += 1
+                    self.__grid_selector.cursor_right()
                     screen.force_update()
                 elif inkey.name == "KEY_PGDOWN":
-                    self.__grid_selector.current_page += 1
-                    if (
-                        self.__grid_selector.current_page
-                        * self.__grid_selector.items_per_page()
-                        >= len(self.__grid_selector.choices)
-                    ):
-                        self.__grid_selector.current_page -= 1
+                    self.__grid_selector.page_down()
                     screen.force_update()
                 elif inkey.name == "KEY_PGUP":
-                    self.__grid_selector.current_page -= 1
-                    if self.__grid_selector.current_page < 0:
-                        self.__grid_selector.current_page = 0
-                    screen.force_update()
-                # Make sure that the cursor is within the boundaries of the box.
-                # NOTE: I can live with the double update if I don't have to copy/paste
-                # these 7 lines in all the previous ifs...
-                cc = self.__grid_selector.current_choice % (
-                    self.__grid_selector.current_page
-                    + 1 * self.__grid_selector.items_per_page()
-                )
-                if cc != self.__grid_selector.current_choice:
-                    self.__grid_selector.current_choice = cc
+                    self.__grid_selector.page_up()
                     screen.force_update()
 
             inkey = term.inkey(timeout=0.1)
@@ -1671,9 +1718,8 @@ class GridSelectorDialog(Dialog):
             box.render_to_buffer(buffer, row, column, buffer_height, buffer_width)
             # TODO: It looks like there is a bug in the pagination.
             gs = self.__grid_selector
-            pagination = (
-                f"{gs.current_page+1}/{round(len(gs.choices)/gs.items_per_page())}"
-            )
+            # Pages are numbered from 0.
+            pagination = f"{gs.current_page+1}/{gs.nb_pages()}"
             lp = len(pagination)
             for c in range(0, lp):
                 buffer[row + self.__grid_selector.max_height + 2][
