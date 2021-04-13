@@ -32,6 +32,7 @@ import sys
 import time
 import numpy as np
 
+
 # We need to ignore that one as it is used by user to compare keys (i.e Utils.key.UP)
 from readchar import readkey, key  # noqa: F401
 
@@ -786,6 +787,10 @@ class Board:
                         if not isinstance(item.item(ir, ic), board_items.BoardItemVoid):
                             self.place_item(item.item(ir, ic), row + ir, column + ic)
                 item.store_position(row, column)
+                if isinstance(item, board_items.Movable):
+                    self._movables.add(item)
+                elif isinstance(item, board_items.Immovable):
+                    self._immovables.add(item)
             elif isinstance(item, board_items.BoardItem):
                 # If we are about to place the item on a overlappable and
                 # restorable we store it to be restored
@@ -806,6 +811,12 @@ class Board:
                         item.sprixel.bg_color = self._overlapped_matrix[row][
                             column
                         ].sprixel.bg_color
+                elif (
+                    isinstance(existing_item, board_items.BoardItemVoid)
+                    and item.sprixel.is_bg_transparent
+                    and existing_item.sprixel is not None
+                ):
+                    item.sprixel.bg_color = existing_item.sprixel.bg_color
                 # Place the item on the board
                 self._matrix[row][column] = item
                 # Take ownership of the item (if item doesn't have parent)
@@ -900,40 +911,30 @@ class Board:
                     for ocol in range(0, item.size[0]):
                         new_row = projected_position.row + orow
                         new_column = projected_position.column + ocol
+                        dest_item = self.item(new_row, new_column)
                         # Check all items within the surface
-                        if isinstance(
-                            self._matrix[new_row][new_column], board_items.Actionable
-                        ):
+                        if isinstance(dest_item, board_items.Actionable):
                             if (
                                 isinstance(item, board_items.Player)
                                 and (
-                                    (
-                                        self._matrix[new_row][new_column].perm
-                                        == constants.PLAYER_AUTHORIZED
-                                    )
+                                    (dest_item.perm == constants.PLAYER_AUTHORIZED)
                                     or (
-                                        self._matrix[new_row][new_column].perm
+                                        dest_item.perm
                                         == constants.ALL_CHARACTERS_AUTHORIZED
                                     )
                                 )
                             ) or (
                                 isinstance(item, board_items.NPC)
                                 and (
-                                    (
-                                        self._matrix[new_row][new_column].perm
-                                        == constants.NPC_AUTHORIZED
-                                    )
+                                    (dest_item.perm == constants.NPC_AUTHORIZED)
                                     or (
-                                        self._matrix[new_row][new_column].perm
+                                        dest_item.perm
                                         == constants.ALL_CHARACTERS_AUTHORIZED
                                     )
                                 )
-                                or (
-                                    self._matrix[new_row][new_column].perm
-                                    == constants.ALL_MOVABLE_AUTHORIZED
-                                )
+                                or (dest_item.perm == constants.ALL_MOVABLE_AUTHORIZED)
                             ):
-                                self._matrix[new_row][new_column].activate()
+                                dest_item.activate()
                         # Now taking care of pickable objects
                         pickable_item = self.item(new_row, new_column)
                         if (
@@ -947,10 +948,7 @@ class Board:
                             # And then clear the cell (this is usefull for the next one)
                             self.remove_item(pickable_item)
                         # Finally we check if the destination is overlappable
-                        if (
-                            self._matrix[new_row][new_column].parent != item
-                            and not self._matrix[new_row][new_column].overlappable()
-                        ):
+                        if dest_item.parent != item and not dest_item.overlappable():
                             can_draw = False
                             break
                 if can_draw:
@@ -1121,35 +1119,22 @@ class Board:
             ):
                 # Then, we check if the item is actionable and if so, if the item
                 # is allowed to activate it.
-                if isinstance(
-                    self._matrix[new_row][new_column], board_items.Actionable
-                ):
+                dest_item = self.item(new_row, new_column)
+                if isinstance(dest_item, board_items.Actionable):
                     if (
                         isinstance(item, board_items.Player)
                         and (
-                            (
-                                self._matrix[new_row][new_column].perm
-                                == constants.PLAYER_AUTHORIZED
-                            )
-                            or (
-                                self._matrix[new_row][new_column].perm
-                                == constants.ALL_CHARACTERS_AUTHORIZED
-                            )
+                            (dest_item.perm == constants.PLAYER_AUTHORIZED)
+                            or (dest_item.perm == constants.ALL_CHARACTERS_AUTHORIZED)
                         )
                     ) or (
                         isinstance(item, board_items.NPC)
                         and (
-                            (
-                                self._matrix[new_row][new_column].perm
-                                == constants.NPC_AUTHORIZED
-                            )
-                            or (
-                                self._matrix[new_row][new_column].perm
-                                == constants.ALL_CHARACTERS_AUTHORIZED
-                            )
+                            (dest_item.perm == constants.NPC_AUTHORIZED)
+                            or (dest_item.perm == constants.ALL_CHARACTERS_AUTHORIZED)
                         )
                     ):
-                        self._matrix[new_row][new_column].activate()
+                        dest_item.activate()
                 # Now we check if the destination contains a pickable item.
                 # Note: I'm not sure why I decided that pickables were not overlappable.
                 pickable_item = self.item(new_row, new_column)
@@ -1164,16 +1149,12 @@ class Board:
                     # And then clear the cell (this is usefull for the next one)
                     self.remove_item(pickable_item)
                 # Finally we check if the destination is overlappable
-                if self._matrix[new_row][new_column].overlappable():
+                if dest_item.overlappable():
                     # And if it is, we check if the destination is restorable
                     if (
-                        not isinstance(
-                            self._matrix[new_row][new_column], board_items.BoardItemVoid
-                        )
-                        and isinstance(
-                            self._matrix[new_row][new_column], board_items.Immovable
-                        )
-                        and self._matrix[new_row][new_column].restorable()
+                        not isinstance(dest_item, board_items.BoardItemVoid)
+                        and isinstance(dest_item, board_items.Immovable)
+                        and dest_item.restorable()
                     ):
                         # If so, we save the item on the hidden layer
                         self._overlapped_matrix[new_row][new_column] = self._matrix[
@@ -1181,7 +1162,7 @@ class Board:
                         ][new_column]
                     if (
                         item.sprixel is not None
-                        and self._matrix[new_row][new_column].sprixel is not None
+                        and dest_item.sprixel is not None
                         and item.sprixel.is_bg_transparent
                     ):
                         item.sprixel.bg_color = self._matrix[new_row][
