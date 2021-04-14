@@ -189,7 +189,7 @@ class Dialog(object):
                 "Dialog.user_input = value: value needs to be a str."
             )
 
-    def show():
+    def show(self):
         """
         This is a virtual method, calling it directly will only raise a
         NotImplementedError. Each class that inheritate Dialog needs to implement
@@ -322,7 +322,7 @@ class Box(object):
         vert_sprix = self._cache["dialog_vertical_border"]
         horiz_sprix = self._cache["dialog_horizontal_border"]
         buffer[row][column] = self._cache["top_right_corner"]
-        if self._cache["title"] == "":
+        if self._cache["title"].text == "":
             for c in range(column + 1, column + self.__width - 1):
                 buffer[row][c] = horiz_sprix
         else:
