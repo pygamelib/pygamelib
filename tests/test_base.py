@@ -118,6 +118,7 @@ class TestBase(unittest.TestCase):
             core.Color(255, 255, 0),
             pgl_base.Style.BRIGHT,
         )
+        self.assertEqual(text.length, 9)
         t = pgl_base.Console.instance()
         self.assertEqual(
             text.__repr__(),
