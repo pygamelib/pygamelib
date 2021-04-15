@@ -645,17 +645,18 @@ class ProgressDialog(Dialog):
             self.__destroy = True
 
 
-class VerticalProgressBar(object):
-    def __init__(
-        self,
-        value=0,
-        maximum=100,
-        height=10,
-        progress_marker="#",
-        empty_marker=" ",
-        config=None,
-    ):
-        super().__init__()
+# TODO: Well... code this class
+# class VerticalProgressBar(object):
+#     def __init__(
+#         self,
+#         value=0,
+#         maximum=100,
+#         height=10,
+#         progress_marker="#",
+#         empty_marker=" ",
+#         config=None,
+#     ):
+#         super().__init__()
 
 
 class MessageDialog(Dialog):
@@ -764,6 +765,7 @@ class MessageDialog(Dialog):
                 elif hasattr(data, "length"):
                     padding = int((self.__width - data.length - 2) / 2)
             if isinstance(self.__cache["data"][idx], core.Sprixel):
+                # TODO: Manage the Sprixels that have a size > 1
                 buffer[row + offset + idx][column + offset + padding] = self.__cache[
                     "data"
                 ][idx]
@@ -785,7 +787,7 @@ class MessageDialog(Dialog):
                     buffer_width,
                 )
 
-    def show(self) -> None:
+    def show(self) -> None:  # pragma: no cover
         screen = self.config.game.screen
         game = self.config.game
         term = game.terminal
@@ -809,7 +811,7 @@ class LineInputDialog(Dialog):
     ) -> None:
         super().__init__(config=config)
         self.__label = label
-        self.__default = str(default)
+        self.__default = default
         self.__filter = filter
         if self.__label is None or not (
             isinstance(self.__label, base.Text) or type(self.__label) is str
@@ -828,24 +830,24 @@ class LineInputDialog(Dialog):
         self.user_input = self.__default
 
     @property
-    def label(self):
+    def label(self) -> base.Text:
         return self.__label
 
     @label.setter
-    def label(self, value):
+    def label(self, value) -> None:
         if isinstance(value, base.Text):
-            self.__label = value.text
-            self._cache["label"] = value
-        elif type(value) is str:
             self.__label = value
-            self._cache["label"].text = value
+        elif type(value) is str:
+            self.__label = base.Text(value)
         else:
             raise base.PglInvalidTypeException(
                 "LineInputDialog.label: value needs to be a str or pygamelib.base.Text."
             )
         self.config.game.screen.trigger_rendering()
 
-    def render_to_buffer(self, buffer, row, column, buffer_height, buffer_width):
+    def render_to_buffer(
+        self, buffer, row, column, buffer_height, buffer_width
+    ) -> None:
         offset = 0
         if not self.config.borderless_dialog:
             offset = 1
@@ -861,7 +863,7 @@ class LineInputDialog(Dialog):
             buffer, row + 1 + offset, column + offset, buffer_height, buffer_width
         )
 
-    def show(self):
+    def show(self):  # pragma: no cover
         screen = self.config.game.screen
         game = self.config.game
         term = game.terminal
@@ -984,7 +986,7 @@ class MultiLineInputDialog(Dialog):
             lc += 2
             fidx += 1
 
-    def show(self):
+    def show(self):  # pragma: no cover
         screen = self.config.game.screen
         game = self.config.game
         term = game.terminal
@@ -1293,7 +1295,7 @@ class FileDialog(Dialog):
         for c in range(tidx, self.__width - 1):
             buffer[row + self.__height][column + c] = " "
 
-    def show(self) -> Path:
+    def show(self) -> Path:  # pragma: no cover
         screen = self.config.game.screen
         game = self.config.game
         term = game.terminal
@@ -1441,6 +1443,7 @@ class GridSelector(object):
     def max_height(self, value):
         if type(value) is int:
             self.__max_height = value
+            self._build_cache()
         else:
             raise base.PglInvalidTypeException(
                 "GridSelector.max_height = value: 'value' must be an int. "
@@ -1455,6 +1458,7 @@ class GridSelector(object):
     def max_width(self, value):
         if type(value) is int:
             self.__max_width = value
+            self._build_cache()
         else:
             raise base.PglInvalidTypeException(
                 "GridSelector.max_width = value: 'value' must be an int. "
@@ -1661,7 +1665,7 @@ class GridSelectorDialog(Dialog):
                 "GridSelector object. "
             )
 
-    def show(self):
+    def show(self):  # pragma: no cover
         screen = self.config.game.screen
         game = self.config.game
         term = game.terminal
@@ -1748,12 +1752,14 @@ class ColorPicker(object):
 
     @property
     def color(self):
-        return self.__color
+        return core.Color(self.__red, self.__green, self.__blue)
 
     @color.setter
     def color(self, value):
         if isinstance(value, core.Color):
-            self.__color = value
+            self.__red = value.r
+            self.__green = value.g
+            self.__blue = value.b
         else:
             raise base.PglInvalidTypeException(
                 'ColorPicker.color = value: "value" needs to be a Color object.'
@@ -1894,7 +1900,7 @@ class ColorPickerDialog(Dialog):
             buffer, row + offset, column + offset, buffer_height, buffer_width
         )
 
-    def show(self):
+    def show(self):  # pragma: no cover
         screen = self.config.game.screen
         game = self.config.game
         term = game.terminal
