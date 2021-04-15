@@ -3,6 +3,7 @@ from pygamelib.gfx import core, ui
 from pygamelib import constants, engine
 import unittest
 from pathlib import Path
+import numpy as np
 
 
 class FakeText:
@@ -17,6 +18,14 @@ class TestBase(unittest.TestCase):
     def setUp(self):
         super().setUp()
         self.game = engine.Game.instance()
+        # This is a dirty hack for CircleCI as it returns a 0x0 screen size.
+        if self.game.screen.width <= 0 or self.game.screen.height <= 0:
+            self.game.screen._display_buffer = np.array(
+                [[core.Sprixel(" ") for i in range(0, 50, 1)] for j in range(0, 50, 1)]
+            )
+            self.game.screen._screen_buffer = np.array(
+                [[core.Sprixel(" ") for i in range(0, 50, 1)] for j in range(0, 50, 1)]
+            )
 
     def test_uiconfig(self):
         with self.assertRaises(pgl_base.PglInvalidTypeException):
