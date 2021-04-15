@@ -157,7 +157,7 @@ class TestBase(unittest.TestCase):
             adaptive_height=False,
             config=conf,
         )
-        self.game.screen.place(md, 10, 0)
+        self.game.screen.place(md, 0, 0)
         self.game.screen.update()
         md.add_line("test 2", constants.ALIGN_RIGHT)
         md.add_line("test 3", constants.ALIGN_CENTER)
@@ -200,7 +200,7 @@ class TestBase(unittest.TestCase):
         self.assertEqual(ld.label.text, "test 3")
         with self.assertRaises(pgl_base.PglInvalidTypeException):
             ld.label = 3
-        self.game.screen.place(ld, 10, 10)
+        self.game.screen.place(ld, 0, 0)
         self.game.screen.update()
 
     def test_multiline_input_dialog(self):
@@ -242,7 +242,7 @@ class TestBase(unittest.TestCase):
         with self.assertRaises(pgl_base.PglInvalidTypeException):
             mld.fields = 42
 
-        self.game.screen.place(mld, 20, 10)
+        self.game.screen.place(mld, 0, 0)
         self.game.screen.update()
 
     def test_file_dialog(self):
