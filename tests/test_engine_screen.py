@@ -141,11 +141,24 @@ class TestBase(unittest.TestCase):
                 0,
             )
         )
+        self.assertIsNone(
+            s.place(
+                Sprite(
+                    sprixels=[
+                        [Sprixel("##"), Sprixel("##")],
+                        [Sprixel("###"), Sprixel("##")],
+                    ]
+                ),
+                8,
+                0,
+            )
+        )
+        s.force_render()
         with self.assertRaises(base.PglInvalidTypeException):
             s.place(None, 0, 0)
         with self.assertRaises(base.PglInvalidTypeException):
             s.place(1, 0, 0)
-        s.update()
+        s.force_update()
         t.text = "update"
         self.assertIsNone(
             s.place(sprites_panda["panda"], screen_height - 2, screen_width - 2)
@@ -215,6 +228,20 @@ class TestBase(unittest.TestCase):
         self.assertIsNone(s.update())
         self.assertIsNone(s.delete(0, 0))
         self.assertIsNone(s.update())
+        self.assertIsNone(
+            functions.render_string_to_buffer(
+                "hello",
+                s._display_buffer,
+                0,
+                0,
+                s._display_buffer.shape[0],
+                s._display_buffer.shape[1],
+            )
+        )
+        # This test has nothing to do here... but I'm lazy.
+        self.assertEqual(5, functions.clamp(5, 0, 10))
+        self.assertEqual(0, functions.clamp(-5, 0, 10))
+        self.assertEqual(10, functions.clamp(15, 0, 10))
 
 
 if __name__ == "__main__":
