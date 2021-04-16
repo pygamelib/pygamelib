@@ -8,7 +8,6 @@ __docformat__ = "restructuredtext"
    pygamelib.gfx.ui.Box
    pygamelib.gfx.ui.ProgressBar
    pygamelib.gfx.ui.ProgressDialog
-   pygamelib.gfx.ui.VerticalProgressBar
    pygamelib.gfx.ui.MessageDialog
    pygamelib.gfx.ui.LineInputDialog
    pygamelib.gfx.ui.MultiLineInputDialog
@@ -160,7 +159,7 @@ class Dialog(object):
     @property
     def config(self):
         """
-        Access the config object (read/write).
+        Get and set the config object (:class:`UiConfig`).
         """
         return self._config
 
@@ -189,6 +188,9 @@ class Dialog(object):
                 "Dialog.user_input = value: value needs to be a str."
             )
 
+    def _store_position(self, row, column):
+        self._position = [row, column]
+
     def show(self):
         """
         This is a virtual method, calling it directly will only raise a
@@ -199,6 +201,13 @@ class Dialog(object):
 
 
 class Box(object):
+    """
+    A simple object to draw a box on screen.
+
+    The Box object's looks and feel is highly configurable through the :class:`UiConfig`
+    object.
+    """
+
     def __init__(
         self,
         width: int,
@@ -207,8 +216,38 @@ class Box(object):
         config: UiConfig = None,
         fill: bool = False,
         filling_sprixel: core.Sprixel = None,
-        title_alignement: int = constants.ALIGN_CENTER,
+        title_alignment: int = constants.ALIGN_CENTER,
     ):
+        """
+        The box constructor takes the following parameters.
+
+        :param width: The width of the box.
+        :type width: int
+        :param height: The height of the box.
+        :type height: int
+        :param title: The title of the box (encased in the top border).
+        :type title: str | :class:`~base.Text`
+        :param config: The configuration object.
+        :type config: :class:`UiConfig`
+        :param fill: A tag to tell the box object to fill its inside (or not).
+        :type fill: bool
+        :param filling_sprixel: If fill is True, the filling Sprixel is used to fill the
+           inside of the box.
+        :type filling_sprixel: :class:`~core.Sprixel`
+        :param title_alignment: The alignment of the title in the top bar. It is a
+           constant from the constant module and can be ALIGN_LEFT, ALIGN_RIGHT and
+           ALIGN_CENTER. THIS FEATURE IS NOT YET IMPLEMENTED.
+        :type title_alignment: int
+
+        .. TODO:: Implement the title alignment.
+
+        Example::
+
+            config = UiConfig(bg_color=None)
+            box = Box(30, 10, 'This is a box')
+            screen.place(box, 20, 20)
+            screen.update()
+        """
         super().__init__()
         self.__width = width
         self.__height = height
@@ -217,7 +256,7 @@ class Box(object):
         self.__filling_sprixel = filling_sprixel
         self.__config = config
         self._cache = {}
-        self.__title_alignement = title_alignement
+        self.__title_alignment = title_alignment
         self._build_cache()
 
     def _build_cache(self):
@@ -263,11 +302,14 @@ class Box(object):
         self._cache["title_sprite"] = core.Sprite.from_text(self._cache["title"])
 
     @property
-    def config(self):
+    def config(self) -> UiConfig:
+        """
+        Get and set the config object (:class:`UiConfig`).
+        """
         return self.__config
 
     @config.setter
-    def config(self, value):
+    def config(self, value: UiConfig) -> None:
         if isinstance(value, UiConfig):
             self.__config = value
             self._build_cache()
@@ -278,10 +320,13 @@ class Box(object):
 
     @property
     def title(self):
+        """
+        Get and set the title, only accepts str or :class:`~base.Text`.
+        """
         return self.__title
 
     @title.setter
-    def title(self, value):
+    def title(self, value) -> None:
         if isinstance(value, base.Text) or type(value) is str:
             self.__title = value
             self._build_cache()
@@ -291,11 +336,14 @@ class Box(object):
             )
 
     @property
-    def width(self):
+    def width(self) -> int:
+        """
+        Get and set the width of the box, only accept int.
+        """
         return self.__width
 
     @width.setter
-    def width(self, value):
+    def width(self, value: int) -> None:
         if type(value) is int:
             self.__width = value
             self._build_cache()
@@ -305,11 +353,14 @@ class Box(object):
             )
 
     @property
-    def height(self):
+    def height(self) -> int:
+        """
+        Get and set the height of the box, only accept int.
+        """
         return self.__height
 
     @height.setter
-    def height(self, value):
+    def height(self, value: int) -> None:
         if type(value) is int:
             self.__height = value
             self._build_cache()
@@ -318,7 +369,25 @@ class Box(object):
                 "Box.width = value: value needs to be an int."
             )
 
-    def render_to_buffer(self, buffer, row, column, buffer_height, buffer_width):
+    def render_to_buffer(
+        self, buffer, row, column, buffer_height, buffer_width
+    ) -> None:
+        """Render the box into a display buffer (not a screen buffer).
+
+        This method is automatically called by :func:`pygamelib.engine.Screen.render`.
+
+        :param buffer: A screen buffer to render the item into.
+        :type buffer: numpy.array
+        :param row: The row to render in.
+        :type row: int
+        :param column: The column to render in.
+        :type column: int
+        :param height: The total height of the display buffer.
+        :type height: int
+        :param width: The total width of the display buffer.
+        :type width: int
+
+        """
         vert_sprix = self._cache["dialog_vertical_border"]
         horiz_sprix = self._cache["dialog_horizontal_border"]
         buffer[row][column] = self._cache["top_right_corner"]
@@ -372,26 +441,6 @@ class ProgressBar(object):
     """
     A simple horizontal progress bar widget.
 
-    :param value: The initial value parameter. It represents the progression.
-    :type value: int
-    :param maximum: The maximum value held by the progress bar. Any value over the
-       maximum is ignored.
-    :type maximum: int
-    :param width: The width of the progress bar widget (in number of screen cells).
-    :type width: int
-
-    Example::
-
-        # Create a default progress bar with the default configuration
-        progress_bar = ProgressBar(config=UiConfig.instance())
-        # Place the progress bar in the middle of the screen
-        screen.place(
-            progress_bar, screen.vcenter, screen.hcenter - int(progress_bar.width)
-        )
-        for progress in range(progress_bar.maximum + 1):
-            # Do something useful
-            progress_bar.value = progress
-            screen.update()
     """
 
     def __init__(
@@ -403,6 +452,47 @@ class ProgressBar(object):
         empty_marker=" ",
         config=None,
     ):
+        """
+        :param value: The initial value parameter. It represents the progression.
+        :type value: int
+        :param maximum: The maximum value held by the progress bar. Any value over the
+           maximum is ignored.
+        :type maximum: int
+        :param width: The width of the progress bar widget (in number of screen cells).
+        :type width: int
+        :param progress_marker: The progress marker is displayed on progression. It is
+           the sprixel that fills the bar. Please see below.
+        :type progress_marker: :class:`core.Sprixel`
+        :param empty_marker: The empty marker is displayed instead of the progress
+           marker when the bar should be empty (when the value is too low to fill the
+           bar for example). Please see below.
+        :type empty_marker: :class:`core.Sprixel`
+        :param config: The configuration object.
+        :type config: :class:`UiConfig`
+
+        Here is a representation of were the progress and empty markers are used.
+        ::
+
+            Progress marker
+               |
+            [=====--------------]
+                       |
+                    Empty marker
+
+
+        Example::
+
+            # Create a default progress bar with the default configuration
+            progress_bar = ProgressBar(config=UiConfig.instance())
+            # Place the progress bar in the middle of the screen
+            screen.place(
+                progress_bar, screen.vcenter, screen.hcenter - int(progress_bar.width)
+            )
+            for progress in range(progress_bar.maximum + 1):
+                # Do something useful
+                progress_bar.value = progress
+                screen.update()
+        """
         super().__init__()
         self.__value = value
         self.__maximum = maximum
@@ -429,6 +519,9 @@ class ProgressBar(object):
 
     @property
     def config(self):
+        """
+        Get and set the config object (:class:`UiConfig`).
+        """
         return self.__config
 
     @config.setter
@@ -443,17 +536,22 @@ class ProgressBar(object):
 
     @property
     def progress_marker(self):
+        """
+        Get and set the progress marker, preferrably a :class:`~core.Sprixel` but could
+        be a str.
+        """
         return self.__progress_marker
 
     @progress_marker.setter
     def progress_marker(self, value):
-        if isinstance(value, base.Text):
-            self.__progress_marker = value.text
+        if isinstance(value, core.Sprixel):
+            self.__progress_marker = value
             self._cache["pb_progress"] = value
+        elif isinstance(value, base.Text):
+            self.__progress_marker = value.text
             self._build_cache()
         elif type(value) is str:
             self.__progress_marker = value
-            self._cache["pb_progress"].text = value
             self._build_cache()
         else:
             raise base.PglInvalidTypeException(
@@ -464,17 +562,22 @@ class ProgressBar(object):
 
     @property
     def empty_marker(self):
+        """
+        Get and set the empty marker, preferrably a :class:`~core.Sprixel` but could
+        be a str.
+        """
         return self.__progress_marker
 
     @empty_marker.setter
     def empty_marker(self, value):
-        if isinstance(value, base.Text):
-            self.__empty_marker = value.text
+        if isinstance(value, core.Sprixel):
+            self.__empty_marker = value
             self._cache["pb_empty"] = value
+        elif isinstance(value, base.Text):
+            self.__empty_marker = value.text
             self._build_cache()
         elif type(value) is str:
             self.__empty_marker = value
-            self._cache["pb_empty"].text = value
             self._build_cache()
         else:
             raise base.PglInvalidTypeException(
@@ -485,6 +588,9 @@ class ProgressBar(object):
 
     @property
     def value(self):
+        """
+        Get and set the current progress value, it has to be an int.
+        """
         return self.__value
 
     @value.setter
@@ -499,6 +605,9 @@ class ProgressBar(object):
 
     @property
     def maximum(self):
+        """
+        Get and set the maximum possible progress, it has to be an int.
+        """
         return self.__maximum
 
     @maximum.setter
@@ -512,6 +621,22 @@ class ProgressBar(object):
         self.__config.game.screen.trigger_rendering()
 
     def render_to_buffer(self, buffer, row, column, buffer_height, buffer_width):
+        """Render the object into a display buffer (not a screen buffer).
+
+        This method is automatically called by :func:`pygamelib.engine.Screen.render`.
+
+        :param buffer: A screen buffer to render the item into.
+        :type buffer: numpy.array
+        :param row: The row to render in.
+        :type row: int
+        :param column: The column to render in.
+        :type column: int
+        :param height: The total height of the display buffer.
+        :type height: int
+        :param width: The total width of the display buffer.
+        :type width: int
+
+        """
         prog = min(int((self.__value * self.__width) / self.__maximum), self.__width)
         for c in range(0, prog):
             buffer[row][column + c] = self._cache["pb_progress"]
@@ -520,6 +645,19 @@ class ProgressBar(object):
 
 
 class ProgressDialog(Dialog):
+    """
+    ProgressDialog is a progress bar widget as a dialog (or popup). The main difference
+    with a progress bar with borders is that it is automatically rendered on the second
+    pass by the screen object (therefore, is visible on top of other graphical elements
+    ).
+
+    This dialog requires external interactions so it is the only dialog widget that does
+    not provide a useful show() implementation. As a matter of fact, show do nothing at
+    all.
+
+    ProgressDialog is mainly a label, a box and a :class:`ProgressBar` bundled together.
+    """
+
     def __init__(
         self,
         label=base.Text("Progress dialog"),
@@ -532,6 +670,50 @@ class ProgressDialog(Dialog):
         destroy_on_complete=True,
         config=None,
     ):
+        """
+        The constructor accepts the following parameters.
+
+        :param label: A label to display on top of the progress bar.
+        :type label: str | :class:`base.Text`
+        :param value: The initial value parameter. It represents the progression.
+        :type value: int
+        :param maximum: The maximum value held by the progress bar. Any value over the
+           maximum is ignored.
+        :type maximum: int
+        :param width: The width of the progress bar widget (in number of screen cells).
+        :type width: int
+        :param progress_marker: The progress marker is displayed on progression. It is
+           the sprixel that fills the bar. Please see below.
+        :type progress_marker: :class:`core.Sprixel`
+        :param empty_marker: The empty marker is displayed instead of the progress
+           marker when the bar should be empty (when the value is too low to fill the
+           bar for example). Please see below.
+        :type empty_marker: :class:`core.Sprixel`
+        :param adaptive_width: If True, the dialog will automatically adapt to the size
+           of the label.
+        :type adaptive_width: bool
+        :param destroy_on_complete: If True, the dialog will remove itself from the
+           screen when complete (i.e: when value == maximum)
+        :type destroy_on_complete:
+        :param config: The configuration object.
+        :type config: :class:`UiConfig`
+
+        Example::
+
+            # Create a default progress bar with the default configuration
+            progress_dial = ProgressDialog(
+                "Please wait while I'm doing something super duper important",
+                config=UiConfig.instance(),
+            )
+            # Place the progress bar in the middle of the screen
+            screen.place(
+                progress_dial, screen.vcenter, screen.hcenter - int(progress_bar.width)
+            )
+            for progress in range(progress_dial.maximum + 1):
+                # Do something useful
+                progress_dial.value = progress
+                screen.update()
+        """
         super().__init__(config=config)
         self.__label = label
         self.__value = value
@@ -571,6 +753,9 @@ class ProgressDialog(Dialog):
 
     @property
     def label(self):
+        """
+        Get and set the label of the dialog, it has to be a str or :class:`base.Text`.
+        """
         return self.__label
 
     @label.setter
@@ -591,6 +776,9 @@ class ProgressDialog(Dialog):
 
     @property
     def value(self):
+        """
+        Get and set the current progress value, it has to be an int.
+        """
         return self.__value
 
     @value.setter
@@ -606,6 +794,9 @@ class ProgressDialog(Dialog):
 
     @property
     def maximum(self):
+        """
+        Get and set the maximum possible progress, it has to be an int.
+        """
         return self.__maximum
 
     @maximum.setter
@@ -620,6 +811,22 @@ class ProgressDialog(Dialog):
         self.config.game.screen.trigger_rendering()
 
     def render_to_buffer(self, buffer, row, column, buffer_height, buffer_width):
+        """Render the object into a display buffer (not a screen buffer).
+
+        This method is automatically called by :func:`pygamelib.engine.Screen.render`.
+
+        :param buffer: A screen buffer to render the item into.
+        :type buffer: numpy.array
+        :param row: The row to render in.
+        :type row: int
+        :param column: The column to render in.
+        :type column: int
+        :param height: The total height of the display buffer.
+        :type height: int
+        :param width: The total width of the display buffer.
+        :type width: int
+
+        """
         if self.__destroy:
             self.config.game.screen.delete(row, column)
         offset = 0
@@ -644,6 +851,13 @@ class ProgressDialog(Dialog):
         if self.destroy_on_complete and self.__value == self.__maximum:
             self.__destroy = True
 
+    def show(self):
+        """
+        The show method does nothing in the ProgressDialog. It is a notable exception
+        and the only dialog widget in the UI module to do that.
+        """
+        pass
+
 
 # TODO: Well... code this class
 # class VerticalProgressBar(object):
@@ -660,29 +874,98 @@ class ProgressDialog(Dialog):
 
 
 class MessageDialog(Dialog):
+    """
+    The message dialog is a popup that can display multiple lines of text.
+
+    It supports formatted text (:class:`base.Text`), python strings,
+    :class:`core.Sprixel`, :class:`core.Sprite` and more generally anything that can
+    be rendered on screen (i.e: posess a render_to_buffer(self, buffer, row, column,
+    buffer_height, buffer_width) method).
+
+    Each line can be aligned separately using :py:const:`constants.ALIGN_RIGHT`,
+    :py:const:`constants.ALIGN_LEFT` or :py:const:`constants.ALIGN_CENTER`. Please see
+    :meth:`add_line`.
+
+    It also implements the `show()` virtual method of :class:`Dialog`.
+    This method is blocking and has its own event loop. It does not return anything.
+
+    ESC or ENTER close the dialog.
+
+    For the moment, the full message dialog needs to be displayed on screen. There is no
+    pagination, but it is going to be implemented in a future release.
+
+    As all dialogs it also has a `user_input` property that reflects the user input. It
+    is not used here however.
+
+    Like all dialogs, it is automatically destroyed on exit of the :meth:`show()`
+    method. It is also deleted from the screen buffer.
+
+    .. TODO:: Implements pagination.
+
+    """
+
     def __init__(
         self,
         data: list = None,
         width: int = 20,
         height: int = None,
         adaptive_height: bool = True,
-        alignement: int = None,
+        alignment: int = None,
         config: UiConfig = None,
     ) -> None:
+        """
+        :param data: A list of data to display inside the MessageDialog. Elements in
+           the list can contain various data types like :class:`base.Text`, python
+           strings, :class:`core.Sprixel`, :class:`core.Sprite`
+        :type data: list
+        :param width: The width of the message dialog widget (in number of screen
+           cells).
+        :type width: int
+        :param height: The height of the message dialog widget (in number of screen
+           cells).
+        :type height: int
+        :param adaptive_height: If True, the dialog height will be automatically adapted
+           to match the content size.
+        :type adaptive_height: bool
+        :param alignment: The alignment to apply to the data parameter. Please use the
+           constants.ALIGN_* constants. The default value is
+           :py:const:`constants.ALIGN_LEFT`
+        :type alignment: int
+        :param config: The configuration object.
+        :type config: :class:`UiConfig`
+
+        Example::
+
+            msg = MessageDialog(
+                [
+                    base.Text('HELP', core.Color(0,125,255), style=constants.BOLD),
+                    base.Text('----', core.Color(0,125,255), style=constants.BOLD),
+                    '',
+                ],
+                20,
+                5,
+                True,
+                constants.ALIGN_CENTER,
+            )
+            msg.add_line('This is aligned on the right', constants.ALGIN_RIGHT)
+            msg.add_line('This is aligned on the left')
+            screen.place(msg, 10, 10)
+            msg.show()
+
+        """
         super().__init__(config=config)
-        if alignement is None:
-            alignement = constants.ALIGN_LEFT
+        if alignment is None:
+            alignment = constants.ALIGN_LEFT
         if adaptive_height is False and height is None:
             adaptive_height = True
         self.__cache = {"data": []}
-        # TODO: add height and width?
         self.__width = width
         self.__height = height
         self.__adaptive_height = adaptive_height
         self.__data = list()
         if data is not None:
             for d in data:
-                self.add_line(d, alignement)
+                self.add_line(d, alignment)
 
     def _build_cache(self) -> None:
         self.__cache = {"data": []}
@@ -706,7 +989,10 @@ class MessageDialog(Dialog):
             )
 
     @property
-    def height(self):
+    def height(self) -> int:
+        """
+        Get and set the height of the message dialog, it has to be an int.
+        """
         if self.__adaptive_height:
             h = 0
             if not self.config.borderless_dialog:
@@ -716,7 +1002,7 @@ class MessageDialog(Dialog):
             return self.__height
 
     @height.setter
-    def height(self, value):
+    def height(self, value: int):
         if type(value) is int:
             self.__height = value
         else:
@@ -725,24 +1011,74 @@ class MessageDialog(Dialog):
                 f"{type(value)}"
             )
 
-    def add_line(self, data, alignement=constants.ALIGN_LEFT) -> None:
+    def add_line(self, data, alignment=constants.ALIGN_LEFT) -> None:
+        """
+        Add a line to the message dialog.
+
+        The line can be any type of data that can be rendered on screen. This means that
+        any object that expose a render_to_buffer(self, buffer, row, column,
+        buffer_height, buffer_width) method can be added as a "line".
+        Python strings are also obviously accepted.
+
+        Here is a non-exhaustive list of supported types:
+
+         * :class:`base.Text`,
+         * python strings (str),
+         * :class:`core.Sprixel`,
+         * :class:`core.Sprite`,
+         * most board items,
+         * etc.
+
+        :param data: The data to add to the message dialog.
+        :type data: various
+        :param alignment: The alignment of the line to add.
+        :type alignment: :py:const:`constants.ALIGN_RIGHT` |
+           :py:const:`constants.ALIGN_LEFT` | :py:const:`constants.ALIGN_CENTER`
+
+        Example::
+
+            msg.add_line(
+                base.Text(
+                    'This is centered and very red',
+                    core.Color(255,0,0),
+                ),
+                constants.ALGIN_CENTER,
+            )
+        """
         if (
             isinstance(data, core.Sprixel)
             or type(data) is str
             or isinstance(data, base.Text)
             or hasattr(data, "render_to_buffer")
         ):
-            self.__data.append([data, alignement])
+            self.__data.append([data, alignment])
             self._build_cache()
         else:
             raise base.PglInvalidTypeException(
-                f"MessageDialog.add_line(data, alignement): 'data' type {type(data)} is"
+                f"MessageDialog.add_line(data, alignment): 'data' type {type(data)} is"
                 " not supported"
             )
 
     def render_to_buffer(
         self, buffer, row, column, buffer_height, buffer_width
     ) -> None:
+        """Render the object into a display buffer (not a screen buffer).
+
+        This method is automatically called by :func:`pygamelib.engine.Screen.render`.
+
+        :param buffer: A screen buffer to render the item into.
+        :type buffer: numpy.array
+        :param row: The row to render in.
+        :type row: int
+        :param column: The column to render in.
+        :type column: int
+        :param height: The total height of the display buffer.
+        :type height: int
+        :param width: The total width of the display buffer.
+        :type width: int
+
+        """
+        self._store_position(row, column)
         render_string = functions.render_string_to_buffer
         offset = 0
         if not self.config.borderless_dialog:
@@ -752,14 +1088,14 @@ class MessageDialog(Dialog):
             )
         for idx in range(len(self.__cache["data"])):
             padding = 0
-            alignement = self.__data[idx][1]
+            alignment = self.__data[idx][1]
             data = self.__data[idx][0]
-            if alignement == constants.ALIGN_RIGHT:
+            if alignment == constants.ALIGN_RIGHT:
                 if type(data) is str:
                     padding = self.__width - len(data) - 2
                 elif hasattr(data, "length"):
                     padding = self.__width - data.length - 2
-            elif alignement == constants.ALIGN_CENTER:
+            elif alignment == constants.ALIGN_CENTER:
                 if type(data) is str:
                     padding = int((self.__width - len(data) - 2) / 2)
                 elif hasattr(data, "length"):
@@ -788,6 +1124,17 @@ class MessageDialog(Dialog):
                 )
 
     def show(self) -> None:  # pragma: no cover
+        """
+        Show the dialog and execute the event loop.
+        Until this method returns, all keyboards event are processed by the local event
+        loop. This is also true if called from the main event loop.
+
+        This event loop returns None.
+
+        Example::
+
+            msg.show()
+        """
         screen = self.config.game.screen
         game = self.config.game
         term = game.terminal
@@ -798,10 +1145,32 @@ class MessageDialog(Dialog):
                 if inkey.name == "KEY_ENTER" or inkey.name == "KEY_ESCAPE":
                     break
             inkey = term.inkey(timeout=0.1)
+        screen.delete(self._position[0], self._position[1])
         return None
 
 
 class LineInputDialog(Dialog):
+    """
+    The LineInputDialog allows the user to enter and edit a single line of text.
+
+    This dialog can be configured to accept either anything printable or only digits.
+
+    The show() method returns the user input.
+
+    **Key mapping**:
+
+     * ESC: set the user input to "" and exit from the :meth:`show()` method.
+     * ENTER: Exit from the :meth:`show()` method. Returns the user input.
+     * BACKSPACE / DELETE: delete a character (both keys have the same result)
+     * All other keys input characters in the input field.
+
+    In all cases, when the dialog is closed, the user input is returned.
+
+    Like all dialogs, it is automatically destroyed on exit of the :meth:`show()`
+    method. It is also deleted from the screen buffer.
+
+    """
+
     def __init__(
         self,
         label="Input a value:",
@@ -809,6 +1178,24 @@ class LineInputDialog(Dialog):
         filter=constants.PRINTABLE_FILTER,
         config=None,
     ) -> None:
+        """
+        :param label: The label of the dialog (usually a one line instruction).
+        :type label: str | :class:`base.Text`
+        :param default: The default value in the input field.
+        :type default: str
+        :param filter: Sets the type of accepted input. It comes from the
+           :mod:`constants` module.
+        :type filter: :py:const:`constants.PRINTABLE_FILTER` |
+           :py:const:`constants.INTEGER_FILTER`
+        :param config: The configuration object.
+        :type config: :class:`UiConfig`
+
+        Example::
+
+            line_input = LineInputDialog("Enter the name of your pet:", "Stupido")
+            screen.place(line_input, 10, 10)
+            pet_name = line_input.show()
+        """
         super().__init__(config=config)
         self.__label = label
         self.__default = default
@@ -831,6 +1218,9 @@ class LineInputDialog(Dialog):
 
     @property
     def label(self) -> base.Text:
+        """
+        Get and set the label of the dialog, it has to be a str or :class:`base.Text`.
+        """
         return self.__label
 
     @label.setter
@@ -848,6 +1238,23 @@ class LineInputDialog(Dialog):
     def render_to_buffer(
         self, buffer, row, column, buffer_height, buffer_width
     ) -> None:
+        """Render the object into a display buffer (not a screen buffer).
+
+        This method is automatically called by :func:`pygamelib.engine.Screen.render`.
+
+        :param buffer: A screen buffer to render the item into.
+        :type buffer: numpy.array
+        :param row: The row to render in.
+        :type row: int
+        :param column: The column to render in.
+        :type column: int
+        :param height: The total height of the display buffer.
+        :type height: int
+        :param width: The total width of the display buffer.
+        :type width: int
+
+        """
+        self._store_position(row, column)
         offset = 0
         if not self.config.borderless_dialog:
             offset = 1
@@ -864,6 +1271,17 @@ class LineInputDialog(Dialog):
         )
 
     def show(self):  # pragma: no cover
+        """
+        Show the dialog and execute the event loop.
+        Until this method returns, all keyboards event are processed by the local event
+        loop. This is also true if called from the main event loop.
+
+        This event loop returns the either "" or what is displayed in the input field.
+
+        Example::
+
+            value = line_input.show()
+        """
         screen = self.config.game.screen
         game = self.config.game
         term = game.terminal
@@ -887,10 +1305,34 @@ class LineInputDialog(Dialog):
                     screen.trigger_rendering()
                     screen.update()
             inkey = term.inkey(timeout=0.1)
+        screen.delete(self._position[0], self._position[1])
         return self.user_input
 
 
 class MultiLineInputDialog(Dialog):
+    """
+    The MultiLineInputDialog behave essentially like the :class:`LineInputDialog` but is
+    more configurable to allow the user to enter and edit a multiple lines of text.
+
+    Each field of this dialog can be individually configured to accept either anything
+    printable or only digits.
+
+    The show() method returns the user input.
+
+    **Key mapping**:
+
+     * ESC: set the user input to "" and exit from the :meth:`show()` method.
+     * ENTER: Exit from the :meth:`show()` method. Returns the user input.
+     * BACKSPACE / DELETE: delete a character (both keys have the same result).
+     * TAB: cycle through the fields.
+     * All other keys input characters in the input field.
+
+    In all cases, when the dialog is closed, the user input is returned.
+
+    Like all dialogs, it is automatically destroyed on exit of the :meth:`show()`
+    method. It is also deleted from the screen buffer.
+    """
+
     def __init__(
         self,
         fields=[
@@ -902,6 +1344,46 @@ class MultiLineInputDialog(Dialog):
         ],
         config=None,
     ) -> None:
+        """
+        :param fields: A list of dictionnary that represent the fields to present to the
+           user. Please see bellow for a description of the dictionnary.
+        :type fields: list
+        :param config: The configuration object.
+        :type config: :class:`UiConfig`
+
+        The fields needs to be a list that contains dictionaries. Each of the
+        dictionaries needs to contain 3 fields:
+
+         * "label": A one line instruction displayed over the field. This is a string.
+         * "default": A string that is going to pre-fill the input field.
+         * "filter": A filter to configure the acceptable inputs.
+
+        The filters are coming from the constants module and can be either
+        :py:const:`constants.INTEGER_FILTER` or :py:const:`constants.PRINTABLE_FILTER`.
+
+        Example::
+
+            fields = [
+                {
+                    "label": "Enter the height of the new sprite:",
+                    "default": "",
+                    "filter": constants.INTEGER_FILTER,
+                },
+                {
+                    "label": "Enter the width of the new sprite:",
+                    "default": "",
+                    "filter": constants.INTEGER_FILTER,
+                },
+                {
+                    "label": "Enter the name of the new sprite:",
+                    "default": f"Sprite {len(sprite_list)}",
+                    "filter": constants.PRINTABLE_FILTER,
+                },
+            ]
+            multi_input = MultiLineInput(fields, conf)
+            screen.place(multi_input, 10, 10)
+            completed_fields = multi_input.show()
+        """
         super().__init__(config=config)
         self.__fields = fields
         if self.__fields is None or not (type(self.__fields) is list):
@@ -924,6 +1406,10 @@ class MultiLineInputDialog(Dialog):
 
     @property
     def fields(self):
+        """
+        Get and set the fields of the dialog, see the constructor for the format or this
+        list.
+        """
         return self.__fields
 
     @fields.setter
@@ -937,7 +1423,26 @@ class MultiLineInputDialog(Dialog):
         self._build_cache()
         self.config.game.screen.trigger_rendering()
 
-    def render_to_buffer(self, buffer, row, column, buffer_height, buffer_width):
+    def render_to_buffer(
+        self, buffer, row, column, buffer_height, buffer_width
+    ) -> None:
+        """Render the object into a display buffer (not a screen buffer).
+
+        This method is automatically called by :func:`pygamelib.engine.Screen.render`.
+
+        :param buffer: A screen buffer to render the item into.
+        :type buffer: numpy.array
+        :param row: The row to render in.
+        :type row: int
+        :param column: The column to render in.
+        :type column: int
+        :param height: The total height of the display buffer.
+        :type height: int
+        :param width: The total width of the display buffer.
+        :type width: int
+
+        """
+        self._store_position(row, column)
         offset = 0
         max_text_width = 0
         if not self.config.borderless_dialog:
@@ -987,6 +1492,45 @@ class MultiLineInputDialog(Dialog):
             fidx += 1
 
     def show(self):  # pragma: no cover
+        """
+        Show the dialog and execute the event loop.
+        Until this method returns, all keyboards event are processed by the local event
+        loop. This is also true if called from the main event loop.
+
+        This event loop returns a list of dictionaries with the content of each
+        fields. The list of dictionaries is the same than the fields constructor
+        parameter but each key has an additional 'user_input' field that contains the
+        user input.
+
+        If the fields parameter was:
+
+        ::
+
+            [
+                {
+                    "label": "Input a value:",
+                    "default": "",
+                    "filter": constants.PRINTABLE_FILTER,
+                }
+            ]
+
+        The returned value would be:
+
+        ::
+
+            [
+                {
+                    "label": "Input a value:",
+                    "default": "",
+                    "filter": constants.PRINTABLE_FILTER,
+                    "user_input": "some input",
+                }
+            ]
+
+        Example::
+
+            fields = multi_input.show()
+        """
         screen = self.config.game.screen
         game = self.config.game
         term = game.terminal
@@ -1026,10 +1570,16 @@ class MultiLineInputDialog(Dialog):
                     screen.trigger_rendering()
                     screen.update()
             inkey = term.inkey(timeout=0.1)
+        screen.delete(self._position[0], self._position[1])
         return self.__fields
 
 
 class FileDialog(Dialog):
+    """
+    Like all dialogs, it is automatically destroyed on exit of the :meth:`show()`
+    method. It is also deleted from the screen buffer.
+    """
+
     def __init__(
         self,
         path: Path = None,
@@ -1211,8 +1761,25 @@ class FileDialog(Dialog):
     def render_to_buffer(
         self, buffer, row: int, column: int, buffer_height: int, buffer_width: int
     ) -> None:
+        """Render the object into a display buffer (not a screen buffer).
+
+        This method is automatically called by :func:`pygamelib.engine.Screen.render`.
+
+        :param buffer: A screen buffer to render the item into.
+        :type buffer: numpy.array
+        :param row: The row to render in.
+        :type row: int
+        :param column: The column to render in.
+        :type column: int
+        :param height: The total height of the display buffer.
+        :type height: int
+        :param width: The total width of the display buffer.
+        :type width: int
+
+        """
+        self._store_position(row, column)
         # TODO: The actual dialog size is bigger than the the one passed in parameter
-        #       because I had to the size (for the file name) instead of drawing INTO
+        #       because I add to the size (for the file name) instead of drawing INTO
         #       the alloted height.
         offset = 0
         if not self.config.borderless_dialog:
@@ -1373,6 +1940,7 @@ class FileDialog(Dialog):
                     screen.trigger_rendering()
                     screen.update()
             inkey = term.inkey(timeout=0.1)
+        screen.delete(self._position[0], self._position[1])
         return self.__path
 
 
@@ -1576,6 +2144,22 @@ class GridSelector(object):
     def render_to_buffer(
         self, buffer, row: int, column: int, buffer_height: int, buffer_width: int
     ) -> None:
+        """Render the object into a display buffer (not a screen buffer).
+
+        This method is automatically called by :func:`pygamelib.engine.Screen.render`.
+
+        :param buffer: A screen buffer to render the item into.
+        :type buffer: numpy.array
+        :param row: The row to render in.
+        :type row: int
+        :param column: The column to render in.
+        :type column: int
+        :param height: The total height of the display buffer.
+        :type height: int
+        :param width: The total width of the display buffer.
+        :type width: int
+
+        """
         self.__max_width = functions.clamp(self.__max_width, 0, buffer_width - 2)
         self.__max_height = functions.clamp(self.__max_height, 0, buffer_height - 2)
         crow = 1
@@ -1617,6 +2201,11 @@ class GridSelector(object):
 
 
 class GridSelectorDialog(Dialog):
+    """
+    Like all dialogs, it is automatically destroyed on exit of the :meth:`show()`
+    method. It is also deleted from the screen buffer.
+    """
+
     def __init__(
         self,
         choices: list = None,
@@ -1702,11 +2291,29 @@ class GridSelectorDialog(Dialog):
                     screen.force_update()
 
             inkey = term.inkey(timeout=0.1)
+        screen.delete(self._position[0], self._position[1])
         return ret_sprixel
 
     def render_to_buffer(
         self, buffer, row: int, column: int, buffer_height: int, buffer_width: int
     ) -> None:
+        """Render the object into a display buffer (not a screen buffer).
+
+        This method is automatically called by :func:`pygamelib.engine.Screen.render`.
+
+        :param buffer: A screen buffer to render the item into.
+        :type buffer: numpy.array
+        :param row: The row to render in.
+        :type row: int
+        :param column: The column to render in.
+        :type column: int
+        :param height: The total height of the display buffer.
+        :type height: int
+        :param width: The total width of the display buffer.
+        :type width: int
+
+        """
+        self._store_position(row, column)
         offset = 0
         if not self.config.borderless_dialog:
             offset = 1
@@ -1829,6 +2436,22 @@ class ColorPicker(object):
     def render_to_buffer(
         self, buffer, row: int, column: int, buffer_height: int, buffer_width: int
     ) -> None:
+        """Render the object into a display buffer (not a screen buffer).
+
+        This method is automatically called by :func:`pygamelib.engine.Screen.render`.
+
+        :param buffer: A screen buffer to render the item into.
+        :type buffer: numpy.array
+        :param row: The row to render in.
+        :type row: int
+        :param column: The column to render in.
+        :type column: int
+        :param height: The total height of the display buffer.
+        :type height: int
+        :param width: The total width of the display buffer.
+        :type width: int
+
+        """
         # TODO: implement the vertical orientation
         # Red: 128 Green: 24 Blue: 128
         colors_data = [
@@ -1860,6 +2483,11 @@ class ColorPicker(object):
 
 
 class ColorPickerDialog(Dialog):
+    """
+    Like all dialogs, it is automatically destroyed on exit of the :meth:`show()`
+    method. It is also deleted from the screen buffer.
+    """
+
     def __init__(self, config) -> None:
         super().__init__(config=config)
         self.__color_picker = ColorPicker(
@@ -1875,14 +2503,23 @@ class ColorPickerDialog(Dialog):
     def render_to_buffer(
         self, buffer, row: int, column: int, buffer_height: int, buffer_width: int
     ) -> None:
-        """
-        :param name: some param
-        :type name: str
+        """Render the object into a display buffer (not a screen buffer).
 
-        Example::
+        This method is automatically called by :func:`pygamelib.engine.Screen.render`.
 
-            method()
+        :param buffer: A screen buffer to render the item into.
+        :type buffer: numpy.array
+        :param row: The row to render in.
+        :type row: int
+        :param column: The column to render in.
+        :type column: int
+        :param height: The total height of the display buffer.
+        :type height: int
+        :param width: The total width of the display buffer.
+        :type width: int
+
         """
+        self._store_position(row, column)
         offset = 0
         if not self.config.borderless_dialog:
             offset = 1
@@ -1942,4 +2579,5 @@ class ColorPickerDialog(Dialog):
                     self.__color_picker.selection += 1
                     screen.force_update()
             inkey = term.inkey(timeout=0.1)
+        screen.delete(self._position[0], self._position[1])
         return ret_color

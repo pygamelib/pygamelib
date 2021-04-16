@@ -4,6 +4,10 @@ LineInputDialog
 .. currentmodule:: pygamelib.gfx.ui
 
 .. autoclass:: LineInputDialog
+   :members:
+   :inherited-members:
+   :undoc-members:
+   :show-inheritance:
 
    
    .. automethod:: __init__

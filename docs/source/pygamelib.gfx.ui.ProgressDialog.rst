@@ -4,6 +4,10 @@ ProgressDialog
 .. currentmodule:: pygamelib.gfx.ui
 
 .. autoclass:: ProgressDialog
+   :members:
+   :inherited-members:
+   :undoc-members:
+   :show-inheritance:
 
    
    .. automethod:: __init__

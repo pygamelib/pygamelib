@@ -4,6 +4,10 @@ Box
 .. currentmodule:: pygamelib.gfx.ui
 
 .. autoclass:: Box
+   :members:
+   :inherited-members:
+   :undoc-members:
+   :show-inheritance:
 
    
    .. automethod:: __init__

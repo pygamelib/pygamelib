@@ -4,6 +4,10 @@ ProgressBar
 .. currentmodule:: pygamelib.gfx.ui
 
 .. autoclass:: ProgressBar
+   :members:
+   :inherited-members:
+   :undoc-members:
+   :show-inheritance:
 
    
    .. automethod:: __init__

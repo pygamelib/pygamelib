@@ -27,7 +27,6 @@ games (or applications).
     pygamelib.gfx.ui.ProgressBar.rst
     pygamelib.gfx.ui.ProgressDialog.rst
     pygamelib.gfx.ui.UiConfig.rst
-    pygamelib.gfx.ui.VerticalProgressBar.rst
 
 .. automodule:: pygamelib.gfx.ui
     :noindex:

@@ -15,7 +15,6 @@ pygamelib.gfx.ui.Box
    
       ~Box.__init__
       ~Box.render_to_buffer
-      ~Box.test
    
    
 

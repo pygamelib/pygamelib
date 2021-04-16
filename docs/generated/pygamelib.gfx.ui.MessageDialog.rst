@@ -14,6 +14,8 @@ pygamelib.gfx.ui.MessageDialog
    .. autosummary::
    
       ~MessageDialog.__init__
+      ~MessageDialog.add_line
+      ~MessageDialog.render_to_buffer
       ~MessageDialog.show
    
    
@@ -25,6 +27,7 @@ pygamelib.gfx.ui.MessageDialog
    .. autosummary::
    
       ~MessageDialog.config
+      ~MessageDialog.height
       ~MessageDialog.user_input
    
    

@@ -4,6 +4,10 @@ MultiLineInputDialog
 .. currentmodule:: pygamelib.gfx.ui
 
 .. autoclass:: MultiLineInputDialog
+   :members:
+   :inherited-members:
+   :undoc-members:
+   :show-inheritance:
 
    
    .. automethod:: __init__
