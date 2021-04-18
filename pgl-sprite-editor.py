@@ -252,7 +252,7 @@ def display_help():
     # msg.add_line("")
     screen.place(msg, screen.vcenter - int(msg.height / 2), 3)
     msg.show()
-    screen.delete(screen.vcenter - int(msg.height / 2), 3)
+    # screen.delete(screen.vcenter - int(msg.height / 2), 3)
     ui_config_popup.bg_color = bgc
 
 
@@ -691,7 +691,7 @@ def update_screen(g: engine.Game, inkey, dt: float):
         screen.place(fid, screen.vcenter - 5, screen.hcenter - int(width / 2))
         file = fid.show()
         # g.log(f"Got file={file} from FileDialog")
-        screen.delete(screen.vcenter - 5, screen.hcenter - int(width / 2))
+        # screen.delete(screen.vcenter - 5, screen.hcenter - int(width / 2))
         if file is not None and not file.is_dir():
             collection = core.SpriteCollection.load_json_file(file)
             # sprite_list = sorted(list(collection.keys()))
@@ -709,7 +709,7 @@ def update_screen(g: engine.Game, inkey, dt: float):
         screen.place(fid, screen.vcenter - 5, screen.hcenter - int(width / 2))
         file = fid.show()
         # g.log(f"Got file={file} from FileDialog")
-        screen.delete(screen.vcenter - 5, screen.hcenter - int(width / 2))
+        # screen.delete(screen.vcenter - 5, screen.hcenter - int(width / 2))
         if file is not None and not file.is_dir():
             filename = str(file)
             for spr_id in range(0, len(sprite_list)):
@@ -788,7 +788,7 @@ def update_screen(g: engine.Game, inkey, dt: float):
         minp = ui.MultiLineInputDialog(fields=fields, config=ui_config_popup)
         screen.place(minp, screen.vcenter - len(fields), screen.hcenter - 18)
         filled_fields = minp.show()
-        screen.delete(screen.vcenter - len(fields), screen.hcenter - 18)
+        # screen.delete(screen.vcenter - len(fields), screen.hcenter - 18)
         if (
             filled_fields[0]["user_input"] != ""
             and filled_fields[1]["user_input"] != ""
@@ -802,10 +802,6 @@ def update_screen(g: engine.Game, inkey, dt: float):
                 ]
             )
             collection[nn].name = nn
-            # TODO: FIX THAT MESS. DONE, if only I could think before coding...
-            # sprite_list = sorted(list(collection.keys()))
-            # sprite_list = list(collection.keys())
-            # sprite_list_idx = sprite_list.index(nn)
             sprite_list.append(nn)
             sprite_list_idx = len(sprite_list) - 1
             load_sprite_to_board(g, sprite_list_idx)
@@ -993,9 +989,9 @@ def update_screen(g: engine.Game, inkey, dt: float):
                 and sprix.model != ""
             ):
                 palette[palette_idx].model = sprix.model
-            screen.delete(
-                int(screen.vcenter - (height / 2)), int(screen.hcenter - (width / 2))
-            )
+            # screen.delete(
+            #     int(screen.vcenter - (height / 2)), int(screen.hcenter - (width / 2))
+            # )
         elif (
             inkey.name == "KEY_ENTER"
             and tools[tools_idx % len(tools)] == "Rename sprite"
@@ -1008,7 +1004,6 @@ def update_screen(g: engine.Game, inkey, dt: float):
             )
             screen.place(edit, screen.vcenter, screen.hcenter - 13)
             new_name = edit.show()
-            screen.delete(screen.vcenter, screen.hcenter - 13)
             collection.rename(old_name, new_name)
             sprite_list[sprite_list_idx % len(sprite_list)] = new_name
             # sprite_list = sorted(sprite_list)
@@ -1023,7 +1018,7 @@ def update_screen(g: engine.Game, inkey, dt: float):
             color = cp.show()
             if len(palette) > palette_idx and color is not None:
                 palette[palette_idx].fg_color = color
-            screen.delete(screen.vcenter - 2, screen.hcenter - 13)
+            # screen.delete(screen.vcenter - 2, screen.hcenter - 13)
         elif (
             inkey.name == "KEY_ENTER"
             and tools[tools_idx % len(tools)] == "Select BG color"
@@ -1034,7 +1029,7 @@ def update_screen(g: engine.Game, inkey, dt: float):
             color = cp.show()
             if len(palette) > palette_idx and color is not None:
                 palette[palette_idx].bg_color = color
-            screen.delete(screen.vcenter - 2, screen.hcenter - 13)
+            # screen.delete(screen.vcenter - 2, screen.hcenter - 13)
         elif inkey.name == "KEY_ENTER" and (
             tools[tools_idx % len(tools)] == "Fill w/ FG color"
             or tools[tools_idx % len(tools)] == "Fill w/ BG color"
@@ -1136,7 +1131,7 @@ def update_screen(g: engine.Game, inkey, dt: float):
             )
             screen.place(msg, screen.vcenter - int(msg.height / 2), 3)
             msg.show()
-            screen.delete(screen.vcenter - int(msg.height / 2), 3)
+            # screen.delete(screen.vcenter - int(msg.height / 2), 3)
             ui_config_popup.bg_color = bgc
         elif (
             inkey.name == "KEY_ENTER"
@@ -1170,7 +1165,7 @@ def update_screen(g: engine.Game, inkey, dt: float):
                         screen.hcenter - int(ts / 2),
                     )
                     msg.show()
-                    screen.delete(screen.vcenter - 2, screen.hcenter - int(ts / 2))
+                    # screen.delete(screen.vcenter - 2, screen.hcenter - int(ts / 2))
                     ui_config_popup.bg_color = bg
                     break
                 if f.width > max_sprite_width:
@@ -1210,6 +1205,7 @@ def update_screen(g: engine.Game, inkey, dt: float):
                             anim.display_time = 0
                     elif key.lower() == "r":
                         anim.frames.reverse()
+                        # 27,3,15   118,201,214
                     for f in anim.frames:
                         screen.place(f"Current frame: {f.name}", arow + 1, acol + 1, 2)
                         screen.place(
@@ -1222,6 +1218,13 @@ def update_screen(g: engine.Game, inkey, dt: float):
                             "+ or -: change frame speed.", arow + 3, acol + 1, 2
                         )
                         screen.place("r to reverse frame order.", arow + 4, acol + 1, 2)
+                        # # Clear previous frame
+                        for cr in range(arow + 5, arow + 5 + f.height):
+                            for cc in range(
+                                acol + int(box_width / 2) - int(f.width / 2),
+                                acol + int(box_width / 2) - int(f.width / 2) + f.width,
+                            ):
+                                screen.buffer[cr][cc] = " "
                         screen.place(
                             f, arow + 5, acol + int(box_width / 2) - int(f.width / 2), 2
                         )
