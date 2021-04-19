@@ -30,6 +30,7 @@ import random
 import json
 import sys
 import time
+import copy
 import numpy as np
 
 
@@ -190,11 +191,14 @@ class Board:
         if self.ui_board_void_cell_sprixel is not None and isinstance(
             self.ui_board_void_cell_sprixel, core.Sprixel
         ):
+            # The deepcopy is a lot slower but it protects against a ton of unwanted
+            # side effects
             self._matrix = np.array(
                 [
                     [
                         board_items.BoardItemVoid(
-                            sprixel=self.ui_board_void_cell_sprixel, parent=self
+                            sprixel=copy.deepcopy(self.ui_board_void_cell_sprixel),
+                            parent=self,
                         )
                         for i in range(0, self.size[0], 1)
                     ]
@@ -237,7 +241,7 @@ class Board:
             self.ui_board_void_cell_sprixel, core.Sprixel
         ):
             return board_items.BoardItemVoid(
-                sprixel=self.ui_board_void_cell_sprixel,
+                sprixel=copy.deepcopy(self.ui_board_void_cell_sprixel),
                 model=self.ui_board_void_cell_sprixel.model,
                 parent=self,
             )
@@ -514,7 +518,7 @@ class Board:
                     and y.model != self.ui_board_void_cell
                 ):
                     y.model = self.ui_board_void_cell
-                    y.sprixel = self.ui_board_void_cell_sprixel
+                    y.sprixel = copy.deepcopy(self.ui_board_void_cell_sprixel)
                 print(y, end="")
             if column_max_bound >= self.size[0]:
                 print(f"{self.ui_border_right}{clear_eol}", end="")
@@ -583,7 +587,7 @@ class Board:
                     and column.model != self.ui_board_void_cell
                 ):
                     if isinstance(self.ui_board_void_cell_sprixel, core.Sprixel):
-                        column.sprixel = self.ui_board_void_cell_sprixel
+                        column.sprixel = copy.deepcopy(self.ui_board_void_cell_sprixel)
                         column.model = self.ui_board_void_cell_sprixel.model
                     else:
                         column.model = self.ui_board_void_cell
