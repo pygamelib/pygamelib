@@ -851,7 +851,7 @@ class ProgressDialog(Dialog):
         if self.destroy_on_complete and self.__value == self.__maximum:
             self.__destroy = True
 
-    def show(self):
+    def show(self):  # pragma: no cover
         """
         The show method does nothing in the ProgressDialog. It is a notable exception
         and the only dialog widget in the UI module to do that.
@@ -1897,6 +1897,10 @@ class FileDialog(Dialog):
                 txt.fg_color = core.Color(0, 255, 0)
                 txt.style = constants.BOLD
                 self.__current_selection = i
+                if i.is_file():
+                    # Can't be tested since the widget do not offer the ability to
+                    # manipulate __browsing_position from the outside.
+                    self.user_input = i.name  # pragma: no cover
             lbl = core.Sprite.from_text(txt)
             lbl.render_to_buffer(
                 buffer,
