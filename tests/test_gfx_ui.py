@@ -143,6 +143,10 @@ class TestBase(unittest.TestCase):
         self.assertEqual(pb.empty_marker, "#")
         with self.assertRaises(pgl_base.PglInvalidTypeException):
             pb.empty_marker = 3
+        pb.progress_marker = core.Sprixel("=")
+        pb.empty_marker = core.Sprixel("-")
+        self.assertIsInstance(pb.progress_marker, core.Sprixel)
+        self.assertIsInstance(pb.empty_marker, core.Sprixel)
         self.assertEqual(pb.value, 0)
         with self.assertRaises(pgl_base.PglInvalidTypeException):
             pb.value = "10"
@@ -257,7 +261,7 @@ class TestBase(unittest.TestCase):
     def test_file_dialog(self):
         conf = ui.UiConfig.instance(game=self.game)
         fd = ui.FileDialog(Path("tests"), config=conf)
-        self.assertEqual(fd.path, Path("tests"))
+        self.assertEqual(fd.path, Path("tests").resolve())
         with self.assertRaises(pgl_base.PglInvalidTypeException):
             fd.path = 42
 
@@ -352,7 +356,14 @@ class TestBase(unittest.TestCase):
 
     def test_colorpickers(self):
         conf = ui.UiConfig.instance(game=self.game)
-        cpd = ui.ColorPickerDialog(conf)
+        cpd = ui.ColorPickerDialog(config=conf)
+        with self.assertRaises(pgl_base.PglInvalidTypeException):
+            cpd.set_selection("42")
+        self.assertEqual(cpd.title, "Pick a color")
+        cpd.title = "Test"
+        self.assertEqual(cpd.title, "Test")
+        with self.assertRaises(pgl_base.PglInvalidTypeException):
+            cpd.title = 42
         cpd.set_color(core.Color(1, 2, 3))
         cd = ui.ColorPicker(config=conf)
         self.assertEqual(cd.selection, 0)

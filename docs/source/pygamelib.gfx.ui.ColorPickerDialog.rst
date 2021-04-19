@@ -20,6 +20,7 @@ ColorPickerDialog
       ~ColorPickerDialog.__init__
       ~ColorPickerDialog.render_to_buffer
       ~ColorPickerDialog.set_color
+      ~ColorPickerDialog.set_selection
       ~ColorPickerDialog.show
    
    

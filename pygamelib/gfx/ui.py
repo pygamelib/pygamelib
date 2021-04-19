@@ -191,7 +191,7 @@ class Dialog(object):
     def _store_position(self, row, column):
         self._position = [row, column]
 
-    def show(self):
+    def show(self):  # pragma: no cover
         """
         This is a virtual method, calling it directly will only raise a
         NotImplementedError. Each class that inheritate Dialog needs to implement
@@ -1129,11 +1129,15 @@ class MessageDialog(Dialog):
         Until this method returns, all keyboards event are processed by the local event
         loop. This is also true if called from the main event loop.
 
-        This event loop returns None.
+        This event loop returns the key pressed .
 
         Example::
 
-            msg.show()
+            key_pressed = msg.show()
+            if key_pressed.name = 'KEY_ENTER':
+                // do something
+            else:
+                print('Good bye')
         """
         screen = self.config.game.screen
         game = self.config.game
@@ -1146,7 +1150,7 @@ class MessageDialog(Dialog):
                     break
             inkey = term.inkey(timeout=0.1)
         screen.delete(self._position[0], self._position[1])
-        return None
+        return inkey
 
 
 class LineInputDialog(Dialog):
@@ -2421,8 +2425,7 @@ class GridSelectorDialog(Dialog):
         loop. This is also true if called from the main event loop.
 
         This event loop returns the selected item as a
-        :class:`~pygamelib.gfx.core.Sprixel` or the empty sprixel (`Sprixel()`) if the
-        user pressed the ESC key.
+        :class:`~pygamelib.gfx.core.Sprixel` or None if the user pressed the ESC key.
 
         :return: The selected item.
         :rtype: :class:`~pygamelib.gfx.core.Sprixel`
@@ -2445,7 +2448,7 @@ class GridSelectorDialog(Dialog):
                     ret_sprixel = self.__grid_selector.current_sprixel()
                     break
                 elif inkey.name == "KEY_ESCAPE":
-                    ret_sprixel = core.Sprixel()
+                    ret_sprixel = None
                     break
                 elif inkey.name == "KEY_UP":
                     self.__grid_selector.cursor_up()
@@ -2747,7 +2750,7 @@ class ColorPickerDialog(Dialog):
     method. It is also deleted from the screen buffer.
     """
 
-    def __init__(self, config) -> None:
+    def __init__(self, title: str = None, config: UiConfig = None) -> None:
         """
         The constructor only take the configuration as parameter.
 
@@ -2765,6 +2768,26 @@ class ColorPickerDialog(Dialog):
         self.__color_picker = ColorPicker(
             orientation=constants.ORIENTATION_HORIZONTAL, config=config
         )
+        self.__title = title
+        if self.__title is None:
+            self.__title = "Pick a color"
+
+    @property
+    def title(self):
+        """
+        Get / set the dialog title, it needs to be a str.
+        """
+        return self.__title
+
+    @title.setter
+    def title(self, value):
+        if value is not None and type(value) is str:
+            self.__title = value
+        else:
+            raise base.PglInvalidTypeException(
+                "GridSelectorDialog.title = value: 'value' must be a str. "
+                f"'{value}' is not a str"
+            )
 
     def set_color(self, color: core.Color) -> None:
         """
@@ -2781,6 +2804,20 @@ class ColorPickerDialog(Dialog):
             self.__color_picker.red = color.r
             self.__color_picker.blue = color.b
             self.__color_picker.green = color.g
+
+    def set_selection(self, selection: int = 0):
+        """
+        Set the channel selection.
+
+        :param selection: The number of the channel to select (0 = red, 1 = green and 2
+           = blue).
+        :type selection: int
+
+        Example::
+
+            color_dialog.set_selection(1)
+        """
+        self.__color_picker.selection = selection
 
     def render_to_buffer(
         self, buffer, row: int, column: int, buffer_height: int, buffer_width: int
@@ -2809,7 +2846,7 @@ class ColorPickerDialog(Dialog):
             box = Box(
                 27,
                 5,
-                "Pick a color",
+                self.title,
                 self.config,
                 True,
                 core.Sprixel(" ", bg_color=None),
