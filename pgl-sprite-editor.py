@@ -1129,6 +1129,11 @@ def update_screen(g: engine.Game, inkey, dt: float):
                 "color."
             )
             msg.add_line("")
+            msg.add_line(
+                "The model is mandatory, however you can hit ESC on any of the color "
+                "choice if you don't need a specific color."
+            )
+            msg.add_line("For example, hit ESC if you don't need a background color.")
             msg.add_line("")
             msg.add_line("Press ENTER to continue or ESC to cancel.")
             screen.place(msg, screen.vcenter - int(msg.height / 2), 3)
@@ -1162,6 +1167,7 @@ def update_screen(g: engine.Game, inkey, dt: float):
                     if color is not None:
                         new_sprixel.fg_color = color
                     cp.set_color(core.Color(128, 128, 128))
+                    cp.set_selection(0)
                     cp.title = "Pick a BACKground color"
                     screen.place(cp, screen.vcenter, screen.hcenter - 13)
                     color = cp.show()
