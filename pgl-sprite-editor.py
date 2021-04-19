@@ -618,7 +618,9 @@ def toggle_eraser_mode(screen: engine.Screen):
             style=constants.BOLD,
         )
         screen.place(txt, 1, screen.hcenter)
+        engine.Game.instance().player.sprixel.fg_color = core.Color(255, 0, 0)
     else:
+        engine.Game.instance().player.sprixel.fg_color = core.Color(0, 255, 0)
         screen.delete(1, screen.hcenter)
 
 
@@ -1315,7 +1317,7 @@ if __name__ == "__main__":
         player=board_items.Player(
             sprixel=core.Sprixel(
                 graphics.BoxDrawings.HEAVY_VERTICAL_AND_HORIZONTAL,
-                fg_color=core.Color(255, 0, 0),
+                fg_color=core.Color(0, 255, 0),
             ),
             movement_speed=0.01,
         ),
