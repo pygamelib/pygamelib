@@ -986,11 +986,7 @@ def update_screen(g: engine.Game, inkey, dt: float):
                 2,
             )
             sprix = gs.show()
-            if (
-                len(palette) > palette_idx
-                and sprix.model is not None
-                and sprix.model != ""
-            ):
+            if len(palette) > palette_idx and sprix is not None and sprix.model != "":
                 palette[palette_idx].model = sprix.model
             # screen.delete(
             #     int(screen.vcenter - (height / 2)), int(screen.hcenter - (width / 2))
@@ -1132,10 +1128,47 @@ def update_screen(g: engine.Game, inkey, dt: float):
                 "You will need to select a model, a forground color and a background "
                 "color."
             )
+            msg.add_line("")
+            msg.add_line("")
+            msg.add_line("Press ENTER to continue or ESC to cancel.")
             screen.place(msg, screen.vcenter - int(msg.height / 2), 3)
-            msg.show()
-            # screen.delete(screen.vcenter - int(msg.height / 2), 3)
+            key_pressed = msg.show()
             ui_config_popup.bg_color = bgc
+            if key_pressed.name == "KEY_ENTER":
+                new_sprixel = core.Sprixel()
+                width = int(screen.width / 2)
+                height = 15
+                gs = ui.GridSelectorDialog(
+                    brush_models,
+                    height,
+                    width,
+                    "Select a brush model",
+                    config=ui_config_popup,
+                )
+                screen.place(
+                    gs,
+                    int(screen.vcenter - (height / 2)),
+                    int(screen.hcenter - (width / 2)),
+                    2,
+                )
+                sprix = gs.show()
+                if sprix is not None and sprix.model != "":
+                    new_sprixel.model = sprix.model
+                    cp = ui.ColorPickerDialog(
+                        "Pick a FOREground color", config=ui_config_popup
+                    )
+                    screen.place(cp, screen.vcenter, screen.hcenter - 13)
+                    color = cp.show()
+                    if color is not None:
+                        new_sprixel.fg_color = color
+                    cp.set_color(core.Color(128, 128, 128))
+                    cp.title = "Pick a BACKground color"
+                    screen.place(cp, screen.vcenter, screen.hcenter - 13)
+                    color = cp.show()
+                    if color is not None:
+                        new_sprixel.bg_color = color
+                    palette.append(new_sprixel)
+
         elif (
             inkey.name == "KEY_ENTER"
             and tools[tools_idx % len(tools)] == "Play animation"
