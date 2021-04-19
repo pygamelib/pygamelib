@@ -2379,7 +2379,7 @@ class GridSelectorDialog(Dialog):
         self.__grid_selector = None
         if not config.borderless_dialog:
             self.__grid_selector = GridSelector(
-                choices, max_height - 3, max_width - 3, config
+                choices, max_height - 3, max_width - 4, config
             )
         else:
             self.__grid_selector = GridSelector(choices, max_height, max_width, config)
@@ -2502,7 +2502,7 @@ class GridSelectorDialog(Dialog):
             offset = 1
             # We need to account for the borders in the box size
             box = Box(
-                self.__grid_selector.max_width + 3,
+                self.__grid_selector.max_width + 4,
                 self.__grid_selector.max_height + 3,
                 self.__title,
                 self.config,
