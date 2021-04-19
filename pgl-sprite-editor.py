@@ -147,9 +147,10 @@ def flood_fill(
     replace: core.Sprixel,
     sprixel: core.Sprixel,
 ):
+    if r < 0 or r >= board.height or c < 0 or c >= board.width:
+        return
     # if not isinstance(board.item(r, c), board_items.BoardItemVoid):
     if board.item(r, c).sprixel != replace:
-
         return
     # if isinstance(board.item(r, c), board_items.BoardItemVoid):
     if board.item(r, c).sprixel == replace:
