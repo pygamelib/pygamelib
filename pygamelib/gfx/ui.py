@@ -462,11 +462,11 @@ class ProgressBar(object):
         :type width: int
         :param progress_marker: The progress marker is displayed on progression. It is
            the sprixel that fills the bar. Please see below.
-        :type progress_marker: :class:`core.Sprixel`
+        :type progress_marker: :class:`pygamelib.gfx.core.Sprixel`
         :param empty_marker: The empty marker is displayed instead of the progress
            marker when the bar should be empty (when the value is too low to fill the
            bar for example). Please see below.
-        :type empty_marker: :class:`core.Sprixel`
+        :type empty_marker: :class:`pygamelib.gfx.core.Sprixel`
         :param config: The configuration object.
         :type config: :class:`UiConfig`
 
@@ -684,11 +684,11 @@ class ProgressDialog(Dialog):
         :type width: int
         :param progress_marker: The progress marker is displayed on progression. It is
            the sprixel that fills the bar. Please see below.
-        :type progress_marker: :class:`core.Sprixel`
+        :type progress_marker: :class:`pygamelib.gfx.core.Sprixel`
         :param empty_marker: The empty marker is displayed instead of the progress
            marker when the bar should be empty (when the value is too low to fill the
            bar for example). Please see below.
-        :type empty_marker: :class:`core.Sprixel`
+        :type empty_marker: :class:`pygamelib.gfx.core.Sprixel`
         :param adaptive_width: If True, the dialog will automatically adapt to the size
            of the label.
         :type adaptive_width: bool
@@ -878,9 +878,9 @@ class MessageDialog(Dialog):
     The message dialog is a popup that can display multiple lines of text.
 
     It supports formatted text (:class:`base.Text`), python strings,
-    :class:`core.Sprixel`, :class:`core.Sprite` and more generally anything that can
-    be rendered on screen (i.e: posess a render_to_buffer(self, buffer, row, column,
-    buffer_height, buffer_width) method).
+    :class:`pygamelib.gfx.core.Sprixel`, :class:`core.Sprite` and more generally
+    anything that can be rendered on screen (i.e: posess a render_to_buffer(self, buffer
+    , row, column, buffer_height, buffer_width) method).
 
     Each line can be aligned separately using :py:const:`constants.ALIGN_RIGHT`,
     :py:const:`constants.ALIGN_LEFT` or :py:const:`constants.ALIGN_CENTER`. Please see
@@ -916,7 +916,7 @@ class MessageDialog(Dialog):
         """
         :param data: A list of data to display inside the MessageDialog. Elements in
            the list can contain various data types like :class:`base.Text`, python
-           strings, :class:`core.Sprixel`, :class:`core.Sprite`
+           strings, :class:`pygamelib.gfx.core.Sprixel`, :class:`core.Sprite`
         :type data: list
         :param width: The width of the message dialog widget (in number of screen
            cells).
@@ -1024,7 +1024,7 @@ class MessageDialog(Dialog):
 
          * :class:`base.Text`,
          * python strings (str),
-         * :class:`core.Sprixel`,
+         * :class:`pygamelib.gfx.core.Sprixel`,
          * :class:`core.Sprite`,
          * most board items,
          * etc.
@@ -1576,6 +1576,26 @@ class MultiLineInputDialog(Dialog):
 
 class FileDialog(Dialog):
     """
+    The FileDialog is a file selection dialog: it allow the user to select a file on
+    disk in a relatively easy way. File can then be use for any purpose by the program,
+    like for "save as" or "open" features.
+
+    The show() method returns the path selected by the user.
+
+    **Key mapping**:
+
+     * ESC: set the path to None and exit from the :meth:`show()` method.
+     * ENTER: Exit from the :meth:`show()` method. Returns the currently selected path.
+     * BACKSPACE / DELETE: delete a character (both keys have the same result).
+     * UP / DOWN: Navigate between the files.
+     * LEFT / RIGHT: Navigate between the directories.
+     * All other keys input characters in the input field.
+
+    In all cases, when the dialog is closed, a path is returned. It can be a file name
+    entered by the user or an existing file. The returned value can also be None if the
+    user pressed ESC. There is no guarantee that the returned path is correct. Please,
+    check it before doing anything with it.
+
     Like all dialogs, it is automatically destroyed on exit of the :meth:`show()`
     method. It is also deleted from the screen buffer.
     """
@@ -1590,10 +1610,36 @@ class FileDialog(Dialog):
         filter: str = "*",
         config: UiConfig = None,
     ) -> None:
+        """
+
+        :param path: The path to start in. This path is made absolute by the
+           constructor.
+        :type path: :class:`pathlib.Path`
+        :param width: The width of the file dialog widget (in number of screen cells).
+        :type width: int
+        :param height: The height of the file dialog widget (in number of screen cells).
+        :type height: int
+        :param title: The title of the dialog (written in the upper border).
+        :type title: str
+        :param show_hidden_files: Does the file dialog needs to show the hidden files or
+            not.
+        :type show_hidden_files: bool
+        :param filter: A string that will be used to filter the files shown to the user.
+            For example "\*.spr".
+        :type filter: str
+        :param config: The configuration object.
+        :type config: :class:`UiConfig`
+
+        Example::
+
+            file_dialog = FileDialog( Path("."), 30, 10, "Open file", False, conf)
+            screen.place(file_dialog, 10, 10)
+            file = file_dialog.show()
+        """
         super().__init__(config=config)
         self.__path = None
         if path is not None and isinstance(path, Path):
-            self.__path = path
+            self.__path = path.resolve()
         self.__original_path = self.__path
         self.__show_hidden_files = False
         if show_hidden_files is not None and type(show_hidden_files) is bool:
@@ -1612,7 +1658,7 @@ class FileDialog(Dialog):
             self.__title = title
         self.__browsing_position = 0
         self.__current_selection = ""
-        self.__current_pannel = 0
+        # self.__current_panel = 0
         self.user_input = ""
         self.__file_icon = core.Sprite(
             size=[1, 1], sprixels=[[core.Sprixel(graphics.Models.PAGE_FACING_UP)]]
@@ -1630,26 +1676,13 @@ class FileDialog(Dialog):
     def _build_file_cache(self):
         # We are only accessing the filesystem when we change directory.
         self.__files = []
-        self.__files = sorted(
-            [
-                x
-                for x in self.__path.iterdir()
-                if (
-                    x.is_dir()
-                    and (
-                        (self.__show_hidden_files and x.name.startswith("."))
-                        or (not self.__show_hidden_files and not x.name.startswith("."))
-                    )
-                )
-            ]
-        )
-        self.__files.extend(
-            sorted(
+        try:
+            self.__files = sorted(
                 [
                     x
-                    for x in self.__path.glob(self.__filter)
+                    for x in self.__path.iterdir()
                     if (
-                        x.is_file()
+                        x.is_dir()
                         and (
                             (self.__show_hidden_files and x.name.startswith("."))
                             or (
@@ -1660,7 +1693,27 @@ class FileDialog(Dialog):
                     )
                 ]
             )
-        )
+            self.__files.extend(
+                sorted(
+                    [
+                        x
+                        for x in self.__path.glob(self.__filter)
+                        if (
+                            x.is_file()
+                            and (
+                                (self.__show_hidden_files and x.name.startswith("."))
+                                or (
+                                    not self.__show_hidden_files
+                                    and not x.name.startswith(".")
+                                )
+                            )
+                        )
+                    ]
+                )
+            )
+        except PermissionError:
+            # TODO: Send a message to the user about that
+            pass
 
     def _build_cache(self):
         self.__cache = {}
@@ -1698,7 +1751,7 @@ class FileDialog(Dialog):
     @property
     def path(self):
         """
-        Return the current path.
+        Get/set the current path.
 
         :returns: The dialog's current path.
         :rtype: :class:`pathlib.Path`
@@ -1718,7 +1771,7 @@ class FileDialog(Dialog):
     @property
     def filter(self):
         """
-        Return the current file filter.
+        Get/set the current file filter.
 
         :returns: The dialog's current filter.
         :rtype: str
@@ -1738,8 +1791,8 @@ class FileDialog(Dialog):
     @property
     def show_hidden_files(self):
         """
-        Return a boolean, if True the file dialog is going to show hidden files, and, if
-        False, it won't.
+        Get/set the property, if True the file dialog is going to show hidden files, and
+        , if False, it won't.
 
         :returns: The dialog's current show_hidden_files value.
         :rtype: bool
@@ -1863,6 +1916,18 @@ class FileDialog(Dialog):
             buffer[row + self.__height][column + c] = " "
 
     def show(self) -> Path:  # pragma: no cover
+        """
+        Show the dialog and execute the event loop.
+        Until this method returns, all keyboards event are processed by the local event
+        loop. This is also true if called from the main event loop.
+
+        This event loop returns a :class:`pathlib.Path` object or None if the user
+        pressed the ESC key. The path can point to an existing file or not.
+
+        Example::
+
+            fields = multi_input.show()
+        """
         screen = self.config.game.screen
         game = self.config.game
         term = game.terminal
@@ -1885,11 +1950,13 @@ class FileDialog(Dialog):
                     self.user_input = tmpp.name
                     screen.trigger_rendering()
                     screen.update()
-                elif inkey.name == "KEY_TAB":
-                    self.__current_pannel += 1
-                    self.__current_pannel = self.__current_pannel % 2
-                    screen.trigger_rendering()
-                    screen.update()
+                # NOTE: I have no idea what was the idea behind that current panel
+                # thing...
+                # elif inkey.name == "KEY_TAB":
+                #     self.__current_panel += 1
+                #     self.__current_panel = self.__current_panel % 2
+                #     screen.trigger_rendering()
+                #     screen.update()
                 elif inkey.name == "KEY_ESCAPE":
                     self.__path = None
                     break
@@ -1945,6 +2012,18 @@ class FileDialog(Dialog):
 
 
 class GridSelector(object):
+    """
+    The GridSelector is a widget that present a list of elements as a grid to the user.
+
+    It also provides the API to draw and manage the cursor and to retrieve the selected
+    element.
+
+    .. WARNING:: In the first version of that widget, only the characters that have a
+        length of 1 are supported. This excludes some UTF8 characters and most of the
+        emojis.
+
+    """
+
     def __init__(
         self,
         choices: list = None,
@@ -1952,6 +2031,24 @@ class GridSelector(object):
         max_width: int = None,
         config: UiConfig = None,
     ) -> None:
+        """
+        :param choices: A list of choices to present to the user. The elements of the
+           list needs to be str or :class:`~pygamelib.gfx.core.Sprixel`.
+        :type choices: list
+        :param max_height: The maximum height of the grid selector.
+        :type max_height: int
+        :param max_width: The maximum width of the grid selector.
+        :type max_width: int
+        :param config: The configuration object.
+        :type config: :class:`UiConfig`
+
+        Example::
+
+            choices = ["@","#","$","%","&","*","[","]"]
+            grid_selector = GridSelector(choices, 10, 30, conf)
+            screen.place(grid_selector, 10, 10)
+            screen.update()
+        """
         super().__init__()
         self.__choices = []
         if choices is not None and type(choices) is list:
@@ -1989,11 +2086,19 @@ class GridSelector(object):
         self.__items_per_page = int(self.__max_height / 2 * self.__max_width / 2)
 
     @property
-    def choices(self):
+    def choices(self) -> int:
+        """
+        Get and set the list of choices, it has to be a list of
+        :class:`~pygamelib.gfx.core.Sprixel` or str.
+        """
         return self.__choices
 
     @choices.setter
     def choices(self, value):
+        """
+        Get and set the list of choices, it has to be a list of
+        :class:`~pygamelib.gfx.core.Sprixel` or str.
+        """
         if type(value) is list:
             self.__choices = value
             self._build_cache()
@@ -2004,7 +2109,10 @@ class GridSelector(object):
             )
 
     @property
-    def max_height(self):
+    def max_height(self) -> int:
+        """
+        Get and set the maximum height of the grid selector, it needs to be an int.
+        """
         return self.__max_height
 
     @max_height.setter
@@ -2019,7 +2127,10 @@ class GridSelector(object):
             )
 
     @property
-    def max_width(self):
+    def max_width(self) -> int:
+        """
+        Get and set the maximum width of the grid selector, it needs to be an int.
+        """
         return self.__max_width
 
     @max_width.setter
@@ -2035,6 +2146,11 @@ class GridSelector(object):
 
     @property
     def current_choice(self) -> int:
+        """
+        Get and set the currently selected item's index (the current choice), it needs
+        to be an int.
+        Use :meth:`current_sprixel` to get the actual current item.
+        """
         return self.__current_choice
 
     @current_choice.setter
@@ -2058,7 +2174,10 @@ class GridSelector(object):
             )
 
     @property
-    def current_page(self):
+    def current_page(self) -> int:
+        """
+        Get and set the current page of the grid selector, it needs to be an int.
+        """
         return self.__current_page
 
     @current_page.setter
@@ -2081,37 +2200,37 @@ class GridSelector(object):
                 f"'{value}' is not an int"
             )
 
-    def cursor_up(self):
+    def cursor_up(self) -> None:
         """
         Move the selection cursor one row up.
         """
         self.current_choice -= int(self.max_width / 2)
 
-    def cursor_down(self):
+    def cursor_down(self) -> None:
         """
         Move the selection cursor one row down.
         """
         self.current_choice += int(self.max_width / 2)
 
-    def cursor_left(self):
+    def cursor_left(self) -> None:
         """
         Move the selection cursor one column to the left.
         """
         self.current_choice -= 1
 
-    def cursor_right(self):
+    def cursor_right(self) -> None:
         """
         Move the selection cursor one column to the right.
         """
         self.current_choice += 1
 
-    def page_up(self):
+    def page_up(self) -> None:
         """
         Change the current page to the one immediately up (current_page - 1).
         """
         self.current_page -= 1
 
-    def page_down(self):
+    def page_down(self) -> None:
         """
         Change the current page to the one immediately down (current_page + 1).
         """
@@ -2202,6 +2321,22 @@ class GridSelector(object):
 
 class GridSelectorDialog(Dialog):
     """
+    The GridSelectorDialog is an easy wrapper around the :class:`GridSelector` object.
+    It offers a simple interface for the programmer to present a :class:`GridSelector`
+    to the user and retrieve its selection.
+
+    The show() method returns the path selected by the user.
+
+    **Key mapping**:
+
+     * ESC: set the selected item to an empty Sprixel and exit from the show() method.
+     * ENTER: Exit from the show() method. Returns the currently selected sprixel.
+     * UP / DOWN / LEFT / RIGHT: Navigate between the files.
+     * PAGE_UP / PAGE_DOWN: Go to previous / next page if there's any.
+
+    In all cases, when the dialog is closed, a :class:`~pygamelib.gfx.core.Sprixel` is
+    returned.
+
     Like all dialogs, it is automatically destroyed on exit of the :meth:`show()`
     method. It is also deleted from the screen buffer.
     """
@@ -2214,6 +2349,24 @@ class GridSelectorDialog(Dialog):
         title: str = None,
         config: UiConfig = None,
     ) -> None:
+        """
+        :param choices: A list of choices to present to the user. The elements of the
+           list needs to be str or :class:`~pygamelib.gfx.core.Sprixel`.
+        :type choices: list
+        :param max_height: The maximum height of the grid selector.
+        :type max_height: int
+        :param max_width: The maximum width of the grid selector.
+        :type max_width: int
+        :param config: The configuration object.
+        :type config: :class:`UiConfig`
+
+        Example::
+
+            choices = ["@","#","$","%","&","*","[","]"]
+            grid_dialog = GridSelector(choices, 10, 30, conf)
+            screen.place(grid_dialog, 10, 10)
+            grid_dialog.show()
+        """
         super().__init__(config=config)
         self.__grid_selector = None
         if not config.borderless_dialog:
@@ -2228,6 +2381,9 @@ class GridSelectorDialog(Dialog):
 
     @property
     def title(self):
+        """
+        Get / set the title of the dialog, it needs to be a str.
+        """
         return self.__title
 
     @title.setter
@@ -2242,6 +2398,10 @@ class GridSelectorDialog(Dialog):
 
     @property
     def grid_selector(self):
+        """
+        Get / set the GridSelector object, it has to be a
+        :class:`~pygamelib.gfx.ui.GridSelector` object.
+        """
         return self.__grid_selector
 
     @grid_selector.setter
@@ -2255,6 +2415,22 @@ class GridSelectorDialog(Dialog):
             )
 
     def show(self):  # pragma: no cover
+        """
+        Show the dialog and execute the event loop.
+        Until this method returns, all keyboards event are processed by the local event
+        loop. This is also true if called from the main event loop.
+
+        This event loop returns the selected item as a
+        :class:`~pygamelib.gfx.core.Sprixel` or the empty sprixel (`Sprixel()`) if the
+        user pressed the ESC key.
+
+        :return: The selected item.
+        :rtype: :class:`~pygamelib.gfx.core.Sprixel`
+
+        Example::
+
+            item = grid_dialog.show()
+        """
         screen = self.config.game.screen
         game = self.config.game
         term = game.terminal
@@ -2342,7 +2518,36 @@ class GridSelectorDialog(Dialog):
 
 
 class ColorPicker(object):
+    """
+    The ColorPicker widget is a simple object to select the red, green and blue
+    components of a color.
+
+    It provides the API to set/get each color channel independently as well as the
+    mechanism to select and draw a selection box around one specific channel to give the
+    user a visual cue about what he is modifying.
+    """
+
     def __init__(self, orientation: int = None, config: UiConfig = None) -> None:
+        """
+        The constructor is really simple and takes only 2 arguments.
+
+        :param orientation: One of the 2 orientation constants
+           :py:const:`pygamelib.constants.ORIENTATION_HORIZONTAL` or
+           :py:const:`pygamelib.constants.ORIENTATION_VERTICAL`
+        :type orientation: int
+        :param config: The configuration object.
+        :type config: :class:`UiConfig`
+
+        The default orientation is horizontal.
+
+        .. WARNING:: The orientation parameter is ignored for the moment.
+
+        Example::
+
+            color_picker = ColorPicker(constants.ORIENTATION_HORIZONTAL, conf)
+            screen.place(color_picker, 10, 10)
+            screen.update()
+        """
         super().__init__()
         self.__orientation = constants.ORIENTATION_HORIZONTAL
         if orientation is not None and type(orientation) is int:
@@ -2359,6 +2564,21 @@ class ColorPicker(object):
 
     @property
     def color(self):
+        """
+        Get / set the edited color.
+
+        The setter automatically forward the individual red, green and blue values to
+        to the proper properties of that widget.
+
+        :param value: The color object.
+        :type value: :class:`~pygamelib.gfx.core.Color`
+
+        Example::
+
+            current_color = color_picker.color
+            current_color.r += 10
+            color_picker.color = current_color
+        """
         return core.Color(self.__red, self.__green, self.__blue)
 
     @color.setter
@@ -2375,6 +2595,10 @@ class ColorPicker(object):
 
     @property
     def red(self):
+        """
+        Get / set the red component of the color, the value needs to be an int between 0
+        and 255.
+        """
         return self.__red
 
     @red.setter
@@ -2390,6 +2614,10 @@ class ColorPicker(object):
 
     @property
     def green(self):
+        """
+        Get / set the green component of the color, the value needs to be an int between
+        0 and 255.
+        """
         return self.__green
 
     @green.setter
@@ -2405,6 +2633,10 @@ class ColorPicker(object):
 
     @property
     def blue(self):
+        """
+        Get / set the blue component of the color, the value needs to be an int between
+        0 and 255.
+        """
         return self.__blue
 
     @blue.setter
@@ -2420,6 +2652,15 @@ class ColorPicker(object):
 
     @property
     def selection(self):
+        """
+        Get / set the selection, it needs to be an int between 0 and 2 included.
+
+        0 correspond to the red channel, 1 to the green channel and 2 to the blue
+        channel.
+
+        When this widget is rendered a :class:`~pygamelib.gfx.ui.Box` will be rendered
+        around the specified channel.
+        """
         return self.__selection
 
     @selection.setter
@@ -2484,17 +2725,58 @@ class ColorPicker(object):
 
 class ColorPickerDialog(Dialog):
     """
+    The ColorPickerDialog is a dialog wrapper around the :class:`ColorPicker` widget.
+
+    It serves the same purpose: present a way to easily select a custom color to the
+    user.
+
+    It does it as an immediately usable dialog.
+
+    The show() method returns the :class:`~pygamelib.gfx.core.Color` selected by the
+    user. If the user pressed the ESC key, it returns None.
+
+    **Key mapping**:
+
+     * ESC: Exit from the show() method and return None.
+     * ENTER: Exit from the show() method. Returns the currently selected color.
+     * UP / DOWN: Increase/decrease the currently selected channel by 1.
+     * PAGE_UP / PAGE_DOWN: Increase/decrease the currently selected channel by 10.
+     * LEFT / RIGHT: Navigate between color channels.
+
     Like all dialogs, it is automatically destroyed on exit of the :meth:`show()`
     method. It is also deleted from the screen buffer.
     """
 
     def __init__(self, config) -> None:
+        """
+        The constructor only take the configuration as parameter.
+
+        :param config: The configuration object.
+        :type config: :class:`UiConfig`
+
+        Example::
+
+            color_dialog = ColorPickerDialog(conf)
+            color_dialog.set_color( core.Color(128, 128, 128) )
+            screen.place(color_dialog, 10, 10)
+            new_color = color_dialog.show()
+        """
         super().__init__(config=config)
         self.__color_picker = ColorPicker(
             orientation=constants.ORIENTATION_HORIZONTAL, config=config
         )
 
     def set_color(self, color: core.Color) -> None:
+        """
+        Set the color shown in the dialog.
+
+        :param color: The color to edit.
+        :type color: :class:`~pygamelib.gfx.core.Color`
+
+        Example::
+
+            color_dialog.set_color( core.Color(128, 128, 128) )
+        """
         if isinstance(color, core.Color):
             self.__color_picker.red = color.r
             self.__color_picker.blue = color.b
@@ -2538,6 +2820,21 @@ class ColorPickerDialog(Dialog):
         )
 
     def show(self):  # pragma: no cover
+        """
+        Show the dialog and execute the event loop.
+        Until this method returns, all keyboards event are processed by the local event
+        loop. This is also true if called from the main event loop.
+
+        This event loop returns the edited :class:`~pygamelib.gfx.core.Color` or None
+        if the user pressed the ESC key.
+
+        :return: The editor color.
+        :rtype: :class:`~pygamelib.gfx.core.Color`
+
+        Example::
+
+            new_color = color_dialog.show()
+        """
         screen = self.config.game.screen
         game = self.config.game
         term = game.terminal

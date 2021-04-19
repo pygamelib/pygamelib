@@ -4,6 +4,10 @@ GridSelectorDialog
 .. currentmodule:: pygamelib.gfx.ui
 
 .. autoclass:: GridSelectorDialog
+   :members:
+   :inherited-members:
+   :undoc-members:
+   :show-inheritance:
 
    
    .. automethod:: __init__

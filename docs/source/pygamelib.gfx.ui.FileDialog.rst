@@ -4,6 +4,10 @@ FileDialog
 .. currentmodule:: pygamelib.gfx.ui
 
 .. autoclass:: FileDialog
+   :members:
+   :inherited-members:
+   :undoc-members:
+   :show-inheritance:
 
    
    .. automethod:: __init__

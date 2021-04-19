@@ -4,6 +4,10 @@ ColorPickerDialog
 .. currentmodule:: pygamelib.gfx.ui
 
 .. autoclass:: ColorPickerDialog
+   :members:
+   :inherited-members:
+   :undoc-members:
+   :show-inheritance:
 
    
    .. automethod:: __init__

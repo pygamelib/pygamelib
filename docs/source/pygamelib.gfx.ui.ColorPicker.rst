@@ -4,6 +4,10 @@ ColorPicker
 .. currentmodule:: pygamelib.gfx.ui
 
 .. autoclass:: ColorPicker
+   :members:
+   :inherited-members:
+   :undoc-members:
+   :show-inheritance:
 
    
    .. automethod:: __init__
