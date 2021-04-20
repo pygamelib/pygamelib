@@ -518,7 +518,7 @@ class Board:
                     and y.model != self.ui_board_void_cell
                 ):
                     y.model = self.ui_board_void_cell
-                    y.sprixel = copy.deepcopy(self.ui_board_void_cell_sprixel)
+                    y.sprixel = self.ui_board_void_cell_sprixel
                 print(y, end="")
             if column_max_bound >= self.size[0]:
                 print(f"{self.ui_border_right}{clear_eol}", end="")
@@ -587,7 +587,7 @@ class Board:
                     and column.model != self.ui_board_void_cell
                 ):
                     if isinstance(self.ui_board_void_cell_sprixel, core.Sprixel):
-                        column.sprixel = copy.deepcopy(self.ui_board_void_cell_sprixel)
+                        column.sprixel = self.ui_board_void_cell_sprixel
                         column.model = self.ui_board_void_cell_sprixel.model
                     else:
                         column.model = self.ui_board_void_cell
