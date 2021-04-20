@@ -16,9 +16,10 @@ import copy
 
 class EditorVariables:
     def __init__(self) -> None:
+        self.collection = None
         self.menu = ["File", "Edit", "Help"]
         self.menu_idx = 0
-        self.boxes = ["menu", "sprite", "info", "sprite_list", "toolbox", "palette"]
+        self.boxes = ["menu", "sprite", "info", "sprite_list", "toolbox", "brushes"]
         self.boxes_idx = 0
         self.tools = [
             "Create new brush",
@@ -32,7 +33,7 @@ class EditorVariables:
             "Fill w/ BG color",
             "     ------     ",
             "(E)raser mode",
-            "(A)dd to palette",
+            "(A)dd to brushes",
             "(R)andom brush",
             "     ------     ",
             "Rename sprite",
@@ -44,12 +45,12 @@ class EditorVariables:
         self.tools_idx = 0
         self.sprite_list = []
         self.sprite_list_idx = 0
-        self.palette = []
-        self.palette_idx = 0
+        self.brushes = []
+        self.brushes_idx = 0
         self.filename = ""
         self.start = time.time()
         self.frames = 0
-        self.screen_dimensions = {"menu": 3, "central_zone": 15, "palette": 7}
+        self.screen_dimensions = {"menu": 3, "central_zone": 15, "brushes": 7}
         self.ui_init = False
         self.eraser_mode = False
         self.current_sprixel = None
@@ -138,7 +139,12 @@ class EditorVariables:
         #     else:
         #         self.brush_models.append(e)
 
-        self.test = 0
+        self.copy_paste_state = "idle"
+        self.copy_paste_start = [None, None]
+        self.copy_paste_stop = [None, None]
+        self.copy_paste_previous_stop = [None, None]
+        self.copy_paste_sprite_idx = -1
+        self.copy_paste_board_id = -1
 
 
 ev = EditorVariables()
@@ -159,8 +165,8 @@ def flood_fill(
         return
     # if isinstance(board.item(r, c), board_items.BoardItemVoid):
     if board.item(r, c).sprixel == replace:
-        board.place_item(board_items.Door(sprixel=sprixel), r, c)
-        sprite.set_sprixel(r, c, sprixel)
+        board.place_item(board_items.Door(sprixel=copy.deepcopy(sprixel)), r, c)
+        sprite.set_sprixel(r, c, copy.deepcopy(sprixel))
     flood_fill(board, sprite, r + 1, c, replace, sprixel)
     flood_fill(board, sprite, r - 1, c, replace, sprixel)
     flood_fill(board, sprite, r, c + 1, replace, sprixel)
@@ -220,13 +226,13 @@ def display_help():
     msg.add_line("Shift + H: Display this help.")
     msg.add_line("Shift + S: Save the current sprite as (i.e: ask for the location).")
     msg.add_line("Shift + O: Open a sprite collection.")
-    msg.add_line("Shift + P: Select the Palette panel.")
+    msg.add_line("Shift + B: Select the Brushes panel.")
     msg.add_line("Shift + L: Select the Sprite List panel.")
     msg.add_line("Shift + T: Select the Tools panel.")
     msg.add_line(
-        "Shift + A: Add the current sprixel (see the info pannel) to the Palette."
+        "Shift + A: Add the current sprixel (see the info pannel) to the Brushes."
     )
-    msg.add_line("Shift + R: Create a random brush and add it to the Palette.")
+    msg.add_line("Shift + R: Create a random brush and add it to the Brushes.")
     msg.add_line("Esc.: Closes most of the dialog windows (including that one). ")
     msg.add_line("      A dialog does not return anything when closed with escape.")
     msg.add_line(
@@ -350,52 +356,52 @@ def draw_ui():
         else:
             screen.place(ev.tools[i], tb_start_row + idx + 1, tb_start_col + 2)
         idx += 1
-    # Draw the palette box
+    # Draw the brushes box
     draw_box(
-        screen.height - ev.screen_dimensions["palette"],
+        screen.height - ev.screen_dimensions["brushes"],
         0,
-        ev.screen_dimensions["palette"],
+        ev.screen_dimensions["brushes"],
         screen.width - 21,
-        "palette",
-        "Palette",
+        "brushes",
+        "Brushes",
     )
     pal_idx = 2
     nl = 0
-    for i in range(0, len(ev.palette)):
+    for i in range(0, len(ev.brushes)):
         screen.place(
-            ev.palette[i],
-            screen.height - ev.screen_dimensions["palette"] + 2 + nl,
+            ev.brushes[i],
+            screen.height - ev.screen_dimensions["brushes"] + 2 + nl,
             pal_idx,
         )
         # TODO: Adjust!!
         # g.log(
         #     'Place sprixel at '
-        #     f'{screen.height - ev.screen_dimensions["palette"] + 2 + nl} '
+        #     f'{screen.height - ev.screen_dimensions["brushes"] + 2 + nl} '
         #     f", {pal_idx} trying to fill null sprixels between {1 + pal_idx} and "
-        #     f"{ 1 + pal_idx + ev.palette[i].length} i={i}"
+        #     f"{ 1 + pal_idx + ev.brushes[i].length} i={i}"
         # )
-        # for c in range(1 + i + 1, 1 + i + ev.palette[i].length):
-        # for c in range(1 + pal_idx, 1 + pal_idx + ev.palette[i].length):
+        # for c in range(1 + i + 1, 1 + i + ev.brushes[i].length):
+        # for c in range(1 + pal_idx, 1 + pal_idx + ev.brushes[i].length):
         #     screen.place(
         #         core.Sprixel(),
-        #         screen.height - ev.screen_dimensions["palette"] + 2 + nl, c
+        #         screen.height - ev.screen_dimensions["brushes"] + 2 + nl, c
         #     )
         # Draw the selector
-        if ev.palette_idx == i:
-            sel = ui.Box(ev.palette[i].length + 2, 3, config=ev.ui_config_selected)
+        if ev.brushes_idx == i:
+            sel = ui.Box(ev.brushes[i].length + 2, 3, config=ev.ui_config_selected)
             screen.place(
                 sel,
-                screen.height - ev.screen_dimensions["palette"] + 1 + nl,
+                screen.height - ev.screen_dimensions["brushes"] + 1 + nl,
                 pal_idx - 1,
             )
             ev.previous_cursor_pos = [
-                screen.height - ev.screen_dimensions["palette"] + 1 + nl,
+                screen.height - ev.screen_dimensions["brushes"] + 1 + nl,
                 pal_idx - 1,
             ]
         pal_idx += 2
         if pal_idx >= screen.width - 23:
             if nl == 2:
-                ev.palette = ev.palette[0:i]
+                ev.brushes = ev.brushes[0:i]
                 break
             else:
                 nl += 2
@@ -646,6 +652,137 @@ def delete_current_sprite(g: engine.Game):
     load_sprite_to_board(g, ev.sprite_list_idx)
 
 
+def is_blended(item):
+    return hasattr(item, "blended") and getattr(item, "blended")
+
+
+def update_copy_paste(g: engine.Game):
+    if ev.copy_paste_state == "selecting":
+        ev.copy_paste_previous_stop = ev.copy_paste_stop
+        ev.copy_paste_stop = g.player.pos
+    if ev.copy_paste_state == "selecting" or ev.copy_paste_state == "selected":
+        start_row = min(ev.copy_paste_start[0], ev.copy_paste_stop[0])
+        stop_row = max(ev.copy_paste_start[0], ev.copy_paste_stop[0])
+        start_col = min(ev.copy_paste_start[1], ev.copy_paste_stop[1])
+        stop_col = max(ev.copy_paste_start[1], ev.copy_paste_stop[1])
+        dst_to_start = base.Math.distance(
+            ev.copy_paste_start[0],
+            ev.copy_paste_start[1],
+            ev.copy_paste_stop[0],
+            ev.copy_paste_stop[1],
+        )
+        previous_dst_to_start = base.Math.distance(
+            ev.copy_paste_start[0],
+            ev.copy_paste_start[1],
+            ev.copy_paste_previous_stop[0],
+            ev.copy_paste_previous_stop[1],
+        )
+        if dst_to_start < previous_dst_to_start:
+            # clear_copy_paste(g)
+            # delete previously selected column
+            start = ev.copy_paste_start[0]
+            stop = ev.copy_paste_previous_stop[0]
+            if ev.copy_paste_previous_stop[0] < ev.copy_paste_start[0]:
+                stop = ev.copy_paste_start[0]
+                start = ev.copy_paste_previous_stop[0]
+            for cpr in range(start, stop + 1):
+                item = g.get_board(ev.copy_paste_board_id).item(
+                    cpr, ev.copy_paste_previous_stop[1]
+                )
+                if item.sprixel is not None:
+                    if hasattr(item, "_original_bg_color"):
+                        item.sprixel.bg_color = getattr(item, "_original_bg_color")
+                    if hasattr(item, "_original_fg_color"):
+                        item.sprixel.fg_color = getattr(item, "_original_fg_color")
+                    setattr(item, "blended", False)
+            # delete previously selected row
+            start = ev.copy_paste_start[1]
+            stop = ev.copy_paste_previous_stop[1]
+            if ev.copy_paste_previous_stop[1] < ev.copy_paste_start[1]:
+                stop = ev.copy_paste_start[1]
+                start = ev.copy_paste_previous_stop[1]
+            for cpr in range(start, stop + 1):
+                item = g.get_board(ev.copy_paste_board_id).item(
+                    ev.copy_paste_previous_stop[0], cpr
+                )
+                if item.sprixel is not None:
+                    if hasattr(item, "_original_bg_color"):
+                        item.sprixel.bg_color = getattr(item, "_original_bg_color")
+                    if hasattr(item, "_original_fg_color"):
+                        item.sprixel.fg_color = getattr(item, "_original_fg_color")
+                    setattr(item, "blended", False)
+
+        for cpr in range(start_row, stop_row + 1):
+            for cpc in range(start_col, stop_col + 1):
+                item = g.get_board(ev.copy_paste_board_id).item(cpr, cpc)
+                if item.sprixel is not None:
+                    if not is_blended(item):
+                        setattr(item, "_original_bg_color", item.sprixel.bg_color)
+                        setattr(item, "_original_fg_color", item.sprixel.fg_color)
+                        if item.sprixel.bg_color is not None:
+                            item.sprixel.bg_color = item.sprixel.bg_color.blend(
+                                core.Color(0, 255, 200)
+                            )
+                        else:
+                            item.sprixel.bg_color = core.Color(0, 255, 200)
+                        if item.sprixel.fg_color is not None:
+                            item.sprixel.fg_color = item.sprixel.fg_color.blend(
+                                core.Color(0, 255, 200)
+                            )
+                        else:
+                            item.sprixel.fg_color = core.Color(0, 255, 200)
+                        setattr(item, "blended", True)
+
+
+def clear_copy_paste(g):
+    start_row = min(ev.copy_paste_start[0], ev.copy_paste_stop[0])
+    stop_row = max(ev.copy_paste_start[0], ev.copy_paste_stop[0])
+    start_col = min(ev.copy_paste_start[1], ev.copy_paste_stop[1])
+    stop_col = max(ev.copy_paste_start[1], ev.copy_paste_stop[1])
+    # spr_c_idx = ev.copy_paste_sprite_idx % len(ev.sprite_list)
+    # spr_name = ev.sprite_list[spr_c_idx]
+    for cpr in range(start_row, stop_row + 1):
+        for cpc in range(start_col, stop_col + 1):
+            item = g.get_board(ev.copy_paste_board_id).item(cpr, cpc)
+            if item.sprixel is not None:
+                # item.sprixel = copy.deepcopy(ev.collection[spr_name].sprixel(cpr, cpc))
+                if hasattr(item, "_original_bg_color"):
+                    item.sprixel.bg_color = getattr(item, "_original_bg_color")
+                if hasattr(item, "_original_fg_color"):
+                    item.sprixel.fg_color = getattr(item, "_original_fg_color")
+                setattr(item, "blended", False)
+
+
+def paste_clipboard(g: engine.Game):
+    clip_spr_c_idx = ev.copy_paste_sprite_idx % len(ev.sprite_list)
+    clip_spr_name = ev.sprite_list[clip_spr_c_idx]
+    clip_sprite = ev.collection[clip_spr_name]
+    _current_sprite = ev.collection[
+        ev.sprite_list[ev.sprite_list_idx % len(ev.sprite_list)]
+    ]
+    sr = g.player.row
+    sc = g.player.column
+    start_row = min(ev.copy_paste_start[0], ev.copy_paste_stop[0])
+    stop_row = max(ev.copy_paste_start[0], ev.copy_paste_stop[0])
+    start_col = min(ev.copy_paste_start[1], ev.copy_paste_stop[1])
+    stop_col = max(ev.copy_paste_start[1], ev.copy_paste_stop[1])
+    clear_copy_paste(g)
+    for r in range(start_row, stop_row):
+        if sr + r - start_row >= _current_sprite.height:
+            break
+        for c in range(start_col, stop_col):
+            if sc + c - start_col >= _current_sprite.width:
+                break
+            g.current_board().place_item(
+                board_items.Door(sprixel=copy.deepcopy(clip_sprite.sprixel(r, c))),
+                sr + r - start_row,
+                sc + c - start_col,
+            )
+            _current_sprite.set_sprixel(
+                sr + r - start_row, sc + c - start_col, clip_sprite.sprixel(r, c)
+            )
+
+
 def update_screen(g: engine.Game, inkey, dt: float):
     redraw_ui = True
     screen = g.screen
@@ -666,10 +803,10 @@ def update_screen(g: engine.Game, inkey, dt: float):
         bg.randomize()
         fg = core.Color()
         fg.randomize()
-        ev.palette.append(core.Sprixel(random.choice(ev.brush_models), bg, fg))
-    elif inkey == "P":
-        if ev.boxes[boxes_current_id] != "palette":
-            ev.boxes_idx = ev.boxes.index("palette")
+        ev.brushes.append(core.Sprixel(random.choice(ev.brush_models), bg, fg))
+    elif inkey == "B":
+        if ev.boxes[boxes_current_id] != "brushes":
+            ev.boxes_idx = ev.boxes.index("brushes")
     elif inkey == "L":
         if ev.boxes[boxes_current_id] != "sprite_list":
             ev.boxes_idx = ev.boxes.index("sprite_list")
@@ -824,13 +961,18 @@ def update_screen(g: engine.Game, inkey, dt: float):
             pos = g.player.pos
             g.move_player(constants.UP, 1)
             update_cursor_info(g)
+            update_copy_paste(g)
         elif inkey == engine.key.DOWN or inkey.name == "KEY_ENTER":
-            update_sprixel_under_cursor(
-                g, base.Vector2D.from_direction(constants.DOWN, 1)
-            )
-            pos = g.player.pos
-            g.move_player(constants.DOWN, 1)
-            update_cursor_info(g)
+            if inkey.name == "KEY_ENTER" and ev.copy_paste_state == "selecting":
+                ev.copy_paste_state = "selected"
+            else:
+                update_sprixel_under_cursor(
+                    g, base.Vector2D.from_direction(constants.DOWN, 1)
+                )
+                pos = g.player.pos
+                g.move_player(constants.DOWN, 1)
+                update_cursor_info(g)
+                update_copy_paste(g)
         elif inkey == engine.key.LEFT:
             update_sprixel_under_cursor(
                 g, base.Vector2D.from_direction(constants.LEFT, 1)
@@ -838,6 +980,7 @@ def update_screen(g: engine.Game, inkey, dt: float):
             pos = g.player.pos
             g.move_player(constants.LEFT, 1)
             update_cursor_info(g)
+            update_copy_paste(g)
         elif inkey == engine.key.RIGHT:
             update_sprixel_under_cursor(
                 g, base.Vector2D.from_direction(constants.RIGHT, 1)
@@ -845,6 +988,7 @@ def update_screen(g: engine.Game, inkey, dt: float):
             pos = g.player.pos
             g.move_player(constants.RIGHT, 1)
             update_cursor_info(g)
+            update_copy_paste(g)
         elif inkey == "j":
             pos = g.player.pos
             if g.player.column - 1 >= 0:
@@ -855,11 +999,13 @@ def update_screen(g: engine.Game, inkey, dt: float):
             if ev.eraser_mode:
                 erase_cell(g, pos[0], pos[1])
                 _current_sprite.set_sprixel(pos[0], pos[1], core.Sprixel())
-            elif len(ev.palette) > 0:
+            elif len(ev.brushes) > 0:
                 g.current_board().place_item(
-                    board_items.Door(sprixel=ev.palette[ev.palette_idx]), pos[0], pos[1]
+                    board_items.Door(sprixel=copy.deepcopy(ev.brushes[ev.brushes_idx])),
+                    pos[0],
+                    pos[1],
                 )
-                _current_sprite.set_sprixel(pos[0], pos[1], ev.palette[ev.palette_idx])
+                _current_sprite.set_sprixel(pos[0], pos[1], ev.brushes[ev.brushes_idx])
         elif inkey == "l":
             pos = g.player.pos
             if g.player.column + 1 < g.current_board().width:
@@ -870,11 +1016,13 @@ def update_screen(g: engine.Game, inkey, dt: float):
             if ev.eraser_mode:
                 erase_cell(g, pos[0], pos[1])
                 _current_sprite.set_sprixel(pos[0], pos[1], core.Sprixel())
-            elif len(ev.palette) > 0:
+            elif len(ev.brushes) > 0:
                 g.current_board().place_item(
-                    board_items.Door(sprixel=ev.palette[ev.palette_idx]), pos[0], pos[1]
+                    board_items.Door(sprixel=copy.deepcopy(ev.brushes[ev.brushes_idx])),
+                    pos[0],
+                    pos[1],
                 )
-                _current_sprite.set_sprixel(pos[0], pos[1], ev.palette[ev.palette_idx])
+                _current_sprite.set_sprixel(pos[0], pos[1], ev.brushes[ev.brushes_idx])
         elif inkey == "i":
             pos = g.player.pos
             if g.player.row - 1 >= 0:
@@ -885,11 +1033,13 @@ def update_screen(g: engine.Game, inkey, dt: float):
             if ev.eraser_mode:
                 erase_cell(g, pos[0], pos[1])
                 _current_sprite.set_sprixel(pos[0], pos[1], core.Sprixel())
-            elif len(ev.palette) > 0:
+            elif len(ev.brushes) > 0:
                 g.current_board().place_item(
-                    board_items.Door(sprixel=ev.palette[ev.palette_idx]), pos[0], pos[1]
+                    board_items.Door(sprixel=copy.deepcopy(ev.brushes[ev.brushes_idx])),
+                    pos[0],
+                    pos[1],
                 )
-                _current_sprite.set_sprixel(pos[0], pos[1], ev.palette[ev.palette_idx])
+                _current_sprite.set_sprixel(pos[0], pos[1], ev.brushes[ev.brushes_idx])
         elif inkey == "k":
             pos = g.player.pos
             if g.player.row + 1 < g.current_board().height:
@@ -900,20 +1050,22 @@ def update_screen(g: engine.Game, inkey, dt: float):
             if ev.eraser_mode:
                 erase_cell(g, pos[0], pos[1])
                 _current_sprite.set_sprixel(pos[0], pos[1], core.Sprixel())
-            elif len(ev.palette) > 0:
+            elif len(ev.brushes) > 0:
                 g.current_board().place_item(
-                    board_items.Door(sprixel=ev.palette[ev.palette_idx]), pos[0], pos[1]
+                    board_items.Door(sprixel=copy.deepcopy(ev.brushes[ev.brushes_idx])),
+                    pos[0],
+                    pos[1],
                 )
-                _current_sprite.set_sprixel(pos[0], pos[1], ev.palette[ev.palette_idx])
+                _current_sprite.set_sprixel(pos[0], pos[1], ev.brushes[ev.brushes_idx])
         elif inkey == "E":
             toggle_eraser_mode(screen)
         elif inkey == "A" and ev.current_sprixel is not None:
-            ev.palette.append(ev.current_sprixel)
-        elif inkey.isdigit() and int(inkey) < len(ev.palette) + 1:
+            ev.brushes.append(ev.current_sprixel)
+        elif inkey.isdigit() and int(inkey) < len(ev.brushes) + 1:
             screen.delete(ev.previous_cursor_pos[0], ev.previous_cursor_pos[1])
-            ev.palette_idx = int(inkey) - 1
-            if ev.palette_idx < 0:
-                ev.palette_idx = 9
+            ev.brushes_idx = int(inkey) - 1
+            if ev.brushes_idx < 0:
+                ev.brushes_idx = 9
         elif inkey.name == "KEY_BACKSPACE":
             if g.player.column - 1 >= 0:
                 g.current_board().clear_cell(g.player.row, g.player.column - 1)
@@ -954,6 +1106,25 @@ def update_screen(g: engine.Game, inkey, dt: float):
             else:
                 mvt = base.Vector2D(g.current_board().height - 1 - g.player.row, 0)
                 g.move_player(mvt)
+        elif inkey == "C":
+            if ev.copy_paste_start != [None, None] and ev.copy_paste_stop != [
+                None,
+                None,
+            ]:
+                clear_copy_paste(g)
+            ev.copy_paste_start = g.player.pos
+            ev.copy_paste_stop = g.player.pos
+            ev.copy_paste_sprite_idx = ev.sprite_list_idx
+            ev.copy_paste_board_id = g.current_level
+            ev.copy_paste_state = "selecting"
+        elif inkey == "V":
+            ev.copy_paste_state = "pasted"
+            paste_clipboard(g)
+        elif inkey.name == "KEY_ESCAPE" and (
+            ev.copy_paste_state == "selecting" or ev.copy_paste_state == "selected"
+        ):
+            ev.copy_paste_state = "none"
+            clear_copy_paste(g)
         elif inkey is not None and inkey != "" and inkey.isprintable():
             # If the character is printable we just add it to the canvas
             sprixel = core.Sprixel(str(inkey))
@@ -992,11 +1163,11 @@ def update_screen(g: engine.Game, inkey, dt: float):
             )
             sprix = gs.show()
             if (
-                len(ev.palette) > ev.palette_idx
+                len(ev.brushes) > ev.brushes_idx
                 and sprix is not None
                 and sprix.model != ""
             ):
-                ev.palette[ev.palette_idx].model = sprix.model
+                ev.brushes[ev.brushes_idx].model = sprix.model
             # screen.delete(
             #     int(screen.vcenter - (height / 2)), int(screen.hcenter - (width / 2))
             # )
@@ -1021,31 +1192,31 @@ def update_screen(g: engine.Game, inkey, dt: float):
             and ev.tools[ev.tools_idx % len(ev.tools)] == "Select FG color"
         ):
             cp = ui.ColorPickerDialog(config=ev.ui_config_popup)
-            cp.set_color(ev.palette[ev.palette_idx].fg_color)
+            cp.set_color(ev.brushes[ev.brushes_idx].fg_color)
             screen.place(cp, screen.vcenter - 2, screen.hcenter - 13)
             color = cp.show()
-            if len(ev.palette) > ev.palette_idx and color is not None:
-                ev.palette[ev.palette_idx].fg_color = color
+            if len(ev.brushes) > ev.brushes_idx and color is not None:
+                ev.brushes[ev.brushes_idx].fg_color = color
             # screen.delete(screen.vcenter - 2, screen.hcenter - 13)
         elif (
             inkey.name == "KEY_ENTER"
             and ev.tools[ev.tools_idx % len(ev.tools)] == "Select BG color"
         ):
             cp = ui.ColorPickerDialog(config=ev.ui_config_popup)
-            cp.set_color(ev.palette[ev.palette_idx].bg_color)
+            cp.set_color(ev.brushes[ev.brushes_idx].bg_color)
             screen.place(cp, screen.vcenter - 2, screen.hcenter - 13)
             color = cp.show()
-            if len(ev.palette) > ev.palette_idx and color is not None:
-                ev.palette[ev.palette_idx].bg_color = color
+            if len(ev.brushes) > ev.brushes_idx and color is not None:
+                ev.brushes[ev.brushes_idx].bg_color = color
             # screen.delete(screen.vcenter - 2, screen.hcenter - 13)
         elif inkey.name == "KEY_ENTER" and (
             ev.tools[ev.tools_idx % len(ev.tools)] == "Fill w/ FG color"
             or ev.tools[ev.tools_idx % len(ev.tools)] == "Fill w/ BG color"
         ):
             # Get the right color
-            color = ev.palette[ev.palette_idx].fg_color
+            color = ev.brushes[ev.brushes_idx].fg_color
             if "BG" in ev.tools[ev.tools_idx % len(ev.tools)]:
-                color = ev.palette[ev.palette_idx].bg_color
+                color = ev.brushes[ev.brushes_idx].bg_color
             # Create a sprixel with no model to fill the space with
             sprx = core.Sprixel(" ", color)
             # Clear the cursor so the flood fill algo doesn't stop right away
@@ -1076,20 +1247,20 @@ def update_screen(g: engine.Game, inkey, dt: float):
             inkey.name == "KEY_ENTER"
             and ev.tools[ev.tools_idx % len(ev.tools)] == "Remove BG color"
         ):
-            if len(ev.palette) > ev.palette_idx:
-                ev.palette[ev.palette_idx].bg_color = None
+            if len(ev.brushes) > ev.brushes_idx:
+                ev.brushes[ev.brushes_idx].bg_color = None
         elif (
             inkey.name == "KEY_ENTER"
             and ev.tools[ev.tools_idx % len(ev.tools)] == "Remove FG color"
         ):
-            if len(ev.palette) > ev.palette_idx:
-                ev.palette[ev.palette_idx].fg_color = None
+            if len(ev.brushes) > ev.brushes_idx:
+                ev.brushes[ev.brushes_idx].fg_color = None
         elif (
             inkey.name == "KEY_ENTER"
-            and ev.tools[ev.tools_idx % len(ev.tools)] == "(A)dd to palette"
+            and ev.tools[ev.tools_idx % len(ev.tools)] == "(A)dd to brushes"
         ):
             if ev.current_sprixel is not None:
-                ev.palette.append(ev.current_sprixel)
+                ev.brushes.append(ev.current_sprixel)
             ev.boxes_idx = ev.boxes.index("sprite")
         elif (
             inkey.name == "KEY_ENTER"
@@ -1182,7 +1353,7 @@ def update_screen(g: engine.Game, inkey, dt: float):
                     color = cp.show()
                     if color is not None:
                         new_sprixel.bg_color = color
-                    ev.palette.append(new_sprixel)
+                    ev.brushes.append(new_sprixel)
 
         elif (
             inkey.name == "KEY_ENTER"
@@ -1295,17 +1466,17 @@ def update_screen(g: engine.Game, inkey, dt: float):
             ev.boxes_idx = ev.boxes.index("sprite")
         else:
             redraw_ui = False
-    elif ev.boxes[boxes_current_id] == "palette":
+    elif ev.boxes[boxes_current_id] == "brushes":
         clean_cursor = True
         if inkey.name == "KEY_RIGHT":
-            ev.palette_idx += 1
+            ev.brushes_idx += 1
         elif inkey.name == "KEY_LEFT":
-            ev.palette_idx -= 1
+            ev.brushes_idx -= 1
         elif inkey.name == "KEY_DOWN":
-            # TODO : the -1 should probably be "- ev.palette[ev.palette_idx].length"
-            ev.palette_idx += int((screen.width - 23) / 2) - 1
+            # TODO : the -1 should probably be "- ev.brushes[ev.brushes_idx].length"
+            ev.brushes_idx += int((screen.width - 23) / 2) - 1
         elif inkey.name == "KEY_UP":
-            ev.palette_idx -= int((screen.width - 23) / 2) - 1
+            ev.brushes_idx -= int((screen.width - 23) / 2) - 1
         elif inkey.name == "KEY_ENTER":
             # If we hit the enter key, we go back to the sprite canvas
             ev.boxes_idx = ev.boxes.index("sprite")
@@ -1317,8 +1488,8 @@ def update_screen(g: engine.Game, inkey, dt: float):
             and ev.previous_cursor_pos[1] is not None
         ):
             screen.delete(ev.previous_cursor_pos[0], ev.previous_cursor_pos[1])
-        # Clamp the ev.palette_idx between 0 and len of the list
-        ev.palette_idx = clamp(ev.palette_idx, 0, len(ev.palette) - 1)
+        # Clamp the ev.brushes_idx between 0 and len of the list
+        ev.brushes_idx = clamp(ev.brushes_idx, 0, len(ev.brushes) - 1)
     elif ev.boxes[boxes_current_id] == "sprite_list" and (
         inkey == engine.key.UP or inkey == engine.key.DOWN
     ):
@@ -1348,6 +1519,12 @@ def update_screen(g: engine.Game, inkey, dt: float):
         screen.place(base.Text(fps), 1, screen.width - len(fps) - 2)
         ev.frames = 0
         ev.start = time.time()
+        screen.place(
+            f"C/P state={ev.copy_paste_state} start={ev.copy_paste_start} stop={ev.copy_paste_stop} pstop={ev.copy_paste_previous_stop} bid={ev.copy_paste_board_id} sid={ev.copy_paste_sprite_idx}",
+            screen.height - 3,
+            3,
+        )
+
     screen.update()
     ev.frames += 1
 
