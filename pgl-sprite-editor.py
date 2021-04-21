@@ -767,20 +767,26 @@ def paste_clipboard(g: engine.Game):
     start_col = min(ev.copy_paste_start[1], ev.copy_paste_stop[1])
     stop_col = max(ev.copy_paste_start[1], ev.copy_paste_stop[1])
     clear_copy_paste(g)
-    for r in range(start_row, stop_row):
+    for r in range(start_row, stop_row + 1):
         if sr + r - start_row >= _current_sprite.height:
             break
-        for c in range(start_col, stop_col):
+        for c in range(start_col, stop_col + 1):
             if sc + c - start_col >= _current_sprite.width:
                 break
-            g.current_board().place_item(
-                board_items.Door(sprixel=copy.deepcopy(clip_sprite.sprixel(r, c))),
-                sr + r - start_row,
-                sc + c - start_col,
-            )
-            _current_sprite.set_sprixel(
-                sr + r - start_row, sc + c - start_col, clip_sprite.sprixel(r, c)
-            )
+            sprix = clip_sprite.sprixel(r, c)
+            if sprix != core.Sprixel():
+                g.current_board().place_item(
+                    board_items.Door(sprixel=copy.deepcopy(sprix)),
+                    sr + r - start_row,
+                    sc + c - start_col,
+                )
+            else:
+                g.current_board().place_item(
+                    g.current_board().generate_void_cell(),
+                    sr + r - start_row,
+                    sc + c - start_col,
+                )
+            _current_sprite.set_sprixel(sr + r - start_row, sc + c - start_col, sprix)
 
 
 def update_screen(g: engine.Game, inkey, dt: float):
@@ -930,7 +936,9 @@ def update_screen(g: engine.Game, inkey, dt: float):
                 "filter": constants.PRINTABLE_FILTER,
             },
         ]
-        minp = ui.MultiLineInputDialog(fields=fields, config=ev.ui_config_popup)
+        minp = ui.MultiLineInputDialog(
+            title="New sprite", fields=fields, config=ev.ui_config_popup
+        )
         screen.place(minp, screen.vcenter - len(fields), screen.hcenter - 18)
         filled_fields = minp.show()
         # screen.delete(screen.vcenter - len(fields), screen.hcenter - 18)
@@ -1177,16 +1185,18 @@ def update_screen(g: engine.Game, inkey, dt: float):
         ):
             old_name = ev.sprite_list[ev.sprite_list_idx % len(ev.sprite_list)]
             edit = ui.LineInputDialog(
+                "Rename sprite",
                 "Enter the new sprite name:",
                 old_name,
                 config=ev.ui_config_popup,
             )
             screen.place(edit, screen.vcenter, screen.hcenter - 13)
             new_name = edit.show()
-            ev.collection.rename(old_name, new_name)
-            ev.sprite_list[ev.sprite_list_idx % len(ev.sprite_list)] = new_name
-            # ev.sprite_list = sorted(ev.sprite_list)
-            # ev.sprite_list_idx = ev.sprite_list.index(new_name)
+            if new_name != "":
+                ev.collection.rename(old_name, new_name)
+                ev.sprite_list[ev.sprite_list_idx % len(ev.sprite_list)] = new_name
+                # ev.sprite_list = sorted(ev.sprite_list)
+                # ev.sprite_list_idx = ev.sprite_list.index(new_name)
         elif (
             inkey.name == "KEY_ENTER"
             and ev.tools[ev.tools_idx % len(ev.tools)] == "Select FG color"

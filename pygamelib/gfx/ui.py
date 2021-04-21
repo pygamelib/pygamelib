@@ -911,6 +911,7 @@ class MessageDialog(Dialog):
         height: int = None,
         adaptive_height: bool = True,
         alignment: int = None,
+        title: str = None,
         config: UiConfig = None,
     ) -> None:
         """
@@ -931,6 +932,9 @@ class MessageDialog(Dialog):
            constants.ALIGN_* constants. The default value is
            :py:const:`constants.ALIGN_LEFT`
         :type alignment: int
+        :param title: The short title of the dialog. Only used when the dialog is not
+           borderless.
+        :type title: str
         :param config: The configuration object.
         :type config: :class:`UiConfig`
 
@@ -966,6 +970,14 @@ class MessageDialog(Dialog):
         if data is not None:
             for d in data:
                 self.add_line(d, alignment)
+        self.__title = title
+        if self.__title is None:
+            self.__title = ""
+        elif isinstance(self.__title, base.Text):
+            # cannot be a Text object as it is styled with the border style.
+            self.__title = self.__title.text
+        elif not (type(title) is str or isinstance(self.__title, base.Text)):
+            raise base.PglInvalidTypeException("MessageDialog: title must be a str.")
 
     def _build_cache(self) -> None:
         self.__cache = {"data": []}
@@ -1010,6 +1022,25 @@ class MessageDialog(Dialog):
                 "MessageDialog.height = value: value needs to be an int. It is a "
                 f"{type(value)}"
             )
+
+    @property
+    def title(self) -> str:
+        """
+        Get and set the title of the dialog, it has to be a str.
+        """
+        return self.__title
+
+    @title.setter
+    def title(self, value) -> None:
+        if isinstance(value, base.Text):
+            self.__title = value.text
+        elif type(value) is str:
+            self.__title = value
+        else:
+            raise base.PglInvalidTypeException(
+                "MessageDialog.title: value needs to be a str."
+            )
+        self.config.game.screen.trigger_rendering()
 
     def add_line(self, data, alignment=constants.ALIGN_LEFT) -> None:
         """
@@ -1177,12 +1208,16 @@ class LineInputDialog(Dialog):
 
     def __init__(
         self,
+        title=None,
         label="Input a value:",
         default="",
         filter=constants.PRINTABLE_FILTER,
         config=None,
     ) -> None:
         """
+        :param title: The short title of the dialog. Only used when the dialog is not
+           borderless.
+        :type title: str
         :param label: The label of the dialog (usually a one line instruction).
         :type label: str | :class:`base.Text`
         :param default: The default value in the input field.
@@ -1196,14 +1231,26 @@ class LineInputDialog(Dialog):
 
         Example::
 
-            line_input = LineInputDialog("Enter the name of your pet:", "Stupido")
+            line_input = LineInputDialog(
+                "Name the pet",
+                "Enter the name of your pet:",
+                "Stupido",
+            )
             screen.place(line_input, 10, 10)
             pet_name = line_input.show()
         """
         super().__init__(config=config)
+        self.__title = title
         self.__label = label
         self.__default = default
         self.__filter = filter
+        if self.__title is None:
+            self.__title = ""
+        elif isinstance(self.__title, base.Text):
+            # cannot be a Text object as it is styled with the border style.
+            self.__title = self.__title.text
+        elif not (type(title) is str or isinstance(self.__title, base.Text)):
+            raise base.PglInvalidTypeException("LineInputDialog: title must be a str.")
         if self.__label is None or not (
             isinstance(self.__label, base.Text) or type(self.__label) is str
         ):
@@ -1239,6 +1286,25 @@ class LineInputDialog(Dialog):
             )
         self.config.game.screen.trigger_rendering()
 
+    @property
+    def title(self) -> str:
+        """
+        Get and set the title of the dialog, it has to be a str.
+        """
+        return self.__title
+
+    @title.setter
+    def title(self, value) -> None:
+        if isinstance(value, base.Text):
+            self.__title = value.text
+        elif type(value) is str:
+            self.__title = value
+        else:
+            raise base.PglInvalidTypeException(
+                "LineInputDialog.title: value needs to be a str."
+            )
+        self.config.game.screen.trigger_rendering()
+
     def render_to_buffer(
         self, buffer, row, column, buffer_height, buffer_width
     ) -> None:
@@ -1263,7 +1329,7 @@ class LineInputDialog(Dialog):
         if not self.config.borderless_dialog:
             offset = 1
             # We need to account for the borders in the box size
-            box = Box(self.__label.length + 2, 4, config=self.config)
+            box = Box(self.__label.length + 2, 4, config=self.config, title=self.title)
             box.render_to_buffer(buffer, row, column, buffer_height, buffer_width)
         lbl = core.Sprite.from_text(self.__label)
         lbl.render_to_buffer(
@@ -1346,12 +1412,16 @@ class MultiLineInputDialog(Dialog):
                 "filter": constants.PRINTABLE_FILTER,
             }
         ],
+        title: str = None,
         config=None,
     ) -> None:
         """
         :param fields: A list of dictionnary that represent the fields to present to the
            user. Please see bellow for a description of the dictionnary.
         :type fields: list
+        :param title: The short title of the dialog. Only used when the dialog is not
+           borderless.
+        :type title: str
         :param config: The configuration object.
         :type config: :class:`UiConfig`
 
@@ -1389,10 +1459,20 @@ class MultiLineInputDialog(Dialog):
             completed_fields = multi_input.show()
         """
         super().__init__(config=config)
+        self.__title = title
         self.__fields = fields
         if self.__fields is None or not (type(self.__fields) is list):
             raise base.PglInvalidTypeException(
                 "MultiInputDialog: fields must be a list of dictionaries."
+            )
+        if self.__title is None:
+            self.__title = ""
+        elif isinstance(self.__title, base.Text):
+            # cannot be a Text object as it is styled with the border style.
+            self.__title = self.__title.text
+        elif not (type(title) is str or isinstance(self.__title, base.Text)):
+            raise base.PglInvalidTypeException(
+                "MultiLineInputDialog: title must be a str."
             )
         self.user_input = ""
         self.__cache = list()
@@ -1425,6 +1505,25 @@ class MultiLineInputDialog(Dialog):
                 "MultiInputDialog.label: value needs to be a list of dictionaries."
             )
         self._build_cache()
+        self.config.game.screen.trigger_rendering()
+
+    @property
+    def title(self) -> str:
+        """
+        Get and set the title of the dialog, it has to be a str.
+        """
+        return self.__title
+
+    @title.setter
+    def title(self, value) -> None:
+        if isinstance(value, base.Text):
+            self.__title = value.text
+        elif type(value) is str:
+            self.__title = value
+        else:
+            raise base.PglInvalidTypeException(
+                "MultiLineInputDialog.title: value needs to be a str."
+            )
         self.config.game.screen.trigger_rendering()
 
     def render_to_buffer(
@@ -1464,7 +1563,10 @@ class MultiLineInputDialog(Dialog):
             offset = 1
             # We need to account for the borders in the box size
             box = Box(
-                max_text_width + 2, len(self.__fields) * 2 + 2, config=self.config
+                max_text_width + 2,
+                len(self.__fields) * 2 + 2,
+                config=self.config,
+                title=self.title,
             )
             box.render_to_buffer(buffer, row, column, buffer_height, buffer_width)
         lc = 0

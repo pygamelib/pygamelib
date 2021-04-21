@@ -170,6 +170,13 @@ class TestBase(unittest.TestCase):
             adaptive_height=False,
             config=conf,
         )
+        self.assertEqual(md.title, "")
+        md.title = "test"
+        self.assertEqual(md.title, "test")
+        md.title = pgl_base.Text("test")
+        self.assertEqual(md.title, "test")
+        with self.assertRaises(pgl_base.PglInvalidTypeException):
+            md.title = 42
         self.game.screen.place(md, 0, 0)
         self.game.screen.update()
         md.add_line("test 2", constants.ALIGN_RIGHT)
@@ -198,29 +205,44 @@ class TestBase(unittest.TestCase):
         self.assertEqual(md.height, 6)
         with self.assertRaises(pgl_base.PglInvalidTypeException):
             md.height = "6"
+        md = ui.MessageDialog(title=pgl_base.Text("test"), config=conf)
+        self.assertEqual(md.title, "test")
+        with self.assertRaises(pgl_base.PglInvalidTypeException):
+            ui.MessageDialog(title=42, config=conf)
 
     def test_lineinput_dialog(self):
         conf = ui.UiConfig.instance(game=self.game)
         with self.assertRaises(pgl_base.PglInvalidTypeException):
-            ui.LineInputDialog(123, config=conf)
+            ui.LineInputDialog("123", 123, config=conf)
+        with self.assertRaises(pgl_base.PglInvalidTypeException):
+            ui.LineInputDialog(123, "123", config=conf)
         with self.assertRaises(pgl_base.PglInvalidTypeException):
             ui.LineInputDialog(default=12, config=conf)
-        ld = ui.LineInputDialog("test line input", config=conf)
+        ld = ui.LineInputDialog("title", "test line input", config=conf)
         self.assertEqual(ld.label.text, "test line input")
+        self.assertEqual(ld.title, "title")
         ld.label = "test 2"
         self.assertEqual(ld.label.text, "test 2")
         ld.label = pgl_base.Text("test 3")
         self.assertEqual(ld.label.text, "test 3")
         with self.assertRaises(pgl_base.PglInvalidTypeException):
             ld.label = 3
+        ld.title = "test"
+        self.assertEqual(ld.title, "test")
+        ld.title = pgl_base.Text("test")
+        self.assertEqual(ld.title, "test")
+        with self.assertRaises(pgl_base.PglInvalidTypeException):
+            ld.title = 3
         self.game.screen.place(ld, 0, 0)
         self.game.screen.update()
+        ld = ui.LineInputDialog(pgl_base.Text("title"), "test line input", config=conf)
+        self.assertEqual(ld.title, "title")
 
     def test_multiline_input_dialog(self):
         conf = ui.UiConfig.instance(game=self.game)
         with self.assertRaises(pgl_base.PglInvalidTypeException):
-            ui.MultiLineInputDialog(fields=1, config=conf)
-        mld = ui.MultiLineInputDialog(config=conf)
+            ui.MultiLineInputDialog(fields=1, title="test", config=conf)
+        mld = ui.MultiLineInputDialog(title="test", config=conf)
         self.assertListEqual(
             mld.fields,
             [
@@ -232,7 +254,7 @@ class TestBase(unittest.TestCase):
                 }
             ],
         )
-        mld.fields = [
+        fields = [
             {
                 "label": pgl_base.Text("Input a value:"),
                 "default": "",
@@ -252,11 +274,26 @@ class TestBase(unittest.TestCase):
                 "user_input": "",
             },
         ]
+        mld.fields = fields
         with self.assertRaises(pgl_base.PglInvalidTypeException):
             mld.fields = 42
 
         self.game.screen.place(mld, 0, 0)
         self.game.screen.update()
+        mld.title = "test change"
+        self.assertEqual(mld.title, "test change")
+        mld.title = pgl_base.Text("test change")
+        self.assertEqual(mld.title, "test change")
+        mld = ui.MultiLineInputDialog(fields, title="test", config=conf)
+        self.assertEqual(mld.title, "test")
+        mld = ui.MultiLineInputDialog(fields, title=pgl_base.Text("test"), config=conf)
+        self.assertEqual(mld.title, "test")
+        with self.assertRaises(pgl_base.PglInvalidTypeException):
+            mld = ui.MultiLineInputDialog(fields, title=42, config=conf)
+        with self.assertRaises(pgl_base.PglInvalidTypeException):
+            mld.title = 42
+        mld = ui.MultiLineInputDialog(fields, title=None, config=conf)
+        self.assertEqual(mld.title, "")
 
     def test_file_dialog(self):
         conf = ui.UiConfig.instance(game=self.game)
