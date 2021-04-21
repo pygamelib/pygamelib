@@ -10,6 +10,7 @@ coverage:
 	coverage run --source=./pygamelib -m unittest discover -s tests
 	coverage report
 	coverage html
+	coverage xml
 
 test:
 	python3 -m unittest discover -s tests
