@@ -210,31 +210,31 @@ class Text(object):
     # Text is a special case in the buffer rendering system and I know special cases are
     # bad but it works well... Text is automatically converted into a Sprite during
     # rendering.
-    # def render_to_buffer(self, buffer, row, column, buffer_height, buffer_width):
-    #     """Render the Text object into a display buffer (not a screen buffer).
+    def _render_to_buffer(self, buffer, row, column, buffer_height, buffer_width):
+        """Render the Text object into a display buffer (not a screen buffer).
 
-    #     This method is automatically called by :func:`pygamelib.engine.Screen.render`.
+        This method is automatically called by :func:`pygamelib.engine.Screen.render`.
 
-    #     :param buffer: A screen buffer to render the item into.
-    #     :type buffer: numpy.array
-    #     :param row: The row to render in.
-    #     :type row: int
-    #     :param column: The column to render in.
-    #     :type column: int
-    #     :param height: The total height of the display buffer.
-    #     :type height: int
-    #     :param width: The total width of the display buffer.
-    #     :type width: int
+        :param buffer: A screen buffer to render the item into.
+        :type buffer: numpy.array
+        :param row: The row to render in.
+        :type row: int
+        :param column: The column to render in.
+        :type column: int
+        :param height: The total height of the display buffer.
+        :type height: int
+        :param width: The total width of the display buffer.
+        :type width: int
 
-    #     """
-    #     idx = 0
-    #     for char in self.text:
-    #         if column + idx >= buffer_width:
-    #             break
-    #         buffer[row][column + idx] = "".join(
-    #             [self.__bgcc, self.__fgcc, self.style, char, "\x1b[0m"]
-    #        )
-    #        idx += 1
+        """
+        idx = 0
+        for char in self.text:
+            if column + idx >= buffer_width:
+                break
+            buffer[row][column + idx] = "".join(
+                [self.__bgcc, self.__fgcc, self.style, char, "\x1b[0m"]
+            )
+            idx += 1
 
     @staticmethod
     def warn(message):
