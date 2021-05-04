@@ -6,6 +6,10 @@ from pathlib import Path
 import numpy as np
 
 
+def fake_callback():
+    pass
+
+
 class FakeText:
     def __init__(self, text) -> None:
         self.text = text
@@ -427,6 +431,149 @@ class TestBase(unittest.TestCase):
 
         self.game.screen.place(cpd, 0, 0)
         self.game.screen.update()
+
+    def test_menus(self):
+        screen = self.game.screen
+        conf = ui.UiConfig.instance(game=self.game)
+        with self.assertRaises(pgl_base.PglInvalidTypeException):
+            ui.MenuBar([42], config=conf)
+        menubar = ui.MenuBar([ui.MenuAction("Default", fake_callback)], config=conf)
+        with self.assertRaises(pgl_base.PglInvalidTypeException):
+            menubar.add_entry(42)
+        menubar.spacing = 0
+        self.assertEqual(menubar.spacing, 0)
+        with self.assertRaises(pgl_base.PglInvalidTypeException):
+            menubar.spacing = "42"
+        menubar.config = conf
+        self.assertIsInstance(menubar.config, ui.UiConfig)
+        with self.assertRaises(pgl_base.PglInvalidTypeException):
+            menubar.config = "42"
+        menubar.current_index = 0
+        self.assertEqual(menubar.current_index, 0)
+        with self.assertRaises(pgl_base.PglInvalidTypeException):
+            menubar.current_index = "42"
+        file_menu = ui.Menu(
+            "File",
+            [
+                ui.MenuAction("Open", fake_callback),
+                ui.MenuAction(pgl_base.Text("Save"), fake_callback),
+                ui.MenuAction("Save as", fake_callback),
+                ui.MenuAction("Quit", fake_callback),
+            ],
+            config=conf,
+        )
+        edit_menu = ui.Menu(
+            pgl_base.Text("Edit", core.Color(0, 255, 255)),
+            [ui.MenuAction("Copy", fake_callback)],
+        )
+        menubar.add_entry(file_menu)
+        menubar.add_entry(edit_menu)
+        help_action = ui.MenuAction("Help", fake_callback)
+        menubar.add_entry(help_action)
+        with self.assertRaises(pgl_base.PglInvalidTypeException):
+            ui.Menu(42)
+        with self.assertRaises(pgl_base.PglInvalidTypeException):
+            edit_menu.add_entry(42)
+        edit_menu.add_entry(ui.MenuAction("Paste", fake_callback))
+        with self.assertRaises(pgl_base.PglInvalidTypeException):
+            ui.Menu("42", ["this", "is", "not going to", "work"])
+        with self.assertRaises(pgl_base.PglInvalidTypeException):
+            ui.MenuAction(42, fake_callback)
+        with self.assertRaises(pgl_base.PglInvalidTypeException):
+            ui.MenuAction("42", 42)
+
+        edit_menu.title = "*E*dit"
+        self.assertEqual(edit_menu.title.text, "*E*dit")
+        edit_menu.title = pgl_base.Text("Edit")
+        self.assertEqual(edit_menu.title.text, "Edit")
+        with self.assertRaises(pgl_base.PglInvalidTypeException):
+            edit_menu.title = 42
+
+        help_action.title = "Help (Shift+H)"
+        self.assertEqual(help_action.title.text, "Help (Shift+H)")
+        help_action.title = pgl_base.Text("Help")
+        self.assertEqual(help_action.title.text, "Help")
+        with self.assertRaises(pgl_base.PglInvalidTypeException):
+            help_action.title = 42
+
+        help_action.action = fake_callback
+        self.assertTrue(callable(help_action.action))
+        with self.assertRaises(pgl_base.PglInvalidTypeException):
+            help_action.action = 42
+        with self.assertRaises(pgl_base.PglInvalidTypeException):
+            help_action.config = 42
+        with self.assertRaises(pgl_base.PglInvalidTypeException):
+            help_action.padding = "42"
+        help_action.padding = 2
+        self.assertEqual(help_action.padding, 2)
+        with self.assertRaises(pgl_base.PglInvalidTypeException):
+            help_action.selected = 42
+        help_action.selected = True
+        self.assertTrue(help_action.selected)
+
+        edit_menu.padding = 0
+        self.assertEqual(edit_menu.padding, 0)
+        with self.assertRaises(pgl_base.PglInvalidTypeException):
+            edit_menu.padding = "42"
+        with self.assertRaises(pgl_base.PglInvalidTypeException):
+            edit_menu.config = "42"
+        edit_menu.selected = True
+        self.assertTrue(edit_menu.selected)
+        with self.assertRaises(pgl_base.PglInvalidTypeException):
+            edit_menu.selected = 42
+        export_menu = ui.Menu(
+            "Export",
+            [
+                ui.MenuAction("Sprite (.spr)", fake_callback),
+                ui.MenuAction("PNG (.png)", fake_callback),
+                ui.MenuAction("Animation as a GIF (.gif)", fake_callback),
+            ],
+        )
+        edit_menu.add_entry(export_menu)
+        export_menu.selected = True
+        self.assertTrue(export_menu.selected)
+        self.assertTrue(type(export_menu.entries) is list)
+        export_menu.entries = [
+            ui.MenuAction("Sprite (.spr)", fake_callback),
+            ui.MenuAction("PNG (.png)", fake_callback),
+            ui.MenuAction("Animation as a GIF (.gif)", fake_callback),
+        ]
+        self.assertEqual(len(export_menu.entries), 3)
+        with self.assertRaises(pgl_base.PglInvalidTypeException):
+            export_menu.entries = 42
+        with self.assertRaises(pgl_base.PglInvalidTypeException):
+            export_menu.entries = [42]
+        edit_menu.select_next()
+        self.assertIsInstance(edit_menu.current_entry(), ui.MenuAction)
+        edit_menu.select_previous()
+        self.assertIsNone(edit_menu.current_entry())
+
+        menubar.select_next()
+        entry = menubar.current_entry()
+        self.assertTrue(entry.selected)
+        menubar.current_index += 1
+        self.assertTrue(menubar.current_entry().selected)
+        menubar.select_previous()
+        self.assertTrue(menubar.current_entry().selected)
+        self.assertTrue(type(menubar.length()) is int)
+        menubar.close()
+        self.assertEqual(menubar.current_index, -1)
+
+        # Screen update
+        screen.place(menubar, 0, 0)
+        screen.update()
+        help_action.padding = 0
+        screen.force_update()
+
+        menubar.entries = [
+            ui.MenuAction("Sprite (.spr)", fake_callback),
+            ui.MenuAction("PNG (.png)", fake_callback),
+            ui.MenuAction("Animation as a GIF (.gif)", fake_callback),
+        ]
+        with self.assertRaises(pgl_base.PglInvalidTypeException):
+            menubar.entries = 42
+        with self.assertRaises(pgl_base.PglInvalidTypeException):
+            menubar.entries = [42]
 
 
 if __name__ == "__main__":

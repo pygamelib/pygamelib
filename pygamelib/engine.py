@@ -2120,6 +2120,7 @@ class Game:
                     if column is not None and type(column) is not int:
                         raise base.PglInvalidTypeException("column must be an int.")
                     while True:
+                        # TODO: Use NPC.width and NPC.height instead of -1!!!!
                         if row is None:
                             row = random.randint(
                                 0, self._boards[level_number]["board"].size[1] - 1

@@ -16,6 +16,9 @@ __docformat__ = "restructuredtext"
    pygamelib.gfx.ui.GridSelectorDialog
    pygamelib.gfx.ui.ColorPicker
    pygamelib.gfx.ui.ColorPickerDialog
+   pygamelib.gfx.ui.MenuBar
+   pygamelib.gfx.ui.Menu
+   pygamelib.gfx.ui.MenuAction
 
 """
 from pygamelib.assets import graphics
@@ -56,6 +59,21 @@ class UiConfig(object):
     :type fg_color: :class:`~pygamelib.gfx.core.Color`
     :param bg_color: The background color (for text and content).
     :type bg_color: :class:`~pygamelib.gfx.core.Color`
+    :param fg_color_inactive: The foreground color for inactive items like menu entries.
+    :type fg_color_inactive: :class:`~pygamelib.gfx.core.Color`
+    :param bg_color_selected: The background color (for selected text and content).
+    :type bg_color_selected: :class:`~pygamelib.gfx.core.Color`
+    :param bg_color_not_selected: The background color (for non selected text and
+       content).
+    :type bg_color_not_selected: :class:`~pygamelib.gfx.core.Color`
+    :param fg_color_selected: The foreground color (for selected text and content).
+    :type fg_color_selected: :class:`~pygamelib.gfx.core.Color`
+    :param fg_color_not_selected: The foreground color (for non selected text and
+       content).
+    :type fg_color_not_selected: :class:`~pygamelib.gfx.core.Color`
+    :param bg_color_menu_not_selected: The menu background color (for expanded menu
+       items).
+    :type bg_color_menu_not_selected: :class:`~pygamelib.gfx.core.Color`
     :param border_fg_color: The foreground color (for borders).
     :type border_fg_color: :class:`~pygamelib.gfx.core.Color`
     :param border_bg_color: The background color (for borders).
@@ -86,6 +104,12 @@ class UiConfig(object):
         box_vertical_and_left=graphics.BoxDrawings.LIGHT_VERTICAL_AND_LEFT,
         fg_color=core.Color(255, 255, 255),
         bg_color=core.Color(0, 128, 128),
+        fg_color_inactive=core.Color(128, 128, 128),
+        bg_color_selected=core.Color(128, 128, 128),
+        bg_color_not_selected=None,
+        fg_color_selected=core.Color(0, 255, 0),
+        fg_color_not_selected=core.Color(255, 255, 255),
+        bg_color_menu_not_selected=core.Color(128, 128, 128),
         border_fg_color=core.Color(255, 255, 255),
         border_bg_color=None,
         borderless_dialog=True,
@@ -106,6 +130,12 @@ class UiConfig(object):
         self.box_vertical_and_left = box_vertical_and_left
         self.fg_color = fg_color
         self.bg_color = bg_color
+        self.fg_color_inactive = fg_color_inactive
+        self.bg_color_selected = bg_color_selected
+        self.bg_color_not_selected = bg_color_not_selected
+        self.fg_color_selected = fg_color_selected
+        self.fg_color_not_selected = fg_color_not_selected
+        self.bg_color_menu_not_selected = bg_color_menu_not_selected
         self.border_fg_color = border_fg_color
         self.border_bg_color = border_bg_color
         self.borderless_dialog = borderless_dialog
@@ -131,7 +161,7 @@ class Dialog(object):
     """
     Dialog is a virtual class that can be subclassed to create actual dialogs.
 
-    All classes that inheritates from Dialog have the following constraints:
+    All classes that inherits from Dialog have the following constraints:
 
      * They need to implement a show() method.
      * They are automatically rendered on the second pass by the
@@ -1053,10 +1083,10 @@ class MessageDialog(Dialog):
 
         Here is a non-exhaustive list of supported types:
 
-         * :class:`base.Text`,
+         * :class:`~pygamelib.base.Text`,
          * python strings (str),
-         * :class:`pygamelib.gfx.core.Sprixel`,
-         * :class:`core.Sprite`,
+         * :class:`~pygamelib.gfx.core.Sprixel`,
+         * :class:`~pygamelib.gfx.core.Sprite`,
          * most board items,
          * etc.
 
@@ -3021,3 +3051,1102 @@ class ColorPickerDialog(Dialog):
             inkey = term.inkey(timeout=0.1)
         screen.delete(self._position[0], self._position[1])
         return ret_color
+
+
+class MenuAction(object):
+    """
+    A menu action is a menu entry that executes a callback when activated. Usually a
+    Menuaction represents an action from the user interface like open file, save, quit,
+    etc.
+
+    Therefor a MenuAction is fairly simple, at its simplest it has a title and a
+    callable reference to a function.
+
+    An action cannot be used by itself but can be added to a :class:`MenuBar` or a
+    :class:`Menu`.
+
+    Like everything in the UI module, MenuAction are styled through a :class:`UiConfig`
+    object. Unlike the other classes of that module however, the configuration object is
+    not mandatory when instanciating this class. The reason is that the :class:`MenuBar`
+    object impose the configuration to its managed :class:`MenuAction` and
+    :class:`Menu`.
+    """
+
+    def __init__(
+        self,
+        title: base.Text = None,
+        action=None,
+        padding: int = 1,
+        config: UiConfig = None,
+    ) -> None:
+        """
+        The constructor takes the following parameters.
+
+        :param title: The title of the action (i.e: its label)
+        :type title: str | :class:`~pygamelib.base.Text`
+        :param action: A reference to a callable function that is going to be executed
+           when the action is activated.
+        :type action: callable
+        :param padding: The horizontal padding, i.e the number of space characters added
+           to the left and right of the action.
+        :type padding: int
+        :param config: The configuration object.
+        :type config: :class:`UiConfig`
+
+        Example ::
+
+            menubar = MenuBar(config=UiConfig.instance())
+            file_menu = Menu(
+                "File",
+                [
+                    MenuAction("Open", open_file),
+                    MenuAction("Save", save_file),
+                    MenuAction("Save as", save_file_as),
+                    MenuAction("Quit", exit_application),
+                ]
+            )
+            menubar.add_entry( file_menu )
+            menubar.add_entry( MenuAction("Help", display_help) )
+            screen.place(menubar, 0, 0)
+            screen.update()
+        """
+        super().__init__()
+        self.__config = config
+        self.__selected = False
+        self.__title = None
+        self.__padding = padding
+        self._parent = None
+        # TODO: Check types.
+        self.__padding_cache = base.Text(" " * self.__padding)
+        if isinstance(title, base.Text):
+            self.__title = title
+        elif type(title) is str:
+            self.__title = base.Text(title)
+        else:
+            raise base.PglInvalidTypeException(
+                "MenuAction(): title needs to be a pygamelib.base.Text object."
+            )
+        self.__action = None
+        if callable(action):
+            self.__action = action
+        else:
+            raise base.PglInvalidTypeException(
+                "MenuAction(): action needs to be a callable function reference."
+            )
+
+    @property
+    def title(self) -> base.Text:
+        """
+        Get / set the title of the action, it needs to be a str or a
+        :class:`~pygamelib.base.Text` object.
+
+        The title is used in the :class:`Menu`. In the following image, the title of
+        the first action in the expanded menu is "Open", followed by "Save".
+
+        .. image:: menu.png
+           :alt: menu
+        """
+        return self.__title
+
+    @title.setter
+    def title(self, value: base.Text):
+        if isinstance(value, base.Text):
+            self.__title = value
+        elif type(value) is str:
+            self.__title = base.Text(value)
+        else:
+            raise base.PglInvalidTypeException(
+                "Menu.title = value: value needs to be a pygamelib.base.Text object."
+            )
+
+    @property
+    def action(self):
+        """
+        Get / set the action's callback, it needs to be a callable.
+        """
+        return self.__action
+
+    @action.setter
+    def action(self, value):
+        if callable(value):
+            self.__action = value
+        else:
+            raise base.PglInvalidTypeException(
+                "Menu.action = value: value needs to be a callable function reference."
+            )
+
+    @property
+    def config(self):
+        """
+        Get / set the config of the MenuAction, it needs to be a :class:`UiConfig`.
+        """
+        return self.__config
+
+    @config.setter
+    def config(self, value: UiConfig):
+        if isinstance(value, UiConfig):
+            self.__config = value
+        else:
+            raise base.PglInvalidTypeException(
+                "MenuAction.config = value: value needs to be a "
+            )
+
+    @property
+    def selected(self) -> bool:
+        """
+        Get / set the selected of the MenuAction, it needs to be a boolean.
+
+        This changes the representation (way it's drawn) of the menu entry.
+        """
+        return self.__selected
+
+    @selected.setter
+    def selected(self, value: bool) -> None:
+        if type(value) is bool:
+            self.__selected = value
+            if self.config is not None:
+                if self.__selected:
+                    self.title.bg_color = self.config.bg_color_selected
+                    self.title.fg_color = self.config.fg_color_selected
+                    self.__padding_cache.bg_color = self.config.bg_color_selected
+                    self.__padding_cache.fg_color = self.config.fg_color_selected
+                else:
+                    if isinstance(self._parent, Menu):
+                        self.title.bg_color = self.config.bg_color_menu_not_selected
+                        self.__padding_cache.bg_color = (
+                            self.config.bg_color_menu_not_selected
+                        )
+                    else:
+                        self.title.bg_color = self.config.bg_color_not_selected
+                        self.__padding_cache.bg_color = (
+                            self.config.bg_color_not_selected
+                        )
+                    self.title.fg_color = self.config.fg_color_not_selected
+                    self.__padding_cache.fg_color = self.config.fg_color_not_selected
+        else:
+            raise base.PglInvalidTypeException(
+                "MenuAction.selected = value: value needs to be a bool"
+            )
+
+    def activate(self):  # pragma: no cover
+        """
+        Execute and return the result of the callback.
+
+        Example::
+
+            file_save_action.activate()
+        """
+        return self.__action()
+
+    @property
+    def padding(self):
+        """
+        Get / set the padding before and after the menu action, it needs to be an int.
+        """
+        return self.__padding
+
+    @padding.setter
+    def padding(self, value):
+        if type(value) is int:
+            self.__padding = value
+            self.__padding_cache = base.Text(" " * self.__padding)
+        else:
+            raise base.PglInvalidTypeException(
+                "MenuAction.padding = value: value needs to be an int."
+            )
+
+    def title_width(self):
+        """
+        Return the actual width of the action's title. This takes into account the
+        padding.
+
+        Example::
+
+            menu_action.title_width()
+        """
+        return self.__title.length + self.__padding_cache.length * 2
+
+    def render_to_buffer(
+        self, buffer, row: int, column: int, buffer_height: int, buffer_width: int
+    ) -> None:
+        """Render the object into a display buffer (not a screen buffer).
+
+        This method is automatically called by :func:`pygamelib.engine.Screen.render`.
+
+        :param buffer: A screen buffer to render the item into.
+        :type buffer: numpy.array
+        :param row: The row to render in.
+        :type row: int
+        :param column: The column to render in.
+        :type column: int
+        :param height: The total height of the display buffer.
+        :type height: int
+        :param width: The total width of the display buffer.
+        :type width: int
+
+        """
+        if self.padding > 0:
+            self.__padding_cache._render_to_buffer(
+                buffer, row, column, buffer_height, buffer_width
+            )
+            self.__title._render_to_buffer(
+                buffer, row, column + self.__padding, buffer_height, buffer_width
+            )
+            self.__padding_cache._render_to_buffer(
+                buffer,
+                row,
+                column + self.title_width() - self.__padding_cache.length,
+                buffer_height,
+                buffer_width,
+            )
+        else:
+            self.__title._render_to_buffer(
+                buffer, row, column, buffer_height, buffer_width
+            )
+
+
+class Menu(object):
+    """
+    The Menu object consists of a list of other Menu objects and/or :class:`MenuAction`
+    objects.
+
+    It has a title that is used in a :class:`MenuBar` and the list of its entries is
+    displayed when the menu is expanded.
+
+    A Menu object can contains an arbitrary number of entries with an arbitrary depth of
+    submenus.
+    """
+
+    def __init__(
+        self,
+        title: base.Text = None,
+        entries: list = None,
+        padding: int = 1,
+        config: UiConfig = None,
+    ) -> None:
+        """
+        The constructor takes the following parameters.
+
+        :param title: The title of the action (i.e: its label)
+        :type title: str | :class:`~pygamelib.base.Text`
+        :param entries: A list of :class:`MenuAction` or other Menu objects.
+        :type entries: list
+        :param padding: The horizontal padding, i.e the number of space characters added
+           to the left and right of the title.
+        :type padding: int
+        :param config: The configuration object.
+        :type config: :class:`UiConfig`
+
+        Example ::
+
+            menubar = MenuBar(config=UiConfig.instance(game=Game.instance()))
+            file_menu = Menu(
+                "File",
+                [
+                    MenuAction("Open", open_file),
+                    MenuAction("Save", save_file),
+                    MenuAction("Save as", save_file_as),
+                    MenuAction("Quit", exit_application),
+                ]
+            )
+            menubar.add_entry( file_menu )
+            menubar.add_entry( MenuAction("Help", display_help) )
+            screen.place(menubar, 0, 0)
+            screen.update()
+        """
+        super().__init__()
+        self.__title = title
+        self.__config = config
+        self.__padding = padding
+        self.__selected = False
+        self.__entries = []
+        self._position = []
+        self._parent = None
+        self.__current_index = -1
+        self.__expanded = False
+        # TODO: Check types. Again...
+        self.__padding_cache = base.Text(" " * self.__padding)
+        self.__menu_width_padding_cache = base.Text(" ")
+        if isinstance(title, base.Text):
+            self.__title = title
+        elif type(title) is str:
+            self.__title = base.Text(title)
+        else:
+            raise base.PglInvalidTypeException(
+                "Menu title needs to be a pygamelib.base.Text object."
+            )
+        if entries is not None:
+            for entry in entries:
+                if isinstance(entry, MenuAction) or isinstance(entry, Menu):
+                    entry._parent = self
+                    if config is not None:
+                        entry.config = config
+                    entry.selected = False
+                    self.__entries.append(entry)
+                else:
+                    raise base.PglInvalidTypeException(
+                        "Menu(entries=list_of_entries): each entry must be a MenuAction"
+                        " or a Menu object."
+                    )
+
+    def _store_position(self, row, column):
+        self._position = [row, column]
+
+    def add_entry(self, entry):
+        """
+        Add an entry to the menu. An entry can be a :class:`MenuAction` or a
+        :class:`Menu`.
+        Entries are displayed in the order of there additions from left to right.
+
+        .. IMPORTANT:: The config of the entry is overwritten by the config of the
+           Menu. That is why it's not mandatory for :class:`Menu` and
+           :class:`MenuAction`.
+
+        :param entry: The entry to add.
+        :type entry: :class:`MenuAction` | :class:`Menu`
+
+        Example::
+
+            menu.add_entry( Menu('File') )
+            menu.add_entry( MenuAction('Exit', quit_application) )
+        """
+        if not isinstance(entry, Menu) and not isinstance(entry, MenuAction):
+            raise base.PglInvalidTypeException(
+                "Menu.add_entry(value): value needs to be a Menu or MenuAction "
+                "object"
+            )
+        entry.config = self.config
+        entry._parent = self
+        entry.selected = False
+        self.__entries.append(entry)
+
+    @property
+    def title(self) -> base.Text:
+        """
+        Get / set the title of the Menu, it needs to be a :class:`~pygamelib.base.Text`
+        object or a python str.
+
+        The title is used in the :class:`MenuBar`. In the following image, the title of
+        the expanded menu is "File".
+
+        .. image:: menu.png
+           :alt: menu
+        """
+        return self.__title
+
+    @title.setter
+    def title(self, value: base.Text):
+        if isinstance(value, base.Text):
+            self.__title = value
+        elif type(value) is str:
+            self.__title = base.Text(value)
+        else:
+            raise base.PglInvalidTypeException(
+                "Menu.title = value: value needs to be a pygamelib.base.Text object."
+            )
+
+    def title_width(self) -> int:
+        """
+        Return the actual width of the menu title. This takes into account the padding.
+
+        Example::
+
+            menu.title_width()
+        """
+        return self.__title.length + self.__padding * 2
+
+    def menu_width(self) -> int:
+        """
+        Calculate and return the maximum width of the menu based on the widest element.
+        This includes the padding.
+
+        :return: the menu width.
+        :rtype: int
+
+        """
+        mw = 0
+        for e in self.__entries:
+            if e.title_width() > mw:
+                mw = e.title_width()
+        return mw
+
+    @property
+    def padding(self):
+        """
+        Get / set the padding before and after the menu, it needs to be an int.
+
+        The padding is only used when the menu is nested into another menu.
+        """
+        return self.__padding
+
+    @padding.setter
+    def padding(self, value):
+        if type(value) is int:
+            self.__padding = value
+            self.__padding_cache = base.Text(" " * self.__padding)
+        else:
+            raise base.PglInvalidTypeException(
+                "Menu.padding = value: value needs to be an int."
+            )
+
+    @property
+    def config(self):
+        """
+        Get / set the config of the Menu, it needs to be a :class:`UiConfig`.
+        """
+        return self.__config
+
+    @config.setter
+    def config(self, value: UiConfig):
+        if isinstance(value, UiConfig):
+            self.__config = value
+            for entry in self.__entries:
+                entry.config = self.__config
+                # little trick to update the visual of the menu items the first time
+                # We should probably do something better.
+                entry.selected = entry.selected
+        else:
+            raise base.PglInvalidTypeException(
+                "Menu.config = value: value needs to be an UiConfig object."
+            )
+
+    @property
+    def selected(self) -> bool:
+        """
+        Get / set the selected status of the Menu, it needs to be a boolean.
+
+        This changes the representation (way it's drawn) of the menu entry.
+        """
+        return self.__selected
+
+    @selected.setter
+    def selected(self, value: bool) -> None:
+        if type(value) is bool:
+            self.__selected = value
+            if self.config is not None:
+                if self.__selected:
+                    self.title.bg_color = self.config.bg_color_selected
+                    self.title.fg_color = self.config.fg_color_selected
+                    self.__padding_cache.bg_color = self.config.bg_color_selected
+                    self.__padding_cache.fg_color = self.config.fg_color_selected
+                    self.__menu_width_padding_cache.bg_color = (
+                        self.config.bg_color_selected
+                    )
+                else:
+                    if isinstance(self._parent, Menu):
+                        self.title.bg_color = self.config.bg_color_menu_not_selected
+                        self.__padding_cache.bg_color = (
+                            self.config.bg_color_menu_not_selected
+                        )
+                        self.__menu_width_padding_cache.bg_color = (
+                            self.config.bg_color_menu_not_selected
+                        )
+                    else:
+                        self.title.bg_color = self.config.bg_color_not_selected
+                        self.__padding_cache.bg_color = (
+                            self.config.bg_color_not_selected
+                        )
+                        self.__menu_width_padding_cache.bg_color = (
+                            self.config.bg_color_not_selected
+                        )
+                    self.title.fg_color = self.config.fg_color_not_selected
+                    self.__padding_cache.fg_color = self.config.fg_color_not_selected
+        else:
+            raise base.PglInvalidTypeException(
+                "MenuAction.selected = value: value needs to be a bool"
+            )
+
+    @property
+    def entries(self) -> list:
+        """
+        Get / set the entries of the Menu, it needs to be a list of :class:`MenuAction`
+        objects.
+        """
+        return self.__entries
+
+    @entries.setter
+    def entries(self, value: list) -> None:
+        if type(value) is list:
+            for entry in value:
+                if not isinstance(entry, Menu) and not isinstance(entry, MenuAction):
+                    raise base.PglInvalidTypeException(
+                        "Menu.entries = value: value needs to be a list of Menu or "
+                        "MenuAction objects (an object within the list is not a Menu or"
+                        " a MenuAction object)."
+                    )
+
+            self.__entries = value
+        else:
+            raise base.PglInvalidTypeException(
+                "Menu.entries = value: value needs to be a list of Menu or "
+                "MenuAction objects."
+            )
+
+    def current_entry(self):
+        """
+        Return the currently selected menu entry.
+
+        It can be either a :class:`Menu` object or a :class:`MenuAction` object.
+        """
+        if self.__current_index >= 0:
+            return self.__entries[self.__current_index % len(self.__entries)]
+
+    def render_to_buffer(
+        self, buffer, row: int, column: int, buffer_height: int, buffer_width: int
+    ) -> None:
+        """Render the object into a display buffer (not a screen buffer).
+
+        This method is automatically called by :func:`pygamelib.engine.Screen.render`.
+
+        :param buffer: A screen buffer to render the item into.
+        :type buffer: numpy.array
+        :param row: The row to render in.
+        :type row: int
+        :param column: The column to render in.
+        :type column: int
+        :param height: The total height of the display buffer.
+        :type height: int
+        :param width: The total width of the display buffer.
+        :type width: int
+
+        """
+        self._store_position(row, column)
+        menu_width = self.menu_width()
+        if self.padding > 0:
+            self.__padding_cache._render_to_buffer(
+                buffer, row, column, buffer_height, buffer_width
+            )
+            self.__title._render_to_buffer(
+                buffer, row, column + self.__padding, buffer_height, buffer_width
+            )
+            self.__padding_cache._render_to_buffer(
+                buffer,
+                row,
+                column + self.title_width() - self.__padding,
+                buffer_height,
+                buffer_width,
+            )
+        else:
+            self.__title._render_to_buffer(
+                buffer, row, column, buffer_height, buffer_width
+            )
+
+        # Can't be automatically tested as it is set by activate().
+        if self.__expanded:  # pragma: no cover
+            row_offset = 1
+            col_offset = 0
+            if isinstance(self._parent, Menu):
+                row_offset = 0
+                col_offset = self._parent.menu_width()
+            for e in self.__entries:
+                e.render_to_buffer(
+                    buffer,
+                    row + row_offset,
+                    column + col_offset,
+                    buffer_height,
+                    buffer_width,
+                )
+                for pc in range(
+                    column + col_offset + e.title_width(),
+                    column + col_offset + menu_width,
+                ):
+                    self.__menu_width_padding_cache._render_to_buffer(
+                        buffer,
+                        row + row_offset,
+                        pc,
+                        buffer_height,
+                        buffer_width,
+                    )
+                row_offset += 1
+
+    def select_next(self):
+        """
+        Select the next entry in the menu.
+
+        The selected entry is rendered differently to give a visual feedback to the
+        user. Please see the :class:`UiConfig` class for the styling option available to
+        the Menu object.
+
+        Example::
+
+            menu.select_next()
+        """
+        self.entries[self.__current_index % len(self.entries)].selected = False
+        self.__current_index += 1
+        self.entries[self.__current_index % len(self.entries)].selected = True
+
+    def select_previous(self):
+        """
+        Select the previous entry in the menu.
+
+        The selected entry is rendered differently to give a visual feedback to the
+        user. Please see the :class:`UiConfig` class for the styling option available to
+        the Menu object.
+
+
+        Example::
+
+            menu.select_previous()
+        """
+        self.entries[self.__current_index % len(self.entries)].selected = False
+        self.__current_index -= 1
+        self.entries[self.__current_index % len(self.entries)].selected = True
+
+    def activate(self):  # pragma: no cover
+        """
+        Activates the menu. This method contains its own event loop a bit like the
+        show() methods of Dialogs. It expands the menu if it wasn't already the case and
+        listen to keyboard key strokes.
+
+         * SPACE or ENTER activates (i.e execute) menu actions.
+         * DOWN select the next entry.
+         * UP select the previous entry.
+         * ESC or LEFT close the menu.
+         * RIGHT activate (i.e expand) a submenu.
+
+        Example::
+
+            menu.activate()
+        """
+        screen = self.config.game.screen
+        term = self.config.game.terminal
+        inkey = ""
+        self.__expanded = True
+        if isinstance(self._parent, Menu) or isinstance(self._parent, MenuBar):
+            for e in self.entries:
+                e.selected = False
+            self.__current_index = -1
+            self.select_next()
+        screen.force_update()
+        while 1:
+            if inkey != "":
+                if inkey.name == "KEY_ENTER" or inkey == " ":
+                    if isinstance(self.current_entry(), MenuAction):
+                        self.current_entry().activate()
+                        break
+                elif inkey.name == "KEY_DOWN":
+                    self.select_next()
+                    screen.force_update()
+                elif inkey.name == "KEY_UP":
+                    self.select_previous()
+                    screen.force_update()
+                elif inkey.name == "KEY_ESCAPE" or inkey.name == "KEY_LEFT":
+                    break
+                elif inkey.name == "KEY_RIGHT":
+                    if isinstance(self.current_entry(), Menu):
+                        self.current_entry().activate()
+            inkey = term.inkey(timeout=0.05)
+        self.__expanded = False
+        screen.force_update()
+
+
+class MenuBar(object):
+    """
+    The MenuBar widget is exactly that: an horizontal bar that can hold :class:`Menu` or
+    :class:`MenuAction` objects.
+
+    Contrary to these 2 classes, MenuBar does *not* have an activate() method. The
+    reason is that the menubar cannot block rendering with its own event loop as it is
+    supposed to be showned at all times. So the management of interactions are left to
+    the programmer to implement.
+
+    A typical implementation would look like this:
+
+    Example::
+
+        # First create a menubar
+        menubar = MenuBar(config=UiConfig.instance(game=Game.instance()))
+
+        # Then create a Menu
+        file_menu = Menu(
+            "File",
+            [
+                MenuAction("Open", open_file),
+                MenuAction("Save", save_file),
+                MenuAction("Save as", save_file_as),
+                MenuAction("Quit", exit_application),
+            ]
+        )
+        menubar.add_entry( file_menu )
+        menubar.add_entry( MenuAction("Help", display_help) )
+
+        # Place the menubar on screen
+        screen.place(menubar, 0, 0)
+        screen.update()
+
+        # Then, somewhere in an event loop, manage the inputs for example in the user
+        # update function
+        def user_update(game, inkey, elapsed_time):
+            if inkey == engine.key.DOWN:
+                if menubar.current_entry() is not None:
+                    menubar.current_entry().activate()
+            elif inkey == engine.key.LEFT:
+                menubar.select_previous()
+            elif inkey == engine.key.RIGHT:
+                menubar.select_next()
+            elif inkey.name == "KEY_ENTER":
+                if menubar.current_entry() is not None:
+                    menubar.current_entry().activate()
+            elif inkey.name == "KEY_ESCAPE":
+                menubar.close()
+    """
+
+    def __init__(
+        self, entries: list = None, spacing: int = 2, config: UiConfig = None
+    ) -> None:
+        """
+        The constructor takes the following parameters.
+
+        :param entries: A list of :class:`MenuAction` or :class:`Menu` objects.
+        :type entries: list
+        :param spacing: The horizontal spacing between entries.
+        :type padding: int
+        :param config: The configuration object.
+        :type config: :class:`UiConfig`
+        """
+        super().__init__()
+        self.__entries = []
+        self.__config = config
+        self.__cross_ref = {}
+        self.__spacing = spacing
+        if entries is not None:
+            for entry in entries:
+                if isinstance(entry, Menu) or isinstance(entry, MenuAction):
+                    entry._parent = self
+                    entry.config = self.config
+                    entry.selected = False
+                    self.__entries.append(entry)
+                else:
+                    raise base.PglInvalidTypeException(
+                        "MenuBar(entries=list_of_entries): each entry must be a Menu or"
+                        " a MenuAction object."
+                    )
+            self.__build_cross_ref()
+        self.__current_index = -1
+
+    def __build_cross_ref(self):
+        self.__cross_ref = {}
+        idx = 0
+        for e in self.__entries:
+            if hasattr(e, "title"):
+                self.__cross_ref[e.title] = idx
+            idx += 1
+
+    @property
+    def entries(self) -> list:
+        """
+        Get / set the entries of the MenuBar, it needs to be a list of
+        :class:`MenuAction` or :class:`Menu` objects.
+        """
+        return self.__entries
+
+    @entries.setter
+    def entries(self, value: list) -> None:
+        if type(value) is list:
+            for entry in value:
+                if not isinstance(entry, Menu) and not isinstance(entry, MenuAction):
+                    raise base.PglInvalidTypeException(
+                        "MenuBar.entries = value: value needs to be a list of Menu or "
+                        "MenuAction objects"
+                    )
+
+            self.__entries = value
+            self.__build_cross_ref()
+        else:
+            raise base.PglInvalidTypeException(
+                "MenuBar.entries = value: value needs to be a list of Menu or "
+                "MenuAction objects."
+            )
+
+    def add_entry(self, entry):
+        """
+        Add an entry to the menu bar. An entry can be a :class:`MenuAction` or a
+        :class:`Menu`.
+        Entries are displayed in the order of there additions from left to right.
+
+        .. IMPORTANT:: The config of the entry is overwritten by the config of the
+           MenuBar. That is why it's not mandatory for :class:`Menu` and
+           :class:`MenuAction`.
+
+        :param entry: The entry to add.
+        :type entry: :class:`MenuAction` | :class:`Menu`
+
+        Example::
+
+            menubar.add_entry( Menu('File') )
+            menubar.add_entry( MenuAction('Exit', quit_application) )
+        """
+        if not isinstance(entry, Menu) and not isinstance(entry, MenuAction):
+            raise base.PglInvalidTypeException(
+                "MenuBar.add_entry(value): value needs to be a Menu or MenuAction "
+                "object"
+            )
+        entry.config = self.config
+        entry._parent = self
+        entry.selected = False
+        self.__entries.append(entry)
+        self.__build_cross_ref()
+
+    @property
+    def spacing(self):
+        """
+        Get / set the spacing between menu entries, it needs to be an int.
+        """
+        return self.__spacing
+
+    @spacing.setter
+    def spacing(self, value):
+        if type(value) is int:
+            self.__spacing = value
+        else:
+            raise base.PglInvalidTypeException(
+                "Menu.spacing = value: value needs to be an int."
+            )
+
+    @property
+    def config(self):
+        """
+        Get / set the config of the MenuBar, it needs to be a :class:`UiConfig`.
+
+        .. IMPORTANT:: The MenuBar's config is imposed on the managed items (Menu and\
+            MenuAction).
+        """
+        return self.__config
+
+    @config.setter
+    def config(self, value: UiConfig):
+        if isinstance(value, UiConfig):
+            self.__config = value
+        else:
+            raise base.PglInvalidTypeException(
+                "Menu.config = value: value needs to be a UiConfig object."
+            )
+
+    @property
+    def current_index(self):
+        """
+        Get / set the currently selected menu entry, it needs to be an int.
+        When setting the current_index, if the previous index was corresponding to a
+        selected entry, said entry is first unselected.
+        """
+        return self.__current_index
+
+    @current_index.setter
+    def current_index(self, value: int):
+        if type(value) is int:
+            if (
+                self.__current_index >= 0
+                and self.__entries[self.__current_index % len(self.__entries)].selected
+            ):
+                self.__entries[
+                    self.__current_index % len(self.__entries)
+                ].selected = False
+            self.__current_index = value
+            if (
+                self.__current_index >= 0
+                and not self.__entries[
+                    self.__current_index % len(self.__entries)
+                ].selected
+            ):
+                self.__entries[
+                    self.__current_index % len(self.__entries)
+                ].selected = True
+        else:
+            raise base.PglInvalidTypeException(
+                "Menu.current_index = value: value needs to be an int."
+            )
+
+    def current_entry(self):
+        """
+        Return the currently selected menu entry.
+
+        It can be either a :class:`Menu` object or a :class:`MenuAction` object.
+        """
+        if self.__current_index >= 0:
+            return self.__entries[self.__current_index % len(self.__entries)]
+
+    # def _recursive_build_entries(self, entry: list):
+    #     # This function only deal with menu entries not top level entry
+    #     # entry needs to be like that:
+    #     # {
+    #     #     "label": "Help",
+    #     #     "entries": [
+    #     #         {"label": "Quick help", "callback": None},
+    #     #         {"label": "Documentation", "callback": None},
+    #     #         {"label": "About", "callback": None},
+    #     #     ],
+    #     #     "callback": None,
+    #     #     "expand_under": True,
+    #     # }
+    #     me = None
+    #     if "label" in entry:
+    #         me = MenuAction(entry["label"], config=self.config)
+    #         if "callback" in entry and entry["callback"] is not None:
+    #             me.callback = entry["callback"]
+    #         if "expand_under" in entry and entry["expand_under"] is not None:
+    #             me.expand_under = entry["expand_under"]
+    #         if "is_active" in entry and entry["is_active"] is not None:
+    #             me.is_active = entry["is_active"]
+    #         if "entries" in entry and len(entry["entries"]) > 0:
+    #             for e in entry["entries"]:
+    #                 me.entries.append(self._recursive_build_entries(e))
+    #     return me
+
+    # def build_from_dict(self, entries: list):
+    #     """
+    #     .. IMPORTANT:: Top level menu entries are forced to expand under for the
+    #        moment.
+
+    #     menu = [
+    #         {
+    #             "label": "File",
+    #             "entries": [
+    #                 {"label": "Open", "callback": None},
+    #                 {"label": "Save", "callback": None},
+    #                 {"label": "Save As", "callback": None},
+    #                 {"label": "Quit", "callback": None},
+    #             ],
+    #             "callback": None,
+    #             "expand_under": True,
+    #         },
+    #         {
+    #             "label": "Edit",
+    #             "entries": [
+    #                 {"label": "Copy", "callback": None},
+    #                 {"label": "Paste", "callback": None},
+    #                 {"label": "New sprite", "callback": None},
+    #                 {"label": "New brush", "callback": None},
+    #             ],
+    #             "callback": None,
+    #             "expand_under": True,
+    #         },
+    #         {
+    #             "label": "Help",
+    #             "entries": [
+    #                 {"label": "Quick help", "callback": None},
+    #                 {"label": "Documentation", "callback": None},
+    #                 {"label": "About", "callback": None},
+    #             ],
+    #             "callback": None,
+    #             "expand_under": True,
+    #         },
+    #     ]
+    #     """
+
+    #     self.entries = []
+    #     for entry in entries:
+    #         me = self._recursive_build_entries(entry)
+    #         if me is not None:
+    #             me.expand_under = True
+    #             self.entries.append(me)
+    #         else:
+    #             raise base.PglInvalidTypeException(
+    #                 "Menu.build_from_dict(entries): entries needs to be a "
+    #                 "specifically formated dict. Please refer to the documentation."
+    #             )
+
+    def length(self) -> int:
+        """
+        Returns the total length of the menubar. This is computed everytime the method
+        is called and it includes the spacing.
+        """
+        le = 0
+        for e in self.entries:
+            le += e.title_width() + self.spacing
+        return le
+
+    def select_next(self):
+        """
+        Select the next element in the menubar.
+
+        Example ::
+
+            if user_input.name == 'KEY_RIGHT':
+                menubar.select_next()
+        """
+        self.entries[self.__current_index % len(self.entries)].selected = False
+        self.__current_index += 1
+        self.entries[self.__current_index % len(self.entries)].selected = True
+
+    def select_previous(self):
+        """
+        Select the previous element in the menubar.
+
+        Example ::
+
+            if user_input.name == 'KEY_RIGHT':
+                menubar.select_previous()
+        """
+        self.entries[self.__current_index % len(self.entries)].selected = False
+        self.__current_index -= 1
+        self.entries[self.__current_index % len(self.entries)].selected = True
+
+    def render_to_buffer(
+        self, buffer, row: int, column: int, buffer_height: int, buffer_width: int
+    ) -> None:
+        """Render the object into a display buffer (not a screen buffer).
+
+        This method is automatically called by :func:`pygamelib.engine.Screen.render`.
+
+        :param buffer: A screen buffer to render the item into.
+        :type buffer: numpy.array
+        :param row: The row to render in.
+        :type row: int
+        :param column: The column to render in.
+        :type column: int
+        :param height: The total height of the display buffer.
+        :type height: int
+        :param width: The total width of the display buffer.
+        :type width: int
+
+        """
+        offset = 0
+        for entry in self.entries:
+            # entry.label.render_to_buffer(
+            #     buffer, row, column + offset, buffer_height, buffer_width
+            # )
+            entry.render_to_buffer(
+                buffer,
+                row,
+                column + offset,
+                buffer_height,
+                buffer_width,
+            )
+            offset += entry.title_width() + self.spacing
+
+    def close(self):
+        """
+        Close and unselect menu entries/submenu.
+
+        Please call that method when the menu bar loses focus.
+        """
+        self.entries[self.__current_index % len(self.entries)].selected = False
+        self.current_index = -1
+
+    # def activate(self):
+    #     screen = self.config.game.screen
+    #     game = self.config.game
+    #     term = game.terminal
+    #     inkey = ""
+    #     screen.force_update()
+    #     while 1:
+    #         if inkey != "":
+    #             if inkey.name == "KEY_DOWN":
+    #                 if self.current_entry() is not None:
+    #                     self.current_entry().activate()
+    #             elif inkey.name == "KEY_LEFT":
+    #                 self.select_previous()
+    #                 screen.force_update()
+    #             elif inkey.name == "KEY_RIGHT":
+    #                 self.select_next()
+    #                 screen.force_update()
+    #             elif inkey.name == "KEY_ENTER":
+    #                 if self.current_entry() is not None:
+    #                     self.current_entry().activate()
+    #                     self.close()
+    #                     break
+    #             elif inkey.name == "KEY_ESCAPE":
+    #                 self.close()
+    #                 break
+    #         inkey = term.inkey(timeout=0.05)
+    #     screen.force_update()

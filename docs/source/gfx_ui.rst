@@ -3,12 +3,12 @@
 ui
 ==
 
-.. WARNING :: The UI module is in alpha version. Some things might change over time.
+.. warning:: The UI module is in alpha version. Some things might change over time.
 
 The ui module contains the classes to easily build full screen Terminal User Interface
 (TUI) for your games (or applications).
 
-.. Important:: It works exclusively with the screen buffer system (place, delete,
+.. important:: It works exclusively with the screen buffer system (place, delete,
    render, update, etc.).
    It doesn't work with Screen functions tagged "direct display" like display_at().
 
@@ -22,6 +22,9 @@ The ui module contains the classes to easily build full screen Terminal User Int
     pygamelib.gfx.ui.GridSelectorDialog.rst
     pygamelib.gfx.ui.GridSelector.rst
     pygamelib.gfx.ui.LineInputDialog.rst
+    pygamelib.gfx.ui.Menu
+    pygamelib.gfx.ui.MenuAction
+    pygamelib.gfx.ui.MenuBar
     pygamelib.gfx.ui.MessageDialog.rst
     pygamelib.gfx.ui.MultiLineInputDialog.rst
     pygamelib.gfx.ui.ProgressBar.rst

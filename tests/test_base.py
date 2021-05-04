@@ -182,6 +182,10 @@ class TestBase(unittest.TestCase):
         self.assertEqual(text.fg_color, core.Color(56, 78, 90))
         with self.assertRaises(pgl_base.PglInvalidTypeException):
             text.fg_color = "definitely not pink! (because tests are not copy/pasted)"
+        text.bg_color = None
+        self.assertIsNone(text.bg_color)
+        text.fg_color = None
+        self.assertIsNone(text.fg_color)
 
     def test_math_distance(self):
         self.assertEqual(self.math.distance(0, 0, 0, 0), 0)
