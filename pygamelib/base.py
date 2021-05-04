@@ -146,6 +146,9 @@ class Text(object):
     def bg_color(self, value):
         if pgl_isinstance(value, "pygamelib.gfx.core.Color"):
             self.__bg_color = value
+        elif value is None:
+            self.__bg_color = value
+            self.__bgcc = Back.RESET
         else:
             raise PglInvalidTypeException(
                 "Text.bg_color can only be a pygamelib.gfx.core.Color object."
@@ -162,6 +165,9 @@ class Text(object):
     def fg_color(self, value):
         if pgl_isinstance(value, "pygamelib.gfx.core.Color"):
             self.__fg_color = value
+        elif value is None:
+            self.__fg_color = value
+            self.__fgcc = Fore.RESET
         else:
             raise PglInvalidTypeException(
                 "Text.fg_color can only be a pygamelib.gfx.core.Color object."
@@ -210,6 +216,8 @@ class Text(object):
     # Text is a special case in the buffer rendering system and I know special cases are
     # bad but it works well... Text is automatically converted into a Sprite during
     # rendering.
+    # The apparent reason is that the BG color is not reset by simply the background to
+    # None
     def _render_to_buffer(self, buffer, row, column, buffer_height, buffer_width):
         """Render the Text object into a display buffer (not a screen buffer).
 
