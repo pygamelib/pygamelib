@@ -12,13 +12,14 @@ import sys
 import time
 import random
 import copy
+import webbrowser
 
 
 class EditorVariables:
     def __init__(self) -> None:
         self.collection = None
-        self.menu = ["File", "Edit", "Help"]
-        self.menu_idx = 0
+        self.menu = None
+        self.menu_idx = -1
         self.boxes = ["menu", "sprite", "info", "sprite_list", "toolbox", "brushes"]
         self.boxes_idx = 0
         self.tools = [
@@ -145,9 +146,14 @@ class EditorVariables:
         self.copy_paste_previous_stop = [None, None]
         self.copy_paste_sprite_idx = -1
         self.copy_paste_board_id = -1
+        self.modified = False
 
 
 ev = EditorVariables()
+
+
+def open_api_doc():
+    webbrowser.open_new_tab("https://pygamelib.readthedocs.io")
 
 
 def flood_fill(
@@ -273,12 +279,9 @@ def draw_ui():
     tb_c_idx = ev.tools_idx % len(ev.tools)
     # Draw the menu
     draw_box(0, 0, ev.screen_dimensions["menu"], screen.width, "menu")
-    col = 0
-    for msg in ev.menu:
-        col += 2
-        screen.place(msg, 1, col)
-        col += len(msg)
-    col += 1
+    screen.place(ev.menu, 1, 2, 2)
+    # +2 because we start at 1 and need +1 to move past the menubar
+    col = ev.menu.length() + 2
     screen.place(core.Sprixel(graphics.BoxDrawings.LIGHT_TRIPLE_DASH_VERTICAL), 1, col)
     # Draw the sprite edition area
     title = "Sprite"
@@ -745,7 +748,10 @@ def clear_copy_paste(g):
         for cpc in range(start_col, stop_col + 1):
             item = g.get_board(ev.copy_paste_board_id).item(cpr, cpc)
             if item.sprixel is not None:
-                # item.sprixel = copy.deepcopy(ev.collection[spr_name].sprixel(cpr, cpc))
+                # item.sprixel = copy.deepcopy(ev.collection[spr_name].sprixel(
+                #   cpr,
+                #   cpc)
+                # )
                 if hasattr(item, "_original_bg_color"):
                     item.sprixel.bg_color = getattr(item, "_original_bg_color")
                 if hasattr(item, "_original_fg_color"):
@@ -789,6 +795,177 @@ def paste_clipboard(g: engine.Game):
             _current_sprite.set_sprixel(sr + r - start_row, sc + c - start_col, sprix)
 
 
+def open_file():
+    g = engine.Game.instance()
+    screen = g.screen
+    width = int(screen.width / 3)
+    default = Path(ev.filename)
+    fid = ui.FileDialog(
+        default.parent,
+        width,
+        10,
+        "Open a sprite collection",
+        filter="*.spr",
+        config=ev.ui_config_popup,
+    )
+    screen.place(fid, screen.vcenter - 5, screen.hcenter - int(width / 2))
+    file = fid.show()
+    # g.log(f"Got file={file} from FileDialog")
+    # screen.delete(screen.vcenter - 5, screen.hcenter - int(width / 2))
+    if file is not None and not file.is_dir():
+        ev.collection = core.SpriteCollection.load_json_file(file)
+        # ev.sprite_list = sorted(list(ev.collection.keys()))
+        ev.sprite_list = list(ev.collection.keys())
+        ev.filename = str(file)
+        g.delete_all_levels()
+        if len(ev.collection) > 0:
+            load_sprite_to_board(g, 0)
+
+
+def save_workspace_as() -> None:
+    screen = engine.Game.instance().screen
+    width = int(screen.width / 3)
+    default = Path(ev.filename)
+    fid = ui.FileDialog(
+        default.parent,
+        width,
+        10,
+        "Save as",
+        filter="*.spr",
+        config=ev.ui_config_popup,
+    )
+    screen.place(fid, screen.vcenter - 5, screen.hcenter - int(width / 2))
+    file = fid.show()
+    # g.log(f"Got file={file} from FileDialog")
+    # screen.delete(screen.vcenter - 5, screen.hcenter - int(width / 2))
+    if file is not None and not file.is_dir():
+        ev.filename = str(file)
+        save_workspace()
+
+
+def save_workspace() -> None:
+    screen = engine.Game.instance().screen
+
+    for spr_id in range(0, len(ev.sprite_list)):
+        spr_name = ev.sprite_list[spr_id]
+        sprite = ev.collection[spr_name]
+        try:
+            board = g.get_board(1 + spr_id)
+        except Exception:
+            continue
+        sprite_set_sprixel = sprite.set_sprixel
+        board_item = board.item
+        if ev.ui_init:
+            diag = base.Text(
+                f" Please wait, saving {spr_name} ",
+                core.Color(0, 0, 0),
+                core.Color(0, 128, 128),
+            )
+            tl = diag.length
+            dr = int((screen.height - 7) / 2)
+            dc = int((screen.width - 21) / 2) - int(tl / 2)
+            progress_bar = ui.ProgressDialog(diag, 0, tl, tl, config=ev.ui_config)
+            screen.place(progress_bar, dr, dc, 2)
+            screen.trigger_rendering()
+            screen.update()
+            total = board.width * board.height
+            screen.update()
+            progress_bar.maximum = total
+        cidx = 0
+        prog = 0
+        last_prog = 0
+        for r in range(sprite.height):
+            for c in range(sprite.width):
+                csprix = board_item(r, c).sprixel
+                if board_item(r, c) == g.player:
+                    cidx += 1
+                    csprix = ev.current_sprixel
+                if csprix is None or csprix.model == "X" or csprix.model == "XX":
+                    sprite_set_sprixel(r, c, core.Sprixel())
+                else:
+                    sprite_set_sprixel(r, c, csprix)
+                if ev.ui_init:
+                    cidx += 1
+                    prog = int((cidx * tl) / total)
+                    if prog > last_prog:
+                        # draw_progress_bar(dr + 1, dc, tl, cidx, total)
+                        progress_bar.value = cidx
+                        g.screen.update()
+                        last_prog = prog
+        if ev.ui_init:
+            screen.delete(dr, dc)
+    # TODO: create a wait dialog
+    ev.collection.to_json_file(ev.filename)
+
+
+def edit_paste() -> None:
+    ev.copy_paste_state = "pasted"
+    paste_clipboard(engine.Game.instance())
+
+
+def edit_copy() -> None:
+    if ev.boxes_idx != ev.boxes.index("sprite"):
+        ev.boxes_idx = ev.boxes.index("sprite")
+        # Close the menubar just in case
+        ev.menu.close()
+    g = engine.Game.instance()
+    if ev.copy_paste_start != [None, None] and ev.copy_paste_stop != [
+        None,
+        None,
+    ]:
+        clear_copy_paste(g)
+    ev.copy_paste_start = g.player.pos
+    ev.copy_paste_stop = g.player.pos
+    ev.copy_paste_sprite_idx = ev.sprite_list_idx
+    ev.copy_paste_board_id = g.current_level
+    ev.copy_paste_state = "selecting"
+
+
+def edit_new_sprite() -> None:
+    g = engine.Game.instance()
+    screen = g.screen
+    fields = [
+        {
+            "label": "Enter the height of the new sprite:",
+            "default": "",
+            "filter": constants.INTEGER_FILTER,
+        },
+        {
+            "label": "Enter the width of the new sprite:",
+            "default": "",
+            "filter": constants.INTEGER_FILTER,
+        },
+        {
+            "label": "Enter the name of the new sprite:",
+            "default": f"Sprite {len(ev.sprite_list)}",
+            "filter": constants.PRINTABLE_FILTER,
+        },
+    ]
+    minp = ui.MultiLineInputDialog(
+        title="New sprite", fields=fields, config=ev.ui_config_popup
+    )
+    screen.place(minp, screen.vcenter - len(fields), screen.hcenter - 18)
+    filled_fields = minp.show()
+    # screen.delete(screen.vcenter - len(fields), screen.hcenter - 18)
+    if (
+        filled_fields[0]["user_input"] != ""
+        and filled_fields[1]["user_input"] != ""
+        and filled_fields[2]["user_input"] != ""
+    ):
+        nn = filled_fields[2]["user_input"]
+        ev.collection[nn] = core.Sprite(
+            size=[
+                int(filled_fields[1]["user_input"]),
+                int(filled_fields[0]["user_input"]),
+            ]
+        )
+        ev.collection[nn].name = nn
+        ev.sprite_list.append(nn)
+        ev.sprite_list_idx = len(ev.sprite_list) - 1
+        load_sprite_to_board(g, ev.sprite_list_idx)
+        ev.boxes_idx = ev.boxes.index("sprite")
+
+
 def update_screen(g: engine.Game, inkey, dt: float):
     redraw_ui = True
     screen = g.screen
@@ -822,145 +999,34 @@ def update_screen(g: engine.Game, inkey, dt: float):
     elif inkey == "H":
         display_help()
     elif inkey == "O":
-        width = int(screen.width / 3)
-        default = Path(ev.filename)
-        fid = ui.FileDialog(
-            default.parent,
-            width,
-            10,
-            "Open a sprite collection",
-            filter="*.spr",
-            config=ev.ui_config_popup,
-        )
-        screen.place(fid, screen.vcenter - 5, screen.hcenter - int(width / 2))
-        file = fid.show()
-        # g.log(f"Got file={file} from FileDialog")
-        # screen.delete(screen.vcenter - 5, screen.hcenter - int(width / 2))
-        if file is not None and not file.is_dir():
-            ev.collection = core.SpriteCollection.load_json_file(file)
-            # ev.sprite_list = sorted(list(ev.collection.keys()))
-            ev.sprite_list = list(ev.collection.keys())
-            ev.filename = str(file)
-            g.delete_all_levels()
-            if len(ev.collection) > 0:
-                load_sprite_to_board(g, 0)
+        open_file()
     elif inkey == "S":
-        width = int(screen.width / 3)
-        default = Path(ev.filename)
-        fid = ui.FileDialog(
-            default.parent,
-            width,
-            10,
-            "Save as",
-            filter="*.spr",
-            config=ev.ui_config_popup,
-        )
-        screen.place(fid, screen.vcenter - 5, screen.hcenter - int(width / 2))
-        file = fid.show()
-        # g.log(f"Got file={file} from FileDialog")
-        # screen.delete(screen.vcenter - 5, screen.hcenter - int(width / 2))
-        if file is not None and not file.is_dir():
-            ev.filename = str(file)
-            for spr_id in range(0, len(ev.sprite_list)):
-                spr_name = ev.sprite_list[spr_id]
-                sprite = ev.collection[spr_name]
-                try:
-                    board = g.get_board(1 + spr_id)
-                except Exception:
-                    continue
-                sprite_set_sprixel = sprite.set_sprixel
-                board_item = board.item
-                if ev.ui_init:
-                    diag = base.Text(
-                        f" Please wait, saving {spr_name} ",
-                        core.Color(0, 0, 0),
-                        core.Color(0, 128, 128),
-                    )
-                    tl = diag.length
-                    dr = int((screen.height - 7) / 2)
-                    dc = int((screen.width - 21) / 2) - int(tl / 2)
-                    progress_bar = ui.ProgressDialog(
-                        diag, 0, tl, tl, config=ev.ui_config
-                    )
-                    screen.place(progress_bar, dr, dc, 2)
-                    screen.trigger_rendering()
-                    screen.update()
-                    total = board.width * board.height
-                    screen.update()
-                    progress_bar.maximum = total
-                cidx = 0
-                prog = 0
-                last_prog = 0
-                for r in range(sprite.height):
-                    for c in range(sprite.width):
-                        csprix = board_item(r, c).sprixel
-                        if board_item(r, c) == g.player:
-                            cidx += 1
-                            csprix = ev.current_sprixel
-                        if (
-                            csprix is None
-                            or csprix.model == "X"
-                            or csprix.model == "XX"
-                        ):
-                            sprite_set_sprixel(r, c, core.Sprixel())
-                        else:
-                            sprite_set_sprixel(r, c, csprix)
-                        if ev.ui_init:
-                            cidx += 1
-                            prog = int((cidx * tl) / total)
-                            if prog > last_prog:
-                                # draw_progress_bar(dr + 1, dc, tl, cidx, total)
-                                progress_bar.value = cidx
-                                g.screen.update()
-                                last_prog = prog
-                if ev.ui_init:
-                    screen.delete(dr, dc)
-            # TODO: create a wait dialog
-            ev.collection.to_json_file(ev.filename)
+        save_workspace()
         redraw_ui = False
     elif inkey == "N":
-        fields = [
-            {
-                "label": "Enter the height of the new sprite:",
-                "default": "",
-                "filter": constants.INTEGER_FILTER,
-            },
-            {
-                "label": "Enter the width of the new sprite:",
-                "default": "",
-                "filter": constants.INTEGER_FILTER,
-            },
-            {
-                "label": "Enter the name of the new sprite:",
-                "default": f"Sprite {len(ev.sprite_list)}",
-                "filter": constants.PRINTABLE_FILTER,
-            },
-        ]
-        minp = ui.MultiLineInputDialog(
-            title="New sprite", fields=fields, config=ev.ui_config_popup
-        )
-        screen.place(minp, screen.vcenter - len(fields), screen.hcenter - 18)
-        filled_fields = minp.show()
-        # screen.delete(screen.vcenter - len(fields), screen.hcenter - 18)
-        if (
-            filled_fields[0]["user_input"] != ""
-            and filled_fields[1]["user_input"] != ""
-            and filled_fields[2]["user_input"] != ""
-        ):
-            nn = filled_fields[2]["user_input"]
-            ev.collection[nn] = core.Sprite(
-                size=[
-                    int(filled_fields[1]["user_input"]),
-                    int(filled_fields[0]["user_input"]),
-                ]
-            )
-            ev.collection[nn].name = nn
-            ev.sprite_list.append(nn)
-            ev.sprite_list_idx = len(ev.sprite_list) - 1
-            load_sprite_to_board(g, ev.sprite_list_idx)
-            ev.boxes_idx = ev.boxes.index("sprite")
+        edit_new_sprite()
     elif inkey.name == "KEY_TAB":
         ev.boxes_idx += 1
+        ev.menu.close()
+    elif ev.boxes[boxes_current_id] == "menu":
+        # if ev.ui_init:
+        #     ev.menu.activate()
+        #     ev.boxes_idx = ev.boxes.index("sprite")
+        if inkey == engine.key.DOWN:
+            if ev.menu.current_entry() is not None:
+                ev.menu.current_entry().activate()
+        elif inkey == engine.key.LEFT:
+            ev.menu.select_previous()
+        elif inkey == engine.key.RIGHT:
+            ev.menu.select_next()
+        elif inkey.name == "KEY_ENTER":
+            if ev.menu.current_entry() is not None:
+                ev.menu.current_entry().activate()
+        elif inkey.name == "KEY_ESCAPE":
+            ev.boxes_idx = ev.boxes.index("sprite")
+            ev.menu.close()
+        else:
+            redraw_ui = False
     elif ev.boxes[boxes_current_id] == "sprite":
         if inkey == engine.key.UP:
             update_sprixel_under_cursor(
@@ -1115,24 +1181,26 @@ def update_screen(g: engine.Game, inkey, dt: float):
                 mvt = base.Vector2D(g.current_board().height - 1 - g.player.row, 0)
                 g.move_player(mvt)
         elif inkey == "C":
-            if ev.copy_paste_start != [None, None] and ev.copy_paste_stop != [
-                None,
-                None,
-            ]:
-                clear_copy_paste(g)
-            ev.copy_paste_start = g.player.pos
-            ev.copy_paste_stop = g.player.pos
-            ev.copy_paste_sprite_idx = ev.sprite_list_idx
-            ev.copy_paste_board_id = g.current_level
-            ev.copy_paste_state = "selecting"
+            edit_copy()
+            # if ev.copy_paste_start != [None, None] and ev.copy_paste_stop != [
+            #     None,
+            #     None,
+            # ]:
+            #     clear_copy_paste(g)
+            # ev.copy_paste_start = g.player.pos
+            # ev.copy_paste_stop = g.player.pos
+            # ev.copy_paste_sprite_idx = ev.sprite_list_idx
+            # ev.copy_paste_board_id = g.current_level
+            # ev.copy_paste_state = "selecting"
         elif inkey == "V":
-            ev.copy_paste_state = "pasted"
-            paste_clipboard(g)
+            edit_paste()
         elif inkey.name == "KEY_ESCAPE" and (
             ev.copy_paste_state == "selecting" or ev.copy_paste_state == "selected"
         ):
             ev.copy_paste_state = "none"
             clear_copy_paste(g)
+        elif inkey.name == "KEY_ESCAPE":
+            ev.boxes_idx = ev.boxes.index("menu")
         elif inkey is not None and inkey != "" and inkey.isprintable():
             # If the character is printable we just add it to the canvas
             sprixel = core.Sprixel(str(inkey))
@@ -1529,11 +1597,6 @@ def update_screen(g: engine.Game, inkey, dt: float):
         screen.place(base.Text(fps), 1, screen.width - len(fps) - 2)
         ev.frames = 0
         ev.start = time.time()
-        screen.place(
-            f"C/P state={ev.copy_paste_state} start={ev.copy_paste_start} stop={ev.copy_paste_stop} pstop={ev.copy_paste_previous_stop} bid={ev.copy_paste_board_id} sid={ev.copy_paste_sprite_idx}",
-            screen.height - 3,
-            3,
-        )
 
     screen.update()
     ev.frames += 1
@@ -1607,6 +1670,41 @@ if __name__ == "__main__":
         bg_color=core.Color(0, 128, 128),
         borderless_dialog=False,
     )
+    # Build menu
+    ev.menu = ui.MenuBar(spacing=0, config=ev.ui_config)
+    ev.menu.add_entry(
+        ui.Menu(
+            "File",
+            [
+                ui.MenuAction("Open", open_file),
+                ui.MenuAction("Save", save_workspace),
+                ui.MenuAction("Save As...", save_workspace_as),
+                ui.MenuAction("Quit", g.stop),
+            ],
+        )
+    )
+    ev.menu.add_entry(
+        ui.Menu(
+            "Edit",
+            [
+                ui.MenuAction("Copy (Shift+C)", edit_copy),
+                ui.MenuAction("Paste (Shift+V)", edit_paste),
+                ui.MenuAction("New sprite", edit_new_sprite),
+                ui.MenuAction("New brush", open_file),
+            ],
+        )
+    )
+    ev.menu.add_entry(
+        ui.Menu(
+            "Help",
+            [
+                ui.MenuAction("Quick help (Shift+H)", display_help),
+                ui.MenuAction("Open documentation", open_api_doc),
+            ],
+        )
+    )
+    ev.menu.add_entry(ui.MenuAction("Quit", g.stop))
+
     # Default empty board.
     g.add_board(
         1,
