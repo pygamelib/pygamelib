@@ -966,6 +966,74 @@ def edit_new_sprite() -> None:
         ev.boxes_idx = ev.boxes.index("sprite")
 
 
+def edit_new_brush():
+    g = engine.Game.instance()
+    screen = g.screen
+    bgc = ev.ui_config_popup.bg_color
+    ev.ui_config_popup.bg_color = None
+    msg = ui.MessageDialog(width=screen.width - 6, config=ev.ui_config_popup)
+    msg.add_line("")
+    msg.add_line(
+        base.Text(
+            "Create brush",
+            core.Color(0, 200, 200),
+            style=constants.BOLD + constants.UNDERLINE,
+        ),
+        constants.ALIGN_CENTER,
+    )
+    msg.add_line("")
+    msg.add_line("This wizard will guide you into creating a new brush.")
+    msg.add_line(
+        "You will need to select a model, a forground color and a background " "color."
+    )
+    msg.add_line("")
+    msg.add_line(
+        "The model is mandatory, however you can hit ESC on any of the color "
+        "choice if you don't need a specific color."
+    )
+    msg.add_line("For example, hit ESC if you don't need a background color.")
+    msg.add_line("")
+    msg.add_line("Press ENTER to continue or ESC to cancel.")
+    screen.place(msg, screen.vcenter - int(msg.height / 2), 3)
+    key_pressed = msg.show()
+    ev.ui_config_popup.bg_color = bgc
+    if key_pressed.name == "KEY_ENTER":
+        new_sprixel = core.Sprixel()
+        width = int(screen.width / 2)
+        height = 15
+        gs = ui.GridSelectorDialog(
+            ev.brush_models,
+            height,
+            width,
+            "Select a brush model",
+            config=ev.ui_config_popup,
+        )
+        screen.place(
+            gs,
+            int(screen.vcenter - (height / 2)),
+            int(screen.hcenter - (width / 2)),
+            2,
+        )
+        sprix = gs.show()
+        if sprix is not None and sprix.model != "":
+            new_sprixel.model = sprix.model
+            cp = ui.ColorPickerDialog(
+                "Pick a FOREGROUND color", config=ev.ui_config_popup
+            )
+            screen.place(cp, screen.vcenter, screen.hcenter - 13)
+            color = cp.show()
+            if color is not None:
+                new_sprixel.fg_color = color
+            cp.set_color(core.Color(128, 128, 128))
+            cp.set_selection(0)
+            cp.title = "Pick a BACKGROUND color"
+            screen.place(cp, screen.vcenter, screen.hcenter - 13)
+            color = cp.show()
+            if color is not None:
+                new_sprixel.bg_color = color
+            ev.brushes.append(new_sprixel)
+
+
 def update_screen(g: engine.Game, inkey, dt: float):
     redraw_ui = True
     screen = g.screen
@@ -1368,71 +1436,7 @@ def update_screen(g: engine.Game, inkey, dt: float):
             inkey.name == "KEY_ENTER"
             and ev.tools[ev.tools_idx % len(ev.tools)] == "Create new brush"
         ):
-            bgc = ev.ui_config_popup.bg_color
-            ev.ui_config_popup.bg_color = None
-            msg = ui.MessageDialog(width=screen.width - 6, config=ev.ui_config_popup)
-            msg.add_line("")
-            msg.add_line(
-                base.Text(
-                    "Create brush",
-                    core.Color(0, 200, 200),
-                    style=constants.BOLD + constants.UNDERLINE,
-                ),
-                constants.ALIGN_CENTER,
-            )
-            msg.add_line("")
-            msg.add_line("This wizard will guide you into creating a new brush.")
-            msg.add_line(
-                "You will need to select a model, a forground color and a background "
-                "color."
-            )
-            msg.add_line("")
-            msg.add_line(
-                "The model is mandatory, however you can hit ESC on any of the color "
-                "choice if you don't need a specific color."
-            )
-            msg.add_line("For example, hit ESC if you don't need a background color.")
-            msg.add_line("")
-            msg.add_line("Press ENTER to continue or ESC to cancel.")
-            screen.place(msg, screen.vcenter - int(msg.height / 2), 3)
-            key_pressed = msg.show()
-            ev.ui_config_popup.bg_color = bgc
-            if key_pressed.name == "KEY_ENTER":
-                new_sprixel = core.Sprixel()
-                width = int(screen.width / 2)
-                height = 15
-                gs = ui.GridSelectorDialog(
-                    ev.brush_models,
-                    height,
-                    width,
-                    "Select a brush model",
-                    config=ev.ui_config_popup,
-                )
-                screen.place(
-                    gs,
-                    int(screen.vcenter - (height / 2)),
-                    int(screen.hcenter - (width / 2)),
-                    2,
-                )
-                sprix = gs.show()
-                if sprix is not None and sprix.model != "":
-                    new_sprixel.model = sprix.model
-                    cp = ui.ColorPickerDialog(
-                        "Pick a FOREGROUND color", config=ev.ui_config_popup
-                    )
-                    screen.place(cp, screen.vcenter, screen.hcenter - 13)
-                    color = cp.show()
-                    if color is not None:
-                        new_sprixel.fg_color = color
-                    cp.set_color(core.Color(128, 128, 128))
-                    cp.set_selection(0)
-                    cp.title = "Pick a BACKGROUND color"
-                    screen.place(cp, screen.vcenter, screen.hcenter - 13)
-                    color = cp.show()
-                    if color is not None:
-                        new_sprixel.bg_color = color
-                    ev.brushes.append(new_sprixel)
-
+            edit_new_brush()
         elif (
             inkey.name == "KEY_ENTER"
             and ev.tools[ev.tools_idx % len(ev.tools)] == "Play animation"
@@ -1690,7 +1694,7 @@ if __name__ == "__main__":
                 ui.MenuAction("Copy (Shift+C)", edit_copy),
                 ui.MenuAction("Paste (Shift+V)", edit_paste),
                 ui.MenuAction("New sprite", edit_new_sprite),
-                ui.MenuAction("New brush", open_file),
+                ui.MenuAction("New brush", edit_new_brush),
             ],
         )
     )
