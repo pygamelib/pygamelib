@@ -421,6 +421,12 @@ class Box(object):
         vert_sprix = self._cache["dialog_vertical_border"]
         horiz_sprix = self._cache["dialog_horizontal_border"]
         buffer[row][column] = self._cache["top_right_corner"]
+        self_width = self.__width
+        self_height = self.__height
+        if column + self.__width >= buffer_width:
+            self.__width = buffer_width - column
+        if row + self.__height >= buffer_height:
+            self.__height = buffer_height - row
         if self._cache["title"].text == "":
             for c in range(column + 1, column + self.__width - 1):
                 buffer[row][c] = horiz_sprix
@@ -465,6 +471,8 @@ class Box(object):
             for r in range(row + 1, row + self.__height - 1):
                 for c in range(column + 1, column + self.__width - 1):
                     buffer[r][c] = self.__filling_sprixel
+        self.__width = self_width
+        self.__height = self_height
 
 
 class ProgressBar(object):
