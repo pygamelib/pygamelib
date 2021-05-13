@@ -159,9 +159,13 @@ class TestBoard(unittest.TestCase):
     def test_immovable(self):
         bi = board_items.Immovable(inventory_space=2)
         self.assertFalse(bi.can_move())
-        self.assertEqual(bi.inventory_space(), 2)
+        self.assertEqual(bi.inventory_space, 2)
         with self.assertRaises(NotImplementedError):
             bi.restorable()
+        with self.assertRaises(board_items.base.PglInvalidTypeException):
+            bi.inventory_space = "2"
+        bi.inventory_space = 3
+        self.assertEqual(bi.inventory_space, 3)
 
     def test_actionable(self):
         bi = board_items.Actionable()
@@ -248,6 +252,7 @@ class TestBoard(unittest.TestCase):
             overlappable=False,
             restorable=True,
         )
+        self.assertEqual(bi.inventory_space, 5)
         self.assertFalse(bi.pickable())
         self.assertFalse(bi.overlappable())
         self.assertTrue(bi.restorable())

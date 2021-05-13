@@ -29,6 +29,7 @@ Contributors
 * Spassarop (`@spassarop`_)
 * Javier Hernán Caballero García (`@caballerojavier13`_)
 * Olle Lögdahl (`@ollelogdahl`_)
+* MaryEtta Morris (`@morrme`_)
 
 .. _`@arnauddupuis`: https://github.com/arnauddupuis
 .. _`@kaozdl`: https://github.com/kaozdl
@@ -46,3 +47,4 @@ Contributors
 .. _`@spassarop`: https://github.com/spassarop
 .. _`@caballerojavier13`: https://github.com/caballerojavier13
 .. _`@ollelogdahl`: https://github.com/ollelogdahl
+.. _`@morrme`: https://github.com/morrme
