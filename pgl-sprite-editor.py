@@ -214,6 +214,8 @@ def draw_progress_bar(
 def display_help():
     g = engine.Game.instance()
     screen = g.screen
+    ev.menu.current_entry().collapse()
+    screen.force_update()
     bgc = ev.ui_config_popup.bg_color
     ev.ui_config_popup.bg_color = None
     msg = ui.MessageDialog(width=screen.width - 6, config=ev.ui_config_popup)
@@ -226,9 +228,11 @@ def display_help():
     )
     msg.add_line("")
     msg.add_line(
-        base.Text("Shortcuts", core.Color(0, 175, 175), style=constants.UNDERLINE)
+        base.Text(
+            "General Shortcuts", core.Color(0, 175, 175), style=constants.UNDERLINE
+        )
     )
-    msg.add_line("Tab: cycle through the panels.")
+    msg.add_line("Tab: cycle through the panels or fields in dialogs.")
     msg.add_line("Shift + H: Display this help.")
     msg.add_line("Shift + S: Save the current sprite as (i.e: ask for the location).")
     msg.add_line("Shift + O: Open a sprite collection.")
@@ -239,12 +243,38 @@ def display_help():
         "Shift + A: Add the current sprixel (see the info pannel) to the Brushes."
     )
     msg.add_line("Shift + R: Create a random brush and add it to the Brushes.")
+    msg.add_line(
+        f"{graphics.Models.UP_ARROW}/{graphics.Models.DOWN_ARROW}: Navigate up and"
+        " down in panels."
+    )
     msg.add_line("Esc.: Closes most of the dialog windows (including that one). ")
     msg.add_line("      A dialog does not return anything when closed with escape.")
     msg.add_line(
         "Enter: In most panels execute the action and return to the sprite canvas."
     )
     msg.add_line("       In dialogs (like this one) close and return the selection.")
+
+    msg.add_line("")
+    msg.add_line(
+        base.Text(
+            "Menubar specific shortcuts",
+            core.Color(0, 175, 175),
+            style=constants.UNDERLINE,
+        )
+    )
+    msg.add_line(
+        f"{graphics.Models.LEFT_ARROW}/{graphics.Models.RIGHT_ARROW}: Navigate left and"
+        " right. Open and close submenus. "
+    )
+    msg.add_line(
+        f"{graphics.Models.UP_ARROW}/{graphics.Models.DOWN_ARROW}: Navigate up and"
+        " down in menus or submenus."
+    )
+    msg.add_line(
+        "Esc.: Close the current menu or submenu. If no menu is open, select"
+        " the sprite canvas."
+    )
+    msg.add_line("Enter: Activate a menu entry or open a menu or submenu.")
 
     msg.add_line("")
     msg.add_line(
@@ -257,7 +287,25 @@ def display_help():
     msg.add_line("Shift + E: Switch between Edit and Erase mode.")
     msg.add_line("i/j/k/l: Place the selected sprixel on the sprite canvas an ")
     msg.add_line("         move up/left/right/up.")
+    msg.add_line("Esc.: Select the menu bar.")
     msg.add_line("")
+    msg.add_line(
+        base.Text(
+            "Sprite list specific shortcuts",
+            core.Color(0, 175, 175),
+            style=constants.UNDERLINE,
+        )
+    )
+    msg.add_line("Enter: Select the sprite canvas.")
+    msg.add_line("")
+    msg.add_line(
+        base.Text(
+            "Tools specific shortcuts",
+            core.Color(0, 175, 175),
+            style=constants.UNDERLINE,
+        )
+    )
+    msg.add_line("Esc.: Select the sprite canvas.")
     msg.add_line("")
     # msg.add_line("")
     # msg.add_line("")
