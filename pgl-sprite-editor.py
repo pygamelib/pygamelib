@@ -1755,7 +1755,6 @@ if __name__ == "__main__":
             ],
         )
     )
-    ev.menu.add_entry(ui.MenuAction("Quit", g.stop))
 
     # Default empty board.
     g.add_board(
