@@ -247,7 +247,7 @@ class TestBase(unittest.TestCase):
         t._render_to_buffer(
             s._display_buffer,
             0,
-            s.width - 5,
+            s._display_buffer.shape[1] - 5,
             s._display_buffer.shape[0],
             s._display_buffer.shape[1],
         )
