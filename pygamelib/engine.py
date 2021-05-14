@@ -2064,12 +2064,12 @@ class Game:
             if lvl_number in self._boards.keys():
                 del self._boards[lvl_number]
             else:
-                base.PglInvalidLevelException(
+                raise base.PglInvalidLevelException(
                     f"Game.delete_level(lvl_number) : {lvl_number} is not a previously"
                     " associated level."
                 )
         else:
-            base.PglInvalidTypeException(
+            raise base.PglInvalidTypeException(
                 "Game.delete_level(lvl_number) : lvl_number needs to be an int. "
                 f"{type(lvl_number)} is not an int."
             )

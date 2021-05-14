@@ -84,6 +84,10 @@ class TestBase(unittest.TestCase):
         self.game.screen.update()
         with self.assertRaises(pgl_base.PglInvalidTypeException):
             b.title = 2
+        self.game.screen.place(
+            b, self.game.screen.height - 5, self.game.screen.width - 5
+        )
+        self.game.screen.update()
 
     def test_progressbar(self):
         conf = ui.UiConfig.instance(game=self.game)
@@ -559,9 +563,11 @@ class TestBase(unittest.TestCase):
         menubar.close()
         self.assertEqual(menubar.current_index, -1)
 
+        self.assertIsNone(edit_menu.expand())
         # Screen update
         screen.place(menubar, 0, 0)
         screen.update()
+        self.assertIsNone(edit_menu.collapse())
         help_action.padding = 0
         screen.force_update()
 

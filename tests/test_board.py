@@ -9,7 +9,9 @@ import unittest
 class TestBoard(unittest.TestCase):
     def setUp(self):
         self.board = pgl_engine.Board(
-            name="test_board", size=[10, 10], player_starting_position=[5, 5],
+            name="test_board",
+            size=[10, 10],
+            player_starting_position=[5, 5],
         )
 
     def test_create_board(self):
@@ -180,7 +182,9 @@ class TestBoard(unittest.TestCase):
             p[0].assertEqual(p[1], 1)
 
         self.board = pgl_engine.Board(
-            name="test_board", size=[10, 10], player_starting_position=[5, 5],
+            name="test_board",
+            size=[10, 10],
+            player_starting_position=[5, 5],
         )
         i = pgl_board_items.ComplexNPC(
             sprite=gfx_core.Sprite(default_sprixel=gfx_core.Sprixel("*"))
@@ -218,6 +222,11 @@ class TestBoard(unittest.TestCase):
         self.board.place_item(pgl_board_items.Door(), i.row, i.column + i.width)
         self.assertIsNone(self.board.move(i, constants.RIGHT, 1))
         self.assertIsNone(self.board.move(i, constants.RIGHT, 2))
+        self.assertIsNone(self.board.move(i, constants.DOWN, 2))
+        with self.assertRaises(pgl_base.PglInvalidTypeException):
+            self.board.move(i, constants.DOWN, "1")
+        with self.assertRaises(pgl_base.PglInvalidTypeException):
+            self.board.move(i, "constants.DOWN", 1)
 
     def test_move_simple(self):
         def _act(p):
@@ -226,7 +235,9 @@ class TestBoard(unittest.TestCase):
         i = pgl_board_items.Player(sprixel=gfx_core.Sprixel("*"))
         i.sprixel.is_bg_transparent = True
         b = pgl_engine.Board(
-            name="test_board", size=[10, 10], player_starting_position=[0, 0],
+            name="test_board",
+            size=[10, 10],
+            player_starting_position=[0, 0],
         )
         b.place_item(i, 0, 0)
         self.assertIsNone(b.move(i, constants.DOWN, 1))
@@ -271,7 +282,9 @@ class TestBoard(unittest.TestCase):
 
     def test_get_objects(self):
         b = pgl_engine.Board(
-            name="test_board", size=[10, 10], player_starting_position=[0, 0],
+            name="test_board",
+            size=[10, 10],
+            player_starting_position=[0, 0],
         )
         for i in range(1, 4):
             b.place_item(pgl_board_items.NPC(name=f"mover{i}", type="mover"), 0, i)

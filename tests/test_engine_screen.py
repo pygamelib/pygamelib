@@ -242,6 +242,16 @@ class TestBase(unittest.TestCase):
         self.assertEqual(5, functions.clamp(5, 0, 10))
         self.assertEqual(0, functions.clamp(-5, 0, 10))
         self.assertEqual(10, functions.clamp(15, 0, 10))
+        # This one either and it's even worst: it's going to disappear!
+        t = base.Text("this is a text")
+        t._render_to_buffer(
+            s._display_buffer,
+            0,
+            s.width - 5,
+            s._display_buffer.shape[0],
+            s._display_buffer.shape[1],
+        )
+        s.update()
 
 
 if __name__ == "__main__":

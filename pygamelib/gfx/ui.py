@@ -3747,6 +3747,26 @@ class Menu(object):
         self.__expanded = False
         screen.force_update()
 
+    def expand(self):
+        """
+        Expand the menu. A menu is automatically expanded when activated.
+
+        Example::
+
+            file_menu.expand()
+        """
+        self.__expanded = True
+
+    def collapse(self):
+        """
+        Collapse the menu. A menu is automatically collapsed after activation.
+
+        Example::
+
+            file_menu.collapse()
+        """
+        self.__expanded = False
+
 
 class MenuBar(object):
     """

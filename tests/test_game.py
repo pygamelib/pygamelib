@@ -294,12 +294,44 @@ class TestBase(unittest.TestCase):
         self.assertEqual(test_door["value"], 10)
         self.assertEqual(test_door["inventory_space"], 1)
 
+        with self.assertRaises(base.PglInvalidTypeException):
+            g.delete_level()
+        with self.assertRaises(base.PglInvalidLevelException):
+            g.delete_level(42)
+        g.delete_level(1)
+        g.delete_all_levels()
+        self.assertIsNone(g.current_board())
+
     def test_singleton(self):
         mygame = engine.Game.instance()
         mygame.test_singleton = True
         self.assertTrue(engine.Game.instance(), "test_singleton")
         self.assertTrue(engine.Game.instance().test_singleton)
         self.assertTrue(mygame is engine.Game.instance())
+
+    def test_logs(self):
+        mygame = engine.Game.instance()
+        self.assertEqual(mygame.logs(), list())
+        mygame.log("test")
+        self.assertEqual(mygame.logs()[0], "test")
+        mygame.clear_logs()
+        self.assertEqual(mygame.logs(), list())
+
+    def test_level_insertion(self):
+        g = engine.Game.instance()
+        g.insert_board(1, engine.Board(name="lvl1"))
+        g.insert_board(2, engine.Board(name="lvl2"))
+        g.insert_board(3, engine.Board(name="lvl3"))
+        self.assertEqual(g.get_board(1).name, "lvl1")
+        g.insert_board(1, engine.Board(name="lvl4"))
+        self.assertEqual(g.get_board(1).name, "lvl4")
+        self.assertEqual(g.get_board(2).name, "lvl1")
+        g.insert_board(41, engine.Board(name="lvl41"))
+        self.assertEqual(g.get_board(41).name, "lvl41")
+        with self.assertRaises(base.PglInvalidTypeException):
+            g.insert_board("1", engine.Board())
+        with self.assertRaises(base.PglInvalidTypeException):
+            g.insert_board(1, "engine.Board()")
 
 
 if __name__ == "__main__":
