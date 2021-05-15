@@ -952,7 +952,7 @@ class Board:
                             # And then clear the cell (this is usefull for the next one)
                             self.remove_item(pickable_item)
                         # Finally we check if the destination is overlappable
-                        if dest_item.parent != item and not dest_item.overlappable():
+                        if dest_item != item and not dest_item.overlappable():
                             can_draw = False
                             break
                 if can_draw:

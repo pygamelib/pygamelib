@@ -194,7 +194,10 @@ class TestBoard(unittest.TestCase):
         self.assertIsInstance(self.board.item(1, 1), pgl_board_items.ComplexNPC)
         self.assertIsNone(self.board.move(i, constants.RIGHT, 1))
         i = pgl_board_items.ComplexPlayer(
-            sprite=gfx_core.Sprite(default_sprixel=gfx_core.Sprixel("*"))
+            sprite=gfx_core.Sprite(
+                default_sprixel=gfx_core.Sprixel("*"),
+                sprixels=[[gfx_core.Sprixel("@"), gfx_core.Sprixel("@")]],
+            )
         )
         self.board.place_item(i, 3, 1)
         self.assertIsInstance(self.board.item(3, 1), pgl_board_items.ComplexPlayer)
@@ -230,6 +233,7 @@ class TestBoard(unittest.TestCase):
 
     def test_move_simple(self):
         def _act(p):
+            setattr(p[0], "test_callback", True)
             p[0].assertEqual(p[1], 1)
 
         i = pgl_board_items.Player(sprixel=gfx_core.Sprixel("*"))
@@ -250,6 +254,7 @@ class TestBoard(unittest.TestCase):
         self.assertIsNone(b.move(i, constants.DLUP, 1))
         self.assertIsNone(b.move(i, pgl_base.Vector2D(0, 0)))
         self.assertEqual(i.pos, [0, 0])
+        setattr(self, "test_callback", False)
         b.place_item(
             pgl_board_items.GenericActionableStructure(
                 action=_act, action_parameters=[self, 1]
@@ -259,6 +264,7 @@ class TestBoard(unittest.TestCase):
         )
         self.assertIsNone(b.move(i, constants.RIGHT, 1))
         self.assertIsNone(b.move(i, constants.RIGHT, 1))
+        self.assertTrue(getattr(self, "test_callback"))
         b.place_item(pgl_board_items.Treasure(value=50), i.row + 1, i.column)
         self.assertIsNone(b.move(i, constants.DOWN, 1))
         self.assertEqual(i.inventory.value(), 50)
