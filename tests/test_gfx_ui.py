@@ -330,9 +330,15 @@ class TestBase(unittest.TestCase):
         fd.user_input = "Some input"
         self.game.screen.force_update()
 
+        # tentative
+        # fd.path = Path("/var/log/audit")
+        # self.assertIsNone(fd._build_file_cache())
+
     def test_gridselector(self):
         conf = ui.UiConfig.instance(game=self.game)
         gd = ui.GridSelectorDialog(["a", "b", "c", "##"], 10, 20, "test", config=conf)
+        self.assertEqual(gd.grid_selector.current_page, 0)
+        gd.grid_selector.current_page = 1
         self.assertEqual(gd.grid_selector.current_page, 0)
         with self.assertRaises(pgl_base.PglInvalidTypeException):
             ui.GridSelectorDialog(
@@ -398,6 +404,17 @@ class TestBase(unittest.TestCase):
         self.assertIsInstance(gd.grid_selector, ui.GridSelector)
         with self.assertRaises(pgl_base.PglInvalidTypeException):
             gd.grid_selector = 42
+        gd.grid_selector.choices = ["a" for _ in range(30)]
+        self.assertEqual(gd.grid_selector.nb_pages(), 15)
+        # gd.grid_selector.choices.append("aa")
+        # input(gd.grid_selector.choices)
+        # gd.grid_selector.render_to_buffer(
+        #     np.array([[" " for i in range(0, 50, 1)] for j in range(0, 50, 1)]),
+        #     0,
+        #     0,
+        #     50,
+        #     50,
+        # )
 
     def test_colorpickers(self):
         conf = ui.UiConfig.instance(game=self.game)

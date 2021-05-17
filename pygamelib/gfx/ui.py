@@ -1855,7 +1855,8 @@ class FileDialog(Dialog):
                     ]
                 )
             )
-        except PermissionError:
+        # Cannot be reliably tested in CI env. PR are welcomed!
+        except PermissionError:  # pragma: no cover
             # TODO: Send a message to the user about that
             pass
 
