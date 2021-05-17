@@ -124,6 +124,7 @@ class TestBase(unittest.TestCase):
         b.place_item(board_items.Wall(model="##"), 0, 0)
         self.assertIsNone(s.place("test", 0, 0))
         self.assertIsNone(s.place(b, 1, 0))
+        self.assertIsInstance(s.get(1, 0), engine.Board)
         t = base.Text("test 2")
         self.assertIsNone(s.place(t, 2, 0))
         self.assertIsNone(s.place(sprites_panda["panda"], 0, 5))
