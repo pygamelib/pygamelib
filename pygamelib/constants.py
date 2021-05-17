@@ -40,6 +40,10 @@ Actions states (for Actuators for example):
  * PAUSED
  * STOPPED
 
+Accepted input (mainly used in pygamelib.gfx.ui for input dialogs):
+ * INTEGER_FILTER
+ * PRINTABLE_FILTER
+
 Special constants:
  * NO_PLAYER: That constant is used to tell the Game object not to manage the player.
  * MODE_RT: Set the game object to Real Time mode. The game runs independently from the
@@ -49,7 +53,7 @@ Special constants:
 """
 
 # Main version
-PYGAMELIB_VERSION = "1.2.3"
+PYGAMELIB_VERSION = "1.2.990"
 
 # Directions
 NO_DIR = 10000000
@@ -71,18 +75,21 @@ ALL_MOVABLE_AUTHORIZED = 20000100
 NONE_AUTHORIZED = 20000101
 
 # UI positions
-POS_TOP = 30000001
-POS_BOTTOM = 30000010
-ORIENTATION_HORIZONTAL = 30000011
-ORIENTATION_VERTICAL = 30000100
-SCREEN_H_CENTER = 30000101
-SCREEN_V_CENTER = 30000110
-
+ORIENTATION_HORIZONTAL = 30000001
+ORIENTATION_VERTICAL = 30000010
+ALIGN_LEFT = 30000011
+ALIGN_RIGHT = 30000100
+ALIGN_CENTER = 30000101
 
 # Running states
 RUNNING = 40000001
 PAUSED = 40000010
 STOPPED = 40000011
+
+
+# Accepted input/validators
+INTEGER_FILTER = 50000001
+PRINTABLE_FILTER = 50000002
 
 # Special constants
 NO_PLAYER = 90000001

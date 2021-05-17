@@ -1,9 +1,13 @@
-pygamelib.actuators.RandomActuator
-==================================
+RandomActuator
+==============
 
 .. currentmodule:: pygamelib.actuators
 
 .. autoclass:: RandomActuator
+   :members:
+   :inherited-members:
+   :undoc-members:
+   :show-inheritance:
 
    
    .. automethod:: __init__

@@ -210,6 +210,8 @@ class TestBase(unittest.TestCase):
         self.assertEqual(spr2.name, sc.get(spr2.name).name)
         self.assertEqual(spr3.name, sc[spr3.name].name)
         self.assertEqual(spr3.name, sc.get(spr3.name).name)
+        self.assertIsNone(sc.rename(spr.name, "test_rename"))
+        self.assertEqual(sc["test_rename"].sprixel(0, 0), spr.sprixel(0, 0))
         self.assertIsNone(sc.to_json_file("test.pgs"))
         sc2 = gfx_core.SpriteCollection.load_json_file("test.pgs")
         self.assertIsInstance(sc2, gfx_core.SpriteCollection)

@@ -1,12 +1,5 @@
 __docformat__ = "restructuredtext"
-"""This module contains the base classes for simple and advanced actuators.
-These classes are the base contract for actuators.
-If you wish to create your own one, you need to inheritate from one of these base class.
-
-This module contains the simple actuators classes.
-Simple actuators are movement related one. They allow for predetermined movements
-patterns.
-
+"""
 .. autosummary::
    :toctree: .
 
@@ -415,13 +408,13 @@ class PathFinder(Behavioral):
         Path Finding Algorithm Description:
 
         Breadth First Search:
-         This method implements a Breadth First Search algorithm
-        (`Wikipedia <https://en.wikipedia.org/wiki/Breadth-first_search>`_)
+        This method implements a Breadth First Search algorithm
+        (`Wikipedia: BFS <https://en.wikipedia.org/wiki/Breadth-first_search>`_)
         to find the shortest path to destination.
 
         A* Search:
         This method implements a A* Search algorithm
-        (`Wikipedia <https://en.wikipedia.org/wiki/A*_search_algorithm>`_)
+        (`Wikipedia: A* <https://en.wikipedia.org/wiki/A*_search_algorithm>`_)
         to find the shortest path to destination.
 
         """

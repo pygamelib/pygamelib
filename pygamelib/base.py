@@ -96,8 +96,10 @@ class Text(object):
         self.__fg_color = None
         self.__fgcc = ""
         self.__bgcc = ""
+        self.__length = 0
         if type(text) is str:
             self.__text = text
+            self.__length = self.__length = Console.instance().length(self.__text)
         if fg_color is None or pgl_isinstance(fg_color, "pygamelib.gfx.core.Color"):
             self.__fg_color = fg_color
         else:
@@ -132,6 +134,7 @@ class Text(object):
             self.__text = value
         elif isinstance(value, Text):
             self.__text = value.text
+        self.__length = self.__length = Console.instance().length(self.__text)
 
     @property
     def bg_color(self):
@@ -143,6 +146,9 @@ class Text(object):
     def bg_color(self, value):
         if pgl_isinstance(value, "pygamelib.gfx.core.Color"):
             self.__bg_color = value
+        elif value is None:
+            self.__bg_color = value
+            self.__bgcc = Back.RESET
         else:
             raise PglInvalidTypeException(
                 "Text.bg_color can only be a pygamelib.gfx.core.Color object."
@@ -159,6 +165,9 @@ class Text(object):
     def fg_color(self, value):
         if pgl_isinstance(value, "pygamelib.gfx.core.Color"):
             self.__fg_color = value
+        elif value is None:
+            self.__fg_color = value
+            self.__fgcc = Fore.RESET
         else:
             raise PglInvalidTypeException(
                 "Text.fg_color can only be a pygamelib.gfx.core.Color object."
@@ -184,34 +193,56 @@ class Text(object):
     def __str__(self):
         return self.__repr__()
 
+    @property
+    def length(self):
+        """Return the true length of the text.
+
+        With UTF8 and emojis the length of a string as returned by python's
+        :func:`len()` function is often very wrong.
+        For example, the len("\\x1b[48;2;139;22;19m\\x1b[38;2;160;26;23m▄\\x1b[0m")
+        returns 39 when it should return 1.
+
+        This method returns the actual printing/display size of the text.
+
+        .. Note:: This is a read only value. It is automatically updated when the text
+           property is changed.
+
+        Example::
+
+            game.screen.place(my_text, 0, game.screen.width - my_text.length)
+        """
+        return self.__length
+
     # Text is a special case in the buffer rendering system and I know special cases are
     # bad but it works well... Text is automatically converted into a Sprite during
     # rendering.
-    # def render_to_buffer(self, buffer, row, column, buffer_height, buffer_width):
-    #     """Render the Text object into a display buffer (not a screen buffer).
+    # The apparent reason is that the BG color is not reset by simply the background to
+    # None
+    def _render_to_buffer(self, buffer, row, column, buffer_height, buffer_width):
+        """Render the Text object into a display buffer (not a screen buffer).
 
-    #     This method is automatically called by :func:`pygamelib.engine.Screen.render`.
+        This method is automatically called by :func:`pygamelib.engine.Screen.render`.
 
-    #     :param buffer: A screen buffer to render the item into.
-    #     :type buffer: numpy.array
-    #     :param row: The row to render in.
-    #     :type row: int
-    #     :param column: The column to render in.
-    #     :type column: int
-    #     :param height: The total height of the display buffer.
-    #     :type height: int
-    #     :param width: The total width of the display buffer.
-    #     :type width: int
+        :param buffer: A screen buffer to render the item into.
+        :type buffer: numpy.array
+        :param row: The row to render in.
+        :type row: int
+        :param column: The column to render in.
+        :type column: int
+        :param height: The total height of the display buffer.
+        :type height: int
+        :param width: The total width of the display buffer.
+        :type width: int
 
-    #     """
-    #     idx = 0
-    #     for char in self.text:
-    #         if column + idx >= buffer_width:
-    #             break
-    #         buffer[row][column + idx] = "".join(
-    #             [self.__bgcc, self.__fgcc, self.style, char, "\x1b[0m"]
-    #        )
-    #        idx += 1
+        """
+        idx = 0
+        for char in self.text:
+            if column + idx >= buffer_width:
+                break
+            buffer[row][column + idx] = "".join(
+                [self.__bgcc, self.__fgcc, self.style, char, "\x1b[0m"]
+            )
+            idx += 1
 
     @staticmethod
     def warn(message):

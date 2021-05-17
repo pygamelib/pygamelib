@@ -1,4 +1,4 @@
-from pygamelib import engine
+from pygamelib import actuators, engine
 from pygamelib import base
 from pygamelib import board_items
 from pygamelib import constants
@@ -192,6 +192,14 @@ class TestBase(unittest.TestCase):
             9,
             1,
         )
+        g.add_projectile(
+            1,
+            board_items.Projectile(
+                hit_model="*", hit_callback=_hit, callback_parameters=[g], range=-1
+            ),
+            9,
+            1,
+        )
         self.assertIsNone(
             g.add_projectile(1, board_items.Projectile(hit_callback=_hit), 5, 5)
         )
@@ -220,6 +228,7 @@ class TestBase(unittest.TestCase):
             g.actuate_projectiles(99)
         with self.assertRaises(base.PglInvalidTypeException):
             g.actuate_projectiles("1")
+        g.actuate_projectiles(1)
         g.run()
 
     def test_tools_function(self):
@@ -294,12 +303,55 @@ class TestBase(unittest.TestCase):
         self.assertEqual(test_door["value"], 10)
         self.assertEqual(test_door["inventory_space"], 1)
 
+        npc = board_items.NPC()
+        npc.actuator = actuators.PathActuator(path=[constants.RIGHT, constants.RIGHT])
+        test_npc = g._obj2ref(npc)
+        self.assertEqual(test_npc["actuator"]["type"], "PathActuator")
+        npc.actuator = actuators.PatrolActuator(path=[constants.RIGHT, constants.RIGHT])
+        test_npc = g._obj2ref(npc)
+        self.assertEqual(test_npc["actuator"]["type"], "PatrolActuator")
+        npc.actuator = actuators.PathFinder(parent=g)
+        test_npc = g._obj2ref(npc)
+        self.assertEqual(test_npc["actuator"]["type"], "PathFinder")
+
+        with self.assertRaises(base.PglInvalidTypeException):
+            g.delete_level()
+        with self.assertRaises(base.PglInvalidLevelException):
+            g.delete_level(42)
+        g.delete_level(1)
+        g.delete_all_levels()
+        self.assertIsNone(g.current_board())
+
     def test_singleton(self):
         mygame = engine.Game.instance()
         mygame.test_singleton = True
         self.assertTrue(engine.Game.instance(), "test_singleton")
         self.assertTrue(engine.Game.instance().test_singleton)
         self.assertTrue(mygame is engine.Game.instance())
+
+    def test_logs(self):
+        mygame = engine.Game.instance()
+        self.assertEqual(mygame.logs(), list())
+        mygame.log("test")
+        self.assertEqual(mygame.logs()[0], "test")
+        mygame.clear_logs()
+        self.assertEqual(mygame.logs(), list())
+
+    def test_level_insertion(self):
+        g = engine.Game.instance()
+        g.insert_board(1, engine.Board(name="lvl1"))
+        g.insert_board(2, engine.Board(name="lvl2"))
+        g.insert_board(3, engine.Board(name="lvl3"))
+        self.assertEqual(g.get_board(1).name, "lvl1")
+        g.insert_board(1, engine.Board(name="lvl4"))
+        self.assertEqual(g.get_board(1).name, "lvl4")
+        self.assertEqual(g.get_board(2).name, "lvl1")
+        g.insert_board(41, engine.Board(name="lvl41"))
+        self.assertEqual(g.get_board(41).name, "lvl41")
+        with self.assertRaises(base.PglInvalidTypeException):
+            g.insert_board("1", engine.Board())
+        with self.assertRaises(base.PglInvalidTypeException):
+            g.insert_board(1, "engine.Board()")
 
 
 if __name__ == "__main__":

@@ -1,9 +1,13 @@
-pygamelib.assets.graphics.BoxDrawings
-=====================================
+BoxDrawings
+===========
 
 .. currentmodule:: pygamelib.assets.graphics
 
 .. autoclass:: BoxDrawings
+   :members:
+   :inherited-members:
+   :undoc-members:
+   :show-inheritance:
 
    
    .. automethod:: __init__

@@ -23,13 +23,16 @@ The Board class is the base class for all levels.
 from pygamelib import board_items, base, constants, actuators
 from pygamelib.assets import graphics
 from pygamelib.gfx import core
+from pygamelib.functions import pgl_isinstance
 from blessed import Terminal
 import uuid
 import random
 import json
 import sys
 import time
+import copy
 import numpy as np
+
 
 # We need to ignore that one as it is used by user to compare keys (i.e Utils.key.UP)
 from readchar import readkey, key  # noqa: F401
@@ -188,11 +191,14 @@ class Board:
         if self.ui_board_void_cell_sprixel is not None and isinstance(
             self.ui_board_void_cell_sprixel, core.Sprixel
         ):
+            # The deepcopy is a lot slower but it protects against a ton of unwanted
+            # side effects
             self._matrix = np.array(
                 [
                     [
                         board_items.BoardItemVoid(
-                            sprixel=self.ui_board_void_cell_sprixel, parent=self
+                            sprixel=copy.deepcopy(self.ui_board_void_cell_sprixel),
+                            parent=self,
                         )
                         for i in range(0, self.size[0], 1)
                     ]
@@ -235,7 +241,7 @@ class Board:
             self.ui_board_void_cell_sprixel, core.Sprixel
         ):
             return board_items.BoardItemVoid(
-                sprixel=self.ui_board_void_cell_sprixel,
+                sprixel=copy.deepcopy(self.ui_board_void_cell_sprixel),
                 model=self.ui_board_void_cell_sprixel.model,
                 parent=self,
             )
@@ -768,10 +774,10 @@ class Board:
         """
         Place an item at coordinates row and column.
 
-        If row or column are our of the board boundaries,
-        an PglOutOfBoardBoundException is raised.
+        If row or column are out of the board boundaries,
+        a PglOutOfBoardBoundException is raised.
 
-        If the item is not a subclass of BoardItem, an PglInvalidTypeException
+        If the item is not a subclass of BoardItem, a PglInvalidTypeException
 
         .. warning:: Nothing prevents you from placing an object on top of
             another. Be sure to check that. This method will check for items that
@@ -785,6 +791,10 @@ class Board:
                         if not isinstance(item.item(ir, ic), board_items.BoardItemVoid):
                             self.place_item(item.item(ir, ic), row + ir, column + ic)
                 item.store_position(row, column)
+                if isinstance(item, board_items.Movable):
+                    self._movables.add(item)
+                elif isinstance(item, board_items.Immovable):
+                    self._immovables.add(item)
             elif isinstance(item, board_items.BoardItem):
                 # If we are about to place the item on a overlappable and
                 # restorable we store it to be restored
@@ -805,6 +815,12 @@ class Board:
                         item.sprixel.bg_color = self._overlapped_matrix[row][
                             column
                         ].sprixel.bg_color
+                elif (
+                    isinstance(existing_item, board_items.BoardItemVoid)
+                    and item.sprixel.is_bg_transparent
+                    and existing_item.sprixel is not None
+                ):
+                    item.sprixel.bg_color = existing_item.sprixel.bg_color
                 # Place the item on the board
                 self._matrix[row][column] = item
                 # Take ownership of the item (if item doesn't have parent)
@@ -899,40 +915,30 @@ class Board:
                     for ocol in range(0, item.size[0]):
                         new_row = projected_position.row + orow
                         new_column = projected_position.column + ocol
+                        dest_item = self.item(new_row, new_column)
                         # Check all items within the surface
-                        if isinstance(
-                            self._matrix[new_row][new_column], board_items.Actionable
-                        ):
+                        if isinstance(dest_item, board_items.Actionable):
                             if (
                                 isinstance(item, board_items.Player)
                                 and (
-                                    (
-                                        self._matrix[new_row][new_column].perm
-                                        == constants.PLAYER_AUTHORIZED
-                                    )
+                                    (dest_item.perm == constants.PLAYER_AUTHORIZED)
                                     or (
-                                        self._matrix[new_row][new_column].perm
+                                        dest_item.perm
                                         == constants.ALL_CHARACTERS_AUTHORIZED
                                     )
                                 )
                             ) or (
                                 isinstance(item, board_items.NPC)
                                 and (
-                                    (
-                                        self._matrix[new_row][new_column].perm
-                                        == constants.NPC_AUTHORIZED
-                                    )
+                                    (dest_item.perm == constants.NPC_AUTHORIZED)
                                     or (
-                                        self._matrix[new_row][new_column].perm
+                                        dest_item.perm
                                         == constants.ALL_CHARACTERS_AUTHORIZED
                                     )
                                 )
-                                or (
-                                    self._matrix[new_row][new_column].perm
-                                    == constants.ALL_MOVABLE_AUTHORIZED
-                                )
+                                or (dest_item.perm == constants.ALL_MOVABLE_AUTHORIZED)
                             ):
-                                self._matrix[new_row][new_column].activate()
+                                dest_item.activate()
                         # Now taking care of pickable objects
                         pickable_item = self.item(new_row, new_column)
                         if (
@@ -946,10 +952,7 @@ class Board:
                             # And then clear the cell (this is usefull for the next one)
                             self.remove_item(pickable_item)
                         # Finally we check if the destination is overlappable
-                        if (
-                            self._matrix[new_row][new_column].parent != item
-                            and not self._matrix[new_row][new_column].overlappable()
-                        ):
+                        if dest_item != item and not dest_item.overlappable():
                             can_draw = False
                             break
                 if can_draw:
@@ -1120,35 +1123,22 @@ class Board:
             ):
                 # Then, we check if the item is actionable and if so, if the item
                 # is allowed to activate it.
-                if isinstance(
-                    self._matrix[new_row][new_column], board_items.Actionable
-                ):
+                dest_item = self.item(new_row, new_column)
+                if isinstance(dest_item, board_items.Actionable):
                     if (
                         isinstance(item, board_items.Player)
                         and (
-                            (
-                                self._matrix[new_row][new_column].perm
-                                == constants.PLAYER_AUTHORIZED
-                            )
-                            or (
-                                self._matrix[new_row][new_column].perm
-                                == constants.ALL_CHARACTERS_AUTHORIZED
-                            )
+                            (dest_item.perm == constants.PLAYER_AUTHORIZED)
+                            or (dest_item.perm == constants.ALL_CHARACTERS_AUTHORIZED)
                         )
                     ) or (
                         isinstance(item, board_items.NPC)
                         and (
-                            (
-                                self._matrix[new_row][new_column].perm
-                                == constants.NPC_AUTHORIZED
-                            )
-                            or (
-                                self._matrix[new_row][new_column].perm
-                                == constants.ALL_CHARACTERS_AUTHORIZED
-                            )
+                            (dest_item.perm == constants.NPC_AUTHORIZED)
+                            or (dest_item.perm == constants.ALL_CHARACTERS_AUTHORIZED)
                         )
                     ):
-                        self._matrix[new_row][new_column].activate()
+                        dest_item.activate()
                 # Now we check if the destination contains a pickable item.
                 # Note: I'm not sure why I decided that pickables were not overlappable.
                 pickable_item = self.item(new_row, new_column)
@@ -1163,16 +1153,12 @@ class Board:
                     # And then clear the cell (this is usefull for the next one)
                     self.remove_item(pickable_item)
                 # Finally we check if the destination is overlappable
-                if self._matrix[new_row][new_column].overlappable():
+                if dest_item.overlappable():
                     # And if it is, we check if the destination is restorable
                     if (
-                        not isinstance(
-                            self._matrix[new_row][new_column], board_items.BoardItemVoid
-                        )
-                        and isinstance(
-                            self._matrix[new_row][new_column], board_items.Immovable
-                        )
-                        and self._matrix[new_row][new_column].restorable()
+                        not isinstance(dest_item, board_items.BoardItemVoid)
+                        and isinstance(dest_item, board_items.Immovable)
+                        and dest_item.restorable()
                     ):
                         # If so, we save the item on the hidden layer
                         self._overlapped_matrix[new_row][new_column] = self._matrix[
@@ -1180,7 +1166,7 @@ class Board:
                         ][new_column]
                     if (
                         item.sprixel is not None
-                        and self._matrix[new_row][new_column].sprixel is not None
+                        and dest_item.sprixel is not None
                         and item.sprixel.is_bg_transparent
                     ):
                         item.sprixel.bg_color = self._matrix[new_row][
@@ -1434,6 +1420,7 @@ class Game:
         self.mode = mode
         self.user_update = user_update
         self.input_lag = input_lag
+        self._logs = []
         # TODO : In future release I'll add physic
         # self.enable_physic = enable_physic
         # # If physic is enabled we turn the mode to realtime (we need time integration)
@@ -1541,6 +1528,40 @@ class Game:
                     self.actuate_projectiles(self.current_level, elapsed)
                     self.animate_items(self.current_level, elapsed)
                     # TODO: Take care of particles.
+
+    def log(self, line: str) -> None:
+        """Add a line to the logs.
+
+        :param line: The line to add to the logs.
+        :type line: str
+
+        Example::
+
+            game = Game.instance()
+            game.log('Game engine initialized')
+        """
+        self._logs.append(line)
+
+    def logs(self) -> list:
+        """Return the complete logs since instantiation.
+
+        Example::
+
+            game = Game.instance()
+            for line in game.logs():
+                print(line)
+        """
+        return self._logs
+
+    def clear_logs(self) -> None:
+        """Delete all the log lines from the logs.
+
+        Example::
+
+            game = Game.instance()
+            game.clear_logs()
+        """
+        self._logs = list()
 
     def add_menu_entry(self, category, shortcut, message, data=None):
         """Add a new entry to the menu.
@@ -1730,7 +1751,7 @@ class Game:
         # Not testable automatically
         return readkey()  # pragma: no cover
 
-    def load_config(self, filename, section="main"):
+    def load_config(self, filename: str, section: str = "main") -> dict:
         """
         Load a configuration file from the disk.
         The configuration file must respect the INI syntax.
@@ -1772,7 +1793,7 @@ class Game:
                 self._configuration_internals[section]["loaded_from"] = filename
                 return config_content
 
-    def config(self, section="main"):
+    def config(self, section: str = "main") -> dict:
         """Get the content of a previously loaded configuration section.
 
         :param section: The name of the section.
@@ -1787,7 +1808,7 @@ class Game:
         if section in self._configuration:
             return self._configuration[section]
 
-    def create_config(self, section):
+    def create_config(self, section: str) -> None:
         """Initialize a new config section.
 
         The new section is a dictionary.
@@ -1808,7 +1829,9 @@ class Game:
         self._configuration[section] = {}
         self._configuration_internals[section] = {}
 
-    def save_config(self, section=None, filename=None, append=False):
+    def save_config(
+        self, section: str = None, filename: str = None, append: bool = False
+    ) -> None:
         """
         Save a configuration section.
 
@@ -1849,7 +1872,7 @@ class Game:
         with open(filename, mode) as file:
             json.dump(self._configuration[section], file)
 
-    def add_board(self, level_number, board):
+    def add_board(self, level_number: int, board: Board) -> None:
         """Add a board for the level number.
 
         This method associate a Board (:class:`pygamelib.engine.Board`) to a level
@@ -1884,7 +1907,57 @@ class Game:
         else:
             raise base.PglInvalidTypeException("The level number must be an int.")
 
-    def get_board(self, level_number):
+    def __rename_level(self, init_lvl_num, dest_lvl_num):
+        # Recursive method to find the first available position to re-index down all
+        # boards.
+        init_level = self._boards[init_lvl_num]
+        if dest_lvl_num in self._boards.keys():
+            self.__rename_level(dest_lvl_num, dest_lvl_num + 1)
+            self._boards[dest_lvl_num] = init_level
+        else:
+            self._boards[dest_lvl_num] = init_level
+
+    def insert_board(self, level_number: int, board: Board) -> None:
+        """Insert a board for the level number.
+
+        This method does basically the same thing than :meth:`add_board` except that if
+        the level number is already associated it re-affect the numbers down.
+
+        Example::
+
+            game.insert_board(1,myboard_1)
+            # level number 1 is associated with myboard_1
+            game.insert_board(2,myboard_2)
+            # level number 1 is associated with myboard_1
+            # level number 2 is associated with myboard_2
+            game.insert_board(2,myboard_3)
+            # level number 1 is associated with myboard_1
+            # level number 2 is now associated with myboard_3
+            # level number 3 is associated with myboard_2
+
+        :param level_number: the level number to associate the board to.
+        :type level_number: int
+        :param board: a Board object corresponding to the level number.
+        :type board: pygamelib.engine.Board
+
+        :raises PglInvalidTypeException: If either of these parameters are not of the
+            correct type.
+        """
+        if type(level_number) is int:
+            if isinstance(board, Board):
+                if level_number in self._boards.keys():
+                    self.__rename_level(level_number, level_number + 1)
+                    self.add_board(level_number, board)
+                else:
+                    self.add_board(level_number, board)
+            else:
+                raise base.PglInvalidTypeException(
+                    "The board paramater must be a pygamelib.engine.Board() object."
+                )
+        else:
+            raise base.PglInvalidTypeException("The level number must be an int.")
+
+    def get_board(self, level_number: int) -> Board:
         """
         This method returns the board associated with a level number.
         :param level_number: The number of the level.
@@ -1901,7 +1974,7 @@ class Game:
         else:
             raise base.PglInvalidTypeException("The level number must be an int.")
 
-    def current_board(self):
+    def current_board(self) -> Board:
         """
         This method return the board object corresponding to the current_level.
 
@@ -1912,14 +1985,16 @@ class Game:
         If current_level is set to a value with no corresponding board a PglException
         exception is raised with an invalid_level error.
         """
-        if self.current_level in self._boards.keys():
+        if len(self._boards) <= 0:
+            return None
+        elif self.current_level in self._boards.keys():
             return self._boards[self.current_level]["board"]
         else:
             raise base.PglInvalidLevelException(
                 "The current level does not correspond to any board."
             )
 
-    def change_level(self, level_number):
+    def change_level(self, level_number: int) -> None:
         """
         Change the current level, load the board and place the player to the right
         place.
@@ -1969,6 +2044,47 @@ class Game:
                 "level_number needs to be an int in change_level(level_number)."
             )
 
+    def delete_level(self, lvl_number: int = None):
+        """Delete a level and its associated Board from the game object.
+
+        Both the level and the board can't be used after that (unless they are reloaded
+        or replaced of course).
+
+        :param lvl_number: The number of the level to remove.
+        :type lvl_number: int
+
+        :raises base.PglInvalidTypeException: If parameter is not an int.
+        :raises base.PglInvalidLevelException: If parameter is not a valid level.
+
+        Example::
+
+            my_game.delete_level(1)
+        """
+        if lvl_number is not None:
+            if lvl_number in self._boards.keys():
+                del self._boards[lvl_number]
+            else:
+                raise base.PglInvalidLevelException(
+                    f"Game.delete_level(lvl_number) : {lvl_number} is not a previously"
+                    " associated level."
+                )
+        else:
+            raise base.PglInvalidTypeException(
+                "Game.delete_level(lvl_number) : lvl_number needs to be an int. "
+                f"{type(lvl_number)} is not an int."
+            )
+
+    def delete_all_levels(self):
+        """Delete all boards and their associated levels from the game object.
+
+        You might want to think twice before using that function...
+
+        Example::
+
+            game.delete_all_levels()
+        """
+        self._boards = {}
+
     def add_npc(self, level_number, npc, row=None, column=None):
         """
         Add a NPC to the game. It will be placed on the board corresponding to the
@@ -2004,6 +2120,7 @@ class Game:
                     if column is not None and type(column) is not int:
                         raise base.PglInvalidTypeException("column must be an int.")
                     while True:
+                        # TODO: Use NPC.width and NPC.height instead of -1!!!!
                         if row is None:
                             row = random.randint(
                                 0, self._boards[level_number]["board"].size[1] - 1
@@ -2095,9 +2212,10 @@ class Game:
                             # amplitude can be different so we proceed in 2 steps:
                             #  1 - build a unit direction vector
                             #  2 - use its component to build a movement vector
-                            d = base.Vector2D.from_direction(
-                                npc.actuator.next_move(), 1
-                            )
+                            nm = npc.actuator.next_move()
+                            d = nm
+                            if not isinstance(nm, base.Vector2D):
+                                d = base.Vector2D.from_direction(nm, 1)
                             self._boards[level_number]["board"].move(
                                 npc,
                                 base.Vector2D(
@@ -2266,10 +2384,12 @@ class Game:
                                 continue
                             proj.dtmove = 0.0
                             if proj.range > 0:
-                                # Build a unit movement vector
-                                umv = base.Vector2D.from_direction(
-                                    proj.actuator.next_move(), 1
-                                )
+                                umv = proj.actuator.next_move()
+                                if not isinstance(umv, base.Vector2D):
+                                    # Build a unit movement vector
+                                    umv = base.Vector2D.from_direction(
+                                        proj.actuator.next_move(), 1
+                                    )
                                 # Build a movement vector
                                 dm = base.Vector2D(
                                     umv.row * proj.step_vertical,
@@ -3494,7 +3614,7 @@ class Screen(object):
                     hasattr(i, "__rendering_pass")
                     and getattr(i, "__rendering_pass") == 2
                 ):
-                    print(f"Deferred rendering for: {i}")
+                    # print(f"Deferred rendering for: {i}")
                     second_pass.append({"item": i, "row": row, "column": col})
                     col -= 1
                     continue
@@ -3539,7 +3659,18 @@ class Screen(object):
             screen.force_render()
         """
         self._is_dirty = True
-        return self.render()
+        self.render()
+
+    def force_update(self):
+        """
+        Same as :func:`force_render()` but also force the screen update.
+
+        Example::
+
+            screen.force_update()
+        """
+        self._is_dirty = True
+        self.update()
 
     def trigger_rendering(self):
         """
@@ -3609,6 +3740,8 @@ class Screen(object):
             raise base.PglInvalidTypeException(
                 "Screen.place(item, row, column) none of the parameters can be None."
             )
+        if pgl_isinstance(element, "pygamelib.gfx.ui.Dialog"):
+            rendering_pass = 2
         if isinstance(element, base.Text):
             # If it's a text object we need to convert it to a Sprite first.
             self._display_buffer[row][column] = core.Sprite.from_text(element)
@@ -3641,16 +3774,47 @@ class Screen(object):
            incompatible with the methods identified as being part of the **Direct
            Display** stack.
 
-        :param name: some param
-        :type name: str
+        Delete a element on screen. Pay attention that if you placed a multi cells
+        element on screen, you only need to erase that specific spot.
+
+        :param row: The row to render to.
+        :type row: int
+        :param column: The column to render to.
+        :type column: int
 
         Example::
 
-            method()
+            board = Board(size=[20,20])
+            screen.place(board, 2, 2)
+            # With this we have placed a board at screen coordinates 2,2 and the board
+            # will display on screen coordinates from 2,2 to 22,22.
+            # However, to delete the board we don't need to clean all these cells.
+            # Just the one where we placed the board:
+            screen.delete(2, 2)
         """
         if row is not None and column is not None:
             self._display_buffer[row][column] = core.Sprixel(" ")
             self._is_dirty = True
+
+    def get(self, row: int = None, column: int = None):
+        """
+        Get an element at the specified screen coordinates.
+
+        The element is returned from the display buffer (pre-rendering).
+
+        :param row: The row to render to.
+        :type row: int
+        :param column: The column to render to.
+        :type column: int
+
+        Example::
+
+            board = Board(size=[20,20])
+            screen.place(board, 2, 2)
+            ny_board = screen.get(2,2)
+        """
+        if row is not None and column is not None:
+            return self._display_buffer[row][column]
 
     def display_line(self, *text, end="\n", file=sys.stdout, flush=False):
         """
