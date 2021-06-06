@@ -32,7 +32,6 @@ import math
 from colorama import Fore, Back, Style, init
 from blessed import Terminal
 import time
-from typing import Any
 
 # Initialize terminal colors for colorama.
 init()
@@ -44,7 +43,7 @@ class PglBaseObject(object):
         self._observers = []
         self._last_updated = time.time()
 
-    def __setattr__(self, name: str, value: Any) -> None:
+    def __setattr__(self, name: str, value) -> None:
         super().__setattr__("_last_updated", time.time())
         return super().__setattr__(name, value)
 
