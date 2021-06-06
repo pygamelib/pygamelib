@@ -31,9 +31,64 @@ from pygamelib.functions import pgl_isinstance
 import math
 from colorama import Fore, Back, Style, init
 from blessed import Terminal
+import time
+from typing import Any
 
 # Initialize terminal colors for colorama.
 init()
+
+
+class PglBaseObject(object):
+    def __init__(self) -> None:
+        super().__init__()
+        self._observers = []
+        self._last_updated = time.time()
+
+    def __setattr__(self, name: str, value: Any) -> None:
+        super().__setattr__("_last_updated", time.time())
+        return super().__setattr__(name, value)
+
+    def notify(self, modifier=None):
+
+        """
+        Notify the observers that a change occurred.
+        """
+
+        for observer in self._observers:
+            if modifier != observer:
+                observer.be_notified(self)
+
+    def attach(self, observer):
+
+        """
+        If the observer is not in the list, append it into the list.
+        An object cannot add itself to the list of observers (to avoid infinite
+        recursions).
+        """
+        if observer == self:
+            return
+        if observer not in self._observers:
+            self._observers.append(observer)
+
+    def detach(self, observer):
+
+        """
+        Remove the observer from the observer list. If observer is not in the list this
+        method ignore the error.
+        """
+
+        try:
+            self._observers.remove(observer)
+        except ValueError:
+            pass
+
+    def be_notified(self, subject):
+        """
+        A virtual method that needs to be implemented by the observer.
+        By default it does nothing but each observer needs to implement it if something
+        needs to be done when notified.
+        """
+        pass
 
 
 class Console:
@@ -61,7 +116,7 @@ class Console:
         return cls.__instance
 
 
-class Text(object):
+class Text(PglBaseObject):
     """
     An object to manipulate and display text in multiple contexts.
 
@@ -89,7 +144,7 @@ class Text(object):
     :type style: str
     """
 
-    def __init__(self, text="", fg_color=None, bg_color=None, style=""):
+    def __init__(self, text="", fg_color=None, bg_color=None, style="", font=None):
         super().__init__()
         self.__text = ""
         self.__bg_color = None
@@ -97,11 +152,14 @@ class Text(object):
         self.__fgcc = ""
         self.__bgcc = ""
         self.__length = 0
+        self.__font = None
         if type(text) is str:
             self.__text = text
             self.__length = self.__length = Console.instance().length(self.__text)
         if fg_color is None or pgl_isinstance(fg_color, "pygamelib.gfx.core.Color"):
             self.__fg_color = fg_color
+            if fg_color is not None:
+                fg_color.attach(self)
         else:
             raise PglInvalidTypeException(
                 "Text(text, bg_color, fg_color, style): fg_color needs to be a "
@@ -109,6 +167,8 @@ class Text(object):
             )
         if bg_color is None or pgl_isinstance(bg_color, "pygamelib.gfx.core.Color"):
             self.__bg_color = bg_color
+            if bg_color is not None:
+                bg_color.attach(self)
         else:
             raise PglInvalidTypeException(
                 "Text(text, bg_color, fg_color, style): bg_color needs to be a "
@@ -122,6 +182,16 @@ class Text(object):
         :class:`~pygamelib.board_items.BoardItem`."""
         self._sprite_data = None
         self._item = None
+        if font is not None:
+            if pgl_isinstance(font, "pygamelib.gfx.core.Font"):
+                self.__font = font
+            else:
+                raise PglInvalidTypeException(
+                    "Text(): the font parameter needs to be a Font object."
+                )
+
+    def be_notified(self, target):
+        self.__build_color_cache()
 
     @property
     def text(self):
@@ -145,8 +215,13 @@ class Text(object):
     @bg_color.setter
     def bg_color(self, value):
         if pgl_isinstance(value, "pygamelib.gfx.core.Color"):
+            if self.__bg_color is not None:
+                self.__bg_color.detach(self)
             self.__bg_color = value
+            self.__bg_color.attach(self)
         elif value is None:
+            if self.__bg_color is not None:
+                self.__bg_color.detach(self)
             self.__bg_color = value
             self.__bgcc = Back.RESET
         else:
@@ -164,8 +239,13 @@ class Text(object):
     @fg_color.setter
     def fg_color(self, value):
         if pgl_isinstance(value, "pygamelib.gfx.core.Color"):
+            if self.__fg_color is not None:
+                self.__fg_color.detach(self)
             self.__fg_color = value
+            self.__fg_color.attach(self)
         elif value is None:
+            if self.__fg_color is not None:
+                self.__fg_color.detach(self)
             self.__fg_color = value
             self.__fgcc = Fore.RESET
         else:
@@ -193,6 +273,10 @@ class Text(object):
     def __str__(self):
         return self.__repr__()
 
+    # def __setattr__(self, key, value):
+    #     print(f"{key} changed with value={value}")
+    #     super(Text, self).__setattr__(key, value)
+
     @property
     def length(self):
         """Return the true length of the text.
@@ -211,14 +295,27 @@ class Text(object):
 
             game.screen.place(my_text, 0, game.screen.width - my_text.length)
         """
-        return self.__length
+        if self.__font is None:
+            return self.__length
+        else:
+            max_length = 0
+            # Squash the dot notation
+            glyph = self.__font.glyph
+            for line in self.text.splitlines():
+                length = 0
+                for char in line:
+                    font_glyph = glyph(char)
+                    length += font_glyph.size[0] + self.__font.horizontal_spacing()
+                if length > max_length:
+                    max_length = length
+            return max_length
 
     # Text is a special case in the buffer rendering system and I know special cases are
     # bad but it works well... Text is automatically converted into a Sprite during
     # rendering.
     # The apparent reason is that the BG color is not reset by simply the background to
     # None
-    def _render_to_buffer(self, buffer, row, column, buffer_height, buffer_width):
+    def render_to_buffer(self, buffer, row, column, buffer_height, buffer_width):
         """Render the Text object into a display buffer (not a screen buffer).
 
         This method is automatically called by :func:`pygamelib.engine.Screen.render`.
@@ -235,14 +332,55 @@ class Text(object):
         :type width: int
 
         """
-        idx = 0
-        for char in self.text:
-            if column + idx >= buffer_width:
-                break
-            buffer[row][column + idx] = "".join(
-                [self.__bgcc, self.__fgcc, self.style, char, "\x1b[0m"]
-            )
-            idx += 1
+        row_idx = 0
+        # Here we have some duplicate code. The reason is optimization.
+        # If we were to test if the font is set or not in the loop, we would execute
+        # as many comparisons as there are characters in the text.
+        # That test can be done once and for all at the expense of writting twice the
+        # rendering code.
+        # It is a small counterpart considering the increase in performances.
+        # As an example, if you have about a 100 characters on screen (for the different
+        # labels), this solution will do 1 test at the beginning + 2 tests (boundaries)
+        # per loop + the character rendering or: 201 "if" + the rendering operations of
+        # the glyph.
+        # Putting everything in the same loop, would add one more test to the loop so:
+        # 3 tests per loop + the character rendering or 300 "if" + the glyph rendering.
+        # This would add 100 tests *every frame*.
+        if self.__font is None:
+            for line in self.text.splitlines():
+                idx = 0
+                for char in line:
+                    if column + idx >= buffer_width:
+                        break
+                    if row + row_idx >= buffer_height:
+                        break
+                    buffer[row + row_idx][column + idx] = "".join(
+                        [self.__bgcc, self.__fgcc, self.style, char, "\x1b[0m"]
+                    )
+                    idx += 1
+                row_idx += 1
+        else:
+            row_incr = self.__font.height() + self.__font.vertical_spacing()
+            # Squash the dot notation
+            glyph = self.__font.glyph
+            colors = {}
+            if self.fg_color is not None:
+                colors["fg_color"] = self.fg_color
+            if self.bg_color is not None:
+                colors["bg_color"] = self.bg_color
+            for line in self.text.splitlines():
+                idx = 0
+                for char in line:
+                    if column + idx >= buffer_width:
+                        break
+                    if row + row_idx >= buffer_height:
+                        break
+                    font_glyph = glyph(char, **colors)
+                    font_glyph.render_to_buffer(
+                        buffer, row + row_idx, column + idx, buffer_height, buffer_width
+                    )
+                    idx += font_glyph.size[0] + self.__font.horizontal_spacing()
+                row_idx += row_incr
 
     @staticmethod
     def warn(message):
