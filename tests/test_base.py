@@ -187,6 +187,22 @@ class TestBase(unittest.TestCase):
         text.fg_color = None
         self.assertIsNone(text.fg_color)
 
+        text = pgl_base.Text("This is a test", font=core.Font("8bits"))
+        self.assertIsNone(text.be_notified(None))
+        self.assertIsInstance(text, pgl_base.Text)
+        with self.assertRaises(pgl_base.PglInvalidTypeException):
+            pgl_base.Text("This is a test", font=42)
+        self.assertEqual(text.length, 126)
+
+    def test_pgl_base_object(self):
+        o1 = pgl_base.PglBaseObject()
+        o2 = pgl_base.PglBaseObject()
+        self.assertTrue(o2.attach(o1))
+        self.assertFalse(o2.attach(o2))
+        self.assertIsNone(o2.notify())
+        self.assertTrue(o2.detach(o1))
+        self.assertFalse(o2.detach(o2))
+
     def test_math_distance(self):
         self.assertEqual(self.math.distance(0, 0, 0, 0), 0)
         self.assertEqual(self.math.distance(0, 0, 0, 1), 1)
