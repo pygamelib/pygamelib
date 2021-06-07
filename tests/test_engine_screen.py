@@ -245,7 +245,7 @@ class TestBase(unittest.TestCase):
         self.assertEqual(10, functions.clamp(15, 0, 10))
         # This one either and it's even worst: it's going to disappear!
         t = base.Text("this is a text")
-        t._render_to_buffer(
+        t.render_to_buffer(
             s._display_buffer,
             0,
             s._display_buffer.shape[1] - 5,
