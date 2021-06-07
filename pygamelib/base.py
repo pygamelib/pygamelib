@@ -65,7 +65,7 @@ class PglBaseObject(object):
         An object cannot add itself to the list of observers (to avoid infinite
         recursions).
         """
-        if observer == self:
+        if type(observer) == type(self) and observer == self:
             return
         if observer not in self._observers:
             self._observers.append(observer)
