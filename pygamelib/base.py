@@ -66,9 +66,10 @@ class PglBaseObject(object):
         recursions).
         """
         if type(observer) == type(self) and observer == self:
-            return
+            return False
         if observer not in self._observers:
             self._observers.append(observer)
+            return True
 
     def detach(self, observer):
 
@@ -79,8 +80,9 @@ class PglBaseObject(object):
 
         try:
             self._observers.remove(observer)
+            return True
         except ValueError:
-            pass
+            return False
 
     def be_notified(self, subject):
         """
@@ -335,7 +337,7 @@ class Text(PglBaseObject):
         row_idx = 0
         # Here we have some duplicate code. The reason is optimization.
         # If we were to test if the font is set or not in the loop, we would execute
-        # as many comparisons as there are characters in the text.
+        # as many comparisons as there are characters in the text for that purpose.
         # That test can be done once and for all at the expense of writting twice the
         # rendering code.
         # It is a small counterpart considering the increase in performances.
@@ -361,6 +363,7 @@ class Text(PglBaseObject):
                 row_idx += 1
         else:
             row_incr = self.__font.height() + self.__font.vertical_spacing()
+            font_horizontal_spacing = self.__font.horizontal_spacing()
             # Squash the dot notation
             glyph = self.__font.glyph
             colors = {}
@@ -371,15 +374,18 @@ class Text(PglBaseObject):
             for line in self.text.splitlines():
                 idx = 0
                 for char in line:
-                    if column + idx >= buffer_width:
-                        break
-                    if row + row_idx >= buffer_height:
-                        break
+                    # NOTE: We don't need to check for the boundaries since we are
+                    # actually rendering a sprite and Sprite.render_to_buffer already
+                    # bind its rendering area to the available space.
+                    # if column + idx >= buffer_width:
+                    #     break
+                    # if row + row_idx >= buffer_height:
+                    #     break
                     font_glyph = glyph(char, **colors)
                     font_glyph.render_to_buffer(
                         buffer, row + row_idx, column + idx, buffer_height, buffer_width
                     )
-                    idx += font_glyph.size[0] + self.__font.horizontal_spacing()
+                    idx += font_glyph.size[0] + font_horizontal_spacing
                 row_idx += row_incr
 
     @staticmethod
