@@ -1440,11 +1440,13 @@ class Sprite(object):
         # I'm not so sure about all this update thing...
         # if (
         #     self._initial_text_object is not None
-        #     and self._initial_text_object._sprite_data != self._initial_text_object.text
+        #     and
+        # self._initial_text_object._sprite_data != self._initial_text_object.text
         # ):
         #     i = Sprite.from_text(self._initial_text_object)
         #     self._sprixels = i._sprixels
-        #     self._initial_text_object._sprite_data = i._initial_text_object._sprite_data
+        #     self._initial_text_object._sprite_data =
+        # i._initial_text_object._sprite_data
         #     self.size = i.size
         #     # display_buffer[row][col] = i
 
