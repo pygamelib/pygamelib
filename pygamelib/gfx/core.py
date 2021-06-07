@@ -1075,7 +1075,7 @@ class Sprite(object):
         Example::
 
             # The Text object allow for easy manipulation of text
-            village_name = base.Text('khukdale',fg_red, bg_green)
+            village_name = base.Text('Khukdale',fg_red, bg_green)
             # It can be converted into a Sprite to be displayed on the Board
             village_sign = board_items.Tile(sprite=Sprite.from_text(village_name))
             # And can be used as formatted text
@@ -1435,17 +1435,19 @@ class Sprite(object):
         :type width: int
 
         """
+        # NOTE: This entire non-sense is not required anymore
         # Check if the text has changed to update the sprite...
         # I'm not so sure about all this update thing...
-        if (
-            self._initial_text_object is not None
-            and self._initial_text_object._sprite_data != self._initial_text_object.text
-        ):
-            i = Sprite.from_text(self._initial_text_object)
-            self._sprixels = i._sprixels
-            self._initial_text_object._sprite_data = i._initial_text_object._sprite_data
-            self.size = i.size
-            # display_buffer[row][col] = i
+        # if (
+        #     self._initial_text_object is not None
+        #     and self._initial_text_object._sprite_data != self._initial_text_object.text
+        # ):
+        #     i = Sprite.from_text(self._initial_text_object)
+        #     self._sprixels = i._sprixels
+        #     self._initial_text_object._sprite_data = i._initial_text_object._sprite_data
+        #     self.size = i.size
+        #     # display_buffer[row][col] = i
+
         # Attempt at optimization.
         null_sprixel = Sprixel()
         get_sprixel = self.sprixel
@@ -2080,7 +2082,6 @@ class Font:
         self.__name = None
         if font_name is not None:
             self.load(font_name)
-            self.__name = font_name
 
     def load(self, font_name: str = None) -> None:
         glyphs_path = importlib_resources.files(assets).joinpath(
@@ -2095,6 +2096,7 @@ class Font:
             self.__config = json.load(config_file)
         self.__config["fg_color"] = Color.load(self.__config["fg_color"])
         self.__config["bg_color"] = Color.load(self.__config["bg_color"])
+        self.__name = font_name
         if "glyphs_map" in self.__config.keys():
             for glyph in self.__config["glyphs_map"].keys():
                 self.__sprite_collection[glyph] = self.__sprite_collection[
