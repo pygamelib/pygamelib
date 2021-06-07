@@ -1,5 +1,5 @@
 from pygamelib import engine, board_items, functions, base
-from pygamelib.gfx.core import SpriteCollection, Sprixel, Color, Sprite
+from pygamelib.gfx.core import SpriteCollection, Sprixel, Color, Sprite, Font
 import unittest
 import numpy as np
 
@@ -244,10 +244,24 @@ class TestBase(unittest.TestCase):
         self.assertEqual(0, functions.clamp(-5, 0, 10))
         self.assertEqual(10, functions.clamp(15, 0, 10))
         # This one either and it's even worst: it's going to disappear!
-        t = base.Text("this is a text")
+        t = base.Text("this is a text\non multiple lines")
         t.render_to_buffer(
             s._display_buffer,
-            0,
+            s._display_buffer.shape[0] - 1,
+            s._display_buffer.shape[1] - 5,
+            s._display_buffer.shape[0],
+            s._display_buffer.shape[1],
+        )
+        s.update()
+        t = base.Text(
+            "this is a text",
+            Color(0, 0, 0),
+            Color(255, 255, 255),
+            font=Font("8bits"),
+        )
+        t.render_to_buffer(
+            s._display_buffer,
+            s._display_buffer.shape[0] - 1,
             s._display_buffer.shape[1] - 5,
             s._display_buffer.shape[0],
             s._display_buffer.shape[1],
