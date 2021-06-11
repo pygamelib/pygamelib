@@ -50,19 +50,9 @@ class Color(base.PglBaseObject):
 
     def __init__(self, r=0, g=0, b=0):
         super().__init__()
-        if type(r) is int:
+        if type(r) is int and type(g) is int and type(b) is int:
             self.__r = r
-        else:
-            raise base.PglInvalidTypeException(
-                "Color(r, g, b): all parameters must be integers."
-            )
-        if type(g) is int:
             self.__g = g
-        else:
-            raise base.PglInvalidTypeException(
-                "Color(r, g, b): all parameters must be integers."
-            )
-        if type(b) is int:
             self.__b = b
         else:
             raise base.PglInvalidTypeException(
@@ -74,6 +64,8 @@ class Color(base.PglBaseObject):
         """
         The r property controls the intensity of the red color. You can set it to an
         integer between 0 and 255 (both included).
+
+        Setting this property triggers a call to :func:`notify`.
 
         Example::
 
@@ -100,6 +92,8 @@ class Color(base.PglBaseObject):
         The g property controls the intensity of the green color. You can set it to an
         integer between 0 and 255 (both included).
 
+        Setting this property triggers a call to :func:`notify`.
+
         Example::
 
            color = Color(128, 128, 0)
@@ -124,6 +118,8 @@ class Color(base.PglBaseObject):
         """
         The b property controls the intensity of the blue color. You can set it to an
         integer between 0 and 255 (both included).
+
+        Setting this property triggers a call to :func:`notify`.
 
         Example::
 
@@ -260,8 +256,8 @@ class Color(base.PglBaseObject):
         :param data: Data loaded from JSON data (deserialized).
         :type data: dict
         :returns: Either a Color object or None if data where empty.
-        :rtype: :class:`Color`|NoneType
-        :raise: `~pygamelib.base.PglInvalidTypeException`
+        :rtype: :class:`Color` | NoneType
+        :raise: :class:`~pygamelib.base.PglInvalidTypeException`
 
         Example::
 
@@ -292,6 +288,8 @@ class Color(base.PglBaseObject):
 
     def randomize(self):
         """Set a random value for each component
+
+        This method triggers a call to :func:`notify`.
 
         :returns: None
         :rtype: NoneType
