@@ -16,15 +16,16 @@ It is the base class for all levels.
 .. autosummary::
    :toctree: .
 
-   Console
-   Math
-   PglException
-   PglInvalidLevelException
-   PglInvalidTypeException
-   PglObjectIsNotMovableException
-   PglOutOfBoardBoundException
-   Vector2D
-   Text
+   pygamelib.base.PglBaseObject
+   pygamelib.base.Console
+   pygamelib.base.Math
+   pygamelib.base.PglException
+   pygamelib.base.PglInvalidLevelException
+   pygamelib.base.PglInvalidTypeException
+   pygamelib.base.PglObjectIsNotMovableException
+   pygamelib.base.PglOutOfBoardBoundException
+   pygamelib.base.Vector2D
+   pygamelib.base.Text
 """
 from pygamelib import constants
 from pygamelib.functions import pgl_isinstance
@@ -39,7 +40,26 @@ init()
 
 
 class PglBaseObject(object):
+    """
+    The PglBaseObject has 2 goals:
+
+     * Timestamp the last change in an attribute.
+     * Implements a modified observer design pattern.
+
+    It is modified as it acts both as the observer and the client. The idea behind it is
+    that any object can observe and be observed by any other objects.
+
+    The base logic of the pattern is already implemented and probably does not require
+    re-implementation on the child object.
+    However, the :func:`~pygamelib.base.PglBaseObject.be_notified()` method needs to be
+    implemented in each client. The actual processing of the notification is indeed
+    specific to each object.
+    """
+
     def __init__(self) -> None:
+        """
+        Like the object class, this class constructor takes no parameter.
+        """
         super().__init__()
         self._observers = []
         self._last_updated = time.time()
@@ -65,7 +85,7 @@ class PglBaseObject(object):
         An object cannot add itself to the list of observers (to avoid infinite
         recursions).
         """
-        if type(observer) == type(self) and observer == self:
+        if observer == self:
             return False
         if observer not in self._observers:
             self._observers.append(observer)
@@ -132,21 +152,22 @@ class Text(PglBaseObject):
     independent attributes. They help to set the text, its style and the foreground and
     background colors.
 
-    The Text object can generate a :class:`~pygamelib.gfx.core.Sprite` to represent
-    itself. This is particularly useful to the place text on the game
-    :class:`~pygamelib.engine.Board`.
-
-    :param text: The text to manipulate
-    :type text: str
-    :param fg_color: The foreground color for the text.
-    :type fg_color: :class:`~pygamelib.gfx.core.Color`
-    :param bg_color: The background color for the text.
-    :type bg_color: :class:`~pygamelib.gfx.core.Color`
-    :param style: The style for the text.
-    :type style: str
+    The Text object can be converted to a :class:`~pygamelib.gfx.core.Sprite` through
+    the Sprite.from_text() method. This is particularly useful to the place text on the
+    game :class:`~pygamelib.engine.Board`.
     """
 
     def __init__(self, text="", fg_color=None, bg_color=None, style="", font=None):
+        """
+        :param text: The text to manipulate
+        :type text: str
+        :param fg_color: The foreground color for the text.
+        :type fg_color: :class:`~pygamelib.gfx.core.Color`
+        :param bg_color: The background color for the text.
+        :type bg_color: :class:`~pygamelib.gfx.core.Color`
+        :param style: The style for the text.
+        :type style: str
+        """
         super().__init__()
         self.__text = ""
         self.__bg_color = None
@@ -778,12 +799,13 @@ class Vector2D(object):
     Contrary to the rest of the library Vector2D uses floating point numbers for its
     coordinates/direction/orientation. However since the rest of the library uses
     integers, the numbers are rounded to 2 decimals.
-    You can alter that behavior by increasing or decreasing (if you want integer for
-    example).
+    You can alter that behavior by increasing or decreasing the rounding_precision
+    parameter (if you want integer for example).
 
     Vector2D use the row/column internal naming convention as it is easier to visualize
-    For learning developers. If it is a concept that you already understand and are
-    more familiar with the x/y coordinate system you can also use x and y.
+    for developers that are still learning python or the pygamelib. If it is a concept
+    that you already understand and are more familiar with the x/y coordinate system you
+    can also use x and y.
 
      - x is equivalent to column
      - y is equivalent to row
@@ -872,9 +894,11 @@ class Vector2D(object):
             )
 
     def __eq__(self, other):
-        if other.row == self.__row and other.column == self.__column:
-            return True
-        return False
+        if isinstance(other, Vector2D):
+            if other.row == self.__row and other.column == self.__column:
+                return True
+            return False
+        return NotImplemented
 
     @property
     def row(self):

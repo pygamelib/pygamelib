@@ -3,10 +3,21 @@
 base
 ====
 
-.. automodule:: pygamelib.base
-    :members:
-    :inherited-members:
-    :undoc-members:
-    :show-inheritance:
+The base module provide basic objects and exceptions that are used by the entire library.
 
-.. autoattribute:: pygamelib.base.Text
+.. toctree::
+
+   pygamelib.base.Math.rst
+   pygamelib.base.PglBaseObject.rst
+   pygamelib.base.PglException.rst
+   pygamelib.base.PglInvalidLevelException.rst
+   pygamelib.base.PglInvalidTypeException.rst
+   pygamelib.base.PglObjectIsNotMovableException.rst
+   pygamelib.base.PglOutOfBoardBoundException.rst
+   pygamelib.base.Text.rst
+   pygamelib.base.Vector2D.rst
+   base_deprecated
+
+
+.. automodule:: pygamelib.base
+    :noindex:

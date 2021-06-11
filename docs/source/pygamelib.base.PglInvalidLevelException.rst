@@ -1,5 +1,5 @@
-pygamelib.base.PglInvalidLevelException
-=======================================
+PglInvalidLevelException
+========================
 
 .. currentmodule:: pygamelib.base
 

@@ -1,5 +1,5 @@
-pygamelib.base.PglObjectIsNotMovableException
-=============================================
+PglObjectIsNotMovableException
+==============================
 
 .. currentmodule:: pygamelib.base
 

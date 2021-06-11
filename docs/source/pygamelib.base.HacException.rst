@@ -1,7 +1,6 @@
-:orphan:
 
-pygamelib.base.HacException
-===========================
+HacException
+============
 
 .. currentmodule:: pygamelib.base
 

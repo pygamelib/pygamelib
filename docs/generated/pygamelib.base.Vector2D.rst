@@ -1,13 +1,9 @@
-Vector2D
-========
+pygamelib.base.Vector2D
+=======================
 
 .. currentmodule:: pygamelib.base
 
 .. autoclass:: Vector2D
-   :members:
-   :inherited-members:
-   :undoc-members:
-   :show-inheritance:
 
    
    .. automethod:: __init__

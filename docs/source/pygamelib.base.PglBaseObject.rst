@@ -1,9 +1,9 @@
-Math
-====
+PglBaseObject
+=============
 
 .. currentmodule:: pygamelib.base
 
-.. autoclass:: Math
+.. autoclass:: PglBaseObject
    :members:
    :inherited-members:
    :undoc-members:
@@ -17,9 +17,11 @@ Math
 
    .. autosummary::
    
-      ~Math.__init__
-      ~Math.distance
-      ~Math.intersect
+      ~PglBaseObject.__init__
+      ~PglBaseObject.attach
+      ~PglBaseObject.be_notified
+      ~PglBaseObject.detach
+      ~PglBaseObject.notify
    
    
 

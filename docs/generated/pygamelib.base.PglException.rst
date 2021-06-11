@@ -1,5 +1,5 @@
-PglException
-============
+pygamelib.base.PglException
+===========================
 
 .. currentmodule:: pygamelib.base
 

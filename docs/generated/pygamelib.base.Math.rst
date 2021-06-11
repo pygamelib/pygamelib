@@ -1,13 +1,9 @@
-Math
-====
+pygamelib.base.Math
+===================
 
 .. currentmodule:: pygamelib.base
 
 .. autoclass:: Math
-   :members:
-   :inherited-members:
-   :undoc-members:
-   :show-inheritance:
 
    
    .. automethod:: __init__

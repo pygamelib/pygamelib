@@ -1,5 +1,5 @@
-pygamelib.base.PglOutOfBoardBoundException
-==========================================
+PglOutOfBoardBoundException
+===========================
 
 .. currentmodule:: pygamelib.base
 
