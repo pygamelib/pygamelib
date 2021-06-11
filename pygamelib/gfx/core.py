@@ -187,14 +187,11 @@ class Color(base.PglBaseObject):
         return None
 
     def __eq__(self, other):
-        if (
-            other is not None
-            and self.r == other.r
-            and self.g == other.g
-            and self.b == other.b
-        ):
-            return True
-        return False
+        if isinstance(other, Color):
+            if self.r == other.r and self.g == other.g and self.b == other.b:
+                return True
+            return False
+        return NotImplemented
 
     def __ne__(self, other):
         return not self == other
@@ -393,14 +390,16 @@ class Sprixel(object):
         self.__color_cache = f"{bgc}{fgc}"
 
     def __eq__(self, other):
-        if (
-            self.model == other.model
-            and self.bg_color == other.bg_color
-            and self.fg_color == other.fg_color
-        ):
-            return True
-        else:
-            return False
+        if isinstance(other, Sprixel):
+            if (
+                self.model == other.model
+                and self.bg_color == other.bg_color
+                and self.fg_color == other.fg_color
+            ):
+                return True
+            else:
+                return False
+        return NotImplemented
 
     def __ne__(self, other):
         if (
