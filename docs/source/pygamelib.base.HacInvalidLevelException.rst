@@ -1,7 +1,6 @@
-:orphan:
 
-pygamelib.base.HacInvalidLevelException
-=======================================
+HacInvalidLevelException
+========================
 
 .. currentmodule:: pygamelib.base
 

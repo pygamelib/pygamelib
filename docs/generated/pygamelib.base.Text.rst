@@ -4,10 +4,6 @@ pygamelib.base.Text
 .. currentmodule:: pygamelib.base
 
 .. autoclass:: Text
-   :members:
-   :inherited-members:
-   :undoc-members:
-   :show-inheritance:
 
    
    .. automethod:: __init__

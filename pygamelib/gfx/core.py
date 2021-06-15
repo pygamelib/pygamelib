@@ -17,13 +17,16 @@ from pygamelib.assets import graphics
 from pygamelib.functions import pgl_isinstance
 import random
 import time
+import copy
 from collections import UserDict
 from uuid import uuid4
 import json
 import re
+from pygamelib import assets
+import importlib_resources
 
 
-class Color(object):
+class Color(base.PglBaseObject):
     """
     .. versionadded:: 1.3.0
 
@@ -47,19 +50,9 @@ class Color(object):
 
     def __init__(self, r=0, g=0, b=0):
         super().__init__()
-        if type(r) is int:
+        if type(r) is int and type(g) is int and type(b) is int:
             self.__r = r
-        else:
-            raise base.PglInvalidTypeException(
-                "Color(r, g, b): all parameters must be integers."
-            )
-        if type(g) is int:
             self.__g = g
-        else:
-            raise base.PglInvalidTypeException(
-                "Color(r, g, b): all parameters must be integers."
-            )
-        if type(b) is int:
             self.__b = b
         else:
             raise base.PglInvalidTypeException(
@@ -71,6 +64,8 @@ class Color(object):
         """
         The r property controls the intensity of the red color. You can set it to an
         integer between 0 and 255 (both included).
+
+        Setting this property triggers a call to :func:`notify`.
 
         Example::
 
@@ -85,6 +80,7 @@ class Color(object):
     def r(self, val):
         if type(val) is int and val >= 0 and val <= 255:
             self.__r = val
+            self.notify()
         else:
             raise base.PglInvalidTypeException(
                 "The value for red needs to be an integer between 0 and 255."
@@ -95,6 +91,8 @@ class Color(object):
         """
         The g property controls the intensity of the green color. You can set it to an
         integer between 0 and 255 (both included).
+
+        Setting this property triggers a call to :func:`notify`.
 
         Example::
 
@@ -109,6 +107,7 @@ class Color(object):
     def g(self, val):
         if type(val) is int and val >= 0 and val <= 255:
             self.__g = val
+            self.notify()
         else:
             raise base.PglInvalidTypeException(
                 "The value for green needs to be an integer between 0 and 255."
@@ -119,6 +118,8 @@ class Color(object):
         """
         The b property controls the intensity of the blue color. You can set it to an
         integer between 0 and 255 (both included).
+
+        Setting this property triggers a call to :func:`notify`.
 
         Example::
 
@@ -133,6 +134,7 @@ class Color(object):
     def b(self, val):
         if type(val) is int and val >= 0 and val <= 255:
             self.__b = val
+            self.notify()
         else:
             raise base.PglInvalidTypeException(
                 "The value for blue needs to be an integer between 0 and 255."
@@ -181,9 +183,11 @@ class Color(object):
         return None
 
     def __eq__(self, other):
-        if self.r == other.r and self.g == other.g and self.b == other.b:
-            return True
-        return False
+        if isinstance(other, Color):
+            if self.r == other.r and self.g == other.g and self.b == other.b:
+                return True
+            return False
+        return NotImplemented
 
     def __ne__(self, other):
         return not self == other
@@ -252,8 +256,8 @@ class Color(object):
         :param data: Data loaded from JSON data (deserialized).
         :type data: dict
         :returns: Either a Color object or None if data where empty.
-        :rtype: :class:`Color`|NoneType
-        :raise: `~pygamelib.base.PglInvalidTypeException`
+        :rtype: :class:`Color` | NoneType
+        :raise: :class:`~pygamelib.base.PglInvalidTypeException`
 
         Example::
 
@@ -285,6 +289,8 @@ class Color(object):
     def randomize(self):
         """Set a random value for each component
 
+        This method triggers a call to :func:`notify`.
+
         :returns: None
         :rtype: NoneType
 
@@ -296,6 +302,7 @@ class Color(object):
         self.r = random.randrange(256)
         self.g = random.randrange(256)
         self.b = random.randrange(256)
+        self.notify()
 
 
 class Sprixel(object):
@@ -381,14 +388,16 @@ class Sprixel(object):
         self.__color_cache = f"{bgc}{fgc}"
 
     def __eq__(self, other):
-        if (
-            self.model == other.model
-            and self.bg_color == other.bg_color
-            and self.fg_color == other.fg_color
-        ):
-            return True
-        else:
-            return False
+        if isinstance(other, Sprixel):
+            if (
+                self.model == other.model
+                and self.bg_color == other.bg_color
+                and self.fg_color == other.fg_color
+            ):
+                return True
+            else:
+                return False
+        return NotImplemented
 
     def __ne__(self, other):
         if (
@@ -1063,7 +1072,7 @@ class Sprite(object):
         Example::
 
             # The Text object allow for easy manipulation of text
-            village_name = base.Text('khukdale',fg_red, bg_green)
+            village_name = base.Text('Khukdale',fg_red, bg_green)
             # It can be converted into a Sprite to be displayed on the Board
             village_sign = board_items.Tile(sprite=Sprite.from_text(village_name))
             # And can be used as formatted text
@@ -1423,17 +1432,21 @@ class Sprite(object):
         :type width: int
 
         """
+        # NOTE: This entire non-sense is not required anymore
         # Check if the text has changed to update the sprite...
         # I'm not so sure about all this update thing...
-        if (
-            self._initial_text_object is not None
-            and self._initial_text_object._sprite_data != self._initial_text_object.text
-        ):
-            i = Sprite.from_text(self._initial_text_object)
-            self._sprixels = i._sprixels
-            self._initial_text_object._sprite_data = i._initial_text_object._sprite_data
-            self.size = i.size
-            # display_buffer[row][col] = i
+        # if (
+        #     self._initial_text_object is not None
+        #     and
+        # self._initial_text_object._sprite_data != self._initial_text_object.text
+        # ):
+        #     i = Sprite.from_text(self._initial_text_object)
+        #     self._sprixels = i._sprixels
+        #     self._initial_text_object._sprite_data =
+        # i._initial_text_object._sprite_data
+        #     self.size = i.size
+        #     # display_buffer[row][col] = i
+
         # Attempt at optimization.
         null_sprixel = Sprixel()
         get_sprixel = self.sprixel
@@ -1982,3 +1995,166 @@ class Animation(object):
             self.dtanimate += time.time() - previous_time
             previous_time = time.time()
         return True
+
+
+# Font is a class
+# Font load a font data and allow an unified access to it
+# Font data consist of a sprite file and a json file that describes the font
+# FONT_NAME/glyphs.spr contains the sprites and FONT_NAME/config.json contains the
+# information.
+# Ideally a font can be used by base.Text to render text.
+# Fonts API:
+#    * load('FONT_NAME') -> Load the font and return None
+#    * glyph('GLYPH_NAME',FG COLOR,BG COLOR) -> Access and return the glyph as a Sprite.
+#
+# config.json looks like that:
+# {
+#     "scalable": false,
+#     "monospace": true,
+#     "colorable": true,
+#     "fg_color": {
+#         "red": 255,
+#         "green": 255,
+#         "blue": 255
+#     },
+#     "bg_color": null,
+#     "glyphs_map": {
+#         "a": "A",
+#         "b": "B",
+#         "c": "C",
+#         "d": "D",
+#         "e": "E",
+#         "f": "F",
+#         "g": "G",
+#         "h": "H",
+#         "i": "I",
+#         "j": "J",
+#         "k": "K",
+#         "l": "L",
+#         "m": "M",
+#         "n": "N",
+#         "o": "O",
+#         "p": "P",
+#         "q": "Q",
+#         "r": "R",
+#         "s": "S",
+#         "t": "T",
+#         "u": "U",
+#         "v": "V",
+#         "w": "W",
+#         "x": "X",
+#         "y": "Y",
+#         "z": "Z"
+#     }
+# }
+#
+# scalable is a boolean. If true it means that the fond is made of scalable elements and
+# look the same if the Sprite.scale() method is used.
+#
+# monospace is telling the user if the font is size consistent (all glyph have the same
+# dimension)
+#
+# colorable hints the ability to change colors or not.
+#
+# fg_color contains the font foreground color.
+#
+# bg_color contains the font background color.
+#
+# This is highly recommended to use white as foreground and None as background.
+# Since fonts can be drawn with multiple technics and looks can be achieved by using
+# Sprixels background and foreground colors, Font cannot determine what is foreground
+# and what is background. Therefor if colorable is true, it will compare colors and
+# replace the corresponding color. Colored glyphs are cached.
+#
+# glyph_map is optional but is used to map any glyph to another glyph. The format is:
+# "<glyph that IS NOT in glyph.spr>" : "<glyph the IS in glyph.spr>"
+#              key                                value
+# The value MUST BE present in glyph.spr
+
+
+class Font:
+    def __init__(self, font_name: str = None) -> None:
+        super().__init__()
+        self.__glyphs_cache = {}
+        self.__config = None
+        self.__sprite_collection = None
+        self.__name = None
+        if font_name is not None:
+            self.load(font_name)
+
+    def load(self, font_name: str = None) -> None:
+        glyphs_path = importlib_resources.files(assets).joinpath(
+            "fonts", font_name, "glyphs.spr"
+        )
+        config_path = importlib_resources.files(assets).joinpath(
+            "fonts", font_name, "config.json"
+        )
+        # This will throw a FileNotFoundError if the font is not present.
+        self.__sprite_collection = SpriteCollection.load_json_file(glyphs_path)
+        with open(config_path) as config_file:
+            self.__config = json.load(config_file)
+        self.__config["fg_color"] = Color.load(self.__config["fg_color"])
+        self.__config["bg_color"] = Color.load(self.__config["bg_color"])
+        self.__name = font_name
+        if "glyphs_map" in self.__config.keys():
+            for glyph in self.__config["glyphs_map"].keys():
+                self.__sprite_collection[glyph] = self.__sprite_collection[
+                    self.__config["glyphs_map"][glyph]
+                ]
+
+    def height(self):
+        return self.__config["height"]
+
+    def horizontal_spacing(self):
+        return self.__config["horizontal_spacing"]
+
+    def vertical_spacing(self):
+        return self.__config["vertical_spacing"]
+
+    def name(self):
+        return self.__name
+
+    @staticmethod
+    def __glyph_colors_to_string(
+        glyph_name: str = None, fg_color: Color = None, bg_color: Color = None
+    ) -> str:
+        serstr = glyph_name
+        for c in (fg_color, bg_color):
+            if c is None:
+                serstr = f"{serstr}:{-1}:{-1}:{-1}"
+            else:
+                serstr = f"{serstr}:{c.r}:{c.g}:{c.b}"
+        return serstr
+
+    def glyph(
+        self,
+        glyph_name: str = None,
+        fg_color: Color = None,
+        bg_color: Color = None,
+    ) -> Sprite:
+        if self.__sprite_collection is None:
+            return
+        if glyph_name not in self.__sprite_collection.keys():
+            glyph_name = "default"
+        if fg_color is None and bg_color is None:
+            return self.__sprite_collection[glyph_name]
+        else:
+            gcolstr = Font.__glyph_colors_to_string(glyph_name, fg_color, bg_color)
+            if gcolstr in self.__glyphs_cache.keys():
+                return self.__glyphs_cache[gcolstr]
+            else:
+                new_sprite = copy.deepcopy(self.__sprite_collection[glyph_name])
+                sprite_sprixel = new_sprite.sprixel
+                cfg = self.__config
+                for r in range(new_sprite.height):
+                    for c in range(new_sprite.width):
+                        if sprite_sprixel(r, c).fg_color == cfg["fg_color"]:
+                            sprite_sprixel(r, c).fg_color = fg_color
+                        elif sprite_sprixel(r, c).fg_color == cfg["bg_color"]:
+                            sprite_sprixel(r, c).fg_color = bg_color
+                        if sprite_sprixel(r, c).bg_color == cfg["fg_color"]:
+                            sprite_sprixel(r, c).bg_color = fg_color
+                        elif sprite_sprixel(r, c).bg_color == cfg["bg_color"]:
+                            sprite_sprixel(r, c).bg_color = bg_color
+                self.__glyphs_cache[gcolstr] = new_sprite
+                return new_sprite

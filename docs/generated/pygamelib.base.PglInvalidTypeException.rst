@@ -1,5 +1,5 @@
-PglInvalidTypeException
-=======================
+pygamelib.base.PglInvalidTypeException
+======================================
 
 .. currentmodule:: pygamelib.base
 

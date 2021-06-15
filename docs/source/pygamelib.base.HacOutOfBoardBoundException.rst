@@ -1,7 +1,6 @@
-:orphan:
 
-pygamelib.base.HacOutOfBoardBoundException
-==========================================
+HacOutOfBoardBoundException
+===========================
 
 .. currentmodule:: pygamelib.base
 

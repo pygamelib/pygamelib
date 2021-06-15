@@ -3,25 +3,25 @@ jobs:
   build:
     working_directory: ~/pygamelib
     docker:
-      - image: circleci/python:3.7
+      - image: circleci/python:3.9
         environment:
           PIPENV_VENV_IN_PROJECT: true
     steps:
       - checkout
       - run: sudo chown -R circleci:circleci /usr/local/bin
-      - run: sudo chown -R circleci:circleci /usr/local/lib/python3.7/site-packages
+      - run: sudo chown -R circleci:circleci /usr/local/lib/python3.9/site-packages
       - restore_cache:
-          key: deps10-{{ .Branch }}-{{ checksum "Pipfile.lock" }}
+          key: python39-{{ .Branch }}-{{ checksum "Pipfile.lock" }}
       - run:
           command: |
             sudo pip3 install pipenv
             pipenv install --dev
       - save_cache:
-          key: deps10-{{ .Branch }}-{{ checksum "Pipfile.lock" }}
+          key: python39-{{ .Branch }}-{{ checksum "Pipfile.lock" }}
           paths:
             - ".venv"
             - "/usr/local/bin"
-            - "/usr/local/lib/python3.7/site-packages"
+            - "/usr/local/lib/python3.9/site-packages"
       - run:
           name: Run linting and metrics
           command: |

@@ -3295,13 +3295,13 @@ class MenuAction(object):
 
         """
         if self.padding > 0:
-            self.__padding_cache._render_to_buffer(
+            self.__padding_cache.render_to_buffer(
                 buffer, row, column, buffer_height, buffer_width
             )
-            self.__title._render_to_buffer(
+            self.__title.render_to_buffer(
                 buffer, row, column + self.__padding, buffer_height, buffer_width
             )
-            self.__padding_cache._render_to_buffer(
+            self.__padding_cache.render_to_buffer(
                 buffer,
                 row,
                 column + self.title_width() - self.__padding_cache.length,
@@ -3309,7 +3309,7 @@ class MenuAction(object):
                 buffer_width,
             )
         else:
-            self.__title._render_to_buffer(
+            self.__title.render_to_buffer(
                 buffer, row, column, buffer_height, buffer_width
             )
 
@@ -3622,13 +3622,13 @@ class Menu(object):
         self._store_position(row, column)
         menu_width = self.menu_width()
         if self.padding > 0:
-            self.__padding_cache._render_to_buffer(
+            self.__padding_cache.render_to_buffer(
                 buffer, row, column, buffer_height, buffer_width
             )
-            self.__title._render_to_buffer(
+            self.__title.render_to_buffer(
                 buffer, row, column + self.__padding, buffer_height, buffer_width
             )
-            self.__padding_cache._render_to_buffer(
+            self.__padding_cache.render_to_buffer(
                 buffer,
                 row,
                 column + self.title_width() - self.__padding,
@@ -3636,7 +3636,7 @@ class Menu(object):
                 buffer_width,
             )
         else:
-            self.__title._render_to_buffer(
+            self.__title.render_to_buffer(
                 buffer, row, column, buffer_height, buffer_width
             )
 
@@ -3659,7 +3659,7 @@ class Menu(object):
                     column + col_offset + e.title_width(),
                     column + col_offset + menu_width,
                 ):
-                    self.__menu_width_padding_cache._render_to_buffer(
+                    self.__menu_width_padding_cache.render_to_buffer(
                         buffer,
                         row + row_offset,
                         pc,

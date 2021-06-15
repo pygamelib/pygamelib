@@ -1,7 +1,6 @@
-:orphan:
 
-pygamelib.base.HacInvalidTypeException
-======================================
+HacInvalidTypeException
+=======================
 
 .. currentmodule:: pygamelib.base
 

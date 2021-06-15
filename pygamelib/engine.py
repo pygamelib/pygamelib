@@ -3742,13 +3742,14 @@ class Screen(object):
             )
         if pgl_isinstance(element, "pygamelib.gfx.ui.Dialog"):
             rendering_pass = 2
-        if isinstance(element, base.Text):
-            # If it's a text object we need to convert it to a Sprite first.
-            self._display_buffer[row][column] = core.Sprite.from_text(element)
-            self._is_dirty = True
-            setattr(element, "__rendering_pass", rendering_pass)
-            return
-        elif (
+        # if isinstance(element, base.Text):
+        #     # If it's a text object we need to convert it to a Sprite first.
+        #     self._display_buffer[row][column] = core.Sprite.from_text(element)
+        #     self._is_dirty = True
+        #     setattr(element, "__rendering_pass", rendering_pass)
+        #     return
+        # el
+        if (
             isinstance(element, core.Sprixel)
             or type(element) is str
             or hasattr(element, "render_to_buffer")

@@ -206,7 +206,7 @@ def draw_progress_bar(
         fg_color=fg_color,
         bg_color=bg_color,
     )
-    g.screen.place(core.Sprite.from_text(pb), row, column, 2)
+    g.screen.place(pb, row, column, 2)
     g.screen.trigger_rendering()
     g.screen.update()
 

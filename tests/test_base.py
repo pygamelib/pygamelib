@@ -28,6 +28,7 @@ class TestBase(unittest.TestCase):
         self.assertEqual(self.vectors[1].__repr__(), "Vector2D (1.0, 1.0)")
         self.assertTrue(self.vectors[0] == pgl_base.Vector2D())
         self.assertFalse(self.vectors[0] == pgl_base.Vector2D(1, 2))
+        self.assertEqual(self.vectors[0].__eq__("nope"), NotImplemented)
 
     def test_v2d_add(self):
         v = self.vectors[0] + self.vectors[1]
@@ -186,6 +187,25 @@ class TestBase(unittest.TestCase):
         self.assertIsNone(text.bg_color)
         text.fg_color = None
         self.assertIsNone(text.fg_color)
+
+        text = pgl_base.Text("This is a test", font=core.Font("8bits"))
+        self.assertIsNone(text.be_notified(None))
+        self.assertIsInstance(text, pgl_base.Text)
+        with self.assertRaises(pgl_base.PglInvalidTypeException):
+            pgl_base.Text("This is a test", font=42)
+        self.assertEqual(text.length, 126)
+
+    def test_pgl_base_object(self):
+        o1 = pgl_base.PglBaseObject()
+        o2 = pgl_base.PglBaseObject()
+        o3 = pgl_base.PglBaseObject()
+        self.assertTrue(o2.attach(o1))
+        self.assertTrue(o2.attach(o3))
+        self.assertFalse(o2.attach(o2))
+        self.assertIsNone(o2.notify())
+        self.assertIsNone(o2.notify(o3))
+        self.assertTrue(o2.detach(o1))
+        self.assertFalse(o2.detach(o2))
 
     def test_math_distance(self):
         self.assertEqual(self.math.distance(0, 0, 0, 0), 0)

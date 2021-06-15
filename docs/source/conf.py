@@ -24,7 +24,7 @@ import pygamelib.constants as CST  # noqa: F402, F541, E402
 # -- Project information -----------------------------------------------------
 
 project = "pygamelib"
-copyright = "2019-2020, Arnaud Dupuis"
+copyright = "2019-2021, Arnaud Dupuis"
 author = "Arnaud Dupuis"
 
 # The short X.Y version
