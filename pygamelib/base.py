@@ -68,22 +68,61 @@ class PglBaseObject(object):
         super().__setattr__("_last_updated", time.time())
         return super().__setattr__(name, value)
 
-    def notify(self, modifier=None):
+    def notify(self, modifier=None) -> None:
 
         """
-        Notify the observers that a change occurred.
-        """
+        Notify all the observers that a change occurred. Two important points:
 
+         1. The "change" that occurred is not specified (but the notifying object is
+            passed as parameter)
+         2. No parameters are passed to the :func:`be_notified` method except the
+            notifying object.
+
+        :param modifier: An optional parameter that identify the modifier object to
+            exclude it from the notified objects.
+        :type modifier: :class:`~pygamelib.base.PglBaseObject`
+
+        Example::
+
+           # This example is silly, you would usually notify other objects from inside
+           # an object that changes a value that's important for the observers.
+           color = Color(255,200,125)
+           color.attach(some_text_object)
+           color.notify()
+        """
+        # Let's get an eventual modifier out of the list so we don't have to add an if
+        # to the for loop.
+        cache = None
+        if modifier in self._observers:
+            cache = self._observers.pop(self._observers.index(modifier))
         for observer in self._observers:
-            if modifier != observer:
-                observer.be_notified(self)
+            observer.be_notified(self)
+        # Restore the cached object
+        if cache is not None:
+            self._observers.append(cache)
 
     def attach(self, observer):
 
         """
-        If the observer is not in the list, append it into the list.
+        Attach an observer to this instance. It means that until it is detached, it will
+        be notified everytime that a notification is issued (usually on changes).
+
         An object cannot add itself to the list of observers (to avoid infinite
         recursions).
+
+        :param observer: An observer to attach to this object.
+        :type observer: :class:`~pygamelib.base.PglBaseObject`
+
+        :returns: True or False depending on the success of the operation.
+        :rtype: bool
+
+        Example::
+
+            myboard = Board()
+            screen = Game.instance().screen
+            # screen will be notified of all changes in myboard
+            myboard.attach(screen)
+
         """
         if observer == self:
             return False
@@ -94,8 +133,19 @@ class PglBaseObject(object):
     def detach(self, observer):
 
         """
-        Remove the observer from the observer list. If observer is not in the list this
-        method ignore the error.
+        Detach an observer from this instance.
+        If observer is not in the list this returns False.
+
+        :param observer: An observer to detach from this object.
+        :type observer: :class:`~pygamelib.base.PglBaseObject`
+
+        :returns: True or False depending on the success of the operation.
+        :rtype: bool
+
+        Example::
+
+            # screen will no longer be notified of the changes in myboard.
+            myboard.detach(screen)
         """
 
         try:

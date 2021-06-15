@@ -198,9 +198,12 @@ class TestBase(unittest.TestCase):
     def test_pgl_base_object(self):
         o1 = pgl_base.PglBaseObject()
         o2 = pgl_base.PglBaseObject()
+        o3 = pgl_base.PglBaseObject()
         self.assertTrue(o2.attach(o1))
+        self.assertTrue(o2.attach(o3))
         self.assertFalse(o2.attach(o2))
         self.assertIsNone(o2.notify())
+        self.assertIsNone(o2.notify(o3))
         self.assertTrue(o2.detach(o1))
         self.assertFalse(o2.detach(o2))
 
