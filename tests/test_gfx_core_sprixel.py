@@ -37,6 +37,7 @@ class TestBase(unittest.TestCase):
         self.assertNotEqual(s1, s3)
         self.assertFalse(s1 == s3)
         self.assertFalse(s1 != s2)
+        self.assertEqual(s1.__eq__("nope"), NotImplemented)
 
     def test_sprixel_from_ansi(self):
         s = gfx_core.Sprixel.from_ansi(

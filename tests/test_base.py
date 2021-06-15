@@ -28,6 +28,7 @@ class TestBase(unittest.TestCase):
         self.assertEqual(self.vectors[1].__repr__(), "Vector2D (1.0, 1.0)")
         self.assertTrue(self.vectors[0] == pgl_base.Vector2D())
         self.assertFalse(self.vectors[0] == pgl_base.Vector2D(1, 2))
+        self.assertEqual(self.vectors[0].__eq__("nope"), NotImplemented)
 
     def test_v2d_add(self):
         v = self.vectors[0] + self.vectors[1]
