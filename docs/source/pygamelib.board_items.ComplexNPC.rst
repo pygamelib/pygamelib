@@ -1,9 +1,13 @@
-pygamelib.board\_items.ComplexNPC
-=================================
+ComplexNPC
+==========
 
 .. currentmodule:: pygamelib.board_items
 
 .. autoclass:: ComplexNPC
+   :members:
+   :inherited-members:
+   :undoc-members:
+   :show-inheritance:
 
    
    .. automethod:: __init__
@@ -16,24 +20,32 @@ pygamelib.board\_items.ComplexNPC
       ~ComplexNPC.__init__
       ~ComplexNPC.can_move
       ~ComplexNPC.collides_with
-      ~ComplexNPC.column
       ~ComplexNPC.debug_info
       ~ComplexNPC.display
       ~ComplexNPC.distance_to
       ~ComplexNPC.has_inventory
-      ~ComplexNPC.height
       ~ComplexNPC.inventory_space
       ~ComplexNPC.item
       ~ComplexNPC.overlappable
       ~ComplexNPC.pickable
       ~ComplexNPC.position_as_vector
-      ~ComplexNPC.row
+      ~ComplexNPC.render_to_buffer
       ~ComplexNPC.store_position
       ~ComplexNPC.update_sprite
-      ~ComplexNPC.width
    
    
 
    
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~ComplexNPC.column
+      ~ComplexNPC.dtmove
+      ~ComplexNPC.height
+      ~ComplexNPC.model
+      ~ComplexNPC.row
+      ~ComplexNPC.width
    
    

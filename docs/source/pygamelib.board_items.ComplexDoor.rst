@@ -1,9 +1,13 @@
-pygamelib.board\_items.ComplexDoor
-==================================
+ComplexDoor
+===========
 
 .. currentmodule:: pygamelib.board_items
 
 .. autoclass:: ComplexDoor
+   :members:
+   :inherited-members:
+   :undoc-members:
+   :show-inheritance:
 
    
    .. automethod:: __init__
@@ -19,11 +23,11 @@ pygamelib.board\_items.ComplexDoor
       ~ComplexDoor.debug_info
       ~ComplexDoor.display
       ~ComplexDoor.distance_to
-      ~ComplexDoor.inventory_space
       ~ComplexDoor.item
       ~ComplexDoor.overlappable
       ~ComplexDoor.pickable
       ~ComplexDoor.position_as_vector
+      ~ComplexDoor.render_to_buffer
       ~ComplexDoor.restorable
       ~ComplexDoor.set_overlappable
       ~ComplexDoor.set_pickable
@@ -41,6 +45,8 @@ pygamelib.board\_items.ComplexDoor
    
       ~ComplexDoor.column
       ~ComplexDoor.height
+      ~ComplexDoor.inventory_space
+      ~ComplexDoor.model
       ~ComplexDoor.row
       ~ComplexDoor.width
    

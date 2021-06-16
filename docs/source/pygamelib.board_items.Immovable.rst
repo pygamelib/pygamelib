@@ -1,9 +1,13 @@
-pygamelib.board\_items.Immovable
-================================
+Immovable
+=========
 
 .. currentmodule:: pygamelib.board_items
 
 .. autoclass:: Immovable
+   :members:
+   :inherited-members:
+   :undoc-members:
+   :show-inheritance:
 
    
    .. automethod:: __init__
@@ -16,22 +20,29 @@ pygamelib.board\_items.Immovable
       ~Immovable.__init__
       ~Immovable.can_move
       ~Immovable.collides_with
-      ~Immovable.column
       ~Immovable.debug_info
       ~Immovable.display
       ~Immovable.distance_to
-      ~Immovable.height
-      ~Immovable.inventory_space
       ~Immovable.overlappable
       ~Immovable.pickable
       ~Immovable.position_as_vector
+      ~Immovable.render_to_buffer
       ~Immovable.restorable
-      ~Immovable.row
       ~Immovable.store_position
-      ~Immovable.width
    
    
 
    
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~Immovable.column
+      ~Immovable.height
+      ~Immovable.inventory_space
+      ~Immovable.model
+      ~Immovable.row
+      ~Immovable.width
    
    

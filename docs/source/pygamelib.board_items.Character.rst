@@ -1,9 +1,13 @@
-pygamelib.board\_items.Character
-================================
+Character
+=========
 
 .. currentmodule:: pygamelib.board_items
 
 .. autoclass:: Character
+   :members:
+   :inherited-members:
+   :undoc-members:
+   :show-inheritance:
 
    
    .. automethod:: __init__

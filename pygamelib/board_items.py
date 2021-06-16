@@ -4,29 +4,31 @@ __docformat__ = "restructuredtext"
 .. autosummary::
    :toctree: .
 
-   BoardItem
-   BoardItemVoid
-   BoardComplexItem
-   BoardItemComplexComponent
-   Movable
-   Projectile
-   Immovable
-   Actionable
-   Character
-   Player
-   ComplexPlayer
-   NPC
-   ComplexNPC
-   TextItem
-   Wall
-   ComplexWall
-   Treasure
-   ComplexTreasure
-   Door
-   ComplexDoor
-   GenericStructure
-   GenericActionableStructure
-   Tile
+   pygamelib.board_items.BoardItem
+   pygamelib.board_items.BoardItemVoid
+   pygamelib.board_items.BoardComplexItem
+   pygamelib.board_items.BoardItemComplexComponent
+   pygamelib.board_items.Movable
+   pygamelib.board_items.Projectile
+   pygamelib.board_items.Immovable
+   pygamelib.board_items.Actionable
+   pygamelib.board_items.Character
+   pygamelib.board_items.Player
+   pygamelib.board_items.ComplexPlayer
+   pygamelib.board_items.NPC
+   pygamelib.board_items.ComplexNPC
+   pygamelib.board_items.TextItem
+   pygamelib.board_items.Wall
+   pygamelib.board_items.ComplexWall
+   pygamelib.board_items.Treasure
+   pygamelib.board_items.ComplexTreasure
+   pygamelib.board_items.Door
+   pygamelib.board_items.ComplexDoor
+   pygamelib.board_items.GenericStructure
+   pygamelib.board_items.GenericActionableStructure
+   pygamelib.board_items.GenericStructureComplexComponent
+   pygamelib.board_items.Tile
+   pygamelib.board_items.Camera
 """
 from pygamelib import engine
 from pygamelib import base

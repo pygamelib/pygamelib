@@ -1,9 +1,13 @@
-pygamelib.gfx.core.Animation
-============================
+Animation
+=========
 
 .. currentmodule:: pygamelib.gfx.core
 
 .. autoclass:: Animation
+   :members:
+   :inherited-members:
+   :undoc-members:
+   :show-inheritance:
 
    
    .. automethod:: __init__
@@ -28,5 +32,11 @@ pygamelib.gfx.core.Animation
    
 
    
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~Animation.dtanimate
    
    

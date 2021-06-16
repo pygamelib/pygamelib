@@ -5,11 +5,12 @@ __docformat__ = "restructuredtext"
 .. autosummary::
    :toctree: .
 
-   Color
-   Sprixel
-   Sprite
-   SpriteCollection
-   Animation
+   pygamelib.gfx.core.Color
+   pygamelib.gfx.core.Sprixel
+   pygamelib.gfx.core.Sprite
+   pygamelib.gfx.core.SpriteCollection
+   pygamelib.gfx.core.Animation
+   pygamelib.gfx.core.Font
 """
 from pygamelib import base
 from pygamelib import constants

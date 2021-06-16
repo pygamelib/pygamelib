@@ -25,6 +25,7 @@ clean:
 	find ./ -iname '*.pyc' | xargs rm -f
 	find ./ -iname '*.pyo' | xargs rm -f
 	find ./ -iname '__pycache__' | xargs rm -rf
+	(cd docs && make clean)
 
 all: coverage doc clean pp
 

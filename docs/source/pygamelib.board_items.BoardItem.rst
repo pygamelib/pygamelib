@@ -1,9 +1,13 @@
-pygamelib.board\_items.BoardItem
-================================
+BoardItem
+=========
 
 .. currentmodule:: pygamelib.board_items
 
 .. autoclass:: BoardItem
+   :members:
+   :inherited-members:
+   :undoc-members:
+   :show-inheritance:
 
    
    .. automethod:: __init__
@@ -16,21 +20,28 @@ pygamelib.board\_items.BoardItem
       ~BoardItem.__init__
       ~BoardItem.can_move
       ~BoardItem.collides_with
-      ~BoardItem.column
       ~BoardItem.debug_info
       ~BoardItem.display
       ~BoardItem.distance_to
-      ~BoardItem.height
       ~BoardItem.inventory_space
       ~BoardItem.overlappable
       ~BoardItem.pickable
       ~BoardItem.position_as_vector
-      ~BoardItem.row
+      ~BoardItem.render_to_buffer
       ~BoardItem.store_position
-      ~BoardItem.width
    
    
 
    
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~BoardItem.column
+      ~BoardItem.height
+      ~BoardItem.model
+      ~BoardItem.row
+      ~BoardItem.width
    
    

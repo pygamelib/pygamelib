@@ -1,9 +1,13 @@
-pygamelib.engine.Game
-=====================
+Game
+====
 
 .. currentmodule:: pygamelib.engine
 
 .. autoclass:: Game
+   :members:
+   :inherited-members:
+   :undoc-members:
+   :show-inheritance:
 
    
    .. automethod:: __init__
@@ -22,10 +26,13 @@ pygamelib.engine.Game
       ~Game.add_projectile
       ~Game.animate_items
       ~Game.change_level
+      ~Game.clear_logs
       ~Game.clear_screen
       ~Game.config
       ~Game.create_config
       ~Game.current_board
+      ~Game.delete_all_levels
+      ~Game.delete_level
       ~Game.delete_menu_category
       ~Game.display_board
       ~Game.display_menu
@@ -33,12 +40,17 @@ pygamelib.engine.Game
       ~Game.get_board
       ~Game.get_key
       ~Game.get_menu_entry
+      ~Game.insert_board
+      ~Game.instance
       ~Game.load_board
       ~Game.load_config
+      ~Game.log
+      ~Game.logs
       ~Game.move_player
       ~Game.neighbors
       ~Game.pause
       ~Game.remove_npc
+      ~Game.run
       ~Game.save_board
       ~Game.save_config
       ~Game.start

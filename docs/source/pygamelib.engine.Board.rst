@@ -1,9 +1,13 @@
-pygamelib.engine.Board
-======================
+Board
+=====
 
 .. currentmodule:: pygamelib.engine
 
 .. autoclass:: Board
+   :members:
+   :inherited-members:
+   :undoc-members:
+   :show-inheritance:
 
    
    .. automethod:: __init__
@@ -21,16 +25,24 @@ pygamelib.engine.Board
       ~Board.generate_void_cell
       ~Board.get_immovables
       ~Board.get_movables
-      ~Board.height
       ~Board.init_board
       ~Board.init_cell
       ~Board.item
       ~Board.move
       ~Board.place_item
-      ~Board.width
+      ~Board.remove_item
+      ~Board.render_cell
+      ~Board.render_to_buffer
    
    
 
    
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~Board.height
+      ~Board.width
    
    

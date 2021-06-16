@@ -1,9 +1,13 @@
-pygamelib.board\_items.BoardItemComplexComponent
-================================================
+BoardItemComplexComponent
+=========================
 
 .. currentmodule:: pygamelib.board_items
 
 .. autoclass:: BoardItemComplexComponent
+   :members:
+   :inherited-members:
+   :undoc-members:
+   :show-inheritance:
 
    
    .. automethod:: __init__
@@ -16,22 +20,29 @@ pygamelib.board\_items.BoardItemComplexComponent
       ~BoardItemComplexComponent.__init__
       ~BoardItemComplexComponent.can_move
       ~BoardItemComplexComponent.collides_with
-      ~BoardItemComplexComponent.column
       ~BoardItemComplexComponent.debug_info
       ~BoardItemComplexComponent.display
       ~BoardItemComplexComponent.distance_to
-      ~BoardItemComplexComponent.height
       ~BoardItemComplexComponent.inventory_space
       ~BoardItemComplexComponent.overlappable
       ~BoardItemComplexComponent.pickable
       ~BoardItemComplexComponent.position_as_vector
+      ~BoardItemComplexComponent.render_to_buffer
       ~BoardItemComplexComponent.restorable
-      ~BoardItemComplexComponent.row
       ~BoardItemComplexComponent.store_position
-      ~BoardItemComplexComponent.width
    
    
 
    
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~BoardItemComplexComponent.column
+      ~BoardItemComplexComponent.height
+      ~BoardItemComplexComponent.model
+      ~BoardItemComplexComponent.row
+      ~BoardItemComplexComponent.width
    
    

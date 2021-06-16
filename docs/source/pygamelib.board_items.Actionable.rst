@@ -1,10 +1,13 @@
-pygamelib.board\_items.Actionable
-=================================
+Actionable
+==========
 
 .. currentmodule:: pygamelib.board_items
 
 .. autoclass:: Actionable
-
+   :members:
+   :inherited-members:
+   :undoc-members:
+   :show-inheritance:
    
    .. automethod:: __init__
 
@@ -17,22 +20,29 @@ pygamelib.board\_items.Actionable
       ~Actionable.activate
       ~Actionable.can_move
       ~Actionable.collides_with
-      ~Actionable.column
       ~Actionable.debug_info
       ~Actionable.display
       ~Actionable.distance_to
-      ~Actionable.height
-      ~Actionable.inventory_space
       ~Actionable.overlappable
       ~Actionable.pickable
       ~Actionable.position_as_vector
+      ~Actionable.render_to_buffer
       ~Actionable.restorable
-      ~Actionable.row
       ~Actionable.store_position
-      ~Actionable.width
    
    
 
    
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~Actionable.column
+      ~Actionable.height
+      ~Actionable.inventory_space
+      ~Actionable.model
+      ~Actionable.row
+      ~Actionable.width
    
    
