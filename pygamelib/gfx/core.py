@@ -312,27 +312,18 @@ class Sprixel(object):
     A sprixel is the representation of 1 cell of the sprite or one cell on the Board.
     It is not really a pixel but it is the closest notion we'll have.
     A Sprixel has a background color, a foreground color and a model.
-    All regular BoardItems can have use Sprixel instead of model.
+    All regular BoardItems can now use a sprixel instead of a model (but simple model is
+    still supported of course).
 
-    If the background color and the is_bg_transparent are None or empty strings,
-    the sprixel will be automatically configured with transparent background.
-    In that case, as we can really achieve transparency in the console, the sprixel will
-    take the background color of whatever it is overlapping.
+    If the background color and the is_bg_transparent are None, the sprixel will be
+    automatically configured with transparent background.
+    In that case, as we cannot really achieve transparency in the console, the sprixel
+    will take the background color of whatever it is overlapping.
 
     .. Important:: **BREAKING CHANGE**: in version 1.3.0 background and foreground
        colors use the new :class:`Color` object. Therefor, Sprixel does not accept ANSI
        sequences anymore for the bg_color and fg_color parameters.
 
-    :param model: The model, it can be any string. Preferrably a single character.
-    :type model: str
-    :param bg_color: A Color object to configure the background color.
-    :type bg_color: :class:`Color`
-    :param fg_color: A Color object to configure the foreground color.
-    :type fg_color: :class:`Color`
-    :param is_bg_transparent: Set the background of the Sprixel to be transparent. It
-       tells the engine to replace the background of the Sprixel by the background color
-       of the overlapped sprixel.
-    :type is_bg_transparent: bool
 
     Example::
 
@@ -344,6 +335,19 @@ class Sprixel(object):
     """
 
     def __init__(self, model="", bg_color=None, fg_color=None, is_bg_transparent=None):
+        """
+        :param model: The model, it can be any string. Preferrably a single character.
+        :type model: str
+        :param bg_color: A Color object to configure the background color.
+        :type bg_color: :class:`Color`
+        :param fg_color: A Color object to configure the foreground color.
+        :type fg_color: :class:`Color`
+        :param is_bg_transparent: Set the background of the Sprixel to be transparent.
+           It tells the engine to replace the background of the Sprixel by the
+           background color of the overlapped sprixel.
+        :type is_bg_transparent: bool
+
+        """
         super().__init__()
         self.__color_cache = ""
         self.__bg_color = None
@@ -475,21 +479,24 @@ class Sprixel(object):
 
             if sprix.length > 2:
                 print(
-                    f'Warning: that sprixel {sprix} will disalign the rest of the board'
+                    f"Warning: that sprixel {sprix} will break the rest of the "
+                    "board's alignement"
                     )
         """
         return self.__length
 
     @property
     def model(self):
-        """Access to the model part of the Sprixel.
+        """
+
+        A property to get/set the model of the Sprixel.
 
         :param value: The new model
         :type value: str
 
         Example::
 
-            # Access the sprixel's model
+            # Get the sprixel's model
             sprix.model
             # Set the sprixel's model to "@"
             sprix.model = "@"
@@ -508,7 +515,9 @@ class Sprixel(object):
 
     @property
     def bg_color(self):
-        """Access to the background color part of the Sprixel.
+        """
+
+        A property to get/set the background color of the Sprixel.
 
         :param value: The new color
         :type value: :class:`Color`
@@ -534,7 +543,9 @@ class Sprixel(object):
 
     @property
     def fg_color(self):
-        """Access to the foreground color part of the Sprixel.
+        """
+
+        A property to get/set the foreground color of the Sprixel.
 
         :param value: The new color
         :type value: :class:`Color`
@@ -597,7 +608,7 @@ class Sprixel(object):
     @classmethod
     def black_rect(cls):
         """
-        This classmethod returns a sprixel that is the equivalent of
+        This class method returns a sprixel that is the equivalent of
         pygamelib.assets.graphics.BLACK_RECT.
         The difference is that BLACK_RECT is a string and this one is a Sprixel that can
         be manipulated more easily.
@@ -611,7 +622,7 @@ class Sprixel(object):
     @classmethod
     def black_square(cls):
         """
-        This classmethod returns a sprixel that is the equivalent of
+        This class method returns a sprixel that is the equivalent of
         pygamelib.assets.graphics.BLACK_SQUARE.
         The difference is that BLACK_SQUARE is a string and this one is a Sprixel that
         can be manipulated more easily.
@@ -625,7 +636,7 @@ class Sprixel(object):
     @classmethod
     def white_rect(cls):
         """
-        This classmethod returns a sprixel that is the equivalent of
+        This class method returns a sprixel that is the equivalent of
         pygamelib.assets.graphics.WHITE_RECT.
         The difference is that WHITE_RECT is a string and this one is a Sprixel that can
         be manipulated more easily.
@@ -639,7 +650,7 @@ class Sprixel(object):
     @classmethod
     def white_square(cls):
         """
-        This classmethod returns a sprixel that is the equivalent of
+        This class method returns a sprixel that is the equivalent of
         pygamelib.assets.graphics.WHITE_SQUARE.
         The difference is that WHITE_SQUARE is a string and this one is a Sprixel that
         can be manipulated more easily.
@@ -653,7 +664,7 @@ class Sprixel(object):
     @classmethod
     def red_rect(cls):
         """
-        This classmethod returns a sprixel that is the equivalent of
+        This class method returns a sprixel that is the equivalent of
         pygamelib.assets.graphics.RED_RECT.
         The difference is that RED_RECT is a string and this one is a Sprixel that can
         be manipulated more easily.
@@ -667,7 +678,7 @@ class Sprixel(object):
     @classmethod
     def red_square(cls):
         """
-        This classmethod returns a sprixel that is the equivalent of
+        This class method returns a sprixel that is the equivalent of
         pygamelib.assets.graphics.RED_SQUARE.
         The difference is that RED_SQUARE is a string and this one is a Sprixel that can
         be manipulated more easily.
@@ -681,7 +692,7 @@ class Sprixel(object):
     @classmethod
     def green_rect(cls):
         """
-        This classmethod returns a sprixel that is the equivalent of
+        This class method returns a sprixel that is the equivalent of
         pygamelib.assets.graphics.GREEN_RECT.
         The difference is that GREEN_RECT is a string and this one is a Sprixel that can
         be manipulated more easily.
@@ -695,7 +706,7 @@ class Sprixel(object):
     @classmethod
     def green_square(cls):
         """
-        This classmethod returns a sprixel that is the equivalent of
+        This class method returns a sprixel that is the equivalent of
         pygamelib.assets.graphics.GREEN_SQUARE.
         The difference is that GREEN_SQUARE is a string and this one is a Sprixel that
         can be manipulated more easily.
@@ -709,7 +720,7 @@ class Sprixel(object):
     @classmethod
     def blue_rect(cls):
         """
-        This classmethod returns a sprixel that is the equivalent of
+        This class method returns a sprixel that is the equivalent of
         pygamelib.assets.graphics.BLUE_RECT.
         The difference is that BLUE_RECT is a string and this one is a Sprixel that can
         be manipulated more easily.
@@ -723,7 +734,7 @@ class Sprixel(object):
     @classmethod
     def blue_square(cls):
         """
-        This classmethod returns a sprixel that is the equivalent of
+        This class method returns a sprixel that is the equivalent of
         pygamelib.assets.graphics.BLUE_SQUARE.
         The difference is that BLUE_SQUARE is a string and this one is a Sprixel that
         can be manipulated more easily.
@@ -737,7 +748,7 @@ class Sprixel(object):
     @classmethod
     def cyan_rect(cls):
         """
-        This classmethod returns a sprixel that is the equivalent of
+        This class method returns a sprixel that is the equivalent of
         pygamelib.assets.graphics.CYAN_RECT.
         The difference is that CYAN_RECT is a string and this one is a Sprixel that can
         be manipulated more easily.
@@ -751,7 +762,7 @@ class Sprixel(object):
     @classmethod
     def cyan_square(cls):
         """
-        This classmethod returns a sprixel that is the equivalent of
+        This class method returns a sprixel that is the equivalent of
         pygamelib.assets.graphics.CYAN_SQUARE.
         The difference is that CYAN_SQUARE is a string and this one is a Sprixel that
         can be manipulated more easily.
@@ -765,7 +776,7 @@ class Sprixel(object):
     @classmethod
     def magenta_rect(cls):
         """
-        This classmethod returns a sprixel that is the equivalent of
+        This class method returns a sprixel that is the equivalent of
         pygamelib.assets.graphics.MAGENTA_RECT.
         The difference is that MAGENTA_RECT is a string and this one is a Sprixel that
         can be manipulated more easily.
@@ -779,7 +790,7 @@ class Sprixel(object):
     @classmethod
     def magenta_square(cls):
         """
-        This classmethod returns a sprixel that is the equivalent of
+        This class method returns a sprixel that is the equivalent of
         pygamelib.assets.graphics.MAGENTA_SQUARE.
         The difference is that MAGENTA_SQUARE is a string and this one is a Sprixel that
         can be manipulated more easily.
@@ -793,7 +804,7 @@ class Sprixel(object):
     @classmethod
     def yellow_rect(cls):
         """
-        This classmethod returns a sprixel that is the equivalent of
+        This class method returns a sprixel that is the equivalent of
         pygamelib.assets.graphics.YELLOW_RECT.
         The difference is that YELLOW_RECT is a string and this one is a Sprixel that
         can be manipulated more easily.
@@ -809,7 +820,7 @@ class Sprixel(object):
     @classmethod
     def yellow_square(cls):
         """
-        This classmethod returns a sprixel that is the equivalent of
+        This class method returns a sprixel that is the equivalent of
         pygamelib.assets.graphics.YELLOW_SQUARE.
         The difference is that YELLOW_SQUARE is a string and this one is a Sprixel that
         can be manipulated more easily.
@@ -2012,7 +2023,7 @@ class Animation(object):
 # {
 #     "scalable": false,
 #     "monospace": true,
-#     "colorable": true,
+#     "tintable": true,
 #     "fg_color": {
 #         "red": 255,
 #         "green": 255,
@@ -2055,7 +2066,7 @@ class Animation(object):
 # monospace is telling the user if the font is size consistent (all glyph have the same
 # dimension)
 #
-# colorable hints the ability to change colors or not.
+# tintable hints the ability to tint the sprite with a color or not.
 #
 # fg_color contains the font foreground color.
 #
@@ -2064,7 +2075,7 @@ class Animation(object):
 # This is highly recommended to use white as foreground and None as background.
 # Since fonts can be drawn with multiple technics and looks can be achieved by using
 # Sprixels background and foreground colors, Font cannot determine what is foreground
-# and what is background. Therefor if colorable is true, it will compare colors and
+# and what is background. Therefor if tintable is true, it will compare colors and
 # replace the corresponding color. Colored glyphs are cached.
 #
 # glyph_map is optional but is used to map any glyph to another glyph. The format is:
@@ -2074,7 +2085,47 @@ class Animation(object):
 
 
 class Font:
+    """
+    .. versionadded:: 1.3.0
+
+    The Font class allow to load and manipulate a pygamelib "font".
+    A font consist of a sprite collection and a configuration file.
+
+    If you want to create your own font, please have a look at the font creation
+    tutorial.
+
+    In general the Font class is not used directly but passed to a
+    :class:`~pygamelib.base.Text` object. The text is then rendered using the font.
+
+    For performance consideration, it is advised to load the font once and to reuse the
+    object in multiple text objects.
+
+    Glyphs are cached (particularly if you change the colors) so it is always beneficial
+    to reuse a font object.
+
+    Example::
+
+        myfont = Font("8bits")
+        # If you print() mytext, it will use the terminal font and print in cyan.
+        # But if you Sreen.place() it, it will render using the 8bits sprite font.
+        mytext = Text("Here's a cool text", fg_color = Color(0,255,255), font=myfont)
+
+    """
+
     def __init__(self, font_name: str = None) -> None:
+        """
+
+        :param font_name: The name of the font to load upon object construction.
+        :type font_name: str
+
+        .. Note::  There is only one font coming with the 1.3.0 release: 8bits. More
+           will be added later.
+
+        Example::
+
+            myfont = Font("8bits")
+        """
+        # TODO: Add a parameter to specify a list of directories to look into.
         super().__init__()
         self.__glyphs_cache = {}
         self.__config = None
@@ -2084,6 +2135,28 @@ class Font:
             self.load(font_name)
 
     def load(self, font_name: str = None) -> None:
+        """
+        Load a font by name. Once the font is loaded glyphs can be accessed through the
+        :func:`~pygamelib.gfx.core.Font.glyph` method.
+
+        This method is automatically called is the Font constructor is called with a
+        font name.
+
+        :param font_name: The name of the font to load upon object construction.
+        :type font_name: str
+
+        Example::
+
+            # The 2 following examples do exactly the same thing.
+            # Example 1: instantiate and load
+            myfont = Font()
+            myfont.load("8bits")
+            # Example 2: load from instantiation
+            myfont2 = Font("8bits")
+            # At that point myfont and myfont2 are exactly the same (and there is no
+            # good justification to instantiate or load the font twice).
+        """
+        # TODO: rework load to use the array of directories.
         glyphs_path = importlib_resources.files(assets).joinpath(
             "fonts", font_name, "glyphs.spr"
         )
@@ -2103,16 +2176,64 @@ class Font:
                     self.__config["glyphs_map"][glyph]
                 ]
 
-    def height(self):
+    def height(self) -> int:
+        """
+        Returns the height of the font as specified in the font config file.
+
+        :rtype: int
+
+        Example::
+
+            screen.place(text, last_row + myfont.height(), first_text_column)
+        """
         return self.__config["height"]
 
-    def horizontal_spacing(self):
+    def horizontal_spacing(self) -> int:
+        """
+        Returns the horizontal spacing recommended by the font (as specified in the font
+        config file).
+
+        As a user of the font class using the Font class to change the look of some
+        text, you will rarely use that value directly (it is directly used by
+        Text.render_to_buffer()).
+
+        If your goal is to use the Font class to do glyph rendering as you see fit, use
+        the horizontal spacing value to place each glyph relatively to the one on its
+        left or right.
+
+        :rtype: int
+
+        """
         return self.__config["horizontal_spacing"]
 
-    def vertical_spacing(self):
+    def vertical_spacing(self) -> int:
+        """
+        Returns the vertical spacing recommended by the font (as specified in the font
+        config file).
+
+        :rtype: int
+
+        Example::
+
+            screen.place(
+                text,
+                last_row + myfont.height() + myfont.vertical_spacing(),
+                first_text_column
+            )
+        """
         return self.__config["vertical_spacing"]
 
-    def name(self):
+    def name(self) -> str:
+        """
+        Return the name of the font. The name is the string that was used to load the
+        font.
+
+        Example::
+
+            myfont = Font("8bits")
+            if myfont.name() != "8bits":
+                print("Something very wrong just occurred!")
+        """
         return self.__name
 
     @staticmethod
@@ -2133,6 +2254,31 @@ class Font:
         fg_color: Color = None,
         bg_color: Color = None,
     ) -> Sprite:
+        """
+        This method take a glyph name in parameter and returns its representation as a
+        :class:`~pygamelib.gfx.core.Sprite`.
+
+        The glyph name is usually the name of a character (like "a") but it is not
+        mandatory and can be anything. The default glyph (returned when no glyph matches
+        the requested glyph) is called "default" for example.
+
+        :param glyph_name: The glyph name
+        :type glyph_name: str
+
+        Example::
+
+            myfont = Font("8bits")
+            row = 5
+            column = 10
+            for letter in "this is a text":
+                glyph = myfont.glyph(letter)
+                screen.place(glyph, row, column)
+                column += glyph.width + myfont.horizontal_spacing()
+
+            # Please note that in real life you would just do this
+            mytext = Text("this is a text", font=myfont)
+            screen.place(mytext, row, column)
+        """
         if self.__sprite_collection is None:
             return
         if glyph_name not in self.__sprite_collection.keys():
