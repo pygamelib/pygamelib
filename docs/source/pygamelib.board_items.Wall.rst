@@ -1,9 +1,13 @@
-pygamelib.board\_items.Wall
-===========================
+Wall
+====
 
 .. currentmodule:: pygamelib.board_items
 
 .. autoclass:: Wall
+   :members:
+   :inherited-members:
+   :undoc-members:
+   :show-inheritance:
 
    
    .. automethod:: __init__
@@ -16,22 +20,29 @@ pygamelib.board\_items.Wall
       ~Wall.__init__
       ~Wall.can_move
       ~Wall.collides_with
-      ~Wall.column
       ~Wall.debug_info
       ~Wall.display
       ~Wall.distance_to
-      ~Wall.height
-      ~Wall.inventory_space
       ~Wall.overlappable
       ~Wall.pickable
       ~Wall.position_as_vector
+      ~Wall.render_to_buffer
       ~Wall.restorable
-      ~Wall.row
       ~Wall.store_position
-      ~Wall.width
    
    
 
    
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~Wall.column
+      ~Wall.height
+      ~Wall.inventory_space
+      ~Wall.model
+      ~Wall.row
+      ~Wall.width
    
    

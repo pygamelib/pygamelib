@@ -1,9 +1,13 @@
-pygamelib.gfx.core.SpriteCollection
-===================================
+SpriteCollection
+================
 
 .. currentmodule:: pygamelib.gfx.core
 
 .. autoclass:: SpriteCollection
+   :members:
+   :inherited-members:
+   :undoc-members:
+   :show-inheritance:
 
    
    .. automethod:: __init__
@@ -25,6 +29,7 @@ pygamelib.gfx.core.SpriteCollection
       ~SpriteCollection.load_json_file
       ~SpriteCollection.pop
       ~SpriteCollection.popitem
+      ~SpriteCollection.rename
       ~SpriteCollection.serialize
       ~SpriteCollection.setdefault
       ~SpriteCollection.to_json_file

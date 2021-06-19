@@ -1,9 +1,13 @@
-pygamelib.board\_items.BoardItemVoid
-====================================
+BoardItemVoid
+=============
 
 .. currentmodule:: pygamelib.board_items
 
 .. autoclass:: BoardItemVoid
+   :members:
+   :inherited-members:
+   :undoc-members:
+   :show-inheritance:
 
    
    .. automethod:: __init__
@@ -16,21 +20,28 @@ pygamelib.board\_items.BoardItemVoid
       ~BoardItemVoid.__init__
       ~BoardItemVoid.can_move
       ~BoardItemVoid.collides_with
-      ~BoardItemVoid.column
       ~BoardItemVoid.debug_info
       ~BoardItemVoid.display
       ~BoardItemVoid.distance_to
-      ~BoardItemVoid.height
       ~BoardItemVoid.inventory_space
       ~BoardItemVoid.overlappable
       ~BoardItemVoid.pickable
       ~BoardItemVoid.position_as_vector
-      ~BoardItemVoid.row
+      ~BoardItemVoid.render_to_buffer
       ~BoardItemVoid.store_position
-      ~BoardItemVoid.width
    
    
 
    
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~BoardItemVoid.column
+      ~BoardItemVoid.height
+      ~BoardItemVoid.model
+      ~BoardItemVoid.row
+      ~BoardItemVoid.width
    
    

@@ -1,9 +1,13 @@
-pygamelib.gfx.core.Sprixel
-==========================
+Sprixel
+=======
 
 .. currentmodule:: pygamelib.gfx.core
 
 .. autoclass:: Sprixel
+   :members:
+   :inherited-members:
+   :undoc-members:
+   :show-inheritance:
 
    
    .. automethod:: __init__
@@ -23,6 +27,7 @@ pygamelib.gfx.core.Sprixel
       ~Sprixel.from_ansi
       ~Sprixel.green_rect
       ~Sprixel.green_square
+      ~Sprixel.load
       ~Sprixel.magenta_rect
       ~Sprixel.magenta_square
       ~Sprixel.red_rect
@@ -43,6 +48,7 @@ pygamelib.gfx.core.Sprixel
    
       ~Sprixel.bg_color
       ~Sprixel.fg_color
+      ~Sprixel.length
       ~Sprixel.model
    
    

@@ -1,9 +1,13 @@
-pygamelib.engine.Inventory
-==========================
+Inventory
+=========
 
 .. currentmodule:: pygamelib.engine
 
 .. autoclass:: Inventory
+   :members:
+   :inherited-members:
+   :undoc-members:
+   :show-inheritance:
 
    
    .. automethod:: __init__

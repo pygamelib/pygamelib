@@ -1,9 +1,13 @@
-pygamelib.board\_items.Player
-=============================
+Player
+======
 
 .. currentmodule:: pygamelib.board_items
 
 .. autoclass:: Player
+   :members:
+   :inherited-members:
+   :undoc-members:
+   :show-inheritance:
 
    
    .. automethod:: __init__
@@ -16,22 +20,30 @@ pygamelib.board\_items.Player
       ~Player.__init__
       ~Player.can_move
       ~Player.collides_with
-      ~Player.column
       ~Player.debug_info
       ~Player.display
       ~Player.distance_to
       ~Player.has_inventory
-      ~Player.height
       ~Player.inventory_space
       ~Player.overlappable
       ~Player.pickable
       ~Player.position_as_vector
-      ~Player.row
+      ~Player.render_to_buffer
       ~Player.store_position
-      ~Player.width
    
    
 
    
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~Player.column
+      ~Player.dtmove
+      ~Player.height
+      ~Player.model
+      ~Player.row
+      ~Player.width
    
    

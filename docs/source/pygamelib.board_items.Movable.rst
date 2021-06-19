@@ -1,9 +1,13 @@
-pygamelib.board\_items.Movable
-==============================
+Movable
+=======
 
 .. currentmodule:: pygamelib.board_items
 
 .. autoclass:: Movable
+   :members:
+   :inherited-members:
+   :undoc-members:
+   :show-inheritance:
 
    
    .. automethod:: __init__
@@ -16,22 +20,30 @@ pygamelib.board\_items.Movable
       ~Movable.__init__
       ~Movable.can_move
       ~Movable.collides_with
-      ~Movable.column
       ~Movable.debug_info
       ~Movable.display
       ~Movable.distance_to
       ~Movable.has_inventory
-      ~Movable.height
       ~Movable.inventory_space
       ~Movable.overlappable
       ~Movable.pickable
       ~Movable.position_as_vector
-      ~Movable.row
+      ~Movable.render_to_buffer
       ~Movable.store_position
-      ~Movable.width
    
    
 
    
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~Movable.column
+      ~Movable.dtmove
+      ~Movable.height
+      ~Movable.model
+      ~Movable.row
+      ~Movable.width
    
    

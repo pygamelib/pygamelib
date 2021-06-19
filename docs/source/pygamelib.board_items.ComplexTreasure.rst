@@ -1,9 +1,13 @@
-pygamelib.board\_items.ComplexTreasure
-======================================
+ComplexTreasure
+===============
 
 .. currentmodule:: pygamelib.board_items
 
 .. autoclass:: ComplexTreasure
+   :members:
+   :inherited-members:
+   :undoc-members:
+   :show-inheritance:
 
    
    .. automethod:: __init__
@@ -19,11 +23,11 @@ pygamelib.board\_items.ComplexTreasure
       ~ComplexTreasure.debug_info
       ~ComplexTreasure.display
       ~ComplexTreasure.distance_to
-      ~ComplexTreasure.inventory_space
       ~ComplexTreasure.item
       ~ComplexTreasure.overlappable
       ~ComplexTreasure.pickable
       ~ComplexTreasure.position_as_vector
+      ~ComplexTreasure.render_to_buffer
       ~ComplexTreasure.restorable
       ~ComplexTreasure.store_position
       ~ComplexTreasure.update_sprite
@@ -38,6 +42,8 @@ pygamelib.board\_items.ComplexTreasure
    
       ~ComplexTreasure.column
       ~ComplexTreasure.height
+      ~ComplexTreasure.inventory_space
+      ~ComplexTreasure.model
       ~ComplexTreasure.row
       ~ComplexTreasure.width
    

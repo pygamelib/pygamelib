@@ -1,9 +1,13 @@
-pygamelib.gfx.core.Sprite
-=========================
+Sprite
+======
 
 .. currentmodule:: pygamelib.gfx.core
 
 .. autoclass:: Sprite
+   :members:
+   :inherited-members:
+   :undoc-members:
+   :show-inheritance:
 
    
    .. automethod:: __init__
@@ -19,12 +23,24 @@ pygamelib.gfx.core.Sprite
       ~Sprite.flip_horizontally
       ~Sprite.flip_vertically
       ~Sprite.from_text
+      ~Sprite.load
       ~Sprite.load_from_ansi_file
+      ~Sprite.render_to_buffer
+      ~Sprite.scale
+      ~Sprite.serialize
       ~Sprite.set_sprixel
+      ~Sprite.set_transparency
       ~Sprite.sprixel
    
    
 
    
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~Sprite.height
+      ~Sprite.width
    
    

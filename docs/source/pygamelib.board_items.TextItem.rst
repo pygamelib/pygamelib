@@ -1,9 +1,13 @@
-pygamelib.board\_items.TextItem
-===============================
+TextItem
+========
 
 .. currentmodule:: pygamelib.board_items
 
 .. autoclass:: TextItem
+   :members:
+   :inherited-members:
+   :undoc-members:
+   :show-inheritance:
 
    
    .. automethod:: __init__
@@ -16,20 +20,17 @@ pygamelib.board\_items.TextItem
       ~TextItem.__init__
       ~TextItem.can_move
       ~TextItem.collides_with
-      ~TextItem.column
       ~TextItem.debug_info
       ~TextItem.display
       ~TextItem.distance_to
-      ~TextItem.height
       ~TextItem.inventory_space
       ~TextItem.item
       ~TextItem.overlappable
       ~TextItem.pickable
       ~TextItem.position_as_vector
-      ~TextItem.row
+      ~TextItem.render_to_buffer
       ~TextItem.store_position
       ~TextItem.update_sprite
-      ~TextItem.width
    
    
 
@@ -39,6 +40,11 @@ pygamelib.board\_items.TextItem
 
    .. autosummary::
    
+      ~TextItem.column
+      ~TextItem.height
+      ~TextItem.model
+      ~TextItem.row
       ~TextItem.text
+      ~TextItem.width
    
    

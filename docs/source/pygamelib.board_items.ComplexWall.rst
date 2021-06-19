@@ -1,9 +1,13 @@
-pygamelib.board\_items.ComplexWall
-==================================
+ComplexWall
+===========
 
 .. currentmodule:: pygamelib.board_items
 
 .. autoclass:: ComplexWall
+   :members:
+   :inherited-members:
+   :undoc-members:
+   :show-inheritance:
 
    
    .. automethod:: __init__
@@ -19,11 +23,11 @@ pygamelib.board\_items.ComplexWall
       ~ComplexWall.debug_info
       ~ComplexWall.display
       ~ComplexWall.distance_to
-      ~ComplexWall.inventory_space
       ~ComplexWall.item
       ~ComplexWall.overlappable
       ~ComplexWall.pickable
       ~ComplexWall.position_as_vector
+      ~ComplexWall.render_to_buffer
       ~ComplexWall.restorable
       ~ComplexWall.store_position
       ~ComplexWall.update_sprite
@@ -38,6 +42,8 @@ pygamelib.board\_items.ComplexWall
    
       ~ComplexWall.column
       ~ComplexWall.height
+      ~ComplexWall.inventory_space
+      ~ComplexWall.model
       ~ComplexWall.row
       ~ComplexWall.width
    

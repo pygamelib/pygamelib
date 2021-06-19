@@ -1,7 +1,7 @@
 .. _base_deprecated-module:
 
-base (deprecated)
-=================
+Deprecated objects
+==================
 
 These are the deprecated objects of the pygamelib.base module. They should not be used
 as they are going to be removed in future versions.

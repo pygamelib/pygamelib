@@ -1,9 +1,13 @@
-pygamelib.board\_items.NPC
-==========================
+NPC
+===
 
 .. currentmodule:: pygamelib.board_items
 
 .. autoclass:: NPC
+   :members:
+   :inherited-members:
+   :undoc-members:
+   :show-inheritance:
 
    
    .. automethod:: __init__
@@ -16,22 +20,30 @@ pygamelib.board\_items.NPC
       ~NPC.__init__
       ~NPC.can_move
       ~NPC.collides_with
-      ~NPC.column
       ~NPC.debug_info
       ~NPC.display
       ~NPC.distance_to
       ~NPC.has_inventory
-      ~NPC.height
       ~NPC.inventory_space
       ~NPC.overlappable
       ~NPC.pickable
       ~NPC.position_as_vector
-      ~NPC.row
+      ~NPC.render_to_buffer
       ~NPC.store_position
-      ~NPC.width
    
    
 
    
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~NPC.column
+      ~NPC.dtmove
+      ~NPC.height
+      ~NPC.model
+      ~NPC.row
+      ~NPC.width
    
    

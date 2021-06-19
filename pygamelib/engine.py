@@ -15,10 +15,10 @@ The Board class is the base class for all levels.
 .. autosummary::
    :toctree: .
 
-   Board
-   Game
-   Inventory
-   Screen
+   pygamelib.engine.Board
+   pygamelib.engine.Game
+   pygamelib.engine.Inventory
+   pygamelib.engine.Screen
 """
 from pygamelib import board_items, base, constants, actuators
 from pygamelib.assets import graphics
@@ -3649,6 +3649,12 @@ class Screen(object):
 
     def force_render(self):
         """
+        .. versionadded:: 1.3.0
+
+        .. NOTE:: This method is part of the **Screen Buffer** rendering stack and is
+           incompatible with the methods identified as being part of the **Direct
+           Display** stack.
+
         Force the immediate rendering of the display buffer.
 
         If you just want to mark the screen buffer for rendering before the next update
@@ -3663,6 +3669,12 @@ class Screen(object):
 
     def force_update(self):
         """
+        .. versionadded:: 1.3.0
+
+        .. NOTE:: This method is part of the **Screen Buffer** rendering stack and is
+           incompatible with the methods identified as being part of the **Direct
+           Display** stack.
+
         Same as :func:`force_render()` but also force the screen update.
 
         Example::
@@ -3674,6 +3686,12 @@ class Screen(object):
 
     def trigger_rendering(self):
         """
+        .. versionadded:: 1.3.0
+
+        .. NOTE:: This method is part of the **Screen Buffer** rendering stack and is
+           incompatible with the methods identified as being part of the **Direct
+           Display** stack.
+
         Trigger the screen buffer for rendering at the next update.
 
         Example::
@@ -3799,6 +3817,12 @@ class Screen(object):
 
     def get(self, row: int = None, column: int = None):
         """
+        .. versionadded:: 1.3.0
+
+        .. NOTE:: This method is part of the **Screen Buffer** rendering stack and is
+           incompatible with the methods identified as being part of the **Direct
+           Display** stack.
+
         Get an element at the specified screen coordinates.
 
         The element is returned from the display buffer (pre-rendering).
