@@ -28,7 +28,7 @@ It started as a very simple library with very little capabilities, but over time
 So this is **obviously** still extremely simple compared to other game framework and it still does not aim at being anything serious for real game developers.
 However, it can now be used by aspiring game developers for an introduction to 2D games development.
 
-There is a [Youtube channel](https://www.youtube.com/channel/UCT_SxIlKaD6MM7JlQKelpgw) that contains tutorials.
+There is a [Youtube channel](https://www.youtube.com/channel/UCT_SxIlKaD6MM7JlQKelpgw) that (will) contains tutorials.
 
 ![suparex.py screenshot](https://raw.githubusercontent.com/arnauddupuis/pygamelib/master/images/Screenshot_Suparex.png "suparex.py")
 
