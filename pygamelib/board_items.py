@@ -67,12 +67,14 @@ class BoardItem(object):
         super().__init__()
         self.name = "Board item"
         self.type = "item"
-        self.pos = [None, None]
+        self.pos = [None, None, None]
         # DEPRECATED
         # self.model = "*"
         self.animation = None
         self.parent = None
         self.sprixel = core.Sprixel("*")
+        # TODO: Change size into a read-only property (and fix the doc that claim that
+        # it's impossible to have read only properties...)
         self.size = [1, 1]
         # Setting class parameters
         for item in ["name", "type", "pos", "parent", "sprixel"]:
@@ -80,6 +82,7 @@ class BoardItem(object):
                 setattr(self, item, kwargs[item])
         if "model" in kwargs:
             self.sprixel.model = kwargs["model"]
+        self._auto_layer = True
 
     @property
     def model(self):
@@ -122,7 +125,7 @@ class BoardItem(object):
             string += f"'model' = '{self.model}'"
         return string
 
-    def store_position(self, row, column):
+    def store_position(self, row, column, layer=0):
         """Store the BoardItem position for self access.
 
         The stored position is used for consistency and quick access to the self
@@ -132,12 +135,15 @@ class BoardItem(object):
         :type row: int
         :param column: the column of the item in the :class:`~pygamelib.engine.Board`.
         :type column: int
+        :param layer: the layer of the item in the :class:`~pygamelib.engine.Board`. By
+           default layer is set to 0.
+        :type column: int
 
         Example::
 
             item.store_position(3,4)
         """
-        self.pos = [row, column]
+        self.pos = [row, column, layer]
 
     def position_as_vector(self):
         """Returns the current item position as a Vector2D
@@ -183,6 +189,22 @@ class BoardItem(object):
                 print('Something extremely unlikely just happened...')
         """
         return self.pos[1]
+
+    @property
+    def layer(self):
+        """Convenience method to get the current stored layer number of the item.
+
+        This is absolutely equivalent to access to item.pos[2].
+
+        :return: The layer number
+        :rtype: int
+
+        Example::
+
+            if item.layer != item.pos[2]:
+                print('Something extremely unlikely just happened...')
+        """
+        return self.pos[2]
 
     @property
     def width(self):
