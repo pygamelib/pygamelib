@@ -276,13 +276,14 @@ with g.terminal.cbreak(), g.terminal.hidden_cursor(), g.terminal.fullscreen():
                 polus_cam.row += 1
         g.actuate_npcs(1)
         g.screen.update()
-        g.terminal.inkey(timeout=dt)
+        time.sleep(dt)
         frame_count += 1
     stop = time.time()
     results.append(
         f"Benchmark (Screen Buffer - phase 2):\n\tdt={dt}\n\tframes rendered="
         f"{frame_count-int(max_frames/2)}"
-        f" in {stop - phase2} sec. or {(stop-phase2)/(frame_count-int(max_frames/2))}"
+        f" in {round(stop - phase2,5)} sec. or "
+        f"{round((stop-phase2)/(frame_count-int(max_frames/2)),5)}"
         f" sec. per frame\n\t"
         f"Actual rendering time per frame: "
         f"{round(((stop-phase2)/(frame_count-int(max_frames/2)) - dt)*1000,2)} "
@@ -291,7 +292,8 @@ with g.terminal.cbreak(), g.terminal.hidden_cursor(), g.terminal.fullscreen():
     results.append(
         f"Benchmark (Screen Buffer - overall):\n\tdt={dt}\n\tframes rendered="
         f"{frame_count}"
-        f" in {stop - start} sec. or {(stop-start)/frame_count} sec. per frame\n\t"
+        f" in {round(stop - start,5)} sec. or {round((stop-start)/frame_count,5)} sec. "
+        "per frame\n\t"
         f"Actual rendering time per frame: "
         f"{round(((stop-start)/frame_count - dt)*1000,2)} "
         f"msec.\n\tFPS: {round(1/((stop-start)/frame_count - dt))}"
