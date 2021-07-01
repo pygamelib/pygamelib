@@ -10,7 +10,7 @@ class TestBoard(unittest.TestCase):
         self.boardItem = board_items.BoardItem()
         self.assertEqual(self.boardItem.name, "Board item")
         self.assertEqual(self.boardItem.type, "item")
-        self.assertEqual(self.boardItem.pos, [None, None])
+        self.assertEqual(self.boardItem.pos, [None, None, None])
         self.assertEqual(self.boardItem.model, "*")
         self.assertEqual(self.boardItem.__str__(), self.boardItem.__repr__())
 

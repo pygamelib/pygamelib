@@ -62,7 +62,7 @@ class GameNeighborTestCase(unittest.TestCase):
 
     def test_npc_neighbors(self):
         def move_player_next_to_npc77():
-            pos_next_to_npc = [7, 8]
+            pos_next_to_npc = [7, 8, 0]
             self.game.move_player(pgl_constants.DOWN, pos_next_to_npc[0])
             self.game.move_player(pgl_constants.RIGHT, pos_next_to_npc[1])
             self.assertEqual(pos_next_to_npc, self.game.player.pos)

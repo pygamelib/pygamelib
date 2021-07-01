@@ -253,7 +253,7 @@ class TestBoard(unittest.TestCase):
         self.assertIsNone(b.move(i, constants.DLDOWN, 1))
         self.assertIsNone(b.move(i, constants.DLUP, 1))
         self.assertIsNone(b.move(i, pgl_base.Vector2D(0, 0)))
-        self.assertEqual(i.pos, [0, 0])
+        self.assertEqual(i.pos, [0, 0, 0])
         setattr(self, "test_callback", False)
         b.place_item(
             pgl_board_items.GenericActionableStructure(
