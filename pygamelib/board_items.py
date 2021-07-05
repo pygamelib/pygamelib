@@ -82,6 +82,8 @@ class BoardItem(object):
                 setattr(self, item, kwargs[item])
         if "model" in kwargs:
             self.sprixel.model = kwargs["model"]
+        if self.sprixel.bg_color is None and "sprixel" not in kwargs.keys():
+            self.sprixel.is_bg_transparent = True
         self._auto_layer = True
 
     @property
@@ -808,7 +810,8 @@ class Projectile(Movable):
         if range % step != 0:
             raise base.PglException(
                 "incorrect_range_step",
-                "range must be a factor of step" " in Projectile",
+                "Range must be a factor of step in Projectile (or else it might never "
+                "reach its target).",
             )
         super().__init__(
             model=model,
