@@ -293,9 +293,11 @@ class TestBoard(unittest.TestCase):
             player_starting_position=[0, 0],
         )
         for i in range(1, 4):
-            b.place_item(pgl_board_items.NPC(name=f"mover{i}", type="mover"), 0, i)
+            b.place_item(pgl_board_items.NPC(name=f"mover{i}", item_type="mover"), 0, i)
         for i in range(1, 4):
-            b.place_item(pgl_board_items.Wall(name=f"static{i}", type="static"), i, 0)
+            b.place_item(
+                pgl_board_items.Wall(name=f"static{i}", item_type="static"), i, 0
+            )
         ret = b.get_immovables(type="static")
         self.assertEqual(len(ret), 3)
         self.assertEqual(len(ret), len(b.get_immovables()))

@@ -133,10 +133,12 @@ class TestBase(unittest.TestCase):
         self.assertIsNone(
             s.place(
                 board_items.Tile(
-                    sprixels=[
-                        [Sprixel("##"), Sprixel("##")],
-                        [Sprixel("##"), Sprixel("##")],
-                    ]
+                    sprite=Sprite(
+                        sprixels=[
+                            [Sprixel("##"), Sprixel("##")],
+                            [Sprixel("##"), Sprixel("##")],
+                        ]
+                    )
                 ),
                 4,
                 0,

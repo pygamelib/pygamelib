@@ -74,6 +74,21 @@ class BoardItem(base.PglBaseObject):
        this parameter is False, the Board.move() method will not allow the item to move.
        This parameter is True or False. If sets to None, it'll be set to False.
     :type can_move: bool
+    :param pos: The position of the BoardItem on a :class:`~pygamelib.engine.Board`.
+       Please make sure that you understand what you do before changing that parameter.
+       The position of an item is managed by the Board object and will be updated. In
+       most cases you don't need to use that parameter. The position is a list of 2 or 3
+       int: [row, column, layer].
+    :type pos: list
+    :param value: The value of an item. It can be used for any game purpose: a score
+       indicator, a trade value, the amount of XP to grant to a player on a kill, etc.
+    :type value: int | float
+    :param inventory_space: The space that the item takes in the
+       :class:`pygamelib.engine.Inventory`. This parameter used to be available only for
+       :class:`Immovable`items but since 1.3.0, every BoardItem can be configured to be
+       pickable, so every BoardItem can now take space in the inventory. Default value
+       is 1.
+    :type inventory_space: int
 
     .. note:: Starting with version 1.2.0 and introduction of complex items,
        BoardItems have a size. That size **CANNOT** be set. It is always 1x1.
@@ -106,6 +121,9 @@ class BoardItem(base.PglBaseObject):
         overlappable=False,
         restorable=False,
         can_move=False,
+        pos=None,
+        value=None,
+        inventory_space=1,
     ):
         super().__init__()
         self.name = "Board item"
@@ -115,6 +133,13 @@ class BoardItem(base.PglBaseObject):
         if item_type is not None:
             self.type = item_type
         self.pos = [None, None, None]
+        if (
+            pos is not None
+            and len(pos) >= 2
+            and pos[0] is not None
+            and pos[1] is not None
+        ):
+            self.pos = pos
         # DEPRECATED
         # self.model = "*"
         self.animation = None
@@ -129,6 +154,8 @@ class BoardItem(base.PglBaseObject):
             self.sprixel.model = model
         if self.sprixel.bg_color is None and sprixel is None:
             self.sprixel.is_bg_transparent = True
+        self.value = value
+        self._inventory_space = inventory_space
         # Init the pickable, overlappable and restorable states
         self.__is_pickable = pickable
         self.__is_overlappable = overlappable
@@ -155,6 +182,25 @@ class BoardItem(base.PglBaseObject):
     @model.setter
     def model(self, value):
         self.sprixel.model = value
+
+    @property
+    def inventory_space(self):
+        """A property to get and set the size that the BoardItem takes in the
+        :class:`~pygamelib.engine.Inventory`.
+
+        :return: The size of the item.
+        :rtype: int
+        """
+        return self._inventory_space
+
+    @inventory_space.setter
+    def inventory_space(self, value):
+        if type(value) is int:
+            self._inventory_space = value
+        else:
+            raise base.PglInvalidTypeException(
+                "BoardItem.inventory_space.(value): value needs to be an int."
+            )
 
     def __str__(self):
         if self.sprixel is not None:
@@ -961,6 +1007,7 @@ class Projectile(Movable):
         parent=None,
         callback_parameters=[],
         movement_speed=0.15,
+        **kwargs,
     ):
         if range % step != 0:
             raise base.PglException(
@@ -974,6 +1021,7 @@ class Projectile(Movable):
             name=name,
             parent=parent,
             movement_speed=movement_speed,
+            **kwargs,
         )
         self.direction = direction
         self.range = range
@@ -1864,7 +1912,10 @@ class Treasure(Immovable):
 
     def __init__(self, value=10, **kwargs):
         if "sprixel" not in kwargs.keys():
-            kwargs["sprixel"] = core.Sprixel("¤")
+            if "model" in kwargs.keys():
+                kwargs["sprixel"] = core.Sprixel(kwargs["model"])
+            else:
+                kwargs["sprixel"] = core.Sprixel("¤")
         if "inventory_space" not in kwargs.keys():
             kwargs["inventory_space"] = 1
         super().__init__(**kwargs)
@@ -2016,13 +2067,14 @@ class GenericStructureComplexComponent(GenericStructure, BoardItemComplexCompone
         super().__init__(**kwargs)
 
 
-class Tile(GenericStructure, BoardComplexItem):
+class Tile(BoardComplexItem, GenericStructure):
     """
     .. versionadded:: 1.2.0
 
     A Tile is a standard :class:`BoardComplexItem` configured by default to:
 
      * be overlappable
+     * be restorable
      * be not pickable
      * be immovable.
 
