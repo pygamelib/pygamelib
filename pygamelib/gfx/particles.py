@@ -1,4 +1,4 @@
-import pygamelib.gfx.core as gfx_core
+from pygamelib.gfx import core
 import pygamelib.board_items as board_items
 import pygamelib.assets.graphics as graphics
 import pygamelib.constants as constants
@@ -18,38 +18,50 @@ class BaseParticle(board_items.Movable):
     Thank you ;)
     """
 
-    def __init__(self, **kwargs):
+    def __init__(
+        self,
+        model=None,
+        bg_color=None,
+        fg_color=None,
+        acceleration=None,
+        velocity=None,
+        lifespan=None,
+        directions=None,
+        **kwargs
+    ):
         super().__init__(**kwargs)
-        self.size = [1, 1]
+        # NOTE: this cannot be done anymore for BoardItems
+        # self.size = [1, 1]
         self.name = str(uuid.uuid4())
         self.type = "base_particle"
-        self.sprixel = gfx_core.Sprixel(graphics.GeometricShapes.BULLET)
-        if "bg_color" in kwargs:
-            self.sprixel.bg_color = kwargs["bg_color"]
-        if "fg_color" in kwargs:
-            self.sprixel.fg_color = kwargs["fg_color"]
-        if "model" in kwargs:
-            self.sprixel.model = kwargs["model"]
+        self.sprixel = core.Sprixel(graphics.GeometricShapes.BULLET)
+        if bg_color is not None and isinstance(bg_color, core.Color):
+            self.sprixel.bg_color = bg_color
+        if fg_color is not None and isinstance(fg_color, core.Color):
+            self.sprixel.fg_color = fg_color
+        if model is not None:
+            self.sprixel.model = model
         self.directions = [
             base.Vector2D.from_direction(constants.UP, 1),
             base.Vector2D.from_direction(constants.DLUP, 1),
             base.Vector2D.from_direction(constants.DRUP, 1),
         ]
         self.lifespan = 5
-        if "velocity" in kwargs and isinstance(kwargs["velocity"], base.Vector2D):
-            self.velocity = kwargs["velocity"]
+        if velocity is not None and isinstance(velocity, base.Vector2D):
+            self.velocity = velocity
         else:
             self.velocity = base.Vector2D()
-        if "acceleration" in kwargs and isinstance(
-            kwargs["acceleration"], base.Vector2D
-        ):
-            self.acceleration = kwargs["acceleration"]
+        if acceleration is not None and isinstance(acceleration, base.Vector2D):
+            self.acceleration = acceleration
         else:
             self.acceleration = base.Vector2D()
-
-        for item in ["lifespan", "sprixel", "name", "type", "directions"]:
-            if item in kwargs:
-                setattr(self, item, kwargs[item])
+        if lifespan is not None:
+            self.lifespan = lifespan
+        if directions is not None and type(directions) is list:
+            self.directions = directions
+        # for item in ["lifespan", "sprixel", "name", "type", "directions"]:
+        #     if item in kwargs:
+        #         setattr(self, item, kwargs[item])
 
     def direction(self):
         return random.choice(self.directions)
