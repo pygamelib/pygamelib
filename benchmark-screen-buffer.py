@@ -65,7 +65,10 @@ g.player = board_items.Player(sprixel=core.Sprixel("@@", None, core.Color(0, 255
 print("Loading resources: ", end="", flush=True)
 load_start = time.time()
 sprites = core.SpriteCollection.load_json_file("tests/pgl-benchmark.spr")
-panda = sprites["panda"]
+
+panda = board_items.Camera()
+panda_frames = [sprites["panda"], sprites["panda2"]]
+panda_frame_idx = 0
 polus = sprites["Polus_Map"]
 # p4ter = polus.scale(0.1)
 load_stop = time.time()
@@ -187,8 +190,18 @@ with g.terminal.cbreak(), g.terminal.hidden_cursor(), g.terminal.fullscreen():
     )
     bench_rem_frames = base.Text("N/A", core.Color(0, 255, 128))
     g.screen.place(bench_rem_frames, 8, polus_map.partial_display_viewport[1] * 2 + 31)
-    g.screen.place(panda, round((35 + g.current_board().height) - panda.height - 1), 2)
-    panda.row = round((35 + g.current_board().height) - panda.height - 1)
+    g.screen.place(
+        panda_frames[0],
+        round(
+            (35 + g.current_board().height)
+            - panda_frames[panda_frame_idx % 2].height
+            - 1
+        ),
+        2,
+    )
+    panda.row = round(
+        (35 + g.current_board().height) - panda_frames[panda_frame_idx % 2].height - 1
+    )
     panda.column = 2
     g.screen.place("Progress: ", 38, 2)
     g.screen.place("FPS/Max. FPS: |", 39, 2)
@@ -196,12 +209,14 @@ with g.terminal.cbreak(), g.terminal.hidden_cursor(), g.terminal.fullscreen():
     g.screen.place(
         base.Text("FPS graph:", style=constants.BOLD + constants.UNDERLINE), 40, 2
     )
-    low_graph_row = round((35 + g.current_board().height) - panda.height - 2)
+    low_graph_row = round(
+        (35 + g.current_board().height) - panda_frames[panda_frame_idx % 2].height - 2
+    )
     # g.start()
     max_fps = 0
     max_frames = 480
     max_frames = 1000
-    panda_steps = int(max_frames / (37 - panda.width))
+    panda_steps = int(max_frames / (37 - panda_frames[panda_frame_idx % 2].width))
     last_col = 0
     while frame_count < max_frames:
         bench_rem_frames.text = str(max_frames - frame_count)
@@ -263,8 +278,11 @@ with g.terminal.cbreak(), g.terminal.hidden_cursor(), g.terminal.fullscreen():
             bench_status.text = "Phase 1 + high definition board + camera movement"
         if frame_count % panda_steps == 0:
             g.screen.delete(panda.row, panda.column)
-            g.screen.place(panda, panda.row, panda.column + 1)
+            g.screen.place(
+                panda_frames[panda_frame_idx % 2], panda.row, panda.column + 1
+            )
             panda.column += 1
+            panda_frame_idx += 1
         if frame_count > max_frames / 2:
             text_phase.text = "Phase 2"
             if (
