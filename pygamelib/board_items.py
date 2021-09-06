@@ -370,6 +370,13 @@ class BoardItem(base.PglBaseObject):
     def collides_with(self, other):
         """Tells if this item collides with another item.
 
+        .. Important:: collides_with() does not take the layer into account! It is not
+           desirable for the pygamelib to assume that 2 items on different layers wont
+           collide. For example, if a player is over a door, they are on different
+           layers, but logically speaking they are colliding. The player is overlapping
+           the door. Therefor, it is the responsibility of the developper to check for
+           layers in collision, if it is important to the game logic.
+
         :param other: The item you want to check for collision.
         :type other: :class:`~pygamelib.board_items.BoardItem`
         :rtype: bool

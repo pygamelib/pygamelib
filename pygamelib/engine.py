@@ -682,6 +682,10 @@ class BoardWorking:
                 bc_start = self.size[0] - vp_width * 2
             elif column_end < (vp_width * 2):
                 column_end = vp_width * 2
+        # if row_end >= buffer_height:
+        #     row_end = buffer_height - 1
+        # if column_end >= buffer_width:
+        #     column_end = buffer_width - 1
         # Trying to remove as many dot notation as possible for performances
         render_cell = self.render_cell
         # TODO: bind the rendering area to buffer_height and buffer_width.
@@ -692,10 +696,16 @@ class BoardWorking:
                 cell = render_cell(br, bc)
                 encoded_cell = cell.__repr__()
                 incr = cell.length
-                buffer[row + br - row_start][column + cidx] = encoded_cell
+                try:
+                    buffer[row + br - row_start][column + cidx] = encoded_cell
+                except IndexError:
+                    break
 
                 for tmpiidx in range(1, incr):
-                    buffer[row + br][column + cidx + tmpiidx] = ""
+                    try:
+                        buffer[row + br][column + cidx + tmpiidx] = ""
+                    except IndexError:
+                        break
                 bc += 1
                 cidx += incr
 
@@ -890,22 +900,30 @@ class BoardWorking:
                 try:
                     existing_item = self._matrix[row][column][layer]
                 except IndexError:
+                    # # If auto_layer is off we can't create the layer for the user, so
+                    # # we raise an exception
+                    # if not auto_layer:
+                    #     raise base.PglOutOfBoardBoundException(
+                    #         f"Board.place_item(): layer={layer} does not exist and "
+                    #         "auto_layer is set to False."
+                    #     )
                     # The layer might not exist yet
-                    for i in range(len(self._matrix[row][column]), layer + 1):
-                        Game.instance().log(
-                            f"place_item: adding extra layers at {row},{column},{i}"
-                        )
-                        # self._matrix[row][column].append(self.generate_void_cell())
-                        self._matrix[row][column].append(None)
-                        self.init_cell(row, column, i)
+                    self._create_missing_layers(row, column, layer)
                     existing_item = self._matrix[row][column][layer]
                 # If not and if the item is overlappable and restorable we increase the
                 # layer number (to create a new layer).
                 # existing_item should *never* be None here. If so, there's a big
                 # problem. Therefor, it's better to not test and let the game crash.
-                if existing_item.restorable() and existing_item.overlappable():
+                # if existing_item.restorable() and existing_item.overlappable():
+                #     layer += 1
+                #     self._adjust_items_layers(row, column, layer, +1)
+                while existing_item.restorable() and existing_item.overlappable():
                     layer += 1
-                    self._adjust_items_layers(row, column, layer, +1)
+                    try:
+                        existing_item = self._matrix[row][column][layer]
+                    except IndexError:
+                        self._create_missing_layers(row, column, layer)
+                        existing_item = self._matrix[row][column][layer]
                 # If we are replacing a void item and the item's background is
                 # transparent, let's grab it's background color.
                 # An alternative would be to have the BoardItemVoid to be restorable,
@@ -925,6 +943,7 @@ class BoardWorking:
                     # This should literrally never happen: we created relevant layers
                     # before. But, better safe than sorry.
                     self._matrix[row][column].append(item)
+                    Game.instance().log(f"place_item: layer={layer} is missing")
                 # Take ownership of the item (if item doesn't have parent)
                 if item.parent is None:
                     item.parent = self
@@ -1020,6 +1039,19 @@ class BoardWorking:
                 and (projected_position.column + item.width - 1) < self.size[0]
             ):
                 can_draw = True
+                collision_item = self.item(
+                    projected_position.row, projected_position.column, item.layer
+                )
+                if item.collides_with(collision_item):
+                    Game.instance().log(
+                        f"ComplexItem collides with {collision_item} {collision_item.name}"
+                    )
+
+                for orow in range(0, item.size[1]):
+                    for ocol in range(0, item.size[0]):
+                        new_row = projected_position.row + orow
+                        new_column = projected_position.column + ocol
+                        dest_item = self.item(new_row, new_column)
                 for orow in range(0, item.size[1]):
                     for ocol in range(0, item.size[0]):
                         new_row = projected_position.row + orow
@@ -1034,6 +1066,8 @@ class BoardWorking:
                                 f"_move_complex: dest_item == item and item is on layer {item.layer} retrying with layer {item.layer - 1}"
                             )
                             dest_item = self.item(new_row, new_column, item.layer - 1)
+                        elif dest_item == item:
+                            continue
                         Game.instance().log(
                             f"_move_complex: dest item: {dest_item} name: {dest_item.name} pos: {dest_item.pos}"
                         )
@@ -1277,39 +1311,16 @@ class BoardWorking:
                     dest_item = self.item(dest_item.row, dest_item.column, item.pos[2])
                 # Finally we check if the destination is overlappable
                 if dest_item.overlappable():
-                    # NOTE: The layer system is more complex than I thought, we need to move all layer logic in one place: place_item and remove_item.
-                    layer = 0
-                    if not item._auto_layer:
-                        layer = item.pos[2]
                     # And if it is, we check if the destination is restorable
                     # Before 1.3.0 only Immovable objects were restorable. After, all
                     # BoardItems can be restorable. So the check for Immovable have been
                     # removed.
-                    if (
-                        not isinstance(dest_item, board_items.BoardItemVoid)
-                        and dest_item.restorable()
-                    ):
-                        layer = dest_item.pos[2] + 1
 
-                    # if item.pos[2] == 0:
-                    #     # If the item is on layer 0 there is nothing under it, so we
-                    #     # just put a void item.
-                    #     self.place_item(
-                    #         self.generate_void_cell(), item.pos[0], item.pos[1], 0
-                    #     )
-                    # else:
-                    #     # we simply delete the last element of the layer (i.e our item)
-                    #     # and place it at its destination afterward.
-                    #     self._matrix[item.pos[0]][item.pos[1]].pop(item.pos[2])
-                    #     self._adjust_layers(item.pos[0], item.pos[1], item.pos[2], -1)
-                    # # Now making sure that we are not leaving a cell with no layer
-                    # if len(self._matrix[item.pos[0]][item.pos[1]]) <= 0:
-                    #     self._matrix[item.pos[0]][item.pos[1]].append(
-                    #         self.generate_void_cell()
-                    #     )
+                    Game.instance().log(
+                        f"_move_simple: destination layer={dest_item.pos[2]}"
+                    )
                     self.clear_cell(item.pos[0], item.pos[1], item.pos[2])
-                    self.place_item(item, new_row, new_column, layer)
-                    # self.place_item(item, new_row, new_column, item.pos[2])
+                    self.place_item(item, new_row, new_column, dest_item.pos[2])
 
         else:
             raise base.PglObjectIsNotMovableException(
@@ -1319,6 +1330,17 @@ class BoardWorking:
                     f"therefor it cannot be moved."
                 )
             )
+
+    def _create_missing_layers(self, row, column, target_layer):
+        # Create the layers that are missing between the current layer stack and
+        # target_layer
+        for i in range(len(self._matrix[row][column]), target_layer + 1):
+            Game.instance().log(
+                f"_create_missing_layers: adding extra layers at {row},{column},{i}"
+            )
+            # self._matrix[row][column].append(self.generate_void_cell())
+            self._matrix[row][column].append(None)
+            self.init_cell(row, column, i)
 
     def _adjust_items_layers(self, row, column, layer, value):
         # Adjust the layers of all items over the specified layer by value.
@@ -6534,6 +6556,18 @@ class Screen(object):
         #     setattr(element, "__rendering_pass", rendering_pass)
         #     return
         # el
+        if row >= self.height:
+            raise base.PglException(
+                "out_of_screen_boundaries",
+                f"Screen.place(item, row, column) : row={row} is out of screen height "
+                f"(i.e {self.height})",
+            )
+        if column >= self.width:
+            raise base.PglException(
+                "out_of_screen_boundaries",
+                f"Screen.place(item, row, column) : column={column} is out of screen "
+                f"width (i.e {self.width})",
+            )
         if (
             isinstance(element, core.Sprixel)
             or type(element) is str
