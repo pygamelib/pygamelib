@@ -750,14 +750,24 @@ class BoardWorking:
         """
         if row < self.size[1] and column < self.size[0]:
             # Here we are doing something similar to casting a ray and
-            # render the first cell that collides.
+            # render the first cell that collides. Or more accurately the first data
+            # that allow the creation of a Sprixel.
             if (
                 len(self._matrix[row][column]) > 0
                 and self._matrix[row][column][-1].sprixel is not None
             ):
+                item = self._matrix[row][column][-1]
                 sprix = self._matrix[row][column][-1].sprixel
                 layers_len = len(self._matrix[row][column])
                 if layers_len > 1:
+                    idx = -1
+                    # For many reasons the item could be a void item, since we are over
+                    # level 0 we don't care about them (they are unimportant for
+                    # rendering). Therefor we try to discard them as quickly as possible
+                    while isinstance(item, board_items.BoardItemVoid):
+                        idx -= 1
+                        item = self._matrix[row][column][idx]
+                    sprix = self._matrix[row][column][idx].sprixel
                     # We only make the copy here because most of the time we don't need
                     # to: if nothing is stacked under then we don't have any reason to
                     # build a new sprixel because we are not modifying it.
@@ -765,8 +775,11 @@ class BoardWorking:
                         sprix = copy.deepcopy(self._matrix[row][column][-1].sprixel)
                         # And now we are going down to make sure that we have pseudo
                         # transparency.
-                        idx = -2
+                        idx -= 1
                         for _ in range(layers_len - 1):
+                            # if isinstance(
+                            #         self.item(row, column), board_items.BoardComplexItem
+                            #     ) and
                             if (
                                 not isinstance(
                                     self._matrix[row][column][idx],
@@ -776,6 +789,12 @@ class BoardWorking:
                                     idx
                                 ].sprixel.is_bg_transparent
                             ):
+                                if isinstance(
+                                    self.item(row, column), board_items.BoardComplexItem
+                                ):
+                                    Game.instance().log(
+                                        f"render_cell({row},{column}) copying bg color from layer {idx} for item {item.name}"
+                                    )
                                 # The following was removed to account for void item bg
                                 # copy.
                                 # and self._matrix[row][column][idx].sprixel.bg_color
@@ -787,6 +806,13 @@ class BoardWorking:
                                     idx
                                 ].sprixel.bg_color
                                 break
+                            else:
+                                if isinstance(
+                                    self.item(row, column), board_items.BoardComplexItem
+                                ):
+                                    Game.instance().log(
+                                        f"render_cell({row},{column}) NOT copying bg color from layer {idx} for item {item.name}"
+                                    )
                             idx -= 1
                 return sprix
             return core.Sprixel()
@@ -866,7 +892,8 @@ class BoardWorking:
             are both overlappable **and** restorable to save them, but that's
             the extend of it.
         """
-        Game.instance().log(f"place_item({item},{row},{column},{layer}, {auto_layer})")
+        # Game.instance().log(f"place_item({item},{row},{column},{layer}, {auto_layer})")
+        # print(f"place_item({item},{row},{column},{layer}, {auto_layer})")
         if row < self.size[1] and column < self.size[0]:
             # First let's make sure that the BoardItem._auto_layer is up to date
             # Auto layer tells us to automatically pick the layer (in case the user
@@ -874,9 +901,40 @@ class BoardWorking:
             if isinstance(item, board_items.BoardItem):
                 item._auto_layer = auto_layer
             if isinstance(item, board_items.BoardComplexItem):
-                # Game.instance().log(
-                #     f"place_item complex item {item} at {row}, {column}, {layer}"
-                # )
+                # First, we get the highest required layer
+                max_layer = layer
+                for ir in range(0, item.size[1]):
+                    for ic in range(0, item.size[0]):
+                        inner_pos_layer = layer
+                        if layer >= len(self._matrix[row + ir][column + ic]):
+                            break
+                        else:
+                            existing_item = self._matrix[row + ir][column + ic][
+                                inner_pos_layer
+                            ]
+                            while (
+                                existing_item.restorable()
+                                and existing_item.overlappable()
+                            ):
+                                inner_pos_layer += 1
+                                try:
+                                    existing_item = self._matrix[row + ir][column + ic][
+                                        inner_pos_layer
+                                    ]
+                                except IndexError:
+                                    self._create_missing_layers(
+                                        row + ir, column + ic, inner_pos_layer
+                                    )
+                                    existing_item = self._matrix[row + ir][column + ic][
+                                        inner_pos_layer
+                                    ]
+                            if inner_pos_layer > max_layer:
+                                max_layer = inner_pos_layer
+                Game.instance().log(f"place_item: max_layer={max_layer}")
+                # TODO: code écris tard, vérifier que çá marche et supprimer la partie
+                # vérification des layers dans _move_complex. Puis finisaliser cette
+                # fonction.
+                # print(f"place_item (complex): max_layer={max_layer}")
                 for ir in range(0, item.size[1]):
                     for ic in range(0, item.size[0]):
                         itm = item.item(ir, ic)
@@ -885,11 +943,11 @@ class BoardWorking:
                                 itm,
                                 row + ir,
                                 column + ic,
-                                layer,
+                                max_layer,
                                 False,
                             )
                             itm._auto_layer = auto_layer
-                item.store_position(row, column, layer)
+                item.store_position(row, column, max_layer)
                 if isinstance(item, board_items.Movable):
                     self._movables.add(item)
                 elif isinstance(item, board_items.Immovable):
@@ -900,13 +958,6 @@ class BoardWorking:
                 try:
                     existing_item = self._matrix[row][column][layer]
                 except IndexError:
-                    # # If auto_layer is off we can't create the layer for the user, so
-                    # # we raise an exception
-                    # if not auto_layer:
-                    #     raise base.PglOutOfBoardBoundException(
-                    #         f"Board.place_item(): layer={layer} does not exist and "
-                    #         "auto_layer is set to False."
-                    #     )
                     # The layer might not exist yet
                     self._create_missing_layers(row, column, layer)
                     existing_item = self._matrix[row][column][layer]
@@ -943,14 +994,14 @@ class BoardWorking:
                     # This should literrally never happen: we created relevant layers
                     # before. But, better safe than sorry.
                     self._matrix[row][column].append(item)
-                    Game.instance().log(f"place_item: layer={layer} is missing")
+                    # Game.instance().log(f"place_item: layer={layer} is missing")
                 # Take ownership of the item (if item doesn't have parent)
                 if item.parent is None:
                     item.parent = self
                 item.store_position(row, column, layer)
-                Game.instance().log(
-                    f"item {item} {item.name} placed at {row}, {column}, {layer}"
-                )
+                # Game.instance().log(
+                #     f"item {item} {item.name} placed at {row}, {column}, {layer}"
+                # )
                 if isinstance(item, board_items.Movable):
                     if isinstance(item.parent, board_items.BoardComplexItem):
                         self._movables.add(item.parent)
@@ -1029,7 +1080,6 @@ class BoardWorking:
             if not isinstance(direction, base.Vector2D):
                 direction = base.Vector2D.from_direction(direction, step)
             # Game.instance().log(f"_move_complex: direction={direction}")
-            layer = 0
             projected_position = item.position_as_vector() + direction
             if (
                 projected_position is not None
@@ -1039,51 +1089,62 @@ class BoardWorking:
                 and (projected_position.column + item.width - 1) < self.size[0]
             ):
                 can_draw = True
-                collision_item = self.item(
-                    projected_position.row, projected_position.column, item.layer
-                )
-                if item.collides_with(collision_item):
-                    Game.instance().log(
-                        f"ComplexItem collides with {collision_item} {collision_item.name}"
-                    )
 
+                # Algo idea:
+                # 1. Remove the complex item with remove_item()
+                # 2. check the projected position + size of the complex item (i.e: the projected surface)
+                # 3. put all the items within the projected surface  that are not BoardItemVoid in a tmp list
+                # 4. for each item in the tmp list do the checks below and decide if we can draw
+                # 5. if we can draw, place the complex item at its new position, else put the complex item back in place (at its initial coordinates)
+                item_row = item.row
+                item_column = item.column
+                Game.instance().log(
+                    f"_move_complex: removing item {item.name} @ {item.row},{item.column},{item.layer}"
+                )
+                self.remove_item(item)
+
+                # NOTE: This code creates artifacts when going over a complex item and
+                #       under another. The performance gain seems to be marginal (1%
+                #       or 2% more FPS).
+                # Sad attempt at optimization: first look at the number of layers , 1 or
+                # 2 are special case and can be treated without adjusting the remaining
+                # layers. More than 2 layers and we need to adjust the remaining layers.
+                # if item.layer == 0:
+                #     gvc = self.generate_void_cell
+                #     for r in range(item.row, item.row + item.height):
+                #         for c in range(item.column, item.column + item.width):
+                #             self._matrix[r][c][0] = gvc()
+                # elif item.layer == 1:
+                #     for r in range(item.row, item.row + item.height):
+                #         for c in range(item.column, item.column + item.width):
+                #             try:
+                #                 self._matrix[r][c].pop(item.layer)
+                #             except IndexError:
+                #                 pass
+                # elif item.layer > 0:
+                #     cl = self._clean_layers
+                #     for r in range(item.row, item.row + item.height):
+                #         for c in range(item.column, item.column + item.width):
+                #             try:
+                #                 self._matrix[r][c].pop(item.layer)
+                #                 cl(r, c)
+                #             except IndexError:
+                #                 pass
+                # collisionables = []
                 for orow in range(0, item.size[1]):
                     for ocol in range(0, item.size[0]):
                         new_row = projected_position.row + orow
                         new_column = projected_position.column + ocol
                         dest_item = self.item(new_row, new_column)
-                for orow in range(0, item.size[1]):
-                    for ocol in range(0, item.size[0]):
-                        new_row = projected_position.row + orow
-                        new_column = projected_position.column + ocol
-                        dest_item = self.item(new_row, new_column)
-                        # If the item is ourselves (because we are moving a cell of the
-                        # complex item) and we are not on layer 0, it means that
-                        # ourselves is already over something. So we need to check that
-                        # something.
-                        if dest_item == item and item.layer > 0:
-                            Game.instance().log(
-                                f"_move_complex: dest_item == item and item is on layer {item.layer} retrying with layer {item.layer - 1}"
-                            )
-                            dest_item = self.item(new_row, new_column, item.layer - 1)
-                        elif dest_item == item:
-                            continue
-                        Game.instance().log(
-                            f"_move_complex: dest item: {dest_item} name: {dest_item.name} pos: {dest_item.pos}"
-                        )
-                        if (
-                            dest_item != item
-                            and not isinstance(dest_item, board_items.BoardItemVoid)
-                            and dest_item.overlappable()
-                            and dest_item.restorable()
-                            and dest_item.layer is not None
-                            and dest_item.layer >= layer
-                        ):
-                            layer = dest_item.layer + 1
-                            Game.instance().log(
-                                f"_move_complex, layer increased to {layer}"
-                            )
-                        # Check all items within the surface
+                        # if (
+                        #     not isinstance(dest_item, board_items.BoardItemVoid)
+                        #     and dest_item != item
+                        # ):
+                        #     # Game.instance().log(
+                        #     #     f"_move_complex: adding {dest_item} to collisionnables"
+                        #     # )
+                        #     collisionables.append(dest_item)
+                        # for dest_item in collisionables:
                         if isinstance(dest_item, board_items.Actionable):
                             if (
                                 isinstance(item, board_items.Player)
@@ -1105,6 +1166,9 @@ class BoardWorking:
                                 )
                                 or (dest_item.perm == constants.ALL_MOVABLE_AUTHORIZED)
                             ):
+                                Game.instance().log(
+                                    f"_move_complex: activating Actionnable at {dest_item.row},{dest_item.column},{dest_item.layer}"
+                                )
                                 dest_item.activate()
                         # Now taking care of pickable objects
                         pickable_item = self.item(new_row, new_column)
@@ -1113,67 +1177,155 @@ class BoardWorking:
                             and isinstance(item, board_items.Movable)
                             and item.has_inventory()
                         ):
+                            # Game.instance().log(f"_move_complex: picking {dest_item}")
                             # Put the item in the inventory
                             item.inventory.add_item(pickable_item)
                             # And then clear the cell (this is usefull for the next one)
                             self.remove_item(pickable_item)
                         # Finally we check if the destination is overlappable
                         if dest_item != item and not dest_item.overlappable():
+                            # Game.instance().log(
+                            #     f"_move_complex: hitting a non overlappable item"
+                            # )
                             can_draw = False
                             break
-                Game.instance().log(
-                    f"Layer (just before draw) for the complex item: {layer}"
-                )
                 if can_draw:
-                    for row in range(0, item.size[1], 1):
-                        for col in range(0, item.size[0], 1):
-                            # First erase everything that was drawn
-                            if (
-                                not isinstance(
-                                    item.item(row, col), board_items.BoardItemVoid
-                                )
-                                and item.pos[2] == 0
-                            ):
-                                self.place_item(
-                                    self.generate_void_cell(),
-                                    item.pos[0] + row,
-                                    item.pos[1] + col,
-                                    0,
-                                )
-                            else:
-                                ## TODO: TMP FIX !!!!!!!
-                                ## Remove the if and fix that correctly
-                                if item.pos[2] < len(
-                                    self._matrix[item.pos[0] + row][item.pos[1] + col]
-                                ):
-                                    self._matrix[item.pos[0] + row][
-                                        item.pos[1] + col
-                                    ].pop(item.pos[2])
-                                # Here we need to make sure that the layers created to
-                                # support the complex item (but are empty) are destroyed
-                                _stack = self._matrix[item.pos[0] + row][
-                                    item.pos[1] + col
-                                ]
-
-                                _stack_idx = (
-                                    len(
-                                        self._matrix[item.pos[0] + row][
-                                            item.pos[1] + col
-                                        ]
-                                    )
-                                    - 1
-                                )
-                                while 1:
-                                    if _stack_idx == 0 or not isinstance(
-                                        _stack[_stack_idx], board_items.BoardItemVoid
-                                    ):
-                                        break
-                                    _stack.pop(_stack_idx)
-                                    _stack_idx -= 1
-                    # Finally, place the item at its new position
-                    self.place_item(
-                        item, projected_position.row, projected_position.column, layer
+                    Game.instance().log(
+                        f"_move_complex: draw allowed @ {projected_position.row},{projected_position.column}"
                     )
+                    self.place_item(
+                        item, projected_position.row, projected_position.column
+                    )
+                else:
+                    Game.instance().log(
+                        f"_move_complex: draw not allowed placing item back at his initial position"
+                    )
+                    self.place_item(item, item_row, item_column)
+                Game.instance().log(
+                    base.Text("Finishing to move complex", core.Color(0, 255, 255))
+                )
+                # for orow in range(0, item.size[1]):
+                #     for ocol in range(0, item.size[0]):
+                #         new_row = projected_position.row + orow
+                #         new_column = projected_position.column + ocol
+                #         dest_item = self.item(new_row, new_column)
+                #         # If the item is ourselves (because we are moving a cell of the
+                #         # complex item) and we are not on layer 0, it means that
+                #         # ourselves is already over something. So we need to check that
+                #         # something.
+                #         if dest_item == item and item.layer > 0:
+                #             Game.instance().log(
+                #                 f"_move_complex: dest_item == item and item is on layer {item.layer} retrying with layer {item.layer - 1}"
+                #             )
+                #             dest_item = self.item(new_row, new_column, item.layer - 1)
+                #         elif dest_item == item:
+                #             continue
+                #         Game.instance().log(
+                #             f"_move_complex: dest item: {dest_item} name: {dest_item.name} pos: {dest_item.pos}"
+                #         )
+                #         if (
+                #             dest_item != item
+                #             and not isinstance(dest_item, board_items.BoardItemVoid)
+                #             and dest_item.overlappable()
+                #             and dest_item.restorable()
+                #             and dest_item.layer is not None
+                #             and dest_item.layer >= layer
+                #         ):
+                #             layer = dest_item.layer + 1
+                #             Game.instance().log(
+                #                 f"_move_complex, layer increased to {layer}"
+                #             )
+                #         # Check all items within the surface
+                #         if isinstance(dest_item, board_items.Actionable):
+                #             if (
+                #                 isinstance(item, board_items.Player)
+                #                 and (
+                #                     (dest_item.perm == constants.PLAYER_AUTHORIZED)
+                #                     or (
+                #                         dest_item.perm
+                #                         == constants.ALL_CHARACTERS_AUTHORIZED
+                #                     )
+                #                 )
+                #             ) or (
+                #                 isinstance(item, board_items.NPC)
+                #                 and (
+                #                     (dest_item.perm == constants.NPC_AUTHORIZED)
+                #                     or (
+                #                         dest_item.perm
+                #                         == constants.ALL_CHARACTERS_AUTHORIZED
+                #                     )
+                #                 )
+                #                 or (dest_item.perm == constants.ALL_MOVABLE_AUTHORIZED)
+                #             ):
+                #                 dest_item.activate()
+                #         # Now taking care of pickable objects
+                #         pickable_item = self.item(new_row, new_column)
+                #         if (
+                #             pickable_item.pickable()
+                #             and isinstance(item, board_items.Movable)
+                #             and item.has_inventory()
+                #         ):
+                #             # Put the item in the inventory
+                #             item.inventory.add_item(pickable_item)
+                #             # And then clear the cell (this is usefull for the next one)
+                #             self.remove_item(pickable_item)
+                #         # Finally we check if the destination is overlappable
+                #         if dest_item != item and not dest_item.overlappable():
+                #             can_draw = False
+                #             break
+                # Game.instance().log(
+                #     f"Layer (just before draw) for the complex item: {layer}"
+                # )
+                # if can_draw:
+                #     for row in range(0, item.size[1], 1):
+                #         for col in range(0, item.size[0], 1):
+                #             # First erase everything that was drawn
+                #             if (
+                #                 not isinstance(
+                #                     item.item(row, col), board_items.BoardItemVoid
+                #                 )
+                #                 and item.pos[2] == 0
+                #             ):
+                #                 self.place_item(
+                #                     self.generate_void_cell(),
+                #                     item.pos[0] + row,
+                #                     item.pos[1] + col,
+                #                     0,
+                #                 )
+                #             else:
+                #                 ## TODO: TMP FIX !!!!!!!
+                #                 ## Remove the if and fix that correctly
+                #                 if item.pos[2] < len(
+                #                     self._matrix[item.pos[0] + row][item.pos[1] + col]
+                #                 ):
+                #                     self._matrix[item.pos[0] + row][
+                #                         item.pos[1] + col
+                #                     ].pop(item.pos[2])
+                #                 # Here we need to make sure that the layers created to
+                #                 # support the complex item (but are empty) are destroyed
+                #                 _stack = self._matrix[item.pos[0] + row][
+                #                     item.pos[1] + col
+                #                 ]
+
+                #                 _stack_idx = (
+                #                     len(
+                #                         self._matrix[item.pos[0] + row][
+                #                             item.pos[1] + col
+                #                         ]
+                #                     )
+                #                     - 1
+                #                 )
+                #                 while 1:
+                #                     if _stack_idx == 0 or not isinstance(
+                #                         _stack[_stack_idx], board_items.BoardItemVoid
+                #                     ):
+                #                         break
+                #                     _stack.pop(_stack_idx)
+                #                     _stack_idx -= 1
+                #     # Finally, place the item at its new position
+                #     self.place_item(
+                #         item, projected_position.row, projected_position.column, layer
+                #     )
         else:  # pragma: no cover
             # This is actually test in tests/test_board.py in function test_move()
             # I have no idea why it is not registering as a tested statement
@@ -1316,9 +1468,9 @@ class BoardWorking:
                     # BoardItems can be restorable. So the check for Immovable have been
                     # removed.
 
-                    Game.instance().log(
-                        f"_move_simple: destination layer={dest_item.pos[2]}"
-                    )
+                    # Game.instance().log(
+                    #     f"_move_simple: destination layer={dest_item.pos[2]}"
+                    # )
                     self.clear_cell(item.pos[0], item.pos[1], item.pos[2])
                     self.place_item(item, new_row, new_column, dest_item.pos[2])
 
@@ -1335,9 +1487,9 @@ class BoardWorking:
         # Create the layers that are missing between the current layer stack and
         # target_layer
         for i in range(len(self._matrix[row][column]), target_layer + 1):
-            Game.instance().log(
-                f"_create_missing_layers: adding extra layers at {row},{column},{i}"
-            )
+            # Game.instance().log(
+            #     f"_create_missing_layers: adding extra layers at {row},{column},{i}"
+            # )
             # self._matrix[row][column].append(self.generate_void_cell())
             self._matrix[row][column].append(None)
             self.init_cell(row, column, i)
@@ -1437,1351 +1589,6 @@ class BoardWorking:
                 layer -= 1
             else:
                 break
-
-    def get_movables(self, **kwargs):
-        """Return a list of all the Movable objects in the Board.
-
-        See :class:`pygamelib.board_items.Movable` for more on a Movable object.
-
-        :param ``**kwargs``: an optional dictionnary with keys matching
-            Movables class members and value being something contained
-            in that member.
-        :return: A list of Movable items
-
-        Example::
-
-            for m in myboard.get_movables():
-                print(m.name)
-
-            # Get all the Movable objects that has a type that contains "foe"
-            foes = myboard.get_movables(type="foe")
-        """
-        if kwargs:
-            retvals = []
-            for item in self._movables:
-                counter = 0
-                for (arg_key, arg_value) in kwargs.items():
-                    if arg_value in getattr(item, arg_key):
-                        counter += 1
-                if counter == len(kwargs):
-                    retvals.append(item)
-            return retvals
-        else:
-            return list(self._movables)
-
-    def get_immovables(self, **kwargs):
-        """Return a list of all the Immovable objects in the Board.
-
-        See :class:`pygamelib.board_items.Immovable` for more on
-            an Immovable object.
-
-        :param ``**kwargs``: an optional dictionnary with keys matching
-            Immovables class members and value being something
-            **contained** in that member.
-        :return: A list of Immovable items
-
-        Example::
-
-            for m in myboard.get_immovables():
-                print(m.name)
-
-            # Get all the Immovable objects that type contains "wall"
-                AND name contains fire
-            walls = myboard.get_immovables(type="wall",name="fire")
-
-        """
-        if kwargs:
-            retvals = []
-            for item in self._immovables:
-                counter = 0
-                for (arg_key, arg_value) in kwargs.items():
-                    if arg_value in getattr(item, arg_key):
-                        counter += 1
-                if counter == len(kwargs):
-                    retvals.append(item)
-            return retvals
-        else:
-            return list(self._immovables)
-
-
-class BoardStaticLayers:
-    """A class that represent a game board.
-
-    The board is being represented by a square matrix.
-    For the moment a board only support one player.
-
-    The Board object is the base object to build a level :
-        you create a Board and then you add BoardItems
-        (or objects derived from BoardItem).
-
-
-    .. Note:: In version 1.3.0 a new screen rendering stack was introduced. With this
-       came the need for some object to hold more information about their state. This is
-       the case for Board. To use partial display with the :class:`Screen` buffer system
-       the board itself needs to hold the information about were to draw and on what to
-       focus. The existing code will still work as the :class:`Game` object takes care
-       of forwarding the information to the Board. However, it is now possible to
-       exploit the :class:`~pygamelib.board_items.Camera` object to create cutscenes and
-       more interesting movements.
-
-    .. Important:: Partial display related parameters are information used by the
-       :func:`~pygamelib.engine.Board.display_around()` method and the :class:`Screen`
-       object to either display directly the board (display_around) or render the Board
-       in the screen buffer. **You have to make sure that the focus element's position
-       is updated**. If you use the player, you have nothing to do but the Camera object
-       needs to be manually updated for example.
-
-    .. Warning:: in 1.3.0 the notion of layers was added to the Board object. Layers are
-       used to better manage items overlapping. For the moment, layers are automatically
-       managed to expand and shrink on demand (or on a need basis). So you should not
-       use the layer system to add some depth to your game (for now).
-       The entire Board object behaves exactly like in version 1.2.x.
-
-    :param name: the name of the Board
-    :type name: str
-    :param size: array [width,height] with width and height being int.
-        The size of the board. If layers is not specified it is set to 5.
-    :type size: list
-    :param player_starting_position: array [row,column] with row and
-        column being int. The coordinates at which Game will place the player
-        on change_level().
-    :type player_starting_position: list
-    :param ui_borders: To set all the borders to the same value
-    :type ui_borders: str
-    :param ui_border_left: A string that represents the left border.
-    :type ui_border_left: str
-    :param ui_border_right: A string that represents the right border.
-    :type ui_border_right: str
-    :param ui_border_top: A string that represents the top border.
-    :type ui_border_top: str
-    :param ui_border_bottom: A string that represents the bottom border.
-    :type ui_border_bottom: str
-    :param ui_board_void_cell: A string that represents an empty cell. This
-        option is going to be the model of the BoardItemVoid
-        (see :class:`pygamelib.board_items.BoardItemVoid`)
-    :type ui_board_void_cell: str
-    :param parent: The parent object (usually the Game object).
-    :type parent: :class:`~pygamelib.engine.Game`
-    :param DISPLAY_SIZE_WARNINGS: A boolean to show or hide the warning about boards
-        bigger than 80 rows and columns.
-    :type DISPLAY_SIZE_WARNINGS: bool
-    :param enable_partial_display: A boolean to tell the Board to enable or not partial
-        display of boards. Default: False.
-    :type enable_partial_display: bool
-    :param partial_display_viewport: A 2 int elements array that gives the **radius**
-        of the partial display in number of row and column. Please see
-        :func:`~pygamelib.engine.Board.display_around()`.
-    :type partial_display_viewport: list
-    :param partial_display_focus: An item to focus (i.e center) the view on. When
-        partial display is enabled the rendered view will be centered on this focus
-        point/item. It can be an item or a vector.
-    :type partial_display_focus: :class:`~pygamelib.board_items.BoardItem` or
-       :class:`~pygamelib.base.Vector2D`
-    """
-
-    def __init__(
-        self,
-        name: str = "Board",
-        size: list = [10, 10],
-        ui_borders: str = None,
-        ui_border_bottom: str = "-",
-        ui_border_top: str = "-",
-        ui_border_left: str = "|",
-        ui_border_right: str = "|",
-        ui_board_void_cell=" ",
-        ui_board_void_cell_sprixel: core.Sprixel = None,
-        player_starting_position=[0, 0, 0],
-        DISPLAY_SIZE_WARNINGS=True,
-        parent=None,
-        partial_display_viewport=None,
-        partial_display_focus=None,
-        enable_partial_display=False,
-    ):
-        self.name = name
-        self.size = size
-        print(f"size={size} self.size={self.size}")
-        # if len(self.size) == 2:
-        #     self.size.append(2)
-        print(f"size={size} self.size={self.size}")
-        self.player_starting_position = player_starting_position
-        self.ui_border_left = ui_border_left
-        self.ui_border_right = ui_border_right
-        self.ui_border_top = ui_border_top
-        self.ui_border_bottom = ui_border_bottom
-        self.ui_board_void_cell = ui_board_void_cell
-        self.ui_board_void_cell_sprixel = ui_board_void_cell_sprixel
-        self.DISPLAY_SIZE_WARNINGS = DISPLAY_SIZE_WARNINGS
-        self.parent = parent
-        self.partial_display_viewport = partial_display_viewport
-        self.partial_display_focus = partial_display_focus
-        self.enable_partial_display = enable_partial_display
-        self._matrix = np.array([])
-        # The overlapped matrix is used as an invisible layer were overlapped
-        # restorable items are parked momentarily (until the cell they were on
-        # is free again).
-        self._overlapped_matrix = np.array([])
-
-        # if ui_borders is set then set all borders to that value
-        if ui_borders is not None:
-            for item in [
-                "ui_border_bottom",
-                "ui_border_top",
-                "ui_border_left",
-                "ui_border_right",
-            ]:
-                setattr(self, item, ui_borders)
-        # Now checking for board's data sanity
-        try:
-            self.check_sanity()
-        except base.PglException as error:
-            raise error
-
-        # Init the list of movable and immovable objects
-        self._movables = set()
-        self._immovables = set()
-        # If sanity check passed then, initialize the board
-        self.init_board()
-
-    def __str__(self):
-        return (
-            "----------------\n"
-            f"Board name: {self.name}\n"
-            f"Board size: {self.size}\n"
-            f"Borders: '{self.ui_border_left}','{self.ui_border_right}','"
-            f"{self.ui_border_top}','{self.ui_border_bottom}',\n"
-            f"Board void cell: '{self.ui_board_void_cell}'\n"
-            f"Board void sprixel: {self.ui_board_void_cell_sprixel}\n"
-            f"Player starting position: {self.player_starting_position}\n"
-            f"Partial display enabled: {self.enable_partial_display}\n"
-            f"Partial display viewport: {self.partial_display_viewport}\n"
-            f"Partial display focus: {self.partial_display_focus}\n"
-            "----------------"
-        )
-
-    def init_board(self):
-        """
-        Initialize the board with BoardItemVoid that uses ui_board_void_cell_sprixel or
-        ui_board_void_cell (in that order of preference) as model.
-
-        Example::
-
-            myboard.init_board()
-        """
-        if self.ui_board_void_cell_sprixel is not None and isinstance(
-            self.ui_board_void_cell_sprixel, core.Sprixel
-        ):
-            # The deepcopy is a lot slower but it protects against a ton of unwanted
-            # side effects
-            self._matrix = np.array(
-                [
-                    [None for i in range(0, self.size[0], 1)]
-                    for j in range(0, self.size[1], 1)
-                ]
-            )
-            for r in range(self.size[1]):
-                for c in range(self.size[0]):
-                    self._matrix[r][c] = [
-                        board_items.BoardItemVoid(
-                            sprixel=copy.deepcopy(self.ui_board_void_cell_sprixel),
-                            parent=self,
-                        )
-                    ]
-        else:
-            self._matrix = np.array(
-                [
-                    [None for i in range(0, self.size[0], 1)]
-                    for j in range(0, self.size[1], 1)
-                ]
-            )
-            for r in range(self.size[1]):
-                for c in range(self.size[0]):
-                    self._matrix[r][c] = [
-                        board_items.BoardItemVoid(
-                            model=self.ui_board_void_cell, parent=self
-                        )
-                    ]
-        self._overlapped_matrix = np.array(
-            [
-                [None for i in range(0, self.size[0], 1)]
-                for j in range(0, self.size[1], 1)
-            ]
-        )
-
-    def generate_void_cell(self):
-        """This method return a void cell.
-
-        If ui_board_void_cell_sprixel is defined it uses it, otherwise use
-        ui_board_void_cell to generate the void item.
-
-        :return: A void board item
-        :rtype: :class:`~pygamelib.board_items.BoardItemVoid`
-
-        Example::
-
-            board.generate_void_cell()
-        """
-        if self.ui_board_void_cell_sprixel is not None and isinstance(
-            self.ui_board_void_cell_sprixel, core.Sprixel
-        ):
-            return board_items.BoardItemVoid(
-                sprixel=copy.deepcopy(self.ui_board_void_cell_sprixel),
-                model=self.ui_board_void_cell_sprixel.model,
-                parent=self,
-            )
-        else:
-            return board_items.BoardItemVoid(model=self.ui_board_void_cell, parent=self)
-
-    def init_cell(self, row, column, layer=0):
-        """
-        Initialize a specific cell of the board with BoardItemVoid that
-        uses ui_board_void_cell as model.
-
-        :param row: the row coordinate.
-        :type row: int
-        :param column: the column coordinate.
-        :type column: int
-
-        Example::
-
-            myboard.init_cell(2,3)
-        """
-        self._matrix[row][column][layer] = self.generate_void_cell()
-
-    def check_sanity(self):
-        """Check the board sanity.
-
-        This is essentially an internal method called by the constructor.
-        """
-        sanity_check = 0
-        if type(self.size) is list:
-            sanity_check += 1
-        else:
-            raise base.PglException(
-                "SANITY_CHECK_KO",
-                "The 'size' parameter must be a list.",
-            )
-        if len(self.size) == 2:
-            sanity_check += 1
-        else:
-            raise base.PglException(
-                "SANITY_CHECK_KO",
-                f"The 'size' parameter must be a list of 3 elements. size: {self.size}",
-            )
-        if type(self.size[0]) is int:
-            sanity_check += 1
-        else:
-            raise base.PglException(
-                "SANITY_CHECK_KO",
-                ("The first element of the 'size' list must be an integer."),
-            )
-        if type(self.size[1]) is int:
-            sanity_check += 1
-        else:
-            raise base.PglException(
-                "SANITY_CHECK_KO",
-                ("The second element of the 'size' list must be an integer."),
-            )
-        if type(self.name) is str:
-            sanity_check += 1
-        else:
-            raise base.PglException(
-                "SANITY_CHECK_KO", "The 'name' parameter must be a string."
-            )
-        if type(self.ui_border_bottom) is str:
-            sanity_check += 1
-        else:
-            raise base.PglException(
-                "SANITY_CHECK_KO",
-                ("The 'ui_border_bottom' parameter must be a string."),
-            )
-        if type(self.ui_border_top) is str:
-            sanity_check += 1
-        else:
-            raise base.PglException(
-                "SANITY_CHECK_KO", ("The 'ui_border_top' parameter must be a string.")
-            )
-        if type(self.ui_border_left) is str:
-            sanity_check += 1
-        else:
-            raise base.PglException(
-                "SANITY_CHECK_KO", ("The 'ui_border_left' parameter must be a string.")
-            )
-        if type(self.ui_border_right) is str:
-            sanity_check += 1
-        else:
-            raise base.PglException(
-                "SANITY_CHECK_KO", ("The 'ui_border_right' parameter must be a string.")
-            )
-        if type(self.ui_board_void_cell) is str:
-            sanity_check += 1
-        else:
-            raise base.PglException(
-                "SANITY_CHECK_KO",
-                ("The 'ui_board_void_cell' parameter must be a string."),
-            )
-        # TODO: The void_cell check should be done once and for all (str and sprixel at
-        #  the same time)
-        if self.ui_board_void_cell_sprixel is not None and isinstance(
-            self.ui_board_void_cell_sprixel, core.Sprixel
-        ):
-            sanity_check += 1
-        elif self.ui_board_void_cell_sprixel is not None and not isinstance(
-            self.ui_board_void_cell_sprixel, core.Sprixel
-        ):
-            raise base.PglException(
-                "SANITY_CHECK_KO",
-                ("The 'ui_board_void_cell_sprixel' parameter must be a Sprixel."),
-            )
-        else:
-            sanity_check += 1
-        if self.size[0] > 80:
-            if self.DISPLAY_SIZE_WARNINGS:
-                base.Text.warn(
-                    (
-                        f"The first dimension of your board is {self.size[0]}. "
-                        "It is a good practice to keep it at a maximum of 80 for "
-                        "compatibility with older terminals."
-                    )
-                )
-
-        if self.size[1] > 80:
-            if self.DISPLAY_SIZE_WARNINGS:
-                base.Text.warn(
-                    (
-                        f"The second dimension of your board is {self.size[1]}. "
-                        "It is a good practice to keep it at a maximum of 80 for "
-                        "compatibility with older terminals."
-                    )
-                )
-
-        # If all sanity check clears return True else raise a general error.
-        # I have no idea how the general error could ever occur but...
-        # better safe than sorry! However we have to skip test coverage for the else.
-        if sanity_check == 11 or sanity_check == 12:
-            return True
-        else:  # pragma: no cover
-            raise base.PglException(
-                "SANITY_CHECK_KO",
-                f"The board data are not valid. (Score: {sanity_check}/12)",
-            )
-
-    @property
-    def width(self):
-        """A convenience read only property to get the width of the Board.
-
-        It is absolutely equivalent to access to board.size[0].
-
-        :return: The width of the board.
-        :rtype: int
-
-        Example::
-
-            if board.size[0] != board.width:
-                print('Houston, we have a problem...')
-        """
-        return self.size[0]
-
-    @property
-    def height(self):
-        """A convenience read only property to get the height of the Board.
-
-        It is absolutely equivalent to access to board.size[1].
-
-        :return: The height of the board.
-        :rtype: int
-
-        Example::
-
-            if board.size[1] != board.height:
-                print('Houston, we have a problem...')
-        """
-        return self.size[1]
-
-    def layers(self, row, column):
-        """A method to get the number of layers at the Board's given coordinates.
-
-        :return: The number of layers of the board.
-        :rtype: int
-
-        Example::
-
-            if board.size[2] != board.layers:
-                print('Houston, we have a problem...')
-        """
-        return len(self._matrix[row][column])
-
-    def display_around(self, item, row_radius, column_radius):
-        """Display only a part of the board.
-
-        This method behaves like display() but only display a part of the board around
-        an object (usually the player).
-        Example::
-
-            # This will display only a total of 30 cells vertically and
-            # 60 cells horizontally.
-            board.display_around(player, 15, 30)
-
-        :param object: an item to center the view on (it has to be a subclass
-            of BoardItem)
-        :type object: :class:`~pygamelib.board_items.BoardItem`
-        :param row_radius: The radius of display in number of rows showed. Remember that
-            it is a radius not a diameter...
-        :type row_radius: int
-        :param column_radius: The radius of display in number of columns showed.
-            Remember that... Well, same thing.
-        :type column_radius: int
-
-        It uses the same display algorithm than the regular display() method.
-        """
-        # First let's take care of the type checking
-        if not isinstance(item, board_items.BoardItem):
-            raise base.PglInvalidTypeException(
-                "Board.display_around: object needs to be a BoardItem."
-            )
-        if type(row_radius) is not int or type(column_radius) is not int:
-            raise base.PglInvalidTypeException(
-                "Board.display_around: both row_radius and"
-                " column_radius needs to be int."
-            )
-        clear_eol = "\x1b[K"
-        # This statement doesn't registered as tested but it is. In tests/test_board.py
-        # in test_partial_display.
-        if isinstance(self.parent, Game) and isinstance(
-            self.parent.terminal, Terminal
-        ):  # pragma: no cover
-            clear_eol = self.parent.terminal.clear_eol
-        # Now if the viewport is greater or equal to the board size, well we just need
-        # a regular display()
-        if self.size[1] <= 2 * row_radius and self.size[0] <= 2 * column_radius:
-            return self.display()
-        if self.size[0] <= 2 * column_radius:
-            column_radius = round(self.size[0] / 2)
-        if self.size[1] <= 2 * row_radius:
-            row_radius = round(self.size[1] / 2)
-        row_min_bound = 0
-        row_max_bound = self.size[1]
-        column_min_bound = 0
-        column_max_bound = self.size[0]
-        # Here we account for the dimension of the complex item to center the viewport
-        # on it.
-        pos_row = item.pos[0]
-        pos_col = item.pos[1]
-        if isinstance(item, board_items.BoardComplexItem):
-            pos_row = item.pos[0] + int(item.height / 2)
-            pos_col = item.pos[1] + int(item.width / 2)
-        # Row
-        if pos_row - row_radius >= 0:
-            row_min_bound = pos_row - row_radius
-        if pos_row + row_radius < row_max_bound:
-            row_max_bound = pos_row + row_radius
-        # Columns
-        if pos_col - column_radius >= 0:
-            column_min_bound = pos_col - column_radius
-        if pos_col + column_radius < column_max_bound:
-            column_max_bound = pos_col + column_radius
-        # Now adjust boundaries so it looks fine at min and max
-        if column_min_bound <= 0:
-            column_min_bound = 0
-            column_max_bound = 2 * column_radius
-        if column_max_bound >= self.size[0]:
-            column_max_bound = self.size[0]
-            if (self.size[0] - 2 * column_radius) >= 0:
-                column_min_bound = self.size[0] - 2 * column_radius
-        if row_min_bound <= 0:
-            row_min_bound = 0
-            row_max_bound = 2 * row_radius
-        if row_max_bound >= self.size[1]:
-            row_max_bound = self.size[1]
-            if (self.size[1] - 2 * row_radius) >= 0:
-                row_min_bound = self.size[1] - 2 * row_radius
-        if row_min_bound == 0:
-            bt_size = column_radius * 2
-            if bt_size >= self.size[0]:
-                bt_size = self.size[0]
-                # if pos_col - column_radius > 0:
-                #     bt_size = self.size[0] - (pos_col - column_radius)
-            print(f"{self.ui_border_top * bt_size}{clear_eol}", end="")
-            if column_min_bound <= 0 and column_max_bound >= self.size[0]:
-                print(f"{self.ui_border_top * 2}{clear_eol}", end="")
-            elif column_min_bound <= 0 or column_max_bound >= self.size[0]:
-                print(f"{self.ui_border_top}{clear_eol}", end="")
-            print("\r")
-        for row in self._matrix[row_min_bound:row_max_bound]:
-            if column_min_bound == 0:
-                print(self.ui_border_left, end="")
-            for y in row[column_min_bound:column_max_bound]:
-                if (
-                    isinstance(y[0], board_items.BoardItemVoid)
-                    and y[0].model != self.ui_board_void_cell
-                ):
-                    y[0].model = self.ui_board_void_cell
-                    y[0].sprixel = self.ui_board_void_cell_sprixel
-                print(y[0], end="")
-            if column_max_bound >= self.size[0]:
-                print(f"{self.ui_border_right}{clear_eol}", end="")
-            print("\r")
-        if row_max_bound >= self.size[1]:
-            bb_size = column_radius * 2
-            if bb_size >= self.size[0]:
-                bb_size = self.size[0]
-                # if pos_col - column_radius > 0:
-                #     bb_size = self.size[0] - (pos_col - column_radius)
-            print(f"{self.ui_border_bottom * bb_size}{clear_eol}", end="")
-            if column_min_bound <= 0 and column_max_bound >= self.size[0]:
-                print(f"{self.ui_border_bottom * 2}{clear_eol}", end="")
-            elif column_min_bound <= 0 or column_max_bound >= self.size[0]:
-                print(f"{self.ui_border_bottom}{clear_eol}", end="")
-            print("\r")
-
-    def display(self):
-        """Display the entire board.
-
-        This method display the Board (as in print()), taking care of
-        displaying the borders, and everything inside.
-
-        It uses the __str__ method of the item, which by default uses (in order)
-        BoardItem.sprixel and (if no sprixel is defined) BoardItem.model. If you want to
-        override this behavior you have to subclass BoardItem.
-        """
-        # # Debug: print the overlapped matrix
-        # for row in self._overlapped_matrix:
-        #     print(self.ui_border_left, end="")
-        #     for column in row:
-        #         if (
-        #             isinstance(column, board_items.BoardItemVoid)
-        #             and column.model != self.ui_board_void_cell
-        #         ):
-        #             column.model = self.ui_board_void_cell
-        #         elif column is None:
-        #             print(" ", end="")
-        #         else:
-        #             print(column, end="\x1b[0m")
-        #     print(self.ui_border_right + "\x1b[0m\r")
-        # print("\x1b[0m")
-        # # eod
-        clear_eol = "\x1b[K"
-        # This statement doesn't registered as tested but it is. In tests/test_board.py
-        # in test_partial_display.
-        if isinstance(self.parent, Game) and isinstance(
-            self.parent.terminal, Terminal
-        ):  # pragma: no cover
-            clear_eol = self.parent.terminal.clear_eol
-        print(
-            "".join(
-                [
-                    self.ui_border_top * len(self._matrix[0]),
-                    self.ui_border_top * 2,
-                    clear_eol,
-                    "\r",
-                ]
-            )
-        )
-        for row in self._matrix:
-            print(self.ui_border_left, end="")
-            for column in row:
-                if (
-                    isinstance(column[0], board_items.BoardItemVoid)
-                    and column[0].model != self.ui_board_void_cell
-                ):
-                    if isinstance(self.ui_board_void_cell_sprixel, core.Sprixel):
-                        column[0].sprixel = self.ui_board_void_cell_sprixel
-                        column[0].model = self.ui_board_void_cell_sprixel.model
-                    else:
-                        column[0].model = self.ui_board_void_cell
-                print(column[0], end="")
-            print(self.ui_border_right + clear_eol + "\r")
-        print(
-            "".join(
-                [
-                    self.ui_border_bottom * len(self._matrix[0]),
-                    self.ui_border_bottom * 2,
-                    clear_eol,
-                    "\r",
-                ]
-            )
-        )
-
-    def render_to_buffer(self, buffer, row, column, buffer_height, buffer_width):
-        """Render the board into a display buffer (not a screen buffer).
-
-        This method is automatically called by :func:`pygamelib.engine.Screen.render`.
-
-        :param buffer: A screen buffer to render the item into.
-        :type buffer: numpy.array
-        :param row: The row to render in.
-        :type row: int
-        :param column: The column to render in.
-        :type column: int
-        :param height: The total height of the display buffer.
-        :type height: int
-        :param width: The total width of the display buffer.
-        :type width: int
-
-        """
-        row_start = 0
-        row_end = self.size[1]
-        bc_start = 0
-        column_end = self.size[0]
-        pos_row = 0
-        pos_col = 0
-        vp_height = 0
-        vp_width = 0
-        if self.enable_partial_display:
-            # We still need to clamp the viewport if we want to avoid
-            # crashes in case the progammer poorly calculated the viewport.
-            vp_height = self.partial_display_viewport[0]
-            vp_width = self.partial_display_viewport[1]
-            if self.size[0] < (2 * vp_width):
-                vp_width = int(self.size[0] / 2)
-            if self.height < (2 * vp_height):
-                vp_height = int(self.size[1] / 2)
-            pos_row = self.partial_display_focus.row
-            pos_col = self.partial_display_focus.column
-            if isinstance(self.partial_display_focus, board_items.BoardComplexItem):
-                pos_row = self.partial_display_focus.row + int(
-                    self.partial_display_focus.height / 2
-                )
-                pos_col = self.partial_display_focus.column + int(
-                    self.partial_display_focus.width / 2
-                )
-            # We don't want to many tests here for performances sake.
-            # So if partial display is enabled we assume the rest of the
-            # parameters are correct. If not, well it'll crash.
-            row_start = pos_row - vp_height
-            row_end = pos_row + vp_height
-            if row_start < 0:
-                row_start = 0
-            if row_end > self.size[1]:
-                row_end = self.size[1]
-                row_start = self.size[1] - (2 * vp_height)
-            elif row_end < (2 * vp_height):
-                row_end = 2 * vp_height
-
-            # compute start and stop coordinates before actually display the
-            # board.
-            bc_start = pos_col - vp_width
-            column_end = pos_col + vp_width
-            if bc_start < 0:
-                bc_start = 0
-            elif bc_start > self.size[0] - (vp_width * 2):
-                bc_start = self.size[0] - (vp_width * 2)
-            if column_end > self.size[0]:
-                column_end = self.size[0]
-                bc_start = self.size[0] - vp_width * 2
-            elif column_end < (vp_width * 2):
-                column_end = vp_width * 2
-        # Trying to remove as many dot notation as possible for performances
-        render_cell = self.render_cell
-        for br in range(row_start, row_end):
-            cidx = 0
-            bc = bc_start
-            while bc < column_end:
-                cell = render_cell(br, bc)
-                encoded_cell = cell.__repr__()
-                incr = cell.length
-                buffer[row + br - row_start][column + cidx] = encoded_cell
-
-                for tmpiidx in range(1, incr):
-                    buffer[row + br][column + cidx + tmpiidx] = ""
-                bc += 1
-                cidx += incr
-
-    def render_cell(self, row, column):
-        """
-        .. versionadded:: 1.3.0
-
-        Render the cell at given position.
-
-        This method always return a :class:`~pygamelib.gfx.core.Sprixel` (it could be an
-        empty one though). It automatically render the highest item (if items are
-        overlapping for example). If the rendered :class:`~pygamelib.gfx.core.Sprixel`
-        is configured to have transparent background, this method is going to go through
-        the layers to make sure that it is rendering the sprixels correctly (i.e: with
-        the right background color).
-
-        For basic usage of the library it is unlikely that you will use it. It is part
-        of the screen rendering stack introduced in version 1.3.0.
-        Actually unless you need to write a different rendering system you won't use
-        that method.
-
-        :param row: The row to render.
-        :type row: int
-        :param column: The column to render.
-        :type column: int
-
-        :rtype: :class:`~pygamelib.gfx.core.Sprixel`
-
-        :raise PglOutOfBoardBoundException: if row or column are
-            out of bound.
-
-        Example::
-
-            # This renders the board from the top left corner of the screen.
-            for row in range(0, myboard.height):
-                for column in range(0, myboard.height):
-                    myscreen.place(
-                        myboard.render_cell(row, column)
-                    ),
-                    row,
-                    column,
-        """
-        if row < self.size[1] and column < self.size[0]:
-            # Here we are doing something similar to casting a ray and
-            # render the first cell that collides.
-            if (
-                len(self._matrix[row][column]) > 0
-                and self._matrix[row][column][-1].sprixel is not None
-            ):
-                sprix = self._matrix[row][column][-1].sprixel
-                layers_len = len(self._matrix[row][column])
-                if layers_len > 1:
-                    # We only make the copy here because most of the time we don't need
-                    # to: if nothing is stacked under then we don't have any reason to
-                    # build a new sprixel because we are not modifying it.
-                    if sprix.bg_color is None or sprix.is_bg_transparent:
-                        sprix = copy.deepcopy(self._matrix[row][column][-1].sprixel)
-                        # And now we are going down to make sure that we have pseudo
-                        # transparency.
-                        idx = -2
-                        for _ in range(layers_len - 1):
-                            if (
-                                not isinstance(
-                                    self._matrix[row][column][idx],
-                                    board_items.BoardItemVoid,
-                                )
-                                and not self._matrix[row][column][
-                                    idx
-                                ].sprixel.is_bg_transparent
-                            ):
-                                # The following was removed to account for void item bg
-                                # copy.
-                                # and self._matrix[row][column][idx].sprixel.bg_color
-                                # is not None
-
-                                # As soon as we complete the sprixel we break out of
-                                # here to limit the impact on performances
-                                sprix.bg_color = self._matrix[row][column][
-                                    idx
-                                ].sprixel.bg_color
-                                break
-                            idx -= 1
-                return sprix
-            return core.Sprixel()
-        else:
-            raise base.PglOutOfBoardBoundException(
-                (
-                    f"Impossible to render cell at coordinates [{row},{column}]"
-                    " because it's out of the board boundaries "
-                    f"({self.size[0]}x{self.size[1]})."
-                )
-            )
-
-    def item(self, row, column, layer=-1):  # layer = -1 or 0?
-        """
-        Return the item at the row, column, layer position if within
-        board's boundaries.
-
-        :param row: The row to probe.
-        :type row: int
-        :param column: The column to probe.
-        :type column: int
-        :param layer: The layer to probe (default: -1 i.e the top item).
-        :type layer: int
-
-        :rtype: pygamelib.board_items.BoardItem
-
-        :raise PglOutOfBoardBoundException: if row, column or layer are
-            out of bound.
-        """
-        if row < self.size[1] and column < self.size[0]:
-            if self._matrix[row][column][layer].parent is not None and isinstance(
-                self._matrix[row][column][layer].parent, board_items.BoardComplexItem
-            ):
-                return self._matrix[row][column][layer].parent
-            else:
-                return self._matrix[row][column][layer]
-        else:
-            raise base.PglOutOfBoardBoundException(
-                (
-                    f"There is no item at coordinates [{row},{column},{layer}] "
-                    "because it's out of the board boundaries "
-                    f"({self.size[0]}x{self.size[1]}x{self.size[2]})."
-                )
-            )
-
-    def place_item(
-        self,
-        item,
-        row: int,
-        column: int,
-        layer: int = 0,
-        auto_layer: bool = True,
-    ):
-        """
-        Place an item at coordinates row, column and layer.
-
-        If row, column or layer are out of the board boundaries,
-        a PglOutOfBoardBoundException is raised.
-
-        If the item is not a subclass of BoardItem, a PglInvalidTypeException
-
-        .. warning:: Nothing prevents you from placing an object on top of
-            another. Be sure to check that. This method will check for items that
-            are both overlappable **and** restorable to save them, but that's
-            the extend of it.
-        """
-        if row < self.size[1] and column < self.size[0]:
-            # First let's make sure that the BoardItem._auto_layer is up to date
-            # Auto layer tells us to automatically pick the layer (in case the user
-            # wants to have higher layer to draw overlays). But it's not implemented yet
-            if isinstance(item, board_items.BoardItem):
-                item._auto_layer = auto_layer
-            if isinstance(item, board_items.BoardComplexItem):
-                for ir in range(0, item.size[1]):
-                    for ic in range(0, item.size[0]):
-                        if not isinstance(item.item(ir, ic), board_items.BoardItemVoid):
-                            self.place_item(
-                                item.item(ir, ic),
-                                row + ir,
-                                column + ic,
-                                layer,
-                                auto_layer,
-                            )
-                item.store_position(row, column, layer)
-                if isinstance(item, board_items.Movable):
-                    self._movables.add(item)
-                elif isinstance(item, board_items.Immovable):
-                    self._immovables.add(item)
-            elif isinstance(item, board_items.BoardItem):
-                # First we look at the layers to see if the specified layer exists.
-                existing_item = None
-                try:
-                    existing_item = self._matrix[row][column][layer]
-                except IndexError:
-                    # The layer might not exist yet
-                    pass
-                # If not and if the item is overlappable and restorable we increase the
-                # layer number (to create a new layer).
-                if (
-                    isinstance(existing_item, board_items.Immovable)
-                    and existing_item.restorable()
-                    and existing_item.overlappable()
-                ):
-                    layer += 1
-                # If we are replacing a void item and the item's background is
-                # transparent, let's grab it's background color.
-                if (
-                    isinstance(existing_item, board_items.BoardItemVoid)
-                    and existing_item.sprixel is not None
-                    and item.sprixel.is_bg_transparent
-                ):
-                    item.sprixel.bg_color = existing_item.sprixel.bg_color
-                # Place the item on the board
-                try:
-                    self._matrix[row][column][layer] = item
-                except IndexError:
-                    self._matrix[row][column].append(item)
-                # Take ownership of the item (if item doesn't have parent)
-                if item.parent is None:
-                    item.parent = self
-                item.store_position(row, column, layer)
-                if isinstance(item, board_items.Movable):
-                    if isinstance(item.parent, board_items.BoardComplexItem):
-                        self._movables.add(item.parent)
-                    else:
-                        self._movables.add(item)
-                elif isinstance(item, board_items.Immovable):
-                    if isinstance(item.parent, board_items.BoardComplexItem):
-                        self._immovables.add(item.parent)
-                    else:
-                        self._immovables.add(item)
-            else:
-                raise base.PglInvalidTypeException(
-                    "The item passed in argument is not a subclass of BoardItem"
-                )
-        else:
-            raise base.PglOutOfBoardBoundException(
-                f"Cannot place item at coordinates [{row},{column},{layer}] because "
-                f"it's out of the board boundaries ({self.size[0]}x{self.size[1]})."
-            )
-
-    def remove_item(self, item):
-        """Remove an item from the board.
-
-        If the item is a single BoardItem, this method is absolutely equivalent to
-        calling :meth:`clear_cell`.
-        If item is a derivative of BoardComplexItem, it is not as clear_cell() only
-        clears a specific cell (that can be part of a complex item). This method
-        actually remove the entire item and clears all its cells.
-
-        :param item: The item to remove.
-        :type item: :class:`~pygamelib.board_items.BoardItem`
-
-        Example::
-
-            game.current_board().remove_item(game.player)
-        """
-        if not isinstance(item, board_items.BoardItem):
-            raise base.PglInvalidTypeException(
-                "Board.remove_item(item): item must be a BoardItem."
-            )
-        cc = None
-        if isinstance(item, board_items.BoardComplexItem):
-            for r in range(item.row, item.row + item.height):
-                for c in range(item.column, item.column + item.width):
-                    cc = self.item(r, c, item.layer)
-                    if cc == item:
-                        break
-                    else:
-                        # I honestly think it's impossible to get there.
-                        cc = None  # pragma: no cover
-                if cc is not None:
-                    break
-        else:
-            cc = self.item(item.row, item.column, item.layer)
-        if cc is not None and item == cc:
-            if isinstance(item, board_items.BoardComplexItem):
-                for r in range(item.row, item.row + item.height):
-                    for c in range(item.column, item.column + item.width):
-                        self.clear_cell(r, c, item.layer)
-            else:
-                self.clear_cell(item.row, item.column, item.layer)
-            return True
-        else:
-            raise base.PglException(
-                "invalid_item",
-                "Board.remove_item(item): The item is different from what is on the "
-                "board at these coordinates.",
-            )
-
-    def _move_complex(self, item, direction, step=1):
-        if isinstance(item, board_items.Movable) and item.can_move():
-            # If direction is not a vector, transform into one
-            if not isinstance(direction, base.Vector2D):
-                direction = base.Vector2D.from_direction(direction, step)
-
-            projected_position = item.position_as_vector() + direction
-            if (
-                projected_position is not None
-                and projected_position.row >= 0
-                and projected_position.column >= 0
-                and (projected_position.row + item.height - 1) < self.size[1]
-                and (projected_position.column + item.width - 1) < self.size[0]
-            ):
-                can_draw = True
-                for orow in range(0, item.size[1]):
-                    for ocol in range(0, item.size[0]):
-                        new_row = projected_position.row + orow
-                        new_column = projected_position.column + ocol
-                        dest_item = self.item(new_row, new_column)
-                        # Check all items within the surface
-                        if isinstance(dest_item, board_items.Actionable):
-                            if (
-                                isinstance(item, board_items.Player)
-                                and (
-                                    (dest_item.perm == constants.PLAYER_AUTHORIZED)
-                                    or (
-                                        dest_item.perm
-                                        == constants.ALL_CHARACTERS_AUTHORIZED
-                                    )
-                                )
-                            ) or (
-                                isinstance(item, board_items.NPC)
-                                and (
-                                    (dest_item.perm == constants.NPC_AUTHORIZED)
-                                    or (
-                                        dest_item.perm
-                                        == constants.ALL_CHARACTERS_AUTHORIZED
-                                    )
-                                )
-                                or (dest_item.perm == constants.ALL_MOVABLE_AUTHORIZED)
-                            ):
-                                dest_item.activate()
-                        # Now taking care of pickable objects
-                        pickable_item = self.item(new_row, new_column)
-                        if (
-                            not pickable_item.overlappable()
-                            and pickable_item.pickable()
-                            and isinstance(item, board_items.Movable)
-                            and item.has_inventory()
-                        ):
-                            # Put the item in the inventory
-                            item.inventory.add_item(pickable_item)
-                            # And then clear the cell (this is usefull for the next one)
-                            self.remove_item(pickable_item)
-                        # Finally we check if the destination is overlappable
-                        if dest_item != item and not dest_item.overlappable():
-                            can_draw = False
-                            break
-                if can_draw:
-                    for row in range(0, item.size[1], 1):
-                        for col in range(0, item.size[0], 1):
-                            # First erase everything that was drawn
-                            if not isinstance(
-                                item.item(row, col), board_items.BoardItemVoid
-                            ):
-                                self.place_item(
-                                    self.generate_void_cell(),
-                                    item.pos[0] + row,
-                                    item.pos[1] + col,
-                                )
-                            # Then restore overlapped elements
-                            if (
-                                self._overlapped_matrix[item.pos[0] + row][
-                                    item.pos[1] + col
-                                ][0]
-                                is not None
-                            ):
-                                self.place_item(
-                                    self._overlapped_matrix[item.pos[0] + row][
-                                        item.pos[1] + col
-                                    ][0],
-                                    item.pos[0] + row,
-                                    item.pos[1] + col,
-                                )
-                                self._overlapped_matrix[item.pos[0] + row][
-                                    item.pos[1] + col
-                                ][0] = None
-                    # Finally, place the item at its new position
-                    self.place_item(
-                        item,
-                        projected_position.row,
-                        projected_position.column,
-                    )
-        else:  # pragma: no cover
-            # This is actually test in tests/test_board.py in function test_move()
-            # I have no idea why it is not registering as a tested statement
-            raise base.PglObjectIsNotMovableException(
-                (
-                    f"Item '{item.name}' at position [{item.pos[0]}, "
-                    f"{item.pos[1]}] is not a subclass of Movable, "
-                    f"therefor it cannot be moved."
-                )
-            )
-
-    def move(self, item, direction, step=1):
-        """
-        Board.move() is a routing function. It does 2 things:
-
-         1 - If the direction is a :class:`~pygamelib.base.Vector2D`, round the
-            values to the nearest integer (as move works with entire board cells, i.e
-            integers).
-         2 - route toward the right moving function depending if the item is complex or
-            not.
-
-        Move an item in the specified direction for a number of steps.
-
-        :param item: an item to move (it has to be a subclass of Movable)
-        :type item: pygamelib.board_items.Movable
-        :param direction: a direction from :ref:`constants-module`
-        :type direction: pygamelib.constants or :class:`~pygamelib.base.Vector2D`
-        :param step: the number of steps to move the item.
-        :type step: int
-
-        If the number of steps is greater than the Board, the item will
-        be move to the maximum possible position.
-
-        If the item is not a subclass of Movable, an PglObjectIsNotMovableException
-        exception (see :class:`pygamelib.base.PglObjectIsNotMovableException`).
-
-        Example::
-
-            board.move(player,constants.UP,1)
-
-        .. Important:: if the move is successfull, an empty BoardItemVoid
-            (see :class:`pygamelib.boards_item.BoardItemVoid`) will be put at the
-            departure position (unless the movable item is over an overlappable
-            item). If the movable item is over an overlappable item, the
-            overlapped item is restored.
-
-        .. Important:: Also important: If the direction is a
-           :class:`~pygamelib.base.Vector2D`, the values will be rounded to the
-           nearest integer (as move works with entire board cells). It allows for
-           movement accumulation before actually moving. The step parameter is not used
-           in that case.
-        """
-        if (
-            item.parent is not None
-            and isinstance(item.parent, Game)
-            and item.parent.mode == constants.MODE_RT
-            and item.dtmove < item.movement_speed
-        ):
-            return
-        item.dtmove = 0.0
-        rounded_direction = None
-        if isinstance(direction, base.Vector2D):
-            # If direction is a vector, round the numbers to the next integer.
-            rounded_direction = base.Vector2D(
-                round(direction.row), round(direction.column)
-            )
-        else:
-            if type(direction) is int:
-                # Else, just use the direction
-                rounded_direction = direction
-                if type(step) is not int:
-                    raise base.PglInvalidTypeException(
-                        "Board.move(item, direction, step): step must be an int."
-                    )
-            else:
-                raise base.PglInvalidTypeException(
-                    "Board.move(item, direction, step): direction must be a Vector2D or"
-                    " a constant direction."
-                )
-        if isinstance(item, board_items.BoardComplexItem):
-            return self._move_complex(item, rounded_direction, step)
-        else:
-            return self._move_simple(item, rounded_direction, step)
-
-    def _move_simple(self, item, direction, step=1):
-        if isinstance(item, board_items.Movable) and item.can_move():
-
-            # if direction not in dir(Constants):
-            #     raise base.PglInvalidTypeException('In Board.move(item, direction,
-            # step), direction must be a direction contant from the
-            # pygamelib.constants module')
-
-            new_row = None
-            new_column = None
-            if isinstance(direction, base.Vector2D):
-                new_row = item.pos[0] + direction.row
-                new_column = item.pos[1] + direction.column
-            else:
-                if direction == constants.UP:
-                    new_row = item.pos[0] - step
-                    new_column = item.pos[1]
-                elif direction == constants.DOWN:
-                    new_row = item.pos[0] + step
-                    new_column = item.pos[1]
-                elif direction == constants.LEFT:
-                    new_row = item.pos[0]
-                    new_column = item.pos[1] - step
-                elif direction == constants.RIGHT:
-                    new_row = item.pos[0]
-                    new_column = item.pos[1] + step
-                elif direction == constants.DRUP:
-                    new_row = item.pos[0] - step
-                    new_column = item.pos[1] + step
-                elif direction == constants.DRDOWN:
-                    new_row = item.pos[0] + step
-                    new_column = item.pos[1] + step
-                elif direction == constants.DLUP:
-                    new_row = item.pos[0] - step
-                    new_column = item.pos[1] - step
-                elif direction == constants.DLDOWN:
-                    new_row = item.pos[0] + step
-                    new_column = item.pos[1] - step
-            # First of all we check if the new coordinates are within the board
-            if (
-                new_row is not None
-                and new_column is not None
-                and new_row >= 0
-                and new_column >= 0
-                and new_row < self.size[1]
-                and new_column < self.size[0]
-            ):
-                # Then, we check if the item is actionable and if so, if the item
-                # is allowed to activate it.
-                # (1.3.0+) item without a third parameter returns the item from the top
-                # layer
-                dest_item = self.item(new_row, new_column)
-                if isinstance(dest_item, board_items.Actionable):
-                    if (
-                        isinstance(item, board_items.Player)
-                        and (
-                            (dest_item.perm == constants.PLAYER_AUTHORIZED)
-                            or (dest_item.perm == constants.ALL_CHARACTERS_AUTHORIZED)
-                        )
-                    ) or (
-                        isinstance(item, board_items.NPC)
-                        and (
-                            (dest_item.perm == constants.NPC_AUTHORIZED)
-                            or (dest_item.perm == constants.ALL_CHARACTERS_AUTHORIZED)
-                        )
-                    ):
-                        dest_item.activate()
-                # Now we check if the destination contains a pickable item.
-                # NOTE: I'm not sure why I decided that pickables were not overlappable.
-                pickable_item = self.item(new_row, new_column)
-                if (
-                    not pickable_item.overlappable()
-                    and pickable_item.pickable()
-                    and isinstance(item, board_items.Movable)
-                    and item.has_inventory()
-                ):
-                    # Put the item in the inventory
-                    item.inventory.add_item(pickable_item)
-                    # And then clear the cell (this is usefull for the next one)
-                    self.remove_item(pickable_item)
-                # Finally we check if the destination is overlappable
-                if dest_item.overlappable():
-                    layer = 0
-                    # And if it is, we check if the destination is restorable
-                    if (
-                        not isinstance(dest_item, board_items.BoardItemVoid)
-                        and isinstance(dest_item, board_items.Immovable)
-                        and dest_item.restorable()
-                    ):
-                        layer = dest_item.pos[2] + 1
-
-                    if item.pos[2] == 0:
-                        # If the item is on layer 0 there is nothing under it, so we
-                        # just put a void item.
-                        self.place_item(
-                            self.generate_void_cell(), item.pos[0], item.pos[1], 0
-                        )
-                    else:
-                        # we simply delete the last element of the layer (i.e our item)
-                        # and place it at its destination afterward.
-                        self._matrix[item.pos[0]][item.pos[1]].pop(-1)
-                    self.place_item(item, new_row, new_column, layer)
-        else:
-            raise base.PglObjectIsNotMovableException(
-                (
-                    f"Item '{item.name}' at position [{item.pos[0]}, "
-                    f"{item.pos[1]}] is not a subclass of Movable, "
-                    f"therefor it cannot be moved."
-                )
-            )
-
-    def clear_cell(self, row, column, layer=0):
-        """Clear cell (row, column, layer)
-
-        This method clears a cell, meaning it position a
-        void_cell BoardItemVoid at these coordinates.
-
-        It also removes the items from the the list of movables and immovables.
-
-        :param row: The row of the item to remove
-        :type row: int
-        :param column: The column of the item to remove
-        :type column: int
-        :param layer: The layer of the item to remove
-        :type layer: int
-
-        Example::
-
-            myboard.clear_cell(3,4,0)
-
-        .. WARNING:: This method does not check the content before,
-            it *will* overwrite the content.
-
-        .. Important:: In the case of a BoardComplexItem derivative (Tile, ComplexPlayer
-           , ComplexNPC, etc.) clearing one cell of the entire item is enough to remove
-           the entire item from the list of movables or immovables.
-
-        .. note:: Starting in 1.3.0 and the addition of board's layers, there is no
-           more overlapping matrix. With no more moving items around this method should
-           be a little faster. It also means that the layer parameter is really
-           important (a wrong layer means that you'll clear the wrong cell).
-
-        """
-        item = self.item(row, column, layer)
-        if item in self._movables:
-            self._movables.discard(item)
-        elif item in self._immovables:
-            self._immovables.discard(item)
-        self._matrix[row][column][layer] = None
-        self.init_cell(row, column, layer)
 
     def get_movables(self, **kwargs):
         """Return a list of all the Movable objects in the Board.
@@ -4826,7 +3633,9 @@ class Game:
         """
         self._boards = {}
 
-    def add_npc(self, level_number, npc, row=None, column=None):
+    def add_npc(
+        self, level_number, npc, row=None, column=None, layer=None, auto_layer=True
+    ):
         """
         Add a NPC to the game. It will be placed on the board corresponding to the
         level_number. If row and column are not None, the NPC is placed at these
@@ -4895,7 +3704,14 @@ class Game:
                             npc.step = 1
                             npc.step_horizontal = 1
                             npc.step_vertical = 1
-                        self._boards[level_number]["board"].place_item(npc, row, column)
+                        if layer is None:
+                            self._boards[level_number]["board"].place_item(
+                                npc, row, column
+                            )
+                        else:
+                            self._boards[level_number]["board"].place_item(
+                                npc, row, column, layer, auto_layer
+                            )
                         self._boards[level_number]["npcs"].append(npc)
                     else:
                         raise base.PglInvalidTypeException("column must be an int.")
