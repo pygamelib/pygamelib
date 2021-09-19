@@ -703,6 +703,8 @@ class BoardComplexItem(BoardItem):
         if sprite is not None:
             self.sprite = sprite
         self.null_sprixel = null_sprixel
+        if self.null_sprixel is None:
+            self.null_sprixel = core.Sprixel()
         self._size = size
         self._item_matrix = []
         # Not sure about that one
@@ -750,6 +752,8 @@ class BoardComplexItem(BoardItem):
                     and self.sprite.sprixel(row, col) == self.null_sprixel
                 ):
                     self._item_matrix[row].append(BoardItemVoid())
+                    self._item_matrix[row][col].name = f"{self.name}_{row}_{col}"
+                    self._item_matrix[row][col].parent = self
                 else:
                     self._item_matrix[row].append(self.base_item_type(**self.__kwargs))
                     self._item_matrix[row][col].name = f"{self.name}_{row}_{col}"
