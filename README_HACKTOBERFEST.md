@@ -29,7 +29,7 @@ It's better but not required. I did not know anything about game dev before star
 
 ### Anything else?
 
-Base branch for PR is either 1.3.0-working or master (I'll keep both in sync).
+Base branch for PR is master.
 
 Have fun!
 
