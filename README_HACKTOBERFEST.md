@@ -7,7 +7,7 @@ If you were to chose to spend your time on the pygamelib project here's what you
 
 ### What is it?
 
-A game library to make console based games.
+A game library to make console (as in terminal) based games.
 
 ### Who is the audience?
 
