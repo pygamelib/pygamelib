@@ -14,4 +14,30 @@ BoardItem: type in constructor is now item_type. This breaks a lot of things...
 BoardItem: they are now all able to set/get overlappable, restorable, pickable and can_move
 BoardItem: value has been moved to BoardItem.
 BoardItem: change of behavior: now if both model and sprixel are given to the constructor, model is ignored (sprixel has priority). Need an example in the release note.
+BoardItem: there was a conflict with inventory_space. It was defined both as a property and a method. The method has been removed. Concretely: you might have to remove parenthesis when using any_item.inventory_space (vs the old any_item.inventory_space()).
+
 [non breaking][important] Void cells are now initialized with knowing their position.
+[non breaking][important] The observer system has some limitations. One being that notifications are not passed down by attributes.
+    For example:
+        screen = Game.instance().screen
+        text = base.Text("This is an example", fg_color=core.Color(125,125,125))
+        screen.place(text, screen.vcenter, screen.hcenter)
+        # The screen will be updated
+        screen.update()
+
+        # In that case the screen will also be updated because Text (as all PglBaseObject objects) notify Screen from all it's direct changes.
+        color = text.fg_color
+        color.r = 255
+        text.fg_color = color
+        screen.update()
+
+        # In that case however you have to use Screen.force_update() as the change notification is not passed down (or up) for Color to Text to Screen.
+        text.fg_color.r = 255
+        screen.update()  # Screen is NOT repainted
+        screen.force_update()  # Screen is going to be repainted
+
+        # You can manually attach the color to the screen to force the behavior
+        text.fg_color.attach(screen)
+        # And in that case, changing a color element will have the intended effect.
+        text.fg_color.g = 255
+        screen.update()  # Here the screen is going to be repainted.
