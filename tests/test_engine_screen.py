@@ -1,7 +1,6 @@
 from pygamelib import engine, board_items, functions, base
 from pygamelib.gfx.core import SpriteCollection, Sprixel, Color, Sprite, Font
 import unittest
-import numpy as np
 
 
 class TB(object):
@@ -19,7 +18,7 @@ class TB(object):
 class TestBase(unittest.TestCase):
     def setUp(self):
         super().setUp()
-        self.screen = engine.Screen()
+        self.screen = engine.Screen(50, 50)
         self.assertIsInstance(self.screen, engine.Screen)
 
     # def test_screen_create_empty(self):
@@ -42,8 +41,8 @@ class TestBase(unittest.TestCase):
         self.assertIsNone(self.screen.clear())
 
     def test_screen_dimension(self):
-        self.assertEqual(self.screen.terminal.width, self.screen.width)
-        self.assertEqual(self.screen.terminal.height, self.screen.height)
+        self.assertEqual(self.screen.width, 50)
+        self.assertEqual(self.screen.height, 50)
 
     def test_screen_display(self):
         self.assertIsNone(
@@ -75,15 +74,7 @@ class TestBase(unittest.TestCase):
     def test_screen_buffer(self):
         sprites_panda = SpriteCollection.load_json_file("tests/panda.spr")
         b = engine.Board(size=[20, 20])
-        s = engine.Screen()
-        # This is a dirty hack for CircleCI as it returns a 0x0 screen size.
-        if s.width <= 0 or s.height <= 0:
-            s._display_buffer = np.array(
-                [[Sprixel(" ") for i in range(0, 50, 1)] for j in range(0, 50, 1)]
-            )
-            s._screen_buffer = np.array(
-                [[Sprixel(" ") for i in range(0, 50, 1)] for j in range(0, 50, 1)]
-            )
+        s = engine.Screen(50, 50)
         # Because CircleCI return a console with no size (most probably because we are
         # not attached to any terminal), we need to make sure that the partial display
         # tests work in that environment too
@@ -109,14 +100,6 @@ class TestBase(unittest.TestCase):
             b.render_cell(50, 50)
         self.assertIsNone(s.clear_buffers())
         self.assertIsNone(s.clear_screen_buffer())
-        # And again after clear buffers.
-        if s.width <= 0 or s.height <= 0:
-            s._display_buffer = np.array(
-                [[Sprixel(" ") for i in range(0, 50, 1)] for j in range(0, 50, 1)]
-            )
-            s._screen_buffer = np.array(
-                [[Sprixel(" ") for i in range(0, 50, 1)] for j in range(0, 50, 1)]
-            )
         self.assertTrue(s._is_dirty)
         self.assertTrue(functions.pgl_isinstance(s.buffer, "numpy.ndarray"))
         self.assertIsNone(s.update())
@@ -261,19 +244,6 @@ class TestBase(unittest.TestCase):
             s._display_buffer.shape[1],
         )
         s.update()
-        # NOTE: That test is no longer needed nor working as Board.render_to_buffer()
-        #       deal with the IndexError itself.
-        # # Finally, test board and viewport to big to fit.
-        # bork = engine.Board(size=[screen_width * 2, screen_height * 2])
-        # bork.partial_display_viewport = [
-        #     int(screen_height * 3) - 1,
-        #     int(screen_width * 3) - 1,
-        # ]
-        # bork.partial_display_focus = camera
-        # s.place(bork, 0, 0)
-        # with self.assertRaises(IndexError):
-        #     s.force_render()
-        #     s.update()
 
 
 if __name__ == "__main__":
