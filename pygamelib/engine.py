@@ -3752,21 +3752,56 @@ class Screen(base.PglBaseObject):
 
     """
 
-    def __init__(self):
+    def __init__(self, width: int = None, height: int = None):
+        """The constructor takes the following (optional) parameters.
+
+        :param width: The width of the screen.
+        :type width: int
+        :param height: The height of the screen.
+        :type height: int
+
+        Setting any of these parameters fixes the screen size regardless of the actual
+        console/terminal resolution. Leaving any of these parameters unset will let the
+        constructor use the actual console/terminal resolution instead.
+
+        Please have a look at the examples for more on this topic.
+
+        Example::
+
+            # Let's assume a terminal resolution of 170(width)x75(height).
+            screen = Screen()
+            # Next line display: "Screen width=170 height=75"
+            print(f"Screen width={screen.width} height={screen.height}")
+            screen = Screen(50)
+            # Next line display: "Screen width=50 height=75"
+            print(f"Screen width={screen.width} height={screen.height}")
+            screen = Screen(height=50)
+            # Next line display: "Screen width=170 height=50"
+            print(f"Screen width={screen.width} height={screen.height}")
+            screen = Screen(50, 50)
+            # Next line display: "Screen width=50 height=50"
+            print(f"Screen width={screen.width} height={screen.height}")
+        """
         super().__init__()
         # get a terminal instance
         self.terminal = base.Console.instance()
         # Create the 2 buffers.
+        self.__width = width
+        self.__height = height
+        if self.__width is None:
+            self.__width = self.terminal.width
+        if self.__height is None:
+            self.__height = self.terminal.height
         self._display_buffer = np.array(
             [
-                [core.Sprixel(" ") for i in range(0, self.terminal.width, 1)]
-                for j in range(0, self.terminal.height, 1)
+                [core.Sprixel(" ") for i in range(0, self.__width, 1)]
+                for j in range(0, self.__height, 1)
             ]
         )
         self._screen_buffer = np.array(
             [
-                [core.Sprixel(" ") for i in range(0, self.terminal.width, 1)]
-                for j in range(0, self.terminal.height, 1)
+                [core.Sprixel(" ") for i in range(0, self.__width, 1)]
+                for j in range(0, self.__height, 1)
             ]
         )
         self._is_dirty = False
@@ -3796,14 +3831,14 @@ class Screen(base.PglBaseObject):
         """
         self._display_buffer = np.array(
             [
-                [core.Sprixel(" ") for i in range(0, self.terminal.width, 1)]
-                for j in range(0, self.terminal.height, 1)
+                [core.Sprixel(" ") for i in range(0, self.__width, 1)]
+                for j in range(0, self.__height, 1)
             ]
         )
         self._screen_buffer = np.array(
             [
-                [core.Sprixel(" ") for i in range(0, self.terminal.width, 1)]
-                for j in range(0, self.terminal.height, 1)
+                [core.Sprixel(" ") for i in range(0, self.__width, 1)]
+                for j in range(0, self.__height, 1)
             ]
         )
         self._is_dirty = False
@@ -3828,8 +3863,8 @@ class Screen(base.PglBaseObject):
         """
         self._screen_buffer = np.array(
             [
-                [core.Sprixel(" ") for i in range(0, self.terminal.width, 1)]
-                for j in range(0, self.terminal.height, 1)
+                [core.Sprixel(" ") for i in range(0, self.__width, 1)]
+                for j in range(0, self.__height, 1)
             ]
         )
         self._is_dirty = True
@@ -3840,7 +3875,7 @@ class Screen(base.PglBaseObject):
         This method wraps Terminal.width and return the width of the terminal window in
         number of characters.
         """
-        return self.terminal.width
+        return self.__width
 
     @property
     def height(self):
@@ -3848,7 +3883,7 @@ class Screen(base.PglBaseObject):
         This method wraps Terminal.height and return the height of the terminal window
         in number of characters.
         """
-        return self.terminal.height
+        return self.__height
 
     @property
     def need_rendering(self):
