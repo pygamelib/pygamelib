@@ -175,6 +175,46 @@ class BoardItem(base.PglBaseObject):
         elif pickable and restorable and not overlappable:
             self.__is_restorable = False
 
+    def serialize(self) -> dict:
+        ret_data = dict()
+        # self.parent cannot really be serialized (or more accurately I don't really
+        # want to do it properly)
+        ret_data["object"] = str(self.__class__)
+        if self.sprixel is not None:
+            ret_data["sprixel"] = self.sprixel.serialize()
+        ret_data["restorable"] = self.restorable()
+        ret_data["overlappable"] = self.overlappable()
+        ret_data["pickable"] = self.pickable()
+        ret_data["can_move"] = self.can_move()
+        ret_data["inventory_space"] = self.inventory_space
+        keys = [
+            "value",
+            "name",
+            "model",
+            "type",
+            "pos",
+        ]
+        for key in keys:
+            ret_data[key] = getattr(self, key)
+        return ret_data
+
+    @classmethod
+    def load(cls, data):
+        itm = cls(
+            sprixel=core.Sprixel.load(data["sprixel"]),
+            model=data["model"],
+            name=data["name"],
+            item_type=data["type"],
+            pickable=data["pickable"],
+            overlappable=data["overlappable"],
+            restorable=data["restorable"],
+            can_move=data["can_move"],
+            pos=data["pos"],
+            value=data["value"],
+            inventory_space=data["inventory_space"],
+        )
+        return itm
+
     @property
     def model(self):
         return self.sprixel.model
@@ -570,20 +610,6 @@ class BoardItem(base.PglBaseObject):
                 "BoardItem.set_pickable(value): 'value' needs to be a bool."
             )
 
-    def inventory_space(self):
-        """
-        This is a virtual method that must be implemented in deriving class.
-        This method has to return an integer.
-        This represent the size of the BoardItem for the
-        :class:`~pygamelib.engine.Inventory`. It is used for example to evaluate
-        the space taken in the inventory.
-
-        .. important:: That abstract function was called size() before version 1.2.0.
-           As it was exclusively used for inventory space management, it as been
-           renamed. Particularly because now items do have a need for a size.
-        """
-        raise NotImplementedError()
-
 
 class BoardItemVoid(BoardItem):
     """
@@ -900,7 +926,36 @@ class Movable(BoardItem):
                 "Movable.dtmove(value): value needs to be an int or float."
             )
 
-    def can_move(self):
+    def serialize(self) -> dict:
+        """Serialize the Immovable object.
+
+        This returns a dictionnary that contains all the key/value pairs that makes up
+        the object.
+
+        """
+        ret_data = super().serialize()
+        ret_data["step"] = self.step
+        ret_data["step_horizontal"] = self.step_horizontal
+        ret_data["step_vertical"] = self.step_vertical
+        ret_data["movement_speed"] = self.movement_speed
+
+        if hasattr(self, "has_inventory"):
+            try:
+                ret_data["has_inventory"] = self.has_inventory()
+            except NotImplementedError:
+                pass
+
+        return ret_data
+
+    @classmethod
+    def load(cls, data):
+        itm = super().load(data)
+        itm.step = data["step"]
+        itm.step_horizontal = data["step_horizontal"]
+        itm.step_vertical = data["step_vertical"]
+        itm.movement_speed = data["movement_speed"]
+
+    def can_move(self) -> bool:
         """
         Movable implements can_move().
 
@@ -909,7 +964,7 @@ class Movable(BoardItem):
         """
         return True
 
-    def has_inventory(self):
+    def has_inventory(self) -> bool:
         """
         This is a virtual method that must be implemented in deriving class.
         This method has to return True or False.
@@ -1345,7 +1400,8 @@ class Actionable(Immovable):
     :type action_parameters: list
     :param perm: The permission that defines what types of items can actually
         activate the actionable. The permission has to be one of the
-        permissions defined in :mod:`~pygamelib.constants`
+        permissions defined in :mod:`~pygamelib.constants`. By default it is set to
+        constants.PLAYER_AUTHORIZED.
     :type perm: :mod:`~pygamelib.constants`
 
     On top of these parameters Actionable accepts all parameters from
@@ -1459,6 +1515,50 @@ class Character(Movable):
         self.agility = None
         if agility is not None:
             self.agility = agility
+
+    def serialize(self) -> dict:
+        """Serialize the Character object.
+
+        This returns a dictionnary that contains all the key/value pairs that makes up
+        the object.
+
+        """
+        ret_data = super().serialize()
+        keys = [
+            "max_hp",
+            "hp",
+            "max_mp",
+            "mp",
+            "remaining_lives",
+            "attack_power",
+            "defense_power",
+            "strength",
+            "intelligence",
+            "agility",
+        ]
+        for key in keys:
+            ret_data[key] = getattr(self, key)
+
+        return ret_data
+
+    @classmethod
+    def load(cls, data):
+        itm = super().load(data)
+        keys = [
+            "max_hp",
+            "hp",
+            "max_mp",
+            "mp",
+            "remaining_lives",
+            "attack_power",
+            "defense_power",
+            "strength",
+            "intelligence",
+            "agility",
+        ]
+        for key in keys:
+            if key in data.keys():
+                setattr(itm, key, data[key])
 
 
 class Player(Character):
@@ -1585,6 +1685,8 @@ class NPC(Character):
         if "movement_speed" not in kwargs.keys():
             kwargs["movement_speed"] = 0.2
         super().__init__(**kwargs)
+        # TODO: actuator should be a property that sets automatically the
+        # parent/actuated_object
         self.actuator = None
         if actuator is not None:
             self.actuator = actuator
@@ -1629,6 +1731,52 @@ class NPC(Character):
                 print("No pickpocketing XP for us today :(")
         """
         return False
+
+    def serialize(self) -> dict:
+        """
+        Serialize the NPC object.
+
+        This returns a dictionnary that contains all the key/value pairs that makes up
+        the object.
+        """
+        ret_data = super().serialize()
+        ret_data["actuator"] = self.actuator.serialize()
+        return ret_data
+
+    @classmethod
+    def load(cls, data):
+        itm = cls(
+            restorable=data["restorable"],
+            overlappable=data["overlappable"],
+            pickable=data["pickable"],
+            can_move=data["can_move"],
+            inventory_space=data["inventory_space"],
+            value=data["value"],
+            name=data["name"],
+            model=data["model"],
+            item_type=data["type"],
+            pos=data["pos"],
+            step=data["step"],
+            step_horizontal=data["step_horizontal"],
+            step_vertical=data["step_vertical"],
+            movement_speed=data["movement_speed"],
+            max_hp=data["max_hp"],
+            hp=data["hp"],
+            max_mp=data["max_mp"],
+            mp=data["mp"],
+            remaining_lives=data["remaining_lives"],
+            attack_power=data["attack_power"],
+            defense_power=data["defense_power"],
+            strength=data["strength"],
+            intelligence=data["intelligence"],
+            agility=data["agility"],
+            sprixel=core.Sprixel.load(data["sprixel"]),
+        )
+        if data["actuator"]["type"] in dir(actuators):
+            act = eval(f"actuators.{data['actuator']['type']}")
+            print(f"NPC.load() data['actuator']={data['actuator']}")
+            itm.actuator = act.load(data["actuator"])
+        return itm
 
 
 class ComplexNPC(NPC, BoardComplexItem):
@@ -2214,3 +2362,6 @@ class Camera(Movable):
     def column(self, val):
         if type(val) is int:
             self.store_position(self.pos[0], val)
+
+    def has_inventory(self) -> bool:
+        return False

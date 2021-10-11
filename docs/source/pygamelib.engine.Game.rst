@@ -26,7 +26,7 @@ Game
       ~Game.add_projectile
       ~Game.animate_items
       ~Game.change_level
-      ~Game.clear_logs
+      ~Game.clear_session_logs
       ~Game.clear_screen
       ~Game.config
       ~Game.create_config
@@ -44,8 +44,8 @@ Game
       ~Game.instance
       ~Game.load_board
       ~Game.load_config
-      ~Game.log
-      ~Game.logs
+      ~Game.session_log
+      ~Game.session_logs
       ~Game.move_player
       ~Game.neighbors
       ~Game.pause

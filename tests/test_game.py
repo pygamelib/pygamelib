@@ -331,11 +331,12 @@ class TestBase(unittest.TestCase):
 
     def test_logs(self):
         mygame = engine.Game.instance()
-        self.assertEqual(mygame.logs(), list())
-        mygame.log("test")
-        self.assertEqual(mygame.logs()[0], "test")
-        mygame.clear_logs()
-        self.assertEqual(mygame.logs(), list())
+        mygame.DEBUG = True
+        self.assertEqual(mygame.session_logs(), list())
+        mygame.session_log("test")
+        self.assertEqual(mygame.session_logs()[0], "test")
+        mygame.clear_session_logs()
+        self.assertEqual(mygame.session_logs(), list())
 
     def test_level_insertion(self):
         g = engine.Game.instance()

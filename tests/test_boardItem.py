@@ -58,14 +58,17 @@ class TestBoard(unittest.TestCase):
 
     def test_default_boarditem_implementation(self):
         bi = board_items.BoardItem()
-        # with self.assertRaises(NotImplementedError):
-        #     bi.can_move()
-        # with self.assertRaises(NotImplementedError):
-        #     bi.pickable()
-        # with self.assertRaises(NotImplementedError):
-        #     bi.overlappable()
-        with self.assertRaises(NotImplementedError):
-            bi.inventory_space()
+        self.assertEqual(bi.inventory_space, 1)
+        self.assertEqual(bi.size, [1, 1])
+        self.assertEqual(bi.restorable(), False)
+        self.assertEqual(bi.overlappable(), False)
+        self.assertEqual(bi.pickable(), False)
+        self.assertEqual(bi.type, "item")
+        self.assertEqual(bi.name, "Board item")
+        self.assertEqual(bi.can_move(), False)
+        self.assertEqual(bi.sprixel.model, "*")
+        self.assertEqual(bi.sprixel.is_bg_transparent, True)
+        self.assertIsNone(bi.value)
 
     def test_boarditemvoid(self):
         bi = board_items.BoardItemVoid()

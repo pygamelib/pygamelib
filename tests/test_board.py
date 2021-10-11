@@ -173,8 +173,12 @@ class TestBoard(unittest.TestCase):
             self.assertEqual(e.error, "invalid_item")
         self.assertTrue(self.board.remove_item(i))
         b = pgl_engine.Board()
-        i = pgl_board_items.ComplexNPC()
-        self.assertIsNone(b.place_item(i, 5, 5))
+        i = pgl_board_items.ComplexNPC(
+            sprite=gfx_core.Sprite(
+                sprixels=[[gfx_core.Sprixel("#"), gfx_core.Sprixel("#")]]
+            )
+        )
+        self.assertIsNone(b.place_item(i, 5, 5, 0))
         self.assertTrue(b.remove_item(i))
 
     def test_move_complex(self):

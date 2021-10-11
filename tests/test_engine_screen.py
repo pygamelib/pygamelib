@@ -200,14 +200,6 @@ class TestBase(unittest.TestCase):
         s.trigger_rendering()
         self.assertIsNone(s.update())
         b.partial_display_viewport = [
-            int(screen_height * 3) - 1,
-            int(screen_width * 3) - 1,
-        ]
-        camera.row += 1
-        with self.assertRaises(IndexError):
-            s.force_render()
-            s.update()
-        b.partial_display_viewport = [
             int(screen_height / 2) - 1,
             int(screen_width / 2) - 1,
         ]
@@ -269,6 +261,19 @@ class TestBase(unittest.TestCase):
             s._display_buffer.shape[1],
         )
         s.update()
+        # NOTE: That test is no longer needed nor working as Board.render_to_buffer()
+        #       deal with the IndexError itself.
+        # # Finally, test board and viewport to big to fit.
+        # bork = engine.Board(size=[screen_width * 2, screen_height * 2])
+        # bork.partial_display_viewport = [
+        #     int(screen_height * 3) - 1,
+        #     int(screen_width * 3) - 1,
+        # ]
+        # bork.partial_display_focus = camera
+        # s.place(bork, 0, 0)
+        # with self.assertRaises(IndexError):
+        #     s.force_render()
+        #     s.update()
 
 
 if __name__ == "__main__":
