@@ -1540,6 +1540,8 @@ class Board(base.PglBaseObject):
                         item = bi.load(s)
                     except Exception as e:
                         raise e
+                    except SyntaxError as e:
+                        raise e
                 tmp.place_item(item, r, c, l)
         return tmp
 

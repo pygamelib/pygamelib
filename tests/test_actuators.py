@@ -21,6 +21,10 @@ class TestBase(unittest.TestCase):
         self.assertEqual(a.state, constants.STOPPED)
         with self.assertRaises(NotImplementedError):
             a.next_move()
+        with self.assertRaises(NotImplementedError):
+            a.serialize()
+        with self.assertRaises(NotImplementedError):
+            a.load()
 
     def test_behavioral(self):
         a = actuators.Behavioral(None)
@@ -45,9 +49,21 @@ class TestBase(unittest.TestCase):
         self.assertEqual(a.next_move(), constants.UP)
         a.set_path([constants.DOWN])
         self.assertEqual(a.next_move(), constants.DOWN)
+        data = a.serialize()
+        self.assertIsNotNone(data)
+        self.assertEqual(data["path"], [constants.DOWN])
+        al = actuators.PathActuator.load(data)
+        self.assertEqual(al.path, [constants.DOWN])
+        self.assertEqual(a.state, al.state)
 
     def test_patrol(self):
         a = actuators.PatrolActuator(path=[constants.UP, constants.DOWN])
+        data = a.serialize()
+        self.assertIsNotNone(data)
+        self.assertEqual(data["path"], [constants.UP, constants.DOWN])
+        al = actuators.PatrolActuator.load(data)
+        self.assertEqual(al.path, [constants.UP, constants.DOWN])
+        self.assertEqual(a.state, al.state)
         a.next_move()
         self.assertEqual(a.next_move(), constants.DOWN)
         self.assertEqual(a.next_move(), constants.UP)
@@ -72,6 +88,12 @@ class TestBase(unittest.TestCase):
         self.assertEqual(a.next_move(), constants.RIGHT)
         a = actuators.UnidirectionalActuator(direction=None)
         self.assertEqual(a.next_move(), constants.RIGHT)
+        data = a.serialize()
+        self.assertIsNotNone(data)
+        self.assertEqual(data["direction"], constants.RIGHT)
+        al = actuators.UnidirectionalActuator.load(data)
+        self.assertEqual(al.direction, constants.RIGHT)
+        self.assertEqual(a.state, al.state)
 
     def test_pathfinder_bfs(self):
         npc = board_items.NPC()
@@ -238,6 +260,17 @@ class TestBase(unittest.TestCase):
             npc.actuator.remove_waypoint(30, 30)
             self.assertEqual(e.error, "invalid_waypoint")
         self.assertIsNone(npc.actuator.remove_waypoint(10, 10))
+
+    def test_pathfinder_serialization(self):
+        a = actuators.PathFinder(parent=board_items.NPC())
+        a.add_waypoint(1, 2)
+        data = a.serialize()
+        self.assertIsNotNone(data)
+        self.assertEqual(data["waypoints"], [(1, 2)])
+        al = actuators.PathFinder.load(data)
+        self.assertEqual(al.waypoints, [(1, 2)])
+        self.assertEqual(a.state, al.state)
+        self.assertEqual(a.destination, al.destination)
 
 
 if __name__ == "__main__":

@@ -19,11 +19,13 @@ class TestBase(unittest.TestCase):
             model="*",
             velocity=particles.base.Vector2D(),
             acceleration=particles.base.Vector2D(),
+            directions=[constants.UP],
             lifespan=8,
         )
         self.assertEqual(p.sprixel.bg_color, core.Color(0, 0, 255))
         self.assertEqual(p.sprixel.fg_color, core.Color(255, 0, 0))
         self.assertEqual(p.sprixel.model, "*")
+        self.assertEqual(p.directions, [constants.UP])
 
     def test_accessors(self):
         p = particles.BaseParticle()

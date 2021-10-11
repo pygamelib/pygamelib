@@ -6,6 +6,38 @@ from pygamelib import constants
 import unittest
 
 
+class TestItem(pgl_board_items.BoardItem):
+    def __init__(
+        self,
+        sprixel=None,
+        model=None,
+        name=None,
+        item_type=None,
+        parent=None,
+        pickable=False,
+        overlappable=False,
+        restorable=False,
+        can_move=False,
+        pos=None,
+        value=None,
+        inventory_space=1,
+    ):
+        super().__init__(
+            sprixel=sprixel,
+            model=model,
+            name=name,
+            item_type=item_type,
+            parent=parent,
+            pickable=pickable,
+            overlappable=overlappable,
+            restorable=restorable,
+            can_move=can_move,
+            pos=pos,
+            value=value,
+            inventory_space=inventory_space,
+        )
+
+
 class TestBoard(unittest.TestCase):
     def setUp(self):
         self.board = pgl_engine.Board(
@@ -328,6 +360,7 @@ class TestBoard(unittest.TestCase):
         )
         self.assertEqual(board.height, 30)
         self.assertEqual(board.width, 20)
+        self.assertEqual(board.layers(0, 0), 1)
 
     def test_display_around(self):
         i = pgl_board_items.NPC()
@@ -353,6 +386,27 @@ class TestBoard(unittest.TestCase):
         b.place_item(i, 2, 2)
         self.assertIsNone(self.board.display_around(i, 2, 2))
         self.assertIsNone(self.board.display())
+
+    def test_serialization(self):
+        class Bork(pgl_board_items.Wall):
+            def __init__(self, **kwargs):
+                super().__init__(**kwargs)
+
+        b = pgl_engine.Board()
+        b.place_item(pgl_board_items.Wall(), 2, 2)
+        b.place_item(TestItem(), 4, 4)
+        data = b.serialize()
+        self.assertIsNotNone(data)
+        self.assertIsNone(pgl_engine.Board.load(None))
+        bl = pgl_engine.Board.load(data)
+        self.assertEqual(b.player_starting_position, bl.player_starting_position)
+        self.assertEqual(b.name, bl.name)
+        self.assertEqual(b.ui_board_void_cell, bl.ui_board_void_cell)
+        self.assertIsInstance(b.item(2, 2), pgl_board_items.Wall)
+        self.assertEqual(b.item(2, 2).model, bl.item(2, 2).model)
+        b.place_item(Bork(), 6, 6)
+        with self.assertRaises(SyntaxError):
+            pgl_engine.Board.load(b.serialize())
 
 
 if __name__ == "__main__":

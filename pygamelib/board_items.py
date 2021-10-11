@@ -954,6 +954,7 @@ class Movable(BoardItem):
         itm.step_horizontal = data["step_horizontal"]
         itm.step_vertical = data["step_vertical"]
         itm.movement_speed = data["movement_speed"]
+        return itm
 
     def can_move(self) -> bool:
         """
@@ -1559,6 +1560,7 @@ class Character(Movable):
         for key in keys:
             if key in data.keys():
                 setattr(itm, key, data[key])
+        return itm
 
 
 class Player(Character):
@@ -1774,7 +1776,6 @@ class NPC(Character):
         )
         if data["actuator"]["type"] in dir(actuators):
             act = eval(f"actuators.{data['actuator']['type']}")
-            print(f"NPC.load() data['actuator']={data['actuator']}")
             itm.actuator = act.load(data["actuator"])
         return itm
 

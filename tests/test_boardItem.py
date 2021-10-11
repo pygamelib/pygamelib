@@ -1,6 +1,5 @@
 # import pygamelib.board_items as pgl_board_items
-from pygamelib import board_items
-from pygamelib import constants
+from pygamelib import board_items, constants, base
 import pygamelib.gfx.core as gfx_core
 import unittest
 
@@ -69,6 +68,31 @@ class TestBoard(unittest.TestCase):
         self.assertEqual(bi.sprixel.model, "*")
         self.assertEqual(bi.sprixel.is_bg_transparent, True)
         self.assertIsNone(bi.value)
+        bi = board_items.BoardItem(
+            overlappable=None, pickable=None, restorable=None, can_move=None
+        )
+        self.assertFalse(bi.overlappable())
+        self.assertFalse(bi.restorable())
+        self.assertFalse(bi.pickable())
+        self.assertFalse(bi.can_move())
+        bi = board_items.BoardItem(overlappable=True, pickable=True, restorable=True)
+        self.assertFalse(bi.pickable())
+        bi = board_items.BoardItem(overlappable=False, pickable=True, restorable=True)
+        self.assertFalse(bi.restorable())
+        bi.sprixel = None
+        self.assertEqual(str(bi), "")
+        self.assertEqual(bi.inventory_space, 1)
+        bi.inventory_space = 2
+        self.assertEqual(bi.inventory_space, 2)
+        with self.assertRaises(base.PglInvalidTypeException):
+            bi.inventory_space = "2"
+        with self.assertRaises(base.PglInvalidTypeException):
+            bi.set_overlappable("False")
+        self.assertIsNone(bi.set_can_move(True))
+        with self.assertRaises(base.PglInvalidTypeException):
+            bi.set_can_move("True")
+        with self.assertRaises(base.PglInvalidTypeException):
+            bi.set_pickable("False")
 
     def test_boarditemvoid(self):
         bi = board_items.BoardItemVoid()
@@ -107,6 +131,13 @@ class TestBoard(unittest.TestCase):
 
         with self.assertRaises(NotImplementedError):
             bi.has_inventory()
+        data = bi.serialize()
+        self.assertIsNotNone(data)
+        self.assertEqual(data["step_vertical"], 2)
+        self.assertEqual(data["step_horizontal"], 1)
+        bil = board_items.Movable.load(data)
+        self.assertEqual(bil.step_vertical, 2)
+        self.assertEqual(bil.step_horizontal, 1)
 
     def test_projectile(self):
         with self.assertRaises(board_items.base.PglException) as e:
@@ -202,9 +233,29 @@ class TestBoard(unittest.TestCase):
         self.assertFalse(npc.has_inventory())
 
     def test_character(self):
-        character = board_items.Character(max_hp=20, intelligence=27)
+        character = board_items.Character(
+            max_hp=20,
+            max_mp=10,
+            mp=10,
+            defense_power=10,
+            strength=2,
+            agility=0,
+            intelligence=27,
+        )
         self.assertEqual(character.max_hp, 20)
+        self.assertEqual(character.max_mp, 10)
+        self.assertEqual(character.mp, 10)
         self.assertEqual(character.intelligence, 27)
+        self.assertEqual(character.defense_power, 10)
+        self.assertEqual(character.strength, 2)
+        self.assertEqual(character.agility, 0)
+        data = character.serialize()
+        self.assertIsNotNone(data)
+        self.assertEqual(data["max_hp"], 20)
+        self.assertEqual(data["intelligence"], 27)
+        cl = board_items.Character.load(data)
+        self.assertEqual(cl.max_hp, 20)
+        self.assertEqual(cl.intelligence, 27)
 
     def test_complexnpc(self):
         board_items.ComplexNPC()
@@ -289,6 +340,7 @@ class TestBoard(unittest.TestCase):
         cam.column = 34
         self.assertEqual(cam.row, 12)
         self.assertEqual(cam.column, 34)
+        self.assertFalse(cam.has_inventory())
 
 
 if __name__ == "__main__":

@@ -475,6 +475,7 @@ class PathFinder(Behavioral):
         parent=None,
         algorithm=constants.ALGO_BFS,
     ):
+        self.parent = None
         if actuated_object is not None and parent is None:
             self.actuated_object = actuated_object
             self.parent = actuated_object
@@ -924,6 +925,7 @@ class PathFinder(Behavioral):
         return {
             "type": "PathFinder",
             "waypoints": self.waypoints,
+            "destination": self.destination,
             "circle_waypoints": self.circle_waypoints,
             "algorithm": self.algorithm,
             "state": self.state,
@@ -945,9 +947,10 @@ class PathFinder(Behavioral):
             method()
         """
         act = cls(
-            waypoints=data["waypoints"],
             circle_waypoints=data["circle_waypoints"],
             algorithm=data["algorithm"],
         )
         act.state = data["state"]
+        act.waypoints = data["waypoints"]
+        act.destination = data["destination"]
         return act
