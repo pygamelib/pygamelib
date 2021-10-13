@@ -183,11 +183,15 @@ class TestBoard(unittest.TestCase):
             5,
             5,
         )
+
         i = pgl_board_items.NPC(sprixel=sprix)
         self.assertIsNone(self.board.place_item(i, 5, 5))
         self.assertIsNone(
             self.board.place_item(
-                pgl_board_items.ComplexNPC(base_item_type=pgl_board_items.Movable), 8, 8
+                pgl_board_items.ComplexNPC(base_item_type=pgl_board_items.Movable),
+                8,
+                8,
+                8,
             )
         )
         self.assertIsNone(self.board.place_item(pgl_board_items.Tile(), 8, 2))
@@ -353,6 +357,20 @@ class TestBoard(unittest.TestCase):
 
         self.board.clear_cell(1, 1)
         self.assertIsInstance(self.board.item(1, 1), pgl_board_items.BoardItemVoid)
+        self.assertIsNone(self.board.clear_cell(1, 1, 10))
+        r = self.board.height - 1
+        c = self.board.width - 1
+        self.board.place_item(pgl_board_items.Door(name="door_layer_0"), r, c, 0)
+        self.board.place_item(pgl_board_items.Door(name="door_layer_1"), r, c, 1)
+        self.board.place_item(pgl_board_items.Door(name="door_layer_2"), r, c, 2)
+        self.board.place_item(pgl_board_items.Door(name="door_layer_3"), r, c, 3)
+        self.assertIsNone(self.board.clear_cell(r, c, 2))
+        self.assertEqual(self.board.layers(r, c), 3)
+        self.board.place_item(
+            pgl_board_items.Door(name="door_layer_3bis"), r, c, 3, False
+        )
+        self.assertIsNone(self.board.clear_cell(r, c, 1))
+        self.assertEqual(self.board.layers(r, c), 4)
 
     def test_size(self):
         board = pgl_engine.Board(
@@ -392,7 +410,9 @@ class TestBoard(unittest.TestCase):
             def __init__(self, **kwargs):
                 super().__init__(**kwargs)
 
-        b = pgl_engine.Board()
+        b = pgl_engine.Board(
+            ui_board_void_cell_sprixel=gfx_core.Sprixel(" ", gfx_core.Color(0, 0, 0))
+        )
         b.place_item(pgl_board_items.Wall(), 2, 2)
         b.place_item(TestItem(), 4, 4)
         data = b.serialize()
@@ -404,6 +424,9 @@ class TestBoard(unittest.TestCase):
         self.assertEqual(b.ui_board_void_cell, bl.ui_board_void_cell)
         self.assertIsInstance(b.item(2, 2), pgl_board_items.Wall)
         self.assertEqual(b.item(2, 2).model, bl.item(2, 2).model)
+        data["map_data"]["(2, 2, 0)"]["object"] = "<'=bork.bork'>"
+        with self.assertRaises(SyntaxError):
+            pgl_engine.Board.load(data)
         b.place_item(Bork(), 6, 6)
         with self.assertRaises(SyntaxError):
             pgl_engine.Board.load(b.serialize())

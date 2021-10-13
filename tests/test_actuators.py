@@ -35,6 +35,11 @@ class TestBase(unittest.TestCase):
         a = actuators.RandomActuator([constants.UP])
         self.assertEqual(a.moveset, [constants.UP])
         self.assertEqual(a.next_move(), constants.UP)
+        data = a.serialize()
+        self.assertEqual(data["moveset"], [constants.UP])
+        al = actuators.RandomActuator.load(data)
+        self.assertEqual(al.moveset, [constants.UP])
+        self.assertEqual(al.moveset, a.moveset)
 
     def test_random_empty(self):
         a = actuators.RandomActuator()

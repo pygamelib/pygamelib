@@ -965,7 +965,7 @@ class Board(base.PglBaseObject):
                 # Place the item on the board
                 try:
                     self._matrix[row][column][layer] = item
-                except IndexError:
+                except IndexError:  # pragma: no cover
                     # This should literrally never happen: we created relevant layers
                     # before. But, better safe than sorry.
                     self._matrix[row][column].append(item)
@@ -975,7 +975,9 @@ class Board(base.PglBaseObject):
                 item.store_position(row, column, layer)
                 if isinstance(item, board_items.Movable):
                     if isinstance(item.parent, board_items.BoardComplexItem):
-                        self._movables.add(item.parent)
+                        # This is actually tested in test_board.py in the test_item
+                        # method.
+                        self._movables.add(item.parent)  # pragma: no cover
                     else:
                         self._movables.add(item)
                 elif isinstance(item, board_items.Immovable):
@@ -1349,7 +1351,11 @@ class Board(base.PglBaseObject):
 
         # Now making sure that we are not leaving a cell with no layer
         if len(self._matrix[row][column]) <= 0:
-            self._matrix[row][column].append(self.generate_void_cell())
+            # Since it is not supposed to happen it is a tough one to test. Excluding
+            # for now.
+            self._matrix[row][column].append(
+                self.generate_void_cell()
+            )  # pragma: no cover
 
     def _clean_layers(self, row, column):
         layer = len(self._matrix[row][column]) - 1
@@ -1361,7 +1367,10 @@ class Board(base.PglBaseObject):
                 self._matrix[row][column].pop(layer)
                 layer -= 1
             else:
-                break
+                # This statement is tested in test_engine_screen.py in the
+                # test_screen_buffer method (and it works or else it would lead to an
+                # infinite loop).
+                break  # pragma: no cover
 
     def get_movables(self, **kwargs):
         """Return a list of all the Movable objects in the Board.
@@ -1539,8 +1548,6 @@ class Board(base.PglBaseObject):
                         bi = eval(f"{obj_full_str}")
                         item = bi.load(s)
                     except Exception as e:
-                        raise e
-                    except SyntaxError as e:
                         raise e
                 tmp.place_item(item, r, c, l)
         return tmp
@@ -3036,7 +3043,13 @@ class Game:
             if "library" in data_keys:
                 self.object_library = []
                 for e in data["library"]:
-                    self.object_library.append(Game._ref2obj(e))
+                    # As far as I know the object library is only used by the pgl-editor
+                    # and it only uses board_items.
+                    obj_full_str = e["object"].split("'")[-2]
+                    obj_str = obj_full_str.split(".")[-1]
+                    if obj_str in dir(board_items):
+                        bi = eval(f"board_items.{obj_str}")
+                        self.object_library.append(bi.load(e))
             # Now let's place the good stuff on the board
             if "map_data" in data_keys:
                 for pos_x in data["map_data"].keys():
@@ -3112,7 +3125,7 @@ class Game:
         if len(self.object_library) > 0:
             data["library"] = []
             for o in self.object_library:
-                data["library"].append(Game._obj2ref(o))
+                data["library"].append(o.serialize())
 
         with open(filename, "w") as f:
             json.dump(data, f)
@@ -3147,70 +3160,6 @@ class Game:
             mygame.stop()
         """
         self.state = constants.STOPPED
-
-    # Here are some utility functions not really meant to be used outside of the Game
-    # object itself.
-    @staticmethod
-    def _obj2ref(obj):
-        ref = {
-            "object": str(obj.__class__),
-            "name": obj.name,
-            "pos": obj.pos,
-            "model": obj.model,
-            "type": obj.type,
-        }
-
-        if obj.sprixel is not None:
-            ref["sprixel"] = obj.sprixel.serialize()
-
-        if isinstance(obj, board_items.Wall):
-            ref["inventory_space"] = obj.inventory_space
-        elif isinstance(obj, board_items.Treasure):
-            ref["value"] = obj.value
-            ref["inventory_space"] = obj.inventory_space
-        elif isinstance(obj, board_items.Door):
-            ref["value"] = obj.value
-            ref["inventory_space"] = obj.inventory_space
-            ref["overlappable"] = obj.overlappable()
-            ref["pickable"] = obj.pickable()
-            ref["restorable"] = obj.restorable()
-        elif isinstance(obj, board_items.GenericActionableStructure) or isinstance(
-            obj, board_items.GenericStructure
-        ):
-            ref["value"] = obj.value
-            ref["inventory_space"] = obj.inventory_space
-            ref["overlappable"] = obj.overlappable()
-            ref["pickable"] = obj.pickable()
-            ref["restorable"] = obj.restorable()
-        elif isinstance(obj, board_items.NPC):
-            ref["hp"] = obj.hp
-            ref["max_hp"] = obj.max_hp
-            ref["step"] = obj.step
-            ref["remaining_lives"] = obj.remaining_lives
-            ref["attack_power"] = obj.attack_power
-            if obj.actuator is not None:
-                if isinstance(obj.actuator, actuators.RandomActuator):
-                    ref["actuator"] = {
-                        "type": "RandomActuator",
-                        "moveset": obj.actuator.moveset,
-                    }
-                elif isinstance(obj.actuator, actuators.PatrolActuator):
-                    ref["actuator"] = {
-                        "type": "PatrolActuator",
-                        "path": obj.actuator.path,
-                    }
-                elif isinstance(obj.actuator, actuators.PathActuator):
-                    ref["actuator"] = {
-                        "type": "PathActuator",
-                        "path": obj.actuator.path,
-                    }
-                elif isinstance(obj.actuator, actuators.PathFinder):
-                    ref["actuator"] = {
-                        "type": "PathFinder",
-                        "waypoints": obj.actuator.waypoints,
-                        "circle_waypoints": obj.actuator.circle_waypoints,
-                    }
-        return ref
 
     @staticmethod
     def _string_to_constant(s):

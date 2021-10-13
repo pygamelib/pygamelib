@@ -200,6 +200,28 @@ class BoardItem(base.PglBaseObject):
 
     @classmethod
     def load(cls, data):
+        fields = [
+            "restorable",
+            "overlappable",
+            "pickable",
+            "can_move",
+            "inventory_space",
+            "value",
+            "name",
+            "model",
+            "type",
+            "pos",
+        ]
+        for field in fields:
+            if field not in data.keys():
+                data[field] = None
+        if "sprixel" not in data.keys():
+            data["sprixel"] = {
+                "model": "",
+                "fg_color": None,
+                "bg_color": None,
+                "is_bg_transparent": True,
+            }
         itm = cls(
             sprixel=core.Sprixel.load(data["sprixel"]),
             model=data["model"],
@@ -1742,11 +1764,48 @@ class NPC(Character):
         the object.
         """
         ret_data = super().serialize()
-        ret_data["actuator"] = self.actuator.serialize()
+        if self.actuator is not None:
+            ret_data["actuator"] = self.actuator.serialize()
         return ret_data
 
     @classmethod
     def load(cls, data):
+        fields = [
+            "restorable",
+            "overlappable",
+            "pickable",
+            "can_move",
+            "inventory_space",
+            "value",
+            "name",
+            "model",
+            "type",
+            "pos",
+            "step",
+            "step_horizontal",
+            "step_vertical",
+            "movement_speed",
+            "max_hp",
+            "hp",
+            "max_mp",
+            "mp",
+            "remaining_lives",
+            "attack_power",
+            "defense_power",
+            "strength",
+            "intelligence",
+            "agility",
+        ]
+        for field in fields:
+            if field not in data.keys():
+                data[field] = None
+        if "sprixel" not in data.keys():
+            data["sprixel"] = {
+                "model": "",
+                "fg_color": None,
+                "bg_color": None,
+                "is_bg_transparent": True,
+            }
         itm = cls(
             restorable=data["restorable"],
             overlappable=data["overlappable"],
@@ -1774,7 +1833,7 @@ class NPC(Character):
             agility=data["agility"],
             sprixel=core.Sprixel.load(data["sprixel"]),
         )
-        if data["actuator"]["type"] in dir(actuators):
+        if "actuator" in data.keys() and data["actuator"]["type"] in dir(actuators):
             act = eval(f"actuators.{data['actuator']['type']}")
             itm.actuator = act.load(data["actuator"])
         return itm

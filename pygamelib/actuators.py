@@ -194,7 +194,8 @@ class RandomActuator(Actuator):
             npc2.actuator = actuators.RandomActuator.load( npc1.actuator.serialize() )
         """
         act = cls(moveset=data["moveset"])
-        act.state = data["state"]
+        if "state" in data.keys():
+            act.state = data["state"]
         return act
 
 
@@ -282,7 +283,8 @@ class PathActuator(Actuator):
             method()
         """
         act = cls(path=data["path"])
-        act.state = data["state"]
+        if "state" in data.keys():
+            act.state = data["state"]
         return act
 
 
@@ -367,7 +369,8 @@ class PatrolActuator(PathActuator):
             method()
         """
         act = cls(path=data["path"])
-        act.state = data["state"]
+        if "state" in data.keys():
+            act.state = data["state"]
         return act
 
 
@@ -435,7 +438,8 @@ class UnidirectionalActuator(Actuator):
             method()
         """
         act = cls(direction=data["direction"])
-        act.state = data["state"]
+        if "state" in data.keys():
+            act.state = data["state"]
         return act
 
 
@@ -950,7 +954,10 @@ class PathFinder(Behavioral):
             circle_waypoints=data["circle_waypoints"],
             algorithm=data["algorithm"],
         )
-        act.state = data["state"]
-        act.waypoints = data["waypoints"]
-        act.destination = data["destination"]
+        if "state" in data.keys():
+            act.state = data["state"]
+        if "waypoints" in data.keys():
+            act.waypoints = data["waypoints"]
+        if "destination" in data.keys():
+            act.destination = data["destination"]
         return act

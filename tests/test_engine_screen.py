@@ -3,7 +3,7 @@ from pygamelib.gfx.core import SpriteCollection, Sprixel, Color, Sprite, Font
 import unittest
 
 
-class TB(object):
+class TB(base.PglBaseObject):
     def __init__(self):
         super().__init__()
 
@@ -96,6 +96,32 @@ class TestBase(unittest.TestCase):
         b.item(19, 19).sprixel = None
         self.assertIsInstance(b.render_cell(19, 19), Sprixel)
         self.assertEqual(b.render_cell(19, 19), Sprixel())
+        b.place_item(board_items.Door(), 19, 19)
+        b.place_item(
+            board_items.Door(
+                sprixel=Sprixel("*", Color(125, 125, 0), is_bg_transparent=False)
+            ),
+            19,
+            19,
+        )
+        b.place_item(
+            board_items.Door(sprixel=Sprixel("#", is_bg_transparent=True)), 19, 19
+        )
+        b.place_item(
+            board_items.NPC(sprixel=Sprixel("$", is_bg_transparent=True)), 19, 19
+        )
+        self.assertEqual(b.layers(19, 19), 4)
+        b.place_item(
+            board_items.BoardItemVoid(sprixel=Sprixel(is_bg_transparent=True)), 19, 19
+        )
+        b.place_item(
+            board_items.BoardItemVoid(sprixel=Sprixel(is_bg_transparent=True)), 19, 19
+        )
+        self.assertIsInstance(b.render_cell(19, 19), Sprixel)
+        b._clean_layers(19, 19)
+        self.assertEqual(b.layers(19, 19), 3)
+        b._clean_layers(18, 19)
+        self.assertEqual(b.layers(18, 19), 1)
         with self.assertRaises(base.PglOutOfBoardBoundException):
             b.render_cell(50, 50)
         self.assertIsNone(s.clear_buffers())
@@ -144,6 +170,10 @@ class TestBase(unittest.TestCase):
             s.place(None, 0, 0)
         with self.assertRaises(base.PglInvalidTypeException):
             s.place(1, 0, 0)
+        with self.assertRaises(base.PglException):
+            s.place(TB(), 400, 0)
+        with self.assertRaises(base.PglException):
+            s.place(TB(), 0, 400)
         s.force_update()
         t.text = "update"
         self.assertIsNone(
@@ -244,6 +274,19 @@ class TestBase(unittest.TestCase):
             s._display_buffer.shape[1],
         )
         s.update()
+
+    def test_screen_observer(self):
+        s = engine.Screen(10, 10)
+        obj = TB()
+        self.assertFalse(s._is_dirty)
+        s.place(obj, 0, 0)
+        self.assertTrue(s._is_dirty)
+        s.render()
+        self.assertFalse(s._is_dirty)
+        s.be_notified("unimportant")
+        self.assertTrue(s._is_dirty)
+        s.delete(0, 0)
+        self.assertEqual(len(obj._observers), 0)
 
 
 if __name__ == "__main__":
