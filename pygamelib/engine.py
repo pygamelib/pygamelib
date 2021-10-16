@@ -2997,6 +2997,17 @@ class Game:
                     if isinstance(mov.actuator, actuators.PathFinder):
                         mov.actuator.game = self
                         mov.actuator.add_waypoint(mov.row, mov.column)
+            # Now load the object library if there's any.
+            if "library" in data.keys():
+                self.object_library = []
+                for e in data["library"]:
+                    # As far as I know the object library is only used by the pgl-editor
+                    # and it only uses board_items.
+                    obj_full_str = e["object"].split("'")[-2]
+                    obj_str = obj_full_str.split(".")[-1]
+                    if obj_str in dir(board_items):
+                        bi = eval(f"board_items.{obj_str}")
+                        self.object_library.append(bi.load(e))
         else:
             local_board = Board()
             data_keys = data.keys()
