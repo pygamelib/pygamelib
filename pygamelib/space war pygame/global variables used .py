@@ -1,0 +1,9 @@
+white = (255 , 255, 255)
+black = ( 0,0,0)
+RED = ( 255 , 0 , 0)
+YELLOW = ( 255,255,0)
+fps = 60
+space_w , space_h = 55 ,40
+velocity = 5
+bullet_velocity = 7
+max_bullets = 10
