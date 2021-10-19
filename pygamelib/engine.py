@@ -770,7 +770,7 @@ class Board(base.PglBaseObject):
                 sprix = self._matrix[row][column][-1].sprixel
                 layers_len = len(self._matrix[row][column])
                 if layers_len > 1:
-                    idx = -1
+                    idx = layers_len - 1
                     # For many reasons the item could be a void item, since we are over
                     # level 0 we don't care about them (they are unimportant for
                     # rendering). Therefor we try to discard them as quickly as possible
@@ -786,7 +786,7 @@ class Board(base.PglBaseObject):
                         # And now we are going down to make sure that we have pseudo
                         # transparency.
                         idx -= 1
-                        while idx > 0:
+                        while idx >= 0:
                             if (
                                 not isinstance(
                                     self._matrix[row][column][idx],
