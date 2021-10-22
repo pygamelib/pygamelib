@@ -747,9 +747,9 @@ class BoardComplexItem(BoardItem):
         self.name = "Board Multi Item"
         self.type = "multi_item"
         super().__init__(**kwargs)
-        self.sprite = core.Sprite()
+        self.__sprite = core.Sprite()
         if sprite is not None:
-            self.sprite = sprite
+            self.__sprite = sprite
         self.null_sprixel = null_sprixel
         if self.null_sprixel is None:
             self.null_sprixel = core.Sprixel()
@@ -764,16 +764,50 @@ class BoardComplexItem(BoardItem):
         #     if item in kwargs:
         #         setattr(self, item, kwargs[item])
         if self._size is None:
-            self._size = self.sprite.size
-        if isinstance(self.sprite, core.Sprite) and self.sprite.parent is None:
-            self.sprite.parent = self
+            self._size = self.__sprite.size
+        if isinstance(self.__sprite, core.Sprite) and self.__sprite.parent is None:
+            self.__sprite.parent = self
         self.update_sprite()
 
     def __repr__(self):  # pragma: no cover
-        return self.sprite.__repr__()
+        return self.__sprite.__repr__()
 
     def __str__(self):  # pragma: no cover
-        return self.sprite.__str__()
+        return self.__sprite.__str__()
+
+    @property
+    def sprite(self):
+        """A property to easily access and update a complex item's sprite.
+        :param new_sprite: The sprite to set
+        :type new_sprite: :class:`~pygamelib.gfx.core.Sprite`
+
+        Example::
+
+            npc1 = board_items.ComplexNpc(
+                                            sprite=npc_sprite_collection['npc1_idle']
+                                        )
+            # to access the sprite:
+            if npc1.sprite.width * npc1.sprite.height > CONSTANT_BIG_GUY:
+                game.screen.place(
+                    base.Text(
+                        'Big boi detected!!!',
+                        core.Color(255,0,0),
+                        style=constants.BOLD,
+                    ),
+                    notifications.row,
+                    notifications.column,
+                )
+            # And to set it:
+            if game.player in game.neighbors(3, npc1):
+                npc1.sprite = npc_sprite_collection['npc1_fight']
+        """
+        return self.__sprite
+
+    @sprite.setter
+    def sprite(self, new_sprite: core.Sprite):
+        if isinstance(new_sprite, core.Sprite):
+            self.__sprite = new_sprite
+            self.update_sprite()
 
     def update_sprite(self):
         """
@@ -791,13 +825,13 @@ class BoardComplexItem(BoardItem):
         """
         self._item_matrix = []
         # Update sprite size.
-        self.sprite.calculate_size()
-        for row in range(0, self.sprite.size[1]):
+        self.__sprite.calculate_size()
+        for row in range(0, self.__sprite.size[1]):
             self._item_matrix.append([])
-            for col in range(0, self.sprite.size[0]):
+            for col in range(0, self.__sprite.size[0]):
                 if (
                     self.null_sprixel is not None
-                    and self.sprite.sprixel(row, col) == self.null_sprixel
+                    and self.__sprite.sprixel(row, col) == self.null_sprixel
                 ):
                     self._item_matrix[row].append(BoardItemVoid())
                     self._item_matrix[row][col].name = f"{self.name}_{row}_{col}"
@@ -805,12 +839,14 @@ class BoardComplexItem(BoardItem):
                 else:
                     self._item_matrix[row].append(self.base_item_type(**self.__kwargs))
                     self._item_matrix[row][col].name = f"{self.name}_{row}_{col}"
-                    self._item_matrix[row][col].model = self.sprite.sprixel(
+                    self._item_matrix[row][col].model = self.__sprite.sprixel(
                         row, col
                     ).model
-                    self._item_matrix[row][col].sprixel = self.sprite.sprixel(row, col)
+                    self._item_matrix[row][col].sprixel = self.__sprite.sprixel(
+                        row, col
+                    )
                     self._item_matrix[row][col].parent = self
-        self._size = self.sprite.size
+        self._size = self.__sprite.size
 
     def item(self, row, column):
         """
@@ -853,11 +889,11 @@ class BoardComplexItem(BoardItem):
         # For optimization's sakes we directly loop through the right places in the
         # buffer and simply translate the coordinates back to the sprite.
         # The loops takes clamped value to not render anything out of the buffer.
-        for sr in range(row, min(self.sprite.size[1] + row, height)):
-            for sc in range(column, min(self.sprite.size[0] + column, width)):
+        for sr in range(row, min(self.__sprite.size[1] + row, height)):
+            for sc in range(column, min(self.__sprite.size[0] + column, width)):
                 # TODO: If the Sprite has sprixels with length > 1 this is going to be
                 # A mess.
-                buffer[sr][sc] = self.sprite.sprixel(sr - row, sc - column).__repr__()
+                buffer[sr][sc] = self.__sprite.sprixel(sr - row, sc - column).__repr__()
 
 
 class Movable(BoardItem):
