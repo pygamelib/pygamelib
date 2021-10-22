@@ -5,6 +5,20 @@ import unittest
 # Test cases for all classes in pygamelib.gfx.core except for Animation.
 
 
+class SuperTreasure(Treasure):
+    def __init__(self, value=10, **kwargs):
+        super().__init__(value=value, **kwargs)
+
+
+class SuperTreasureBork(Treasure):
+    def __init__(self, value=10, **kwargs):
+        super().__init__(value=value, **kwargs)
+
+    @classmethod
+    def load(cls, data):
+        raise Exception()
+
+
 class TestBase(unittest.TestCase):
     def setUp(self):
         super().setUp()
@@ -52,6 +66,20 @@ class TestBase(unittest.TestCase):
         self.assertEqual(
             self.inv.__str__(), "=============\n= inventory =\n=============\n$ : 1.0"
         )
+
+    def test_serialization(self):
+        inv = engine.Inventory()
+        inv.add_item(SuperTreasure(name="Super Treasure"))
+        inv.add_item(Treasure(name="Normal Treasure"))
+        data = inv.serialize()
+        self.assertIsNotNone(data)
+        self.assertEqual(data["max_size"], inv.max_size)
+        invl = engine.Inventory.load(data)
+        self.assertEqual(inv.size(), invl.size())
+        inv.add_item(SuperTreasureBork(name="Super Bork"))
+        data = inv.serialize()
+        with self.assertRaises(Exception):
+            engine.Inventory.load(data)
 
 
 if __name__ == "__main__":

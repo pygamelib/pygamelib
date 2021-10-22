@@ -68,7 +68,7 @@ class PglBaseObject(object):
         super().__setattr__("_last_updated", time.time())
         return super().__setattr__(name, value)
 
-    def notify(self, modifier=None) -> None:
+    def notify(self, modifier=None, attribute: str = None, value: Any = None) -> None:
 
         """
         Notify all the observers that a change occurred. Two important points:
@@ -79,8 +79,14 @@ class PglBaseObject(object):
             notifying object.
 
         :param modifier: An optional parameter that identify the modifier object to
-            exclude it from the notified objects.
+           exclude it from the notified objects.
         :type modifier: :class:`~pygamelib.base.PglBaseObject`
+        :param attribute: An optional parameter that identify the attribute that has
+           changed.
+        :type attribute: str
+        :param value: An optional parameter that identify the new value of the
+           attribute.
+        :type value: Any
 
         Example::
 
@@ -96,7 +102,7 @@ class PglBaseObject(object):
         if modifier in self._observers:
             cache = self._observers.pop(self._observers.index(modifier))
         for observer in self._observers:
-            observer.be_notified(self)
+            observer.be_notified(self, attribute, value)
         # Restore the cached object
         if cache is not None:
             self._observers.append(cache)
@@ -154,11 +160,24 @@ class PglBaseObject(object):
         except ValueError:
             return False
 
-    def be_notified(self, subject):
+    def be_notified(self, subject, attribute=None, value=None):
         """
         A virtual method that needs to be implemented by the observer.
         By default it does nothing but each observer needs to implement it if something
         needs to be done when notified.
+
+        This method always receive the notifying object as first parameter. The 2 other
+        paramters are optional and can be None.
+
+        You can use the attribute and value as you see fit. You are free to consider
+        attribute as an event and value as the event's value.
+
+        :param subject: The object that has changed.
+        :type subject: :class:`~pygamelib.base.PglBaseObject`
+        :param attribute: The attribute that has changed. This can be None.
+        :type attribute: str
+        :param value: The new value of the attribute. This can be None.
+        :type value: Any
         """
         pass
 
@@ -263,7 +282,7 @@ class Text(PglBaseObject):
                     "Text(): the font parameter needs to be a Font object."
                 )
 
-    def be_notified(self, target):
+    def be_notified(self, target, attribute=None, value=None):
         self.__build_color_cache()
 
     @property
@@ -316,10 +335,12 @@ class Text(PglBaseObject):
                 self.__fg_color.detach(self)
             self.__fg_color = value
             self.__fg_color.attach(self)
+            self.notify(self, "base.Text.fg_color:changed", value)
         elif value is None:
             if self.__fg_color is not None:
                 self.__fg_color.detach(self)
             self.__fg_color = value
+            self.notify(self, "base.Text.fg_color:changed", value)
             self.__fgcc = Fore.RESET
         else:
             raise PglInvalidTypeException(

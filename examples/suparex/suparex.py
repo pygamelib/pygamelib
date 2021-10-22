@@ -481,7 +481,8 @@ def change_level(params):
     for i in range(0, board.size[0]):
         board.place_item(
             board_items.Wall(
-                model=block_color() + "  " + graphics.Style.RESET_ALL, type="platform"
+                model=block_color() + "  " + graphics.Style.RESET_ALL,
+                item_type="platform",
             ),
             board.size[1] - 1,
             i,
@@ -533,7 +534,7 @@ def make_platform(b, row, column):
                     get_up = 4
                     break
         m = block_color() + "  " + graphics.Style.RESET_ALL
-        plateform.append([board_items.Wall(model=m, type="platform"), row, i])
+        plateform.append([board_items.Wall(model=m, item_type="platform"), row, i])
     for i in plateform:
         b.place_item(i[0], i[1] - get_up, i[2])
         if random.choice([True, False]):
@@ -561,7 +562,7 @@ def generate_treasure(b, row, column):
                     + graphics.Models.TANABATA_TREE
                     + graphics.Style.RESET_ALL,
                     value=25,
-                    type="treasure.scorers",
+                    item_type="treasure.scorers",
                 ),
                 row,
                 column,
@@ -573,7 +574,7 @@ def generate_treasure(b, row, column):
                     + graphics.Models.HOURGLASS_NOT_DONE
                     + graphics.Style.RESET_ALL,
                     value=15,
-                    type="treasure.timers",
+                    item_type="treasure.timers",
                 ),
                 row,
                 column,
@@ -585,7 +586,7 @@ def generate_treasure(b, row, column):
                     + graphics.Models.GEM_STONE
                     + graphics.Style.RESET_ALL,
                     value=30,
-                    type="treasure.diamond",
+                    item_type="treasure.diamond",
                 ),
                 row,
                 column,
@@ -597,7 +598,7 @@ def generate_treasure(b, row, column):
                     + graphics.Models.HEART_WITH_RIBBON
                     + graphics.Style.RESET_ALL,
                     value=30,
-                    type="treasure.1UP",
+                    item_type="treasure.1UP",
                 ),
                 row,
                 column,
@@ -619,7 +620,7 @@ def generate_trap(b, row, column):
                     + graphics.Blocks.QUADRANT_UPPER_LEFT_AND_LOWER_RIGHT
                     + graphics.Blocks.QUADRANT_UPPER_RIGHT_AND_LOWER_LEFT
                     + graphics.Style.RESET_ALL,
-                    type="trap.hfire",
+                    item_type="trap.hfire",
                 )
                 trap.fire_timer = random.uniform(1.0, 4.0)
                 b.place_item(trap, row, column)
@@ -635,7 +636,7 @@ def generate_trap(b, row, column):
                         + graphics.Blocks.QUADRANT_UPPER_LEFT_AND_LOWER_LEFT_AND_LOWER_RIGHT  # noqa E501
                     )
                     + graphics.Style.RESET_ALL,
-                    type="trap.vfire",
+                    item_type="trap.vfire",
                 )
                 trap.fire_timer = random.uniform(2.0, 6.0)
                 b.place_item(trap, row, column)
@@ -682,7 +683,7 @@ def generate_level(g, b):
                 b.place_item(
                     board_items.Wall(
                         model=block_color() + "  " + graphics.Style.RESET_ALL,
-                        type="ground",
+                        item_type="ground",
                     ),
                     y,
                     x,
@@ -715,7 +716,7 @@ def generate_level(g, b):
     b.place_item(
         board_items.GenericActionableStructure(
             model=bg_color + graphics.Models.CYCLONE + graphics.Style.RESET_ALL,
-            type="exit",
+            item_type="exit",
             action=change_level,
             action_parameters=[g],
         ),
@@ -812,7 +813,7 @@ def sprout(p, *args):
     if p is not None:
         o = board_items.Wall(
             model=bg_color + graphics.Models.DECIDUOUS_TREE + graphics.Style.RESET_ALL,
-            type="sprouted_trees",
+            item_type="sprouted_trees",
         )
         o.pos = p.pos
         # board_items.Projectile is own by the Board by default.

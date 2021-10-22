@@ -1,1 +1,429 @@
-{"name": "board name", "player_starting_position": [5, 5], "ui_border_left": "\ud83e\uddf1", "ui_border_right": "\ud83e\uddf1", "ui_border_top": "\ud83e\uddf1", "ui_border_bottom": "\ud83e\uddf1", "ui_board_void_cell": "  ", "size": [15, 15], "map_data": {"0": {"5": {"object": "<class 'pygamelib.board_items.Wall'>", "name": "wall", "pos": [0, 5], "model": "\ud83e\uddf1", "type": "wall", "inventory_space": 0}}, "1": {"5": {"object": "<class 'pygamelib.board_items.Wall'>", "name": "wall", "pos": [1, 5], "model": "\ud83e\uddf1", "type": "wall", "inventory_space": 0}}, "2": {"5": {"object": "<class 'pygamelib.board_items.Wall'>", "name": "wall", "pos": [2, 5], "model": "\ud83d\udeaa", "type": "wall", "inventory_space": 0}, "13": {"object": "<class 'pygamelib.board_items.Treasure'>", "name": "treasure", "pos": [2, 13], "model": "\ud83d\udcb6", "type": "money", "value": 10, "inventory_space": 1}}, "10": {"12": {"object": "<class 'pygamelib.board_items.GenericStructure'>", "name": "crown", "pos": [10, 12], "model": "\ud83d\udc51", "type": "crown", "value": 0, "inventory_space": 1, "overlappable": false, "pickable": false, "restorable": false}}, "13": {"2": {"object": "<class 'pygamelib.board_items.NPC'>", "name": "bad guy 2", "pos": [13, 2], "model": "\ud83d\udc7e", "type": "ennemy", "hp": 20, "max_hp": 20, "step": 1, "remaining_lives": 1, "attack_power": 5, "actuator": {"type": "RandomActuator", "moveset": [10000001, 10000010]}}, "9": {"object": "<class 'pygamelib.board_items.NPC'>", "name": "bad guy", "pos": [13, 9], "model": "\ud83d\udc7e", "type": "ennemy", "hp": 20, "max_hp": 20, "step": 1, "remaining_lives": 1, "attack_power": 5, "actuator": {"type": "PathActuator", "path": [10000001, 10000011, 10000010, 10000100]}}}}}
+{
+    "name": "board name",
+    "data_version": 2,
+    "size": [
+        15,
+        15
+    ],
+    "player_starting_position": [
+        5,
+        5
+    ],
+    "ui_border_left": "\ud83e\uddf1",
+    "ui_border_right": "\ud83e\uddf1",
+    "ui_border_top": "\ud83e\uddf1",
+    "ui_border_bottom": "\ud83e\uddf1",
+    "ui_board_void_cell": "  ",
+    "ui_board_void_cell_sprixel": {
+        "model": "  ",
+        "bg_color": null,
+        "fg_color": null,
+        "is_bg_transparent": true
+    },
+    "DISPLAY_SIZE_WARNINGS": true,
+    "partial_display_viewport": null,
+    "partial_display_focus": null,
+    "enable_partial_display": false,
+    "map_data": {
+        "(0, 5, 0)": {
+            "object": "<class 'pygamelib.board_items.Wall'>",
+            "sprixel": {
+                "model": "\ud83e\uddf1",
+                "bg_color": null,
+                "fg_color": null,
+                "is_bg_transparent": true
+            },
+            "restorable": false,
+            "overlappable": false,
+            "pickable": false,
+            "can_move": false,
+            "inventory_space": 0,
+            "value": null,
+            "name": "wall",
+            "model": "\ud83e\uddf1",
+            "type": "wall",
+            "pos": [
+                0,
+                5,
+                0
+            ]
+        },
+        "(1, 5, 0)": {
+            "object": "<class 'pygamelib.board_items.Wall'>",
+            "sprixel": {
+                "model": "\ud83e\uddf1",
+                "bg_color": null,
+                "fg_color": null,
+                "is_bg_transparent": true
+            },
+            "restorable": false,
+            "overlappable": false,
+            "pickable": false,
+            "can_move": false,
+            "inventory_space": 0,
+            "value": null,
+            "name": "wall",
+            "model": "\ud83e\uddf1",
+            "type": "wall",
+            "pos": [
+                1,
+                5,
+                0
+            ]
+        },
+        "(2, 5, 0)": {
+            "object": "<class 'pygamelib.board_items.Wall'>",
+            "sprixel": {
+                "model": "\ud83d\udeaa",
+                "bg_color": null,
+                "fg_color": null,
+                "is_bg_transparent": true
+            },
+            "restorable": false,
+            "overlappable": false,
+            "pickable": false,
+            "can_move": false,
+            "inventory_space": 0,
+            "value": null,
+            "name": "wall",
+            "model": "\ud83d\udeaa",
+            "type": "wall",
+            "pos": [
+                2,
+                5,
+                0
+            ]
+        },
+        "(2, 13, 0)": {
+            "object": "<class 'pygamelib.board_items.Treasure'>",
+            "sprixel": {
+                "model": "\ud83d\udcb6",
+                "bg_color": null,
+                "fg_color": null,
+                "is_bg_transparent": true
+            },
+            "restorable": false,
+            "overlappable": false,
+            "pickable": true,
+            "can_move": false,
+            "inventory_space": 1,
+            "value": 10,
+            "name": "treasure",
+            "model": "\ud83d\udcb6",
+            "type": "money",
+            "pos": [
+                2,
+                13,
+                0
+            ]
+        },
+        "(3, 1, 0)": {
+            "object": "<class 'pygamelib.board_items.Door'>",
+            "sprixel": {
+                "model": "  ",
+                "bg_color": {
+                    "red": 0,
+                    "green": 0,
+                    "blue": 255
+                },
+                "fg_color": null,
+                "is_bg_transparent": false
+            },
+            "restorable": true,
+            "overlappable": true,
+            "pickable": false,
+            "can_move": false,
+            "inventory_space": 1,
+            "value": 0,
+            "name": "11c2d820-2e49-11ec-afb1-f02f742dbdc5",
+            "model": "\u001b[48;2;0;0;255m  \u001b[0m",
+            "type": "door",
+            "pos": [
+                3,
+                1,
+                0
+            ]
+        },
+        "(4, 1, 0)": {
+            "object": "<class 'pygamelib.board_items.Door'>",
+            "sprixel": {
+                "model": "\u001b[48;2;0;0;255m  \u001b[0m",
+                "bg_color": {
+                    "red": 0,
+                    "green": 0,
+                    "blue": 255
+                },
+                "fg_color": null,
+                "is_bg_transparent": false
+            },
+            "restorable": true,
+            "overlappable": true,
+            "pickable": false,
+            "can_move": false,
+            "inventory_space": 1,
+            "value": 0,
+            "name": "11c2d820-2e49-11ec-afb1-f02f742dbdc5",
+            "model": "\u001b[48;2;0;0;255m  \u001b[0m",
+            "type": "door",
+            "pos": [
+                4,
+                1,
+                0
+            ]
+        },
+        "(5, 1, 0)": {
+            "object": "<class 'pygamelib.board_items.Door'>",
+            "sprixel": {
+                "model": "\u001b[48;2;0;0;255m  \u001b[0m",
+                "bg_color": {
+                    "red": 0,
+                    "green": 0,
+                    "blue": 255
+                },
+                "fg_color": null,
+                "is_bg_transparent": false
+            },
+            "restorable": true,
+            "overlappable": true,
+            "pickable": false,
+            "can_move": false,
+            "inventory_space": 1,
+            "value": 0,
+            "name": "11c2d820-2e49-11ec-afb1-f02f742dbdc5",
+            "model": "\u001b[48;2;0;0;255m  \u001b[0m",
+            "type": "door",
+            "pos": [
+                5,
+                1,
+                0
+            ]
+        },
+        "(7, 5, 0)": {
+            "object": "<class 'pygamelib.board_items.Wall'>",
+            "sprixel": {
+                "model": "\u001b[48;2;0;255;0m  \u001b[0m",
+                "bg_color": {
+                    "red": 0,
+                    "green": 255,
+                    "blue": 0
+                },
+                "fg_color": null,
+                "is_bg_transparent": false
+            },
+            "restorable": false,
+            "overlappable": false,
+            "pickable": false,
+            "can_move": false,
+            "inventory_space": 0,
+            "value": null,
+            "name": "da21c23c-2c77-11ec-b540-f02f742dbdc5",
+            "model": "\u001b[48;2;0;255;0m  \u001b[0m",
+            "type": "item",
+            "pos": [
+                7,
+                5,
+                0
+            ]
+        },
+        "(7, 6, 0)": {
+            "object": "<class 'pygamelib.board_items.Wall'>",
+            "sprixel": {
+                "model": "\u001b[48;2;0;255;0m  \u001b[0m",
+                "bg_color": {
+                    "red": 0,
+                    "green": 255,
+                    "blue": 0
+                },
+                "fg_color": null,
+                "is_bg_transparent": false
+            },
+            "restorable": false,
+            "overlappable": false,
+            "pickable": false,
+            "can_move": false,
+            "inventory_space": 0,
+            "value": null,
+            "name": "da21c23c-2c77-11ec-b540-f02f742dbdc5",
+            "model": "\u001b[48;2;0;255;0m  \u001b[0m",
+            "type": "item",
+            "pos": [
+                7,
+                6,
+                0
+            ]
+        },
+        "(7, 7, 0)": {
+            "object": "<class 'pygamelib.board_items.Wall'>",
+            "sprixel": {
+                "model": "\u001b[48;2;0;255;0m  \u001b[0m",
+                "bg_color": {
+                    "red": 0,
+                    "green": 255,
+                    "blue": 0
+                },
+                "fg_color": null,
+                "is_bg_transparent": false
+            },
+            "restorable": false,
+            "overlappable": false,
+            "pickable": false,
+            "can_move": false,
+            "inventory_space": 0,
+            "value": null,
+            "name": "da21c23c-2c77-11ec-b540-f02f742dbdc5",
+            "model": "\u001b[48;2;0;255;0m  \u001b[0m",
+            "type": "item",
+            "pos": [
+                7,
+                7,
+                0
+            ]
+        },
+        "(10, 12, 0)": {
+            "object": "<class 'pygamelib.board_items.GenericStructure'>",
+            "sprixel": {
+                "model": "\ud83d\udc51",
+                "bg_color": null,
+                "fg_color": null,
+                "is_bg_transparent": true
+            },
+            "restorable": false,
+            "overlappable": false,
+            "pickable": false,
+            "can_move": false,
+            "inventory_space": 1,
+            "value": 0,
+            "name": "crown",
+            "model": "\ud83d\udc51",
+            "type": "crown",
+            "pos": [
+                10,
+                12,
+                0
+            ]
+        },
+        "(13, 2, 0)": {
+            "object": "<class 'pygamelib.board_items.NPC'>",
+            "sprixel": {
+                "model": "\ud83d\udc7e",
+                "bg_color": null,
+                "fg_color": null,
+                "is_bg_transparent": true
+            },
+            "restorable": false,
+            "overlappable": false,
+            "pickable": false,
+            "can_move": true,
+            "inventory_space": 1,
+            "value": null,
+            "name": "bad guy 2",
+            "model": "\ud83d\udc7e",
+            "type": "ennemy",
+            "pos": [
+                13,
+                2,
+                0
+            ],
+            "step": 1,
+            "step_horizontal": 1,
+            "step_vertical": 1,
+            "movement_speed": 0.2,
+            "has_inventory": false,
+            "max_hp": 20,
+            "hp": 20,
+            "max_mp": null,
+            "mp": null,
+            "remaining_lives": 1,
+            "attack_power": 5,
+            "defense_power": null,
+            "strength": null,
+            "intelligence": null,
+            "agility": null,
+            "actuator": {
+                "type": "RandomActuator",
+                "moveset": [
+                    10000001,
+                    10000010
+                ],
+                "state": 40000001
+            }
+        },
+        "(13, 9, 0)": {
+            "object": "<class 'pygamelib.board_items.NPC'>",
+            "sprixel": {
+                "model": "\ud83d\udc7e",
+                "bg_color": null,
+                "fg_color": null,
+                "is_bg_transparent": true
+            },
+            "restorable": false,
+            "overlappable": false,
+            "pickable": false,
+            "can_move": true,
+            "inventory_space": 1,
+            "value": null,
+            "name": "bad guy",
+            "model": "\ud83d\udc7e",
+            "type": "ennemy",
+            "pos": [
+                13,
+                9,
+                0
+            ],
+            "step": 1,
+            "step_horizontal": 1,
+            "step_vertical": 1,
+            "movement_speed": 0.2,
+            "has_inventory": false,
+            "max_hp": 20,
+            "hp": 20,
+            "max_mp": null,
+            "mp": null,
+            "remaining_lives": 1,
+            "attack_power": 5,
+            "defense_power": null,
+            "strength": null,
+            "intelligence": null,
+            "agility": null,
+            "actuator": {
+                "type": "PathActuator",
+                "path": [
+                    10000001,
+                    10000011,
+                    10000010,
+                    10000100
+                ],
+                "state": 40000001
+            }
+        }
+    },
+    "library": [
+        {
+            "object": "<class 'pygamelib.board_items.Door'>",
+            "sprixel": {
+                "model": "\u001b[48;2;0;0;255m  \u001b[0m",
+                "bg_color": {
+                    "red": 0,
+                    "green": 0,
+                    "blue": 255
+                },
+                "fg_color": null,
+                "is_bg_transparent": false
+            },
+            "restorable": true,
+            "overlappable": true,
+            "pickable": false,
+            "can_move": false,
+            "inventory_space": 1,
+            "value": 0,
+            "name": "11c2d820-2e49-11ec-afb1-f02f742dbdc5",
+            "model": "\u001b[48;2;0;0;255m  \u001b[0m",
+            "type": "door",
+            "pos": [
+                null,
+                null,
+                null
+            ]
+        }
+    ]
+}

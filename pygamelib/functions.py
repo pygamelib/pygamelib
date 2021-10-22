@@ -1,5 +1,5 @@
 """
-This file holds utility functions that belongs to nowhere else.
+This file holds utility functions that belongs nowhere else.
 """
 
 import inspect

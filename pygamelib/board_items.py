@@ -37,7 +37,7 @@ from pygamelib.gfx import core
 from pygamelib import actuators
 
 
-class BoardItem(object):
+class BoardItem(base.PglBaseObject):
     """
     Base class for any item that will be placed on a Board.
 
@@ -52,34 +52,190 @@ class BoardItem(object):
         2 integers [row,column]
     :type pos: array
     :param model: The model to use to display this item on the Board. Be mindful of the
-        space it will require. Default value is '*'.
+        space it will require. Default value is '*'. This parameter is now deprecated in
+        favor of "sprixel". If both "sprixel" and "model" are specified, "model" is
+        ignored.
     :type model: str
     :param parent: The parent object of the board item. Usually a Board or Game object.
+    :param sprixel: The sprixel that will represent the item on the Board.
+    :type sprixel: :class:`~pygamelib.gfx.core.Sprixel`
+    :param pickable: Represent the capacity for a BoardItem to be pick-up by player or
+       NPC. This parameter is True or False. If sets to None, it'll be set to False.
+    :type pickable: bool
+    :param overlappable: Represent to be overlapped by another BoardItem. This parameter
+       is True or False. If sets to None, it'll be set to False.
+    :type overlappable: bool
+    :param restorable: Represent the capacity for an Immovable BoardItem to be restored
+        by the board if the item is overlappable and has been overlapped by another
+        BoardItem. This parameter is True or False. If sets to None, it'll be set to
+        False.
+    :type restorable: bool
+    :param can_move: Represent the ability of the BoardItem to move on the Board. If
+       this parameter is False, the Board.move() method will not allow the item to move.
+       This parameter is True or False. If sets to None, it'll be set to False.
+    :type can_move: bool
+    :param pos: The position of the BoardItem on a :class:`~pygamelib.engine.Board`.
+       Please make sure that you understand what you do before changing that parameter.
+       The position of an item is managed by the Board object and will be updated. In
+       most cases you don't need to use that parameter. The position is a list of 2 or 3
+       int: [row, column, layer].
+    :type pos: list
+    :param value: The value of an item. It can be used for any game purpose: a score
+       indicator, a trade value, the amount of XP to grant to a player on a kill, etc.
+    :type value: int | float
+    :param inventory_space: The space that the item takes in the
+       :class:`pygamelib.engine.Inventory`. This parameter used to be available only for
+       :class:`Immovable`items but since 1.3.0, every BoardItem can be configured to be
+       pickable, so every BoardItem can now take space in the inventory. Default value
+       is 1.
+    :type inventory_space: int
 
-    .. important:: Starting with version 1.2.0 and introduction of complex items,
+    .. note:: Starting with version 1.2.0 and introduction of complex items,
        BoardItems have a size. That size **CANNOT** be set. It is always 1x1.
        This is because a BoardItem always takes 1 cell, regardless of its actual number
-       of characters. Python does not really provide a way to prevent changing that
-       member but if you do, you'll break rendering. You have been warned.
+       of characters. The size is a read-only property.
+
+    .. important:: In version 1.3.0 the BoardItem object has been reworked to make sure
+       that the pickable, restorable, overlappable and can_move properties are
+       configurable for all items independently of their type. This fixes an issue with
+       restorable: only :class:`~Immovable` objects could be restorable. Now all items
+       can be any combination of these properties. As a developper you are now
+       encouraged to use the corresponding functions to determine the abilities of an
+       item.
+
+    .. warning:: An item cannot be restorable and pickable at the same time. If it's
+       pickable, it's put into the inventory of the item overlapping it. Therefor, it
+       cannot be restored. If both restorable and pickable are set to True, one of the 2
+       is set to False depending on the value of overlappable: if True restorable is set
+       to True and pickable to False and the contrary if overlappable is False.
     """
 
-    def __init__(self, **kwargs):
+    def __init__(
+        self,
+        sprixel=None,
+        model=None,
+        name=None,
+        item_type=None,
+        parent=None,
+        pickable=False,
+        overlappable=False,
+        restorable=False,
+        can_move=False,
+        pos=None,
+        value=None,
+        inventory_space=1,
+    ):
         super().__init__()
         self.name = "Board item"
+        if name is not None:
+            self.name = name
         self.type = "item"
-        self.pos = [None, None]
+        if item_type is not None:
+            self.type = item_type
+        self.pos = [None, None, None]
+        if (
+            pos is not None
+            and len(pos) >= 2
+            and pos[0] is not None
+            and pos[1] is not None
+        ):
+            self.pos = pos
         # DEPRECATED
         # self.model = "*"
         self.animation = None
         self.parent = None
+        if parent is not None:
+            self.parent = parent
         self.sprixel = core.Sprixel("*")
-        self.size = [1, 1]
-        # Setting class parameters
-        for item in ["name", "type", "pos", "parent", "sprixel"]:
-            if item in kwargs:
-                setattr(self, item, kwargs[item])
-        if "model" in kwargs:
-            self.sprixel.model = kwargs["model"]
+        if sprixel is not None:
+            self.sprixel = sprixel
+        self._size = [1, 1]
+        if model is not None and sprixel is None:
+            self.sprixel.model = model
+        if self.sprixel.bg_color is None and sprixel is None:
+            self.sprixel.is_bg_transparent = True
+        self.value = value
+        self._inventory_space = inventory_space
+        # Init the pickable, overlappable and restorable states
+        self.__is_pickable = pickable
+        self.__is_overlappable = overlappable
+        self.__is_restorable = restorable
+        self.__can_move = can_move
+        if self.__is_pickable is None:
+            self.__is_pickable = False
+        if self.__is_overlappable is None:
+            self.__is_overlappable = False
+        if self.__is_restorable is None:
+            self.__is_restorable = False
+        if self.__can_move is None:
+            self.__can_move = False
+        # Solving conflicts
+        if pickable and restorable and overlappable:
+            self.__is_pickable = False
+        elif pickable and restorable and not overlappable:
+            self.__is_restorable = False
+
+    def serialize(self) -> dict:
+        ret_data = dict()
+        # self.parent cannot really be serialized (or more accurately I don't really
+        # want to do it properly)
+        ret_data["object"] = str(self.__class__)
+        if self.sprixel is not None:
+            ret_data["sprixel"] = self.sprixel.serialize()
+        ret_data["restorable"] = self.restorable()
+        ret_data["overlappable"] = self.overlappable()
+        ret_data["pickable"] = self.pickable()
+        ret_data["can_move"] = self.can_move()
+        ret_data["inventory_space"] = self.inventory_space
+        keys = [
+            "value",
+            "name",
+            "model",
+            "type",
+            "pos",
+        ]
+        for key in keys:
+            ret_data[key] = getattr(self, key)
+        return ret_data
+
+    @classmethod
+    def load(cls, data):
+        fields = [
+            "restorable",
+            "overlappable",
+            "pickable",
+            "can_move",
+            "inventory_space",
+            "value",
+            "name",
+            "model",
+            "type",
+            "pos",
+        ]
+        for field in fields:
+            if field not in data.keys():
+                data[field] = None
+        if "sprixel" not in data.keys():
+            data["sprixel"] = {
+                "model": "",
+                "fg_color": None,
+                "bg_color": None,
+                "is_bg_transparent": True,
+            }
+        itm = cls(
+            sprixel=core.Sprixel.load(data["sprixel"]),
+            model=data["model"],
+            name=data["name"],
+            item_type=data["type"],
+            pickable=data["pickable"],
+            overlappable=data["overlappable"],
+            restorable=data["restorable"],
+            can_move=data["can_move"],
+            pos=data["pos"],
+            value=data["value"],
+            inventory_space=data["inventory_space"],
+        )
+        return itm
 
     @property
     def model(self):
@@ -88,6 +244,25 @@ class BoardItem(object):
     @model.setter
     def model(self, value):
         self.sprixel.model = value
+
+    @property
+    def inventory_space(self):
+        """A property to get and set the size that the BoardItem takes in the
+        :class:`~pygamelib.engine.Inventory`.
+
+        :return: The size of the item.
+        :rtype: int
+        """
+        return self._inventory_space
+
+    @inventory_space.setter
+    def inventory_space(self, value):
+        if type(value) is int:
+            self._inventory_space = value
+        else:
+            raise base.PglInvalidTypeException(
+                "BoardItem.inventory_space.(value): value needs to be an int."
+            )
 
     def __str__(self):
         if self.sprixel is not None:
@@ -122,7 +297,7 @@ class BoardItem(object):
             string += f"'model' = '{self.model}'"
         return string
 
-    def store_position(self, row, column):
+    def store_position(self, row, column, layer=0):
         """Store the BoardItem position for self access.
 
         The stored position is used for consistency and quick access to the self
@@ -132,12 +307,15 @@ class BoardItem(object):
         :type row: int
         :param column: the column of the item in the :class:`~pygamelib.engine.Board`.
         :type column: int
+        :param layer: the layer of the item in the :class:`~pygamelib.engine.Board`. By
+           default layer is set to 0.
+        :type column: int
 
         Example::
 
             item.store_position(3,4)
         """
-        self.pos = [row, column]
+        self.pos = [row, column, layer]
 
     def position_as_vector(self):
         """Returns the current item position as a Vector2D
@@ -185,6 +363,22 @@ class BoardItem(object):
         return self.pos[1]
 
     @property
+    def layer(self):
+        """Convenience method to get the current stored layer number of the item.
+
+        This is absolutely equivalent to access to item.pos[2].
+
+        :return: The layer number
+        :rtype: int
+
+        Example::
+
+            if item.layer != item.pos[2]:
+                print('Something extremely unlikely just happened...')
+        """
+        return self.pos[2]
+
+    @property
     def width(self):
         """Convenience method to get the width of the item.
 
@@ -216,8 +410,34 @@ class BoardItem(object):
         """
         return self.size[1]
 
+    @property
+    def size(self):
+        """A read-only property that gives the size of the item as a 2 dimensions list.
+        The first element is the width and the second the height.
+
+        :return: The size.
+        :rtype: list
+
+        Example::
+
+            # This is a silly example because the Board object does not allow
+            # that use case.
+            if item.column + item.size[0] >= board.width:
+                Game.instance().screen.display_line(
+                    f"{item.name} cannot be placed at {item.pos}."
+                )
+        """
+        return self._size
+
     def collides_with(self, other):
         """Tells if this item collides with another item.
+
+        .. Important:: collides_with() does not take the layer into account! It is not
+           desirable for the pygamelib to assume that 2 items on different layers wont
+           collide. For example, if a player is over a door, they are on different
+           layers, but logically speaking they are colliding. The player is overlapping
+           the door. Therefor, it is the responsibility of the developper to check for
+           layers in collision, if it is important to the game logic.
 
         :param other: The item you want to check for collision.
         :type other: :class:`~pygamelib.board_items.BoardItem`
@@ -296,44 +516,121 @@ class BoardItem(object):
             for idx in range(column + 1, end):
                 buffer[row][idx] = ""
 
-    def can_move(self):
+    def restorable(self):
         """
-        This is a virtual method that must be implemented in deriving classes.
-        This method has to return True or False.
-        This represent the capacity for a BoardItem to be moved by the Board.
-        """
-        raise NotImplementedError()
+        Returns True if the item is restorable, False otherwise.
 
-    def pickable(self):
+        Example::
+
+            if board.item(4,5).restorable():
+                print('The item is restorable')
         """
-        This is a virtual method that must be implemented in deriving class.
-        This method has to return True or False.
-        This represent the capacity for a BoardItem to be pick-up by player or NPC.
+        return self.__is_restorable
+
+    def set_restorable(self, value):
         """
-        raise NotImplementedError()
+        Set the value of the restorable property to value.
+
+        :param value: The value to set.
+        :type value: bool
+
+        Example::
+
+            item.set_restorable(False)
+        """
+        if type(value) is bool:
+            self.__is_restorable = value
+        else:
+            raise base.PglInvalidTypeException(
+                "BoardItem.set_restorable(value): 'value' needs to be a bool."
+            )
 
     def overlappable(self):
         """
-        This is a virtual method that must be implemented in deriving class.
-        This method has to return True or False.
-        This represent the capacity for a BoardItem to be overlapped by another
-        BoardItem.
-        """
-        raise NotImplementedError()
+        Returns True if the item is overlappable, False otherwise.
 
-    def inventory_space(self):
-        """
-        This is a virtual method that must be implemented in deriving class.
-        This method has to return an integer.
-        This represent the size of the BoardItem for the
-        :class:`~pygamelib.engine.Inventory`. It is used for example to evaluate
-        the space taken in the inventory.
+        Example::
 
-        .. important:: That abstract function was called size() before version 1.2.0.
-           As it was exclusively used for inventory space management, it as been
-           renamed. Particularly because now items do have a need for a size.
+            if board.item(4,5).overlappable():
+                print('The item is overlappable')
         """
-        raise NotImplementedError()
+        return self.__is_overlappable
+
+    def set_overlappable(self, value):
+        """
+        Set the value of the overlappable property to value.
+
+        :param value: The value to set.
+        :type value: bool
+
+        Example::
+
+            item.set_overlappable(False)
+        """
+        if type(value) is bool:
+            self.__is_overlappable = value
+        else:
+            raise base.PglInvalidTypeException(
+                "BoardItem.set_overlappable(value): 'value' needs to be a bool."
+            )
+
+    def can_move(self):
+        """
+        Returns True if the item can move, False otherwise.
+
+        Example::
+
+            if board.item(4,5).can_move():
+                print('The item can move')
+        """
+        return self.__can_move
+
+    def set_can_move(self, value):
+        """
+        Set the value of the can_move property to value.
+
+        :param value: The value to set.
+        :type value: bool
+
+        Example::
+
+            item.set_can_move(False)
+        """
+        if type(value) is bool:
+            self.__can_move = value
+        else:
+            raise base.PglInvalidTypeException(
+                "BoardItem.set_can_move(value): 'value' needs to be a bool."
+            )
+
+    def pickable(self):
+        """
+        Returns True if the item is pickable, False otherwise.
+
+        Example::
+
+            if board.item(4,5).pickable():
+                print('The item is pickable')
+        """
+        return self.__is_pickable
+
+    def set_pickable(self, value):
+        """
+        Set the value of the pickable property to value.
+
+        :param value: The value to set.
+        :type value: bool
+
+        Example::
+
+            item.set_pickable(False)
+        """
+        if type(value) is bool:
+            self.__is_pickable = value
+        else:
+            raise base.PglInvalidTypeException(
+                "BoardItem.set_pickable(value): 'value' needs to be a bool."
+            )
 
 
 class BoardItemVoid(BoardItem):
@@ -375,6 +672,9 @@ class BoardItemComplexComponent(BoardItem):
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
+        self.__is_restorable = False
+        self.__is_overlappable = False
+        self.__can_move = False
         if hasattr(self, "parent") and self.parent is not None:
             if hasattr(self.parent, "restorable") and callable(self.parent.restorable):
                 self.__is_restorable = self.parent.restorable()
@@ -390,55 +690,19 @@ class BoardItemComplexComponent(BoardItem):
                 self.__can_move = self.parent.can_move()
             else:
                 self.__can_move = False
-        else:
-            self.__is_restorable = False
-            self.__is_overlappable = False
-            self.__can_move = False
         self.__is_pickable = False
-
-    def restorable(self):
-        """
-        Returns True if the item is restorable, False otherwise.
-
-        Example::
-
-            if item.item(4,5).restorable():
-                print('The item is restorable')
-        """
-        return self.__is_restorable
-
-    def overlappable(self):
-        """
-        Returns True if the item is overlappable, False otherwise.
-
-        Example::
-
-            if item.item(4,5).overlappable():
-                print('The item is overlappable')
-        """
-        return self.__is_overlappable
-
-    def can_move(self):
-        """
-        Returns True if the item can move, False otherwise.
-
-        Example::
-
-            if item.item(4,5).can_move():
-                print('The item can move')
-        """
-        return self.__can_move
 
     def pickable(self):
         """
-        Returns True if the item is pickable, False otherwise.
+        Returns False. A component is never pickable by itself (either the whole complex
+        item is pickable or not, but not partially)
 
         Example::
 
             if item.item(4,5).pickable():
                 print('The item is pickable')
         """
-        return self.__is_pickable
+        return False
 
 
 class BoardComplexItem(BoardItem):
@@ -476,23 +740,31 @@ class BoardComplexItem(BoardItem):
 
     """
 
-    def __init__(self, **kwargs):
+    def __init__(
+        self, sprite=None, size=None, null_sprixel=None, base_item_type=None, **kwargs
+    ):
         self.__kwargs = kwargs
         self.name = "Board Multi Item"
         self.type = "multi_item"
         super().__init__(**kwargs)
         self.sprite = core.Sprite()
-        self.null_sprixel = None
-        self.size = None
+        if sprite is not None:
+            self.sprite = sprite
+        self.null_sprixel = null_sprixel
+        if self.null_sprixel is None:
+            self.null_sprixel = core.Sprixel()
+        self._size = size
         self._item_matrix = []
         # Not sure about that one
-        self.hit_box = []
+        # self.hit_box = []
         self.base_item_type = BoardItemComplexComponent
-        for item in ["sprite", "size", "null_sprixel", "base_item_type"]:
-            if item in kwargs:
-                setattr(self, item, kwargs[item])
-        if self.size is None:
-            self.size = self.sprite.size
+        if base_item_type is not None:
+            self.base_item_type = base_item_type
+        # for item in ["sprite", "size", "null_sprixel", "base_item_type"]:
+        #     if item in kwargs:
+        #         setattr(self, item, kwargs[item])
+        if self._size is None:
+            self._size = self.sprite.size
         if isinstance(self.sprite, core.Sprite) and self.sprite.parent is None:
             self.sprite.parent = self
         self.update_sprite()
@@ -528,6 +800,8 @@ class BoardComplexItem(BoardItem):
                     and self.sprite.sprixel(row, col) == self.null_sprixel
                 ):
                     self._item_matrix[row].append(BoardItemVoid())
+                    self._item_matrix[row][col].name = f"{self.name}_{row}_{col}"
+                    self._item_matrix[row][col].parent = self
                 else:
                     self._item_matrix[row].append(self.base_item_type(**self.__kwargs))
                     self._item_matrix[row][col].name = f"{self.name}_{row}_{col}"
@@ -536,7 +810,7 @@ class BoardComplexItem(BoardItem):
                     ).model
                     self._item_matrix[row][col].sprixel = self.sprite.sprixel(row, col)
                     self._item_matrix[row][col].parent = self
-        self.size = self.sprite.size
+        self._size = self.sprite.size
 
     def item(self, row, column):
         """
@@ -617,37 +891,47 @@ class Movable(BoardItem):
     BoardItem.overlappable()
     """
 
-    def __init__(self, **kwargs):
+    def __init__(
+        self,
+        step: int = None,
+        step_vertical: int = None,
+        step_horizontal: int = None,
+        movement_speed: float = None,
+        **kwargs,
+    ):
         super().__init__(**kwargs)
         # We probably need the item to store its own velocity at some point
         # self.velocity = base.Vector2d(0,0)
         # Set default values
-        for s in ["step", "step_vertical", "step_horizontal"]:
-            if s not in kwargs.keys():
-                # self.step = 1
-                self.__setattr__(s, 1)
-            else:
-                # self.step = kwargs["step"]
-                self.__setattr__(s, kwargs[s])
+        self.step_horizontal = 1
+        if step_horizontal is not None:
+            self.step_horizontal = step_horizontal
+        self.step_vertical = 1
+        if step_vertical is not None:
+            self.step_vertical = step_vertical
+        self.step = 1
+        if step is not None:
+            self.step = step
+        self.movement_speed = 1.0
+        if movement_speed is not None:
+            self.movement_speed = movement_speed
+
         # TODO: That's initial thought for physic i the pygamelib. For future reference.
-        # if "velocity" in kwargs.keys():
-        #     self.velocity = kwargs["velocity"]
+        # if velocity is not None:
+        #     self.velocity = velocity
         # else:
         #     self.velocity = base.Vector2D()
-        # if "ignore_physic" in kwargs.keys():
-        #     self.ignore_physic = kwargs["ignore_physic"]
+        # if ignore_physic is not None:
+        #     self.ignore_physic = ignore_physic
         # else:
         #     self.ignore_physic = False
+
         # Now if only step is set and it's not 1, set the correct value for the 2 others
-        if "step_vertical" not in kwargs.keys() and self.step != 1:
+        if step_vertical is None and self.step != 1:
             self.step_vertical = self.step
 
-        if "step_horizontal" not in kwargs.keys() and self.step != 1:
+        if step_horizontal is None and self.step != 1:
             self.step_horizontal = self.step
-        if "movement_speed" not in kwargs.keys():
-            self.movement_speed = 1.0
-        else:
-            self.movement_speed = kwargs["movement_speed"]
         self.__dtmove = 0.0
         self.__can_move = True
 
@@ -664,16 +948,46 @@ class Movable(BoardItem):
                 "Movable.dtmove(value): value needs to be an int or float."
             )
 
-    def can_move(self):
+    def serialize(self) -> dict:
+        """Serialize the Immovable object.
+
+        This returns a dictionnary that contains all the key/value pairs that makes up
+        the object.
+
+        """
+        ret_data = super().serialize()
+        ret_data["step"] = self.step
+        ret_data["step_horizontal"] = self.step_horizontal
+        ret_data["step_vertical"] = self.step_vertical
+        ret_data["movement_speed"] = self.movement_speed
+
+        if hasattr(self, "has_inventory"):
+            try:
+                ret_data["has_inventory"] = self.has_inventory()
+            except NotImplementedError:
+                pass
+
+        return ret_data
+
+    @classmethod
+    def load(cls, data):
+        itm = super().load(data)
+        itm.step = data["step"]
+        itm.step_horizontal = data["step_horizontal"]
+        itm.step_vertical = data["step_vertical"]
+        itm.movement_speed = data["movement_speed"]
+        return itm
+
+    def can_move(self) -> bool:
         """
         Movable implements can_move().
 
         :return: True
         :rtype: Boolean
         """
-        return self.__can_move
+        return True
 
-    def has_inventory(self):
+    def has_inventory(self) -> bool:
         """
         This is a virtual method that must be implemented in deriving class.
         This method has to return True or False.
@@ -782,11 +1096,13 @@ class Projectile(Movable):
         parent=None,
         callback_parameters=[],
         movement_speed=0.15,
+        **kwargs,
     ):
         if range % step != 0:
             raise base.PglException(
                 "incorrect_range_step",
-                "range must be a factor of step" " in Projectile",
+                "Range must be a factor of step in Projectile (or else it might never "
+                "reach its target).",
             )
         super().__init__(
             model=model,
@@ -794,6 +1110,7 @@ class Projectile(Movable):
             name=name,
             parent=parent,
             movement_speed=movement_speed,
+            **kwargs,
         )
         self.direction = direction
         self.range = range
@@ -1044,18 +1361,24 @@ class Projectile(Movable):
 
 class Immovable(BoardItem):
     """
-    This class derive BoardItem and describe an object that cannot move or be
-    moved (like a wall). Thus this class implements BoardItem.can_move().
-    However it does not implement BoardItem.pickable() or
-    BoardItem.overlappable()
+    This class derive :class:`BoardItem` and describe an object that cannot move or be
+    moved (like a wall).
+    :func:`~BoardItem.can_move` cannot be configured and return False. The other
+    properties can be configured. They have the same default values than
+    :class:`BoardItem`.
+
+    :param inventory_space: The space the immovable item takes into an
+       :class:`~pygamelib.engine.Inventory` (in case the item is pickable). By default
+       it is 0.
+    :type inventory_space: int
     """
 
-    def __init__(self, **kwargs):
+    def __init__(self, inventory_space: int = None, **kwargs):
         super().__init__(**kwargs)
-        if "inventory_space" not in kwargs.keys():
+        if inventory_space is None:
             self._inventory_space = 0
         else:
-            self._inventory_space = kwargs["inventory_space"]
+            self._inventory_space = inventory_space
 
     def can_move(self):
         """Return the capability of moving of an item.
@@ -1087,16 +1410,6 @@ class Immovable(BoardItem):
                 "Immovable.inventory_space.(value): value needs to be an int."
             )
 
-    def restorable(self):
-        """
-        This is a virtual method that must be implemented in deriving class.
-        This method has to return True or False.
-        This represent the capacity for an Immovable BoardItem to be restored
-        by the board if the item is overlappable and has been overlapped by
-        another Movable (:class:`~pygamelib.board_items.Movable`) item.
-        """
-        raise NotImplementedError()
-
 
 class Actionable(Immovable):
     """
@@ -1110,7 +1423,8 @@ class Actionable(Immovable):
     :type action_parameters: list
     :param perm: The permission that defines what types of items can actually
         activate the actionable. The permission has to be one of the
-        permissions defined in :mod:`~pygamelib.constants`
+        permissions defined in :mod:`~pygamelib.constants`. By default it is set to
+        constants.PLAYER_AUTHORIZED.
     :type perm: :mod:`~pygamelib.constants`
 
     On top of these parameters Actionable accepts all parameters from
@@ -1123,20 +1437,17 @@ class Actionable(Immovable):
         for more details.
     """
 
-    def __init__(self, **kwargs):
-        if "action" not in kwargs.keys():
-            self.action = None
-        else:
-            self.action = kwargs["action"]
-        if "action_parameters" not in kwargs.keys():
-            kwargs["action_parameters"] = []
-        else:
-            self.action_parameters = kwargs["action_parameters"]
-        if "perm" not in kwargs.keys():
-            self.perm = constants.PLAYER_AUTHORIZED
-        else:
-            self.perm = kwargs["perm"]
+    def __init__(self, action=None, action_parameters=None, perm=None, **kwargs):
         super().__init__(**kwargs)
+        self.action = None
+        if action is not None:
+            self.action = action
+        self.action_parameters = []
+        if action_parameters is not None:
+            self.action_parameters = action_parameters
+        self.perm = constants.PLAYER_AUTHORIZED
+        if perm is not None:
+            self.perm = perm
 
     def activate(self):
         """
@@ -1150,7 +1461,7 @@ class Actionable(Immovable):
             self.action(self.action_parameters)
 
 
-class Character(object):
+class Character(Movable):
     """A base class for a character (playable or not)
 
     :param agility: Represent the agility of the character
@@ -1182,19 +1493,61 @@ class Character(object):
 
     """
 
-    def __init__(self, **kwargs):
-        super().__init__()
+    def __init__(
+        self,
+        max_hp=None,
+        hp=None,
+        max_mp=None,
+        mp=None,
+        remaining_lives=None,
+        attack_power=None,
+        defense_power=None,
+        strength=None,
+        intelligence=None,
+        agility=None,
+        **kwargs,
+    ):
+        super().__init__(**kwargs)
         self.max_hp = None
+        if max_hp is not None:
+            self.max_hp = max_hp
         self.hp = None
+        if hp is not None:
+            self.hp = hp
         self.max_mp = None
+        if max_mp is not None:
+            self.max_mp = max_mp
         self.mp = None
+        if mp is not None:
+            self.mp = mp
         self.remaining_lives = None
+        if remaining_lives is not None:
+            self.remaining_lives = remaining_lives
         self.attack_power = None
+        if attack_power is not None:
+            self.attack_power = attack_power
         self.defense_power = None
+        if defense_power is not None:
+            self.defense_power = defense_power
         self.strength = None
+        if strength is not None:
+            self.strength = strength
         self.intelligence = None
+        if intelligence is not None:
+            self.intelligence = intelligence
         self.agility = None
-        for a in [
+        if agility is not None:
+            self.agility = agility
+
+    def serialize(self) -> dict:
+        """Serialize the Character object.
+
+        This returns a dictionnary that contains all the key/value pairs that makes up
+        the object.
+
+        """
+        ret_data = super().serialize()
+        keys = [
             "max_hp",
             "hp",
             "max_mp",
@@ -1205,12 +1558,34 @@ class Character(object):
             "strength",
             "intelligence",
             "agility",
-        ]:
-            if a in kwargs.keys():
-                setattr(self, a, kwargs[a])
+        ]
+        for key in keys:
+            ret_data[key] = getattr(self, key)
+
+        return ret_data
+
+    @classmethod
+    def load(cls, data):
+        itm = super().load(data)
+        keys = [
+            "max_hp",
+            "hp",
+            "max_mp",
+            "mp",
+            "remaining_lives",
+            "attack_power",
+            "defense_power",
+            "strength",
+            "intelligence",
+            "agility",
+        ]
+        for key in keys:
+            if key in data.keys():
+                setattr(itm, key, data[key])
+        return itm
 
 
-class Player(Movable, Character):
+class Player(Character):
     """
     A class that represent a player controlled by a human.
     It accepts all the parameters from :class:`~pygamelib.board_items.Character` and is
@@ -1228,7 +1603,7 @@ class Player(Movable, Character):
     .. note:: If no inventory is passed as parameter a default one is created.
     """
 
-    def __init__(self, **kwargs):
+    def __init__(self, inventory=None, **kwargs):
         if "max_hp" not in kwargs.keys():
             kwargs["max_hp"] = 100
         if "hp" not in kwargs.keys():
@@ -1240,8 +1615,8 @@ class Player(Movable, Character):
         if "movement_speed" not in kwargs.keys():
             kwargs["movement_speed"] = 0.1
         super().__init__(**kwargs)
-        if "inventory" in kwargs.keys():
-            self.inventory = kwargs["inventory"]
+        if inventory is not None:
+            self.inventory = inventory
         else:
             self.inventory = engine.Inventory(parent=self)
 
@@ -1253,13 +1628,15 @@ class Player(Movable, Character):
         """This method returns True (a player has an inventory)."""
         return True
 
-    def overlappable(self):
-        """This method returns false (a player cannot be overlapped).
+    # NOTE: This is an arbitrary decision, there is no reason for a player object to
+    #       behave like that.
+    # def overlappable(self):
+    #     """This method returns false (a player cannot be overlapped).
 
-        .. note:: If you wish your player to be overlappable, you need to inherit from
-            that class and re-implement overlappable().
-        """
-        return False
+    #     .. note:: If you wish your player to be overlappable, you need to inherit from
+    #         that class and re-implement overlappable().
+    #     """
+    #     return False
 
 
 class ComplexPlayer(Player, BoardComplexItem):
@@ -1287,7 +1664,7 @@ class ComplexPlayer(Player, BoardComplexItem):
         super().__init__(**kwargs)
 
 
-class NPC(Movable, Character):
+class NPC(Character):
     """
     A class that represent a non playable character controlled by the computer.
     For the NPC to be successfully managed by the Game, you need to set an actuator.
@@ -1320,7 +1697,7 @@ class NPC(Movable, Character):
         mynpc.actuator = RandomActuator()
     """
 
-    def __init__(self, **kwargs):
+    def __init__(self, actuator=None, **kwargs):
         if "max_hp" not in kwargs.keys():
             kwargs["max_hp"] = 10
         if "hp" not in kwargs.keys():
@@ -1332,15 +1709,17 @@ class NPC(Movable, Character):
         if "movement_speed" not in kwargs.keys():
             kwargs["movement_speed"] = 0.2
         super().__init__(**kwargs)
-        if "actuator" not in kwargs.keys():
-            self.actuator = None
-        else:
-            self.actuator = kwargs["actuator"]
+        # TODO: actuator should be a property that sets automatically the
+        # parent/actuated_object
+        self.actuator = None
+        if actuator is not None:
+            self.actuator = actuator
 
-        if "step" not in kwargs.keys():
-            self.step = 1
-        else:
-            self.step = kwargs["step"]
+        # NOTE: Useless, it is done in Movable
+        # if "step" not in kwargs.keys():
+        #     self.step = 1
+        # else:
+        #     self.step = kwargs["step"]
 
     def pickable(self):
         """Define if the NPC is pickable.
@@ -1355,22 +1734,6 @@ class NPC(Movable, Character):
             if mynpc.pickable():
                 Utils.warn("Something is fishy, that NPC is pickable"
                     "but is not a Pokemon...")
-        """
-        return False
-
-    def overlappable(self):
-        """Define if the NPC is overlappable.
-
-        Obviously this method also always return False.
-
-        :return: False
-        :rtype: Boolean
-
-        Example::
-
-            if mynpc.overlappable():
-                Utils.warn("Something is fishy, that NPC is overlappable but"
-                    "is not a Ghost...")
         """
         return False
 
@@ -1392,6 +1755,88 @@ class NPC(Movable, Character):
                 print("No pickpocketing XP for us today :(")
         """
         return False
+
+    def serialize(self) -> dict:
+        """
+        Serialize the NPC object.
+
+        This returns a dictionnary that contains all the key/value pairs that makes up
+        the object.
+        """
+        ret_data = super().serialize()
+        if self.actuator is not None:
+            ret_data["actuator"] = self.actuator.serialize()
+        return ret_data
+
+    @classmethod
+    def load(cls, data):
+        fields = [
+            "restorable",
+            "overlappable",
+            "pickable",
+            "can_move",
+            "inventory_space",
+            "value",
+            "name",
+            "model",
+            "type",
+            "pos",
+            "step",
+            "step_horizontal",
+            "step_vertical",
+            "movement_speed",
+            "max_hp",
+            "hp",
+            "max_mp",
+            "mp",
+            "remaining_lives",
+            "attack_power",
+            "defense_power",
+            "strength",
+            "intelligence",
+            "agility",
+        ]
+        for field in fields:
+            if field not in data.keys():
+                data[field] = None
+        if "sprixel" not in data.keys():
+            data["sprixel"] = {
+                "model": "",
+                "fg_color": None,
+                "bg_color": None,
+                "is_bg_transparent": True,
+            }
+        itm = cls(
+            restorable=data["restorable"],
+            overlappable=data["overlappable"],
+            pickable=data["pickable"],
+            can_move=data["can_move"],
+            inventory_space=data["inventory_space"],
+            value=data["value"],
+            name=data["name"],
+            model=data["model"],
+            item_type=data["type"],
+            pos=data["pos"],
+            step=data["step"],
+            step_horizontal=data["step_horizontal"],
+            step_vertical=data["step_vertical"],
+            movement_speed=data["movement_speed"],
+            max_hp=data["max_hp"],
+            hp=data["hp"],
+            max_mp=data["max_mp"],
+            mp=data["mp"],
+            remaining_lives=data["remaining_lives"],
+            attack_power=data["attack_power"],
+            defense_power=data["defense_power"],
+            strength=data["strength"],
+            intelligence=data["intelligence"],
+            agility=data["agility"],
+            sprixel=core.Sprixel.load(data["sprixel"]),
+        )
+        if "actuator" in data.keys() and data["actuator"]["type"] in dir(actuators):
+            act = eval(f"actuators.{data['actuator']['type']}")
+            itm.actuator = act.load(data["actuator"])
+        return itm
 
 
 class ComplexNPC(NPC, BoardComplexItem):
@@ -1520,8 +1965,9 @@ class Wall(Immovable):
             kwargs["sprixel"] = core.Sprixel("#")
         if "name" not in kwargs.keys():
             kwargs["name"] = "wall"
-        if "size" not in kwargs.keys():
-            kwargs["size"] = 1
+        # Deprecated (size is 1 for BoardItems)
+        # if "size" not in kwargs.keys():
+        #     kwargs["size"] = 1
         super().__init__(**kwargs)
 
     def pickable(self):
@@ -1622,114 +2068,20 @@ class GenericStructure(Immovable):
 
     """
 
-    def __init__(self, **kwargs):
+    def __init__(self, value=0, **kwargs):
         if "sprixel" not in kwargs.keys():
             kwargs["sprixel"] = core.Sprixel("#")
         if "name" not in kwargs.keys():
             kwargs["name"] = "structure"
-        if "value" not in kwargs.keys():
-            self.value = 0
-        else:
-            self.value = kwargs["value"]
-        if "pickable" in kwargs.keys():
-            self.__is_pickable = kwargs["pickable"]
-        else:
-            self.__is_pickable = False
-        if "overlappable" in kwargs.keys():
-            self.__is_overlappable = kwargs["overlappable"]
-        else:
-            self.__is_overlappable = False
+        if "pickable" not in kwargs.keys():
+            kwargs["pickable"] = False
+        if "restorable" not in kwargs.keys():
+            kwargs["restorable"] = False
+        if "overlappable" not in kwargs.keys():
+            kwargs["overlappable"] = False
 
-        if "restorable" in kwargs.keys():
-            self.__is_restorable = kwargs["restorable"]
-        else:
-            self.__is_restorable = False
         super().__init__(**kwargs)
-
-    def pickable(self):
-        """This represent the capacity for a BoardItem to be picked-up by player or NPC.
-
-        To set this value please use :meth:`~.set_pickable`
-
-        :return: True or False
-        :rtype: bool
-
-        .. seealso:: :meth:`~.set_pickable`
-        """
-        return self.__is_pickable
-
-    def set_pickable(self, val):
-        """Make the structure pickable or not.
-
-        :param val: True or False depending on the pickability of the structure.
-        :type val: bool
-
-        Example::
-
-            myneatstructure.set_pickable(True)
-        """
-        if type(val) is bool:
-            self.__is_pickable = val
-
-    def overlappable(self):
-        """This represent the capacity for a :class:`~pygamelib.board_items.BoardItem` to
-        be overlapped by player or NPC.
-
-        To set this value please use :meth:`~.set_overlappable`
-
-        :return: False
-        :rtype: bool
-
-        .. seealso:: :meth:`~.set_overlappable`
-        """
-        return self.__is_overlappable
-
-    def set_overlappable(self, val):
-        """Make the structure overlappable or not.
-
-        :param val: True or False depending on the fact that the structure can be
-            overlapped (i.e that a Player or NPC can step on it) or not.
-        :type val: bool
-
-        Example::
-
-            myneatstructure.set_overlappable(True)
-        """
-        if type(val) is bool:
-            self.__is_overlappable = val
-
-    def restorable(self):
-        """
-        This represent the capacity for an :class:`~pygamelib.board_items.Immovable`
-        :class:`~pygamelib.board_items.BoardItem` (in this case a GenericStructure item)
-        to be restored by the board if the item is overlappable and has been overlapped
-        by another :class:`~pygamelib.board_items.Movable` item.
-
-        The value of this property is set with :meth:`~.set_restorable`
-
-        :return: False
-        :rtype: bool
-
-        .. seealso:: :meth:`~.set_restorable`
-        """
-        return self.__is_restorable
-
-    def set_restorable(self, val):
-        """Make the structure restorable or not.
-
-        :param val: True or False depending on the restorability of the structure.
-        :type val: bool
-
-        Example::
-
-            myneatstructure.set_restorable(True)
-        """
-        if type(val) is bool:
-            self.__is_restorable = val
-        else:
-            raise base.PglInvalidTypeException(
-                "set_restorable(bool) takes a boolean as paramater."
-            )
+        self.value = value
 
 
 class GenericActionableStructure(GenericStructure, Actionable):
@@ -1777,18 +2129,16 @@ class Treasure(Immovable):
             {player.inventory.size()}/{player.inventory.max_size}")
     """
 
-    def __init__(self, **kwargs):
+    def __init__(self, value=10, **kwargs):
         if "sprixel" not in kwargs.keys():
-            kwargs["sprixel"] = core.Sprixel("¤")
-        super().__init__(**kwargs)
-        if "value" not in kwargs.keys():
-            self.value = 10
-        else:
-            self.value = kwargs["value"]
+            if "model" in kwargs.keys():
+                kwargs["sprixel"] = core.Sprixel(kwargs["model"])
+            else:
+                kwargs["sprixel"] = core.Sprixel("¤")
         if "inventory_space" not in kwargs.keys():
-            self._inventory_space = 1
-        else:
-            self._inventory_space = kwargs["inventory_space"]
+            kwargs["inventory_space"] = 1
+        super().__init__(**kwargs)
+        self.value = value
 
     def pickable(self):
         """This represent the capacity for a Treasure to be picked-up by player or NPC.
@@ -1886,35 +2236,21 @@ class Door(GenericStructure):
     def __init__(self, **kwargs):
         if "sprixel" not in kwargs.keys():
             kwargs["sprixel"] = core.Sprixel("]")
-        super().__init__(**kwargs)
         if "value" not in kwargs.keys():
-            self.value = 0
-        else:
-            self.value = kwargs["value"]
+            kwargs["value"] = 0
         if "inventory_space" not in kwargs.keys():
-            self._inventory_space = 1
-        else:
-            self._inventory_space = kwargs["inventory_space"]
+            kwargs["inventory_space"] = 1
         if "name" not in kwargs.keys():
-            self.name = "Door"
-        else:
-            self.name = kwargs["name"]
-        if "type" not in kwargs.keys():
-            self.type = "door"
-        else:
-            self.type = kwargs["type"]
+            kwargs["name"] = "Door"
+        if "item_type" not in kwargs.keys():
+            kwargs["item_type"] = "door"
         if "pickable" not in kwargs.keys():
-            self.set_pickable(False)
-        else:
-            self.set_pickable(kwargs["pickable"])
+            kwargs["pickable"] = False
         if "overlappable" not in kwargs.keys():
-            self.set_overlappable(True)
-        else:
-            self.set_overlappable(kwargs["overlappable"])
+            kwargs["overlappable"] = True
         if "restorable" not in kwargs.keys():
-            self.set_restorable(True)
-        else:
-            self.set_restorable(kwargs["restorable"])
+            kwargs["restorable"] = True
+        super().__init__(**kwargs)
 
 
 class ComplexDoor(Door, BoardComplexItem):
@@ -1950,13 +2286,14 @@ class GenericStructureComplexComponent(GenericStructure, BoardItemComplexCompone
         super().__init__(**kwargs)
 
 
-class Tile(GenericStructure, BoardComplexItem):
+class Tile(BoardComplexItem, GenericStructure):
     """
     .. versionadded:: 1.2.0
 
     A Tile is a standard :class:`BoardComplexItem` configured by default to:
 
      * be overlappable
+     * be restorable
      * be not pickable
      * be immovable.
 
@@ -2036,13 +2373,13 @@ class Camera(Movable):
             game.screen.update()
     """
 
-    def __init__(self, **kwargs):
+    def __init__(self, actuator=None, **kwargs):
         super().__init__(**kwargs)
         self.model = ""
         self.sprixel = core.Sprixel("", None, None, True)
         self.actuator = None
-        if "actuator" in kwargs:
-            self.actuator = kwargs["actuator"]
+        if actuator is not None:
+            self.actuator = actuator
 
     @property
     def row(self):
@@ -2085,3 +2422,6 @@ class Camera(Movable):
     def column(self, val):
         if type(val) is int:
             self.store_position(self.pos[0], val)
+
+    def has_inventory(self) -> bool:
+        return False

@@ -87,9 +87,13 @@ class TestBase(unittest.TestCase):
 
     def test_board_management(self):
         b = engine.Board()
-        g = engine.Game(player=constants.NO_PLAYER)
+        g = engine.Game(player=board_items.Player())
         self.assertIsNone(g.add_board(19, b))
         self.assertIsNone(g.change_level(19))
+        self.assertIsNone(g.display_board())
+        # Test display_board but with partial display on.
+        g.enable_partial_display = True
+        g.partial_display_viewport = [2, 2]
         self.assertIsNone(g.display_board())
         # Reset
         g = engine.Game()
@@ -120,7 +124,9 @@ class TestBase(unittest.TestCase):
         g = engine.Game()
         self.assertIsNone(g.add_board(1, b))
         npc = board_items.NPC(step=None)
+        npc.step = None
         self.assertIsNone(g.add_npc(1, npc))
+        self.assertEqual(npc.step, 1)
         with self.assertRaises(base.PglInvalidTypeException):
             g.add_npc(1, board_items.NPC(step=None), "1")
         with self.assertRaises(base.PglInvalidTypeException):
@@ -240,6 +246,10 @@ class TestBase(unittest.TestCase):
         self.assertIsNone(
             g.add_npc(1, board_items.NPC(value=10, inventory_space=1), 1, 1)
         )
+        tmp_npc = g.get_board(1).item(1, 1)
+        tmp_npc.actuator = actuators.PathFinder(game=g, actuated_object=tmp_npc)
+        tmp_npc.actuator.set_destination(2, 5)
+        tmp_npc.actuator.find_path()
         self.assertIsNone(
             b.place_item(board_items.Door(value=10, inventory_space=1), 1, 2)
         )
@@ -295,24 +305,6 @@ class TestBase(unittest.TestCase):
         self.assertEqual(g._string_to_constant("DRDOWN"), constants.DRDOWN)
         self.assertEqual(g._string_to_constant("DLUP"), constants.DLUP)
         self.assertEqual(g._string_to_constant("DLDOWN"), constants.DLDOWN)
-        test_wall = g._obj2ref(board_items.Wall(inventory_space=1))
-        self.assertEqual(test_wall["name"], "wall")
-        self.assertEqual(test_wall["inventory_space"], 1)
-        test_door = g._obj2ref(board_items.Door(value=10, inventory_space=1))
-        self.assertEqual(test_door["name"], "Door")
-        self.assertEqual(test_door["value"], 10)
-        self.assertEqual(test_door["inventory_space"], 1)
-
-        npc = board_items.NPC()
-        npc.actuator = actuators.PathActuator(path=[constants.RIGHT, constants.RIGHT])
-        test_npc = g._obj2ref(npc)
-        self.assertEqual(test_npc["actuator"]["type"], "PathActuator")
-        npc.actuator = actuators.PatrolActuator(path=[constants.RIGHT, constants.RIGHT])
-        test_npc = g._obj2ref(npc)
-        self.assertEqual(test_npc["actuator"]["type"], "PatrolActuator")
-        npc.actuator = actuators.PathFinder(parent=g)
-        test_npc = g._obj2ref(npc)
-        self.assertEqual(test_npc["actuator"]["type"], "PathFinder")
 
         with self.assertRaises(base.PglInvalidTypeException):
             g.delete_level()
@@ -321,6 +313,46 @@ class TestBase(unittest.TestCase):
         g.delete_level(1)
         g.delete_all_levels()
         self.assertIsNone(g.current_board())
+        bi = board_items.Door(
+            value=10,
+            inventory_space=0,
+            pickable=False,
+            overlappable=True,
+            restorable=True,
+        )
+        obj = engine.Game._ref2obj(bi.serialize())
+        self.assertIsInstance(obj, board_items.Door)
+        bi = board_items.Treasure(
+            value=10,
+            inventory_space=0,
+            pickable=False,
+            overlappable=True,
+            restorable=True,
+        )
+        obj = engine.Game._ref2obj(bi.serialize())
+        self.assertIsInstance(obj, board_items.Treasure)
+        bi = board_items.GenericActionableStructure(
+            value=10,
+            inventory_space=0,
+            pickable=False,
+            overlappable=True,
+            restorable=True,
+        )
+        obj = engine.Game._ref2obj(bi.serialize())
+        self.assertIsInstance(obj, board_items.GenericActionableStructure)
+        bi = board_items.NPC(
+            value=10,
+            inventory_space=10,
+            pickable=False,
+            overlappable=True,
+            restorable=True,
+        )
+        bi.actuator = actuators.PathActuator(path=[constants.UP])
+        obj = engine.Game._ref2obj(bi.serialize())
+        self.assertIsInstance(obj, board_items.NPC)
+        bi.actuator = actuators.PatrolActuator(path=[constants.UP])
+        obj = engine.Game._ref2obj(bi.serialize())
+        self.assertIsInstance(obj.actuator, actuators.PatrolActuator)
 
     def test_singleton(self):
         mygame = engine.Game.instance()
@@ -331,11 +363,12 @@ class TestBase(unittest.TestCase):
 
     def test_logs(self):
         mygame = engine.Game.instance()
-        self.assertEqual(mygame.logs(), list())
-        mygame.log("test")
-        self.assertEqual(mygame.logs()[0], "test")
-        mygame.clear_logs()
-        self.assertEqual(mygame.logs(), list())
+        mygame.DEBUG = True
+        self.assertEqual(mygame.session_logs(), list())
+        mygame.session_log("test")
+        self.assertEqual(mygame.session_logs()[0], "test")
+        mygame.clear_session_logs()
+        self.assertEqual(mygame.session_logs(), list())
 
     def test_level_insertion(self):
         g = engine.Game.instance()

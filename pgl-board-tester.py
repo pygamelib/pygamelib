@@ -28,6 +28,7 @@ if b.width >= g.screen.width or b.height >= g.screen.height:
         int((g.screen.width - 2) / 4),
     ]
 
+
 g.player = board_items.Player(model=graphics.Models.FLYING_SAUCER)
 g.player.inventory.max_size = 99999
 g.change_level(1)
@@ -37,6 +38,7 @@ idx = 0
 key = None
 
 while idx < max_iter or max_iter == 0:
+    t1 = time.time()
     if key == "w":
         g.move_player(constants.UP, 1)
     elif key == "s":
@@ -50,6 +52,7 @@ while idx < max_iter or max_iter == 0:
     g.clear_screen()
     g.actuate_npcs(1)
     g.display_board()
+    t2 = time.time()
 
     if max_iter == 0:
         g.screen.display_line(
@@ -57,5 +60,6 @@ while idx < max_iter or max_iter == 0:
         )
         key = engine.Game.get_key()
     else:
-        time.sleep(0.1)
+        g.screen.display_line(f"FPS: {round(1/(t2-t1))}")
+        time.sleep(0.05)
         idx += 1

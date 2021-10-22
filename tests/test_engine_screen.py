@@ -1,10 +1,9 @@
 from pygamelib import engine, board_items, functions, base
 from pygamelib.gfx.core import SpriteCollection, Sprixel, Color, Sprite, Font
 import unittest
-import numpy as np
 
 
-class TB(object):
+class TB(base.PglBaseObject):
     def __init__(self):
         super().__init__()
 
@@ -19,7 +18,7 @@ class TB(object):
 class TestBase(unittest.TestCase):
     def setUp(self):
         super().setUp()
-        self.screen = engine.Screen()
+        self.screen = engine.Screen(50, 50)
         self.assertIsInstance(self.screen, engine.Screen)
 
     # def test_screen_create_empty(self):
@@ -42,8 +41,8 @@ class TestBase(unittest.TestCase):
         self.assertIsNone(self.screen.clear())
 
     def test_screen_dimension(self):
-        self.assertEqual(self.screen.terminal.width, self.screen.width)
-        self.assertEqual(self.screen.terminal.height, self.screen.height)
+        self.assertEqual(self.screen.width, 50)
+        self.assertEqual(self.screen.height, 50)
 
     def test_screen_display(self):
         self.assertIsNone(
@@ -75,15 +74,7 @@ class TestBase(unittest.TestCase):
     def test_screen_buffer(self):
         sprites_panda = SpriteCollection.load_json_file("tests/panda.spr")
         b = engine.Board(size=[20, 20])
-        s = engine.Screen()
-        # This is a dirty hack for CircleCI as it returns a 0x0 screen size.
-        if s.width <= 0 or s.height <= 0:
-            s._display_buffer = np.array(
-                [[Sprixel(" ") for i in range(0, 50, 1)] for j in range(0, 50, 1)]
-            )
-            s._screen_buffer = np.array(
-                [[Sprixel(" ") for i in range(0, 50, 1)] for j in range(0, 50, 1)]
-            )
+        s = engine.Screen(50, 50)
         # Because CircleCI return a console with no size (most probably because we are
         # not attached to any terminal), we need to make sure that the partial display
         # tests work in that environment too
@@ -105,18 +96,36 @@ class TestBase(unittest.TestCase):
         b.item(19, 19).sprixel = None
         self.assertIsInstance(b.render_cell(19, 19), Sprixel)
         self.assertEqual(b.render_cell(19, 19), Sprixel())
+        b.place_item(board_items.Door(), 19, 19)
+        b.place_item(
+            board_items.Door(
+                sprixel=Sprixel("*", Color(125, 125, 0), is_bg_transparent=False)
+            ),
+            19,
+            19,
+        )
+        b.place_item(
+            board_items.Door(sprixel=Sprixel("#", is_bg_transparent=True)), 19, 19
+        )
+        b.place_item(
+            board_items.NPC(sprixel=Sprixel("$", is_bg_transparent=True)), 19, 19
+        )
+        self.assertEqual(b.layers(19, 19), 4)
+        b.place_item(
+            board_items.BoardItemVoid(sprixel=Sprixel(is_bg_transparent=True)), 19, 19
+        )
+        b.place_item(
+            board_items.BoardItemVoid(sprixel=Sprixel(is_bg_transparent=True)), 19, 19
+        )
+        self.assertIsInstance(b.render_cell(19, 19), Sprixel)
+        b._clean_layers(19, 19)
+        self.assertEqual(b.layers(19, 19), 3)
+        b._clean_layers(18, 19)
+        self.assertEqual(b.layers(18, 19), 1)
         with self.assertRaises(base.PglOutOfBoardBoundException):
             b.render_cell(50, 50)
         self.assertIsNone(s.clear_buffers())
         self.assertIsNone(s.clear_screen_buffer())
-        # And again after clear buffers.
-        if s.width <= 0 or s.height <= 0:
-            s._display_buffer = np.array(
-                [[Sprixel(" ") for i in range(0, 50, 1)] for j in range(0, 50, 1)]
-            )
-            s._screen_buffer = np.array(
-                [[Sprixel(" ") for i in range(0, 50, 1)] for j in range(0, 50, 1)]
-            )
         self.assertTrue(s._is_dirty)
         self.assertTrue(functions.pgl_isinstance(s.buffer, "numpy.ndarray"))
         self.assertIsNone(s.update())
@@ -133,10 +142,12 @@ class TestBase(unittest.TestCase):
         self.assertIsNone(
             s.place(
                 board_items.Tile(
-                    sprixels=[
-                        [Sprixel("##"), Sprixel("##")],
-                        [Sprixel("##"), Sprixel("##")],
-                    ]
+                    sprite=Sprite(
+                        sprixels=[
+                            [Sprixel("##"), Sprixel("##")],
+                            [Sprixel("##"), Sprixel("##")],
+                        ]
+                    )
                 ),
                 4,
                 0,
@@ -159,6 +170,10 @@ class TestBase(unittest.TestCase):
             s.place(None, 0, 0)
         with self.assertRaises(base.PglInvalidTypeException):
             s.place(1, 0, 0)
+        with self.assertRaises(base.PglException):
+            s.place(TB(), 400, 0)
+        with self.assertRaises(base.PglException):
+            s.place(TB(), 0, 400)
         s.force_update()
         t.text = "update"
         self.assertIsNone(
@@ -197,14 +212,6 @@ class TestBase(unittest.TestCase):
         self.assertIsNone(s.place(b, 0, 0, 2))
         s.trigger_rendering()
         self.assertIsNone(s.update())
-        b.partial_display_viewport = [
-            int(screen_height * 3) - 1,
-            int(screen_width * 3) - 1,
-        ]
-        camera.row += 1
-        with self.assertRaises(IndexError):
-            s.force_render()
-            s.update()
         b.partial_display_viewport = [
             int(screen_height / 2) - 1,
             int(screen_width / 2) - 1,
@@ -267,6 +274,19 @@ class TestBase(unittest.TestCase):
             s._display_buffer.shape[1],
         )
         s.update()
+
+    def test_screen_observer(self):
+        s = engine.Screen(10, 10)
+        obj = TB()
+        self.assertFalse(s._is_dirty)
+        s.place(obj, 0, 0)
+        self.assertTrue(s._is_dirty)
+        s.render()
+        self.assertFalse(s._is_dirty)
+        s.be_notified("unimportant")
+        self.assertTrue(s._is_dirty)
+        s.delete(0, 0)
+        self.assertEqual(len(obj._observers), 0)
 
 
 if __name__ == "__main__":

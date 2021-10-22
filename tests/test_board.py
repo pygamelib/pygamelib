@@ -6,6 +6,38 @@ from pygamelib import constants
 import unittest
 
 
+class TestItem(pgl_board_items.BoardItem):
+    def __init__(
+        self,
+        sprixel=None,
+        model=None,
+        name=None,
+        item_type=None,
+        parent=None,
+        pickable=False,
+        overlappable=False,
+        restorable=False,
+        can_move=False,
+        pos=None,
+        value=None,
+        inventory_space=1,
+    ):
+        super().__init__(
+            sprixel=sprixel,
+            model=model,
+            name=name,
+            item_type=item_type,
+            parent=parent,
+            pickable=pickable,
+            overlappable=overlappable,
+            restorable=restorable,
+            can_move=can_move,
+            pos=pos,
+            value=value,
+            inventory_space=inventory_space,
+        )
+
+
 class TestBoard(unittest.TestCase):
     def setUp(self):
         self.board = pgl_engine.Board(
@@ -151,11 +183,15 @@ class TestBoard(unittest.TestCase):
             5,
             5,
         )
+
         i = pgl_board_items.NPC(sprixel=sprix)
         self.assertIsNone(self.board.place_item(i, 5, 5))
         self.assertIsNone(
             self.board.place_item(
-                pgl_board_items.ComplexNPC(base_item_type=pgl_board_items.Movable), 8, 8
+                pgl_board_items.ComplexNPC(base_item_type=pgl_board_items.Movable),
+                8,
+                8,
+                8,
             )
         )
         self.assertIsNone(self.board.place_item(pgl_board_items.Tile(), 8, 2))
@@ -173,8 +209,12 @@ class TestBoard(unittest.TestCase):
             self.assertEqual(e.error, "invalid_item")
         self.assertTrue(self.board.remove_item(i))
         b = pgl_engine.Board()
-        i = pgl_board_items.ComplexNPC()
-        self.assertIsNone(b.place_item(i, 5, 5))
+        i = pgl_board_items.ComplexNPC(
+            sprite=gfx_core.Sprite(
+                sprixels=[[gfx_core.Sprixel("#"), gfx_core.Sprixel("#")]]
+            )
+        )
+        self.assertIsNone(b.place_item(i, 5, 5, 0))
         self.assertTrue(b.remove_item(i))
 
     def test_move_complex(self):
@@ -253,7 +293,7 @@ class TestBoard(unittest.TestCase):
         self.assertIsNone(b.move(i, constants.DLDOWN, 1))
         self.assertIsNone(b.move(i, constants.DLUP, 1))
         self.assertIsNone(b.move(i, pgl_base.Vector2D(0, 0)))
-        self.assertEqual(i.pos, [0, 0])
+        self.assertEqual(i.pos, [0, 0, 0])
         setattr(self, "test_callback", False)
         b.place_item(
             pgl_board_items.GenericActionableStructure(
@@ -293,9 +333,11 @@ class TestBoard(unittest.TestCase):
             player_starting_position=[0, 0],
         )
         for i in range(1, 4):
-            b.place_item(pgl_board_items.NPC(name=f"mover{i}", type="mover"), 0, i)
+            b.place_item(pgl_board_items.NPC(name=f"mover{i}", item_type="mover"), 0, i)
         for i in range(1, 4):
-            b.place_item(pgl_board_items.Wall(name=f"static{i}", type="static"), i, 0)
+            b.place_item(
+                pgl_board_items.Wall(name=f"static{i}", item_type="static"), i, 0
+            )
         ret = b.get_immovables(type="static")
         self.assertEqual(len(ret), 3)
         self.assertEqual(len(ret), len(b.get_immovables()))
@@ -315,6 +357,20 @@ class TestBoard(unittest.TestCase):
 
         self.board.clear_cell(1, 1)
         self.assertIsInstance(self.board.item(1, 1), pgl_board_items.BoardItemVoid)
+        self.assertIsNone(self.board.clear_cell(1, 1, 10))
+        r = self.board.height - 1
+        c = self.board.width - 1
+        self.board.place_item(pgl_board_items.Door(name="door_layer_0"), r, c, 0)
+        self.board.place_item(pgl_board_items.Door(name="door_layer_1"), r, c, 1)
+        self.board.place_item(pgl_board_items.Door(name="door_layer_2"), r, c, 2)
+        self.board.place_item(pgl_board_items.Door(name="door_layer_3"), r, c, 3)
+        self.assertIsNone(self.board.clear_cell(r, c, 2))
+        self.assertEqual(self.board.layers(r, c), 3)
+        self.board.place_item(
+            pgl_board_items.Door(name="door_layer_3bis"), r, c, 3, False
+        )
+        self.assertIsNone(self.board.clear_cell(r, c, 1))
+        self.assertEqual(self.board.layers(r, c), 4)
 
     def test_size(self):
         board = pgl_engine.Board(
@@ -322,6 +378,7 @@ class TestBoard(unittest.TestCase):
         )
         self.assertEqual(board.height, 30)
         self.assertEqual(board.width, 20)
+        self.assertEqual(board.layers(0, 0), 1)
 
     def test_display_around(self):
         i = pgl_board_items.NPC()
@@ -347,6 +404,32 @@ class TestBoard(unittest.TestCase):
         b.place_item(i, 2, 2)
         self.assertIsNone(self.board.display_around(i, 2, 2))
         self.assertIsNone(self.board.display())
+
+    def test_serialization(self):
+        class Bork(pgl_board_items.Wall):
+            def __init__(self, **kwargs):
+                super().__init__(**kwargs)
+
+        b = pgl_engine.Board(
+            ui_board_void_cell_sprixel=gfx_core.Sprixel(" ", gfx_core.Color(0, 0, 0))
+        )
+        b.place_item(pgl_board_items.Wall(), 2, 2)
+        b.place_item(TestItem(), 4, 4)
+        data = b.serialize()
+        self.assertIsNotNone(data)
+        self.assertIsNone(pgl_engine.Board.load(None))
+        bl = pgl_engine.Board.load(data)
+        self.assertEqual(b.player_starting_position, bl.player_starting_position)
+        self.assertEqual(b.name, bl.name)
+        self.assertEqual(b.ui_board_void_cell, bl.ui_board_void_cell)
+        self.assertIsInstance(b.item(2, 2), pgl_board_items.Wall)
+        self.assertEqual(b.item(2, 2).model, bl.item(2, 2).model)
+        data["map_data"]["(2, 2, 0)"]["object"] = "<'=bork.bork'>"
+        with self.assertRaises(SyntaxError):
+            pgl_engine.Board.load(data)
+        b.place_item(Bork(), 6, 6)
+        with self.assertRaises(SyntaxError):
+            pgl_engine.Board.load(b.serialize())
 
 
 if __name__ == "__main__":

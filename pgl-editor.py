@@ -1243,15 +1243,21 @@ while True:
                         game.current_board().size[1],
                         game.current_board().size[0] - old_value,
                     ),
-                    board_items.BoardItemVoid(
-                        model=game.current_board().ui_board_void_cell
-                    ),
+                    None,
                 )
+                for r in range(game.current_board().size[1]):
+                    for c in range(game.current_board().size[0] - old_value):
+                        ext[r][c] = [
+                            board_items.BoardItemVoid(
+                                pos=[r, c, 0],
+                                sprixel=deepcopy(
+                                    game.current_board().ui_board_void_cell_sprixel
+                                ),
+                                parent=game.current_board(),
+                            )
+                        ]
                 game.current_board()._matrix = np.append(
                     game.current_board()._matrix, ext, 1
-                )
-                game.current_board()._overlapped_matrix = np.append(
-                    game.current_board()._overlapped_matrix, ext, 1
                 )
                 is_modified = True
 
@@ -1267,15 +1273,21 @@ while True:
                         game.current_board().size[1] - old_value,
                         game.current_board().size[0],
                     ),
-                    board_items.BoardItemVoid(
-                        model=game.current_board().ui_board_void_cell
-                    ),
+                    None,
                 )
+                for r in range(game.current_board().size[1] - old_value):
+                    for c in range(game.current_board().size[0]):
+                        ext[r][c] = [
+                            board_items.BoardItemVoid(
+                                pos=[r, c, 0],
+                                sprixel=deepcopy(
+                                    game.current_board().ui_board_void_cell_sprixel
+                                ),
+                                parent=game.current_board(),
+                            )
+                        ]
                 game.current_board()._matrix = np.append(
                     game.current_board()._matrix, ext, 0
-                )
-                game.current_board()._overlapped_matrix = np.append(
-                    game.current_board()._overlapped_matrix, ext, 0
                 )
                 is_modified = True
 
@@ -1463,7 +1475,8 @@ while True:
 reflib = []
 count = 0
 for o in game.config("settings")["object_library"]:
-    reflib.append(engine.Game._obj2ref(o))
+    # reflib.append(engine.Game._obj2ref(o))
+    reflib.append(o.serialize())
     count += 1
     if count > 10:
         break
