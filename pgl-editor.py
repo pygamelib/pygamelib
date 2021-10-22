@@ -1475,7 +1475,8 @@ while True:
 reflib = []
 count = 0
 for o in game.config("settings")["object_library"]:
-    reflib.append(engine.Game._obj2ref(o))
+    # reflib.append(engine.Game._obj2ref(o))
+    reflib.append(o.serialize())
     count += 1
     if count > 10:
         break
