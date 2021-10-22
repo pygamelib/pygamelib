@@ -49,7 +49,7 @@ class TestBase(unittest.TestCase):
     def test_path(self):
         a = actuators.PathActuator([constants.UP])
         a.pause()
-        self.assertIsNone(a.next_move())
+        self.assertEqual(a.next_move(), constants.NO_DIR)
         a.start()
         self.assertEqual(a.next_move(), constants.UP)
         a.set_path([constants.DOWN])
