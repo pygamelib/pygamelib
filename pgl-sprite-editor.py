@@ -1777,5 +1777,5 @@ if __name__ == "__main__":
     #     f"{ev.frames} ev.frames in {round(time.time()-ev.start,2)} secondes or "
     #     f"{round(ev.frames/(time.time()-ev.start))} FPS"
     # )
-    for log in g.logs():
+    for log in g.session_logs():
         print(log)
