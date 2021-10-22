@@ -156,10 +156,10 @@ class RandomActuator(Actuator):
         """Return a randomly selected movement
 
         The movement is randomly selected from moveset if state is RUNNING,
-        otherwise it should return None.
+        otherwise it returns NO_DIR from the :py:mod:`~pygamelib.constants` module.
 
         :return: The next movement
-        :rtype: int | None
+        :rtype: int | :py:const:`pygamelib.constants.NO_DIR`
 
         Example::
 
@@ -226,12 +226,12 @@ class PathActuator(Actuator):
         """Return the movement based on current index
 
         The movement is selected from path if state is RUNNING, otherwise
-        it should return None. When state is RUNNING, the movement is selected
-        before incrementing the index by 1. When the index equal the length of
-        path, the index should return back to 0.
+        it returns NO_DIR from the :py:mod:`~pygamelib.constants` module. When state is
+        RUNNING, the movement is selected before incrementing the index by 1. When the
+        index equal the length of path, the index should return back to 0.
 
         :return: The next movement
-        :rtype: int | None
+        :rtype: int | :py:const:`pygamelib.constants.NO_DIR`
 
         Example::
 
@@ -243,6 +243,8 @@ class PathActuator(Actuator):
             if self.index == len(self.path):
                 self.index = 0
             return move
+        else:
+            return constants.NO_DIR
 
     def set_path(self, path):
         """Defines a new path
@@ -307,14 +309,14 @@ class PatrolActuator(PathActuator):
     def next_move(self):
         """Return the movement based on current index
 
-        The movement is selected from path if state is RUNNING, otherwise it
-        should return None. When state is RUNNING, the movement is selected
-        before incrementing the index by 1. When the index equals the length
-        of path, the index should return back to 0 and the path list should be
-        reversed before the next call.
+        The movement is selected from path if state is RUNNING, otherwise it returns
+        NO_DIR from the :py:mod:`~pygamelib.constants` module. When state is RUNNING,
+        the movement is selected before incrementing the index by 1. When the index
+        equals the length of path, the index should return back to 0 and the path list
+        should be reversed before the next call.
 
         :return: The next movement
-        :rtype: int | None
+        :rtype: int | :py:const:`pygamelib.constants.NO_DIR`
 
         Example::
 
@@ -344,6 +346,8 @@ class PatrolActuator(PathActuator):
                     elif self.path[i] == constants.DRUP:
                         self.path[i] = constants.DLDOWN
             return move
+        else:
+            return constants.NO_DIR
 
     def serialize(self) -> dict:
         """Return a dictionary with all the attributes of this object.
@@ -398,10 +402,10 @@ class UnidirectionalActuator(Actuator):
         """Return the direction.
 
         The movement is always direction if state is RUNNING,
-        otherwise it returns None.
+        otherwise it returns NO_DIR from the :py:mod:`~pygamelib.constants` module.
 
         :return: The next movement
-        :rtype: int | None
+        :rtype: int | :py:const:`pygamelib.constants.NO_DIR`
 
         Example::
 

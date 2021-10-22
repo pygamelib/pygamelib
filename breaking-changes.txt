@@ -10,11 +10,14 @@ Sprites are not describing the same thing as before.
 
 1.2.0 -> 1.3.0
 
+META: We need some sort of code to show the severity of the breaking change. It should reflect the pain to update.
+
 BoardItem: type in constructor is now item_type. This breaks a lot of things...
 BoardItem: they are now all able to set/get overlappable, restorable, pickable and can_move
 BoardItem: value has been moved to BoardItem.
 BoardItem: change of behavior: now if both model and sprixel are given to the constructor, model is ignored (sprixel has priority). Need an example in the release note.
 BoardItem: there was a conflict with inventory_space. It was defined both as a property and a method. The method has been removed. Concretely: you might have to remove parenthesis when using any_item.inventory_space (vs the old any_item.inventory_space()).
+pygamelib.actuators: all the next_move() methods now returns pygamelib.constants.NO_DIR instead of None if there's no more move to use.
 
 [non breaking][important] Void cells are now initialized with knowing their position.
 [non breaking][important] The observer system has some limitations. One being that notifications are not passed down by attributes.

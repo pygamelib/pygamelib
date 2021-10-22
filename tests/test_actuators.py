@@ -49,7 +49,7 @@ class TestBase(unittest.TestCase):
     def test_path(self):
         a = actuators.PathActuator([constants.UP])
         a.pause()
-        self.assertIsNone(a.next_move())
+        self.assertEqual(a.next_move(), constants.NO_DIR)
         a.start()
         self.assertEqual(a.next_move(), constants.UP)
         a.set_path([constants.DOWN])
@@ -69,6 +69,9 @@ class TestBase(unittest.TestCase):
         al = actuators.PatrolActuator.load(data)
         self.assertEqual(al.path, [constants.UP, constants.DOWN])
         self.assertEqual(a.state, al.state)
+        a.pause()
+        self.assertEqual(a.next_move(), constants.NO_DIR)
+        a.start()
         a.next_move()
         self.assertEqual(a.next_move(), constants.DOWN)
         self.assertEqual(a.next_move(), constants.UP)
