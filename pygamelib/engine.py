@@ -1532,25 +1532,47 @@ class Board(base.PglBaseObject):
             )
             for k in data["map_data"].keys():
                 (r, c, l) = ast.literal_eval(k)
-                s = data["map_data"][k]
-                obj_full_str = s["object"].split("'")[-2]
-                obj_str = obj_full_str.split(".")[-1]
-                item = None
-                # If it's a board item, we get it from the already imported module.
-                if obj_str in dir(board_items):
-                    bi = eval(f"board_items.{obj_str}")
-                    item = bi.load(s)
-                # otherwise, we import the module and instantiate the required object.
-                # This means that the module is in the path of course.
-                else:
-                    try:
-                        exec(f"import {obj_full_str.split('.')[0]}")
-                        bi = eval(f"{obj_full_str}")
-                        item = bi.load(s)
-                    except Exception as e:
-                        raise e
-                tmp.place_item(item, r, c, l)
+                item = Board.instantiate_item(data["map_data"][k])
+                if item is not None:
+                    tmp.place_item(item, r, c, l)
         return tmp
+
+    @staticmethod
+    def instantiate_item(data: dict):
+        """Instantiate a BoardItem from its serialized data.
+
+        :param data: The data to use to build the item.
+        :type data: dict
+        :returns: an instance of a :class:`~pygamelib.board_items.BoardItem`.
+
+        .. important:: The actual object depends on the serialized data. It can be any
+           derivative of BoardItem (even custom objects as long as they inherit from
+           BoardItem) as long as they are importable by this class.
+
+        Example::
+
+            # First get some board item serialization data. For example:
+            data = super_duper_npc.serialize()
+            # Then instantiate a new one:
+            another_super_duper_npc = Board.instantiate_item(data)
+        """
+        obj_full_str = data["object"].split("'")[-2]
+        obj_str = obj_full_str.split(".")[-1]
+        item = None
+        # If it's a board item, we get it from the already imported module.
+        if obj_str in dir(board_items):
+            bi = eval(f"board_items.{obj_str}")
+            item = bi.load(data)
+        # otherwise, we import the module and instantiate the required object.
+        # This means that the module is in the path of course.
+        else:
+            try:
+                exec(f"import {obj_full_str.split('.')[0]}")
+                bi = eval(f"{obj_full_str}")
+                item = bi.load(data)
+            except Exception as e:
+                raise e
+        return item
 
 
 class Game:
@@ -3001,13 +3023,9 @@ class Game:
             if "library" in data.keys():
                 self.object_library = []
                 for e in data["library"]:
-                    # As far as I know the object library is only used by the pgl-editor
-                    # and it only uses board_items.
-                    obj_full_str = e["object"].split("'")[-2]
-                    obj_str = obj_full_str.split(".")[-1]
-                    if obj_str in dir(board_items):
-                        bi = eval(f"board_items.{obj_str}")
-                        self.object_library.append(bi.load(e))
+                    item = Board.instantiate_item(e)
+                    if item is not None:
+                        self.object_library.append(item)
         else:
             local_board = Board()
             data_keys = data.keys()
@@ -3054,13 +3072,10 @@ class Game:
             if "library" in data_keys:
                 self.object_library = []
                 for e in data["library"]:
-                    # As far as I know the object library is only used by the pgl-editor
-                    # and it only uses board_items.
-                    obj_full_str = e["object"].split("'")[-2]
-                    obj_str = obj_full_str.split(".")[-1]
-                    if obj_str in dir(board_items):
-                        bi = eval(f"board_items.{obj_str}")
-                        self.object_library.append(bi.load(e))
+                    item = Board.instantiate_item(e)
+                    if item is not None:
+                        self.object_library.append(item)
+
             # Now let's place the good stuff on the board
             if "map_data" in data_keys:
                 for pos_x in data["map_data"].keys():
@@ -3584,23 +3599,9 @@ class Inventory:
     def load(cls, data):
         inv = cls(max_size=data["max_size"])
         for di in data["items"]:
-            obj_full_str = di["object"].split("'")[-2]
-            obj_str = obj_full_str.split(".")[-1]
-            item = None
-            # If it's a board item, we get it from the already imported module.
-            if obj_str in dir(board_items):
-                bi = eval(f"board_items.{obj_str}")
-                item = bi.load(di)
-            # otherwise, we import the module and instantiate the required object.
-            # This means that the module is in the path of course.
-            else:
-                try:
-                    exec(f"import {obj_full_str.split('.')[0]}")
-                    bi = eval(f"{obj_full_str}")
-                    item = bi.load(di)
-                except Exception as e:
-                    raise e
-            inv.add_item(item)
+            item = Board.instantiate_item(di)
+            if di is not None:
+                inv.add_item(item)
         return inv
 
 
