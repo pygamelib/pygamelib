@@ -44,6 +44,7 @@ BoardComplexItem
       ~BoardComplexItem.height
       ~BoardComplexItem.model
       ~BoardComplexItem.row
+      ~BoardComplexItem.sprite
       ~BoardComplexItem.width
    
    
