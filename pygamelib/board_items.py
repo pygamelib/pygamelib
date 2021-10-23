@@ -778,6 +778,7 @@ class BoardComplexItem(BoardItem):
     @property
     def sprite(self):
         """A property to easily access and update a complex item's sprite.
+
         :param new_sprite: The sprite to set
         :type new_sprite: :class:`~pygamelib.gfx.core.Sprite`
 
@@ -812,12 +813,18 @@ class BoardComplexItem(BoardItem):
     def update_sprite(self):
         """
         Update the complex item with the current sprite.
-        This method needs to be called everytime the sprite is changed.
+
+        .. note:: This method use to need to be called everytime the sprite was changed.
+           Starting with version 1.3.0, it is no longer a requirement as
+           BoardComplexItem.sprite was turned into a property that takes care of calling
+           update_sprite().
 
         Example::
 
             item = BoardComplexItem(sprite=position_idle)
             for s in [walk_1, walk_2, walk_3, walk_4]:
+                # This is not only no longer required but also wasteful as
+                # update_sprite() is called twice here.
                 item.sprite = s
                 item.update_sprite()
                 board.move(item, constants.RIGHT, 1)
@@ -1940,7 +1947,6 @@ class TextItem(BoardComplexItem):
         else:
             self._text = text
         self.sprite = core.Sprite.from_text(self._text)
-        self.update_sprite()
 
     def __repr__(self):  # pragma: no cover
         return self._text.__repr__()
@@ -1971,7 +1977,6 @@ class TextItem(BoardComplexItem):
                 "TextItem.text must be either a str or a pygamelib.base.Text object."
             )
         self.sprite = core.Sprite.from_text(self._text)
-        self.update_sprite()
 
 
 class Wall(Immovable):
