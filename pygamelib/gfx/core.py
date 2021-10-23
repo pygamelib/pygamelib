@@ -1925,7 +1925,6 @@ class Animation(object):
             self.parent.sprixel = self.frames[self._frame_index]
         elif isinstance(self.frames[self._frame_index], Sprite):
             self.parent.sprite = self.frames[self._frame_index]
-            self.parent.update_sprite()
         else:
             raise base.PglInvalidTypeException(
                 "Animation.next_frame(): the frame is neither a string, a sprixel nor a"

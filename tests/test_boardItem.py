@@ -118,6 +118,7 @@ class TestBoard(unittest.TestCase):
         bic = board_items.BoardComplexItem(
             size=[3, 3], null_sprixel=board_items.core.Sprixel()
         )
+        self.assertIsInstance(bic.sprite, gfx_core.Sprite)
         self.assertIsInstance(bic.item(1, 1), board_items.BoardItemVoid)
         with self.assertRaises(board_items.base.PglOutOfItemBoundException):
             bic.item(5, 6)
