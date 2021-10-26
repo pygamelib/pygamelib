@@ -257,6 +257,98 @@ class TestBase(unittest.TestCase):
         self.assertEqual(c.g, 2)
         self.assertEqual(c.b, 3)
 
+    def test_tinting(self):
+        sp = gfx_core.Sprite(
+            sprixels=[
+                [
+                    gfx_core.Sprixel(
+                        " ",
+                        gfx_core.Color(255, 255, 255),
+                        gfx_core.Color(255, 255, 255),
+                    ),
+                    gfx_core.Sprixel(
+                        " ",
+                        gfx_core.Color(255, 255, 255),
+                        gfx_core.Color(255, 255, 255),
+                    ),
+                    gfx_core.Sprixel(
+                        " ",
+                        gfx_core.Color(255, 255, 255),
+                        gfx_core.Color(255, 255, 255),
+                    ),
+                    gfx_core.Sprixel(
+                        " ",
+                        gfx_core.Color(255, 255, 255),
+                        gfx_core.Color(255, 255, 255),
+                    ),
+                    gfx_core.Sprixel(
+                        " ",
+                        gfx_core.Color(255, 255, 255),
+                        gfx_core.Color(255, 255, 255),
+                    ),
+                    gfx_core.Sprixel(
+                        " ",
+                        gfx_core.Color(255, 255, 255),
+                        gfx_core.Color(255, 255, 255),
+                    ),
+                ],
+                [
+                    gfx_core.Sprixel(
+                        " ",
+                        gfx_core.Color(255, 255, 255),
+                        gfx_core.Color(255, 255, 255),
+                    ),
+                    gfx_core.Sprixel(
+                        " ",
+                        gfx_core.Color(255, 255, 255),
+                        gfx_core.Color(255, 255, 255),
+                    ),
+                    gfx_core.Sprixel(
+                        " ",
+                        gfx_core.Color(255, 255, 255),
+                        gfx_core.Color(255, 255, 255),
+                    ),
+                    gfx_core.Sprixel(
+                        " ",
+                        gfx_core.Color(255, 255, 255),
+                        gfx_core.Color(255, 255, 255),
+                    ),
+                    gfx_core.Sprixel(
+                        " ",
+                        gfx_core.Color(255, 255, 255),
+                        gfx_core.Color(255, 255, 255),
+                    ),
+                    gfx_core.Sprixel(
+                        " ",
+                        gfx_core.Color(255, 255, 255),
+                        gfx_core.Color(255, 255, 255),
+                    ),
+                ],
+            ]
+        )
+        spr = sp.tint(gfx_core.Color(0, 255, 0), 0.2)
+        self.assertEqual(spr.sprixel(0, 0).bg_color.r, 204)
+        self.assertEqual(spr.sprixel(0, 0).bg_color.g, 255)
+        self.assertEqual(spr.sprixel(0, 0).bg_color.b, 204)
+        # Original sprite should not be modified by tint
+        self.assertEqual(sp.sprixel(0, 0).bg_color.r, 255)
+        self.assertEqual(sp.sprixel(0, 0).bg_color.g, 255)
+        self.assertEqual(sp.sprixel(0, 0).bg_color.b, 255)
+        with self.assertRaises(gfx_core.base.PglInvalidTypeException):
+            sp.tint(gfx_core.Color(0, 255, 0), 1.2)
+        with self.assertRaises(gfx_core.base.PglInvalidTypeException):
+            sp.tint(gfx_core.Color(0, 255, 0), -1.2)
+        with self.assertRaises(gfx_core.base.PglInvalidTypeException):
+            sp.modulate(gfx_core.Color(0, 255, 0), 1.2)
+        with self.assertRaises(gfx_core.base.PglInvalidTypeException):
+            sp.modulate(gfx_core.Color(0, 255, 0), -1.2)
+
+        sp.modulate(gfx_core.Color(0, 255, 0), 0.2)
+        # Original sprite should be modified by modulate
+        self.assertEqual(sp.sprixel(0, 0).bg_color.r, 204)
+        self.assertEqual(sp.sprixel(0, 0).bg_color.g, 255)
+        self.assertEqual(sp.sprixel(0, 0).bg_color.b, 204)
+
 
 if __name__ == "__main__":
     unittest.main()

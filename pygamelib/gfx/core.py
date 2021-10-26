@@ -215,7 +215,8 @@ class Color(base.PglBaseObject):
         """
         if type(fraction) is not float or fraction < 0.0 or fraction > 1.0:
             raise base.PglInvalidTypeException(
-                "fraction needs to be a float between 0.0 and 1.0."
+                "Color.blend(other_color, fraction): fraction needs to be a float "
+                "between 0.0 and 1.0."
             )
         if not isinstance(other_color, Color):
             raise base.PglInvalidTypeException(
@@ -1426,6 +1427,81 @@ class Sprite(object):
                 r2 = (i * row_ratio) >> 16
                 new_sprite.set_sprixel(i, j, self.sprixel(r2, c2))
         return new_sprite
+
+    def tint(self, color: Color, ratio: float = 0.5):
+        """Tint a copy of the sprite with the color.
+
+        This method creates a copy of the sprite and tint all its sprixels with the
+        color at the specified ratio.
+        It then returns the new sprite. **The original sprite is NOT modified**.
+
+        :param color: The tint color.
+        :type color: :class:`Color`
+        :param ratio: The tint ration between 0.0 and 1.0 (default: 0.5)
+        :type ratio: float
+        :returns: :class:`Sprite`
+
+        Example::
+
+            player_sprites = core.SpriteCollection.load_json_file("gfx/player.spr")
+            player_sprites["sick"] = player_sprites["normal"].tint(
+                                        core.Color(0, 255, 0), 0.3
+                                    )
+        """
+        if ratio < 0.0 or ratio > 1.0:
+            raise base.PglInvalidTypeException(
+                "Sprite.tint(color, ratio): ratio must be a float between 0 and 1 "
+                f"(rate={ratio})"
+            )
+        new_sprite = Sprite(
+            size=self.size,
+            sprixels=None,
+            default_sprixel=self.default_sprixel,
+            parent=self.parent,
+        )
+        for row in range(0, self.size[1]):
+            for col in range(0, self.size[0]):
+                new_sprix: Sprixel = copy.deepcopy(self._sprixels[row][col])
+                if new_sprix.bg_color is not None:
+                    new_sprix.bg_color = new_sprix.bg_color.blend(color, ratio)
+                if new_sprix.fg_color is not None:
+                    new_sprix.fg_color = new_sprix.fg_color.blend(color, ratio)
+                new_sprite.set_sprixel(row, col, new_sprix)
+        return new_sprite
+
+    def modulate(self, color: Color, ratio: float = 0.5):
+        """Modulate the sprite colors with the color in parameters.
+
+        This method tint all the sprixels of the sprite with the color at the specified
+        ratio.
+        **The original sprite IS modified**.
+
+        If you want to keep the original sprite intact consider using :py:meth:`tint()`.
+
+        :param color: The modulation color.
+        :type color: :class:`Color`
+        :param ratio: The modulation ratio between 0.0 and 1.0 (default: 0.5)
+        :type ratio: float
+        :returns: None
+
+        Example::
+
+            player_sprites = core.SpriteCollection.load_json_file("gfx/player.spr")
+            # After that, the sprite is quite not "normal" anymore...
+            player_sprites["normal"].modulate(core.Color(0, 255, 0), 0.3)
+        """
+        if ratio < 0.0 or ratio > 1.0:
+            raise base.PglInvalidTypeException(
+                "Sprite.tint(color, ratio): ratio must be a float between 0 and 1 "
+                f"(rate={ratio})"
+            )
+        for row in range(0, self.size[1]):
+            for col in range(0, self.size[0]):
+                sprix: Sprixel = self._sprixels[row][col]
+                if sprix.bg_color is not None:
+                    sprix.bg_color = sprix.bg_color.blend(color, ratio)
+                if sprix.fg_color is not None:
+                    sprix.fg_color = sprix.fg_color.blend(color, ratio)
 
     def render_to_buffer(self, buffer, row, column, buffer_height, buffer_width):
         """Render the sprite into a display buffer (not a screen buffer).
