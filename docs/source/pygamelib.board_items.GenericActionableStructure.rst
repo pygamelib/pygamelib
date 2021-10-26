@@ -24,11 +24,13 @@ GenericActionableStructure
       ~GenericActionableStructure.debug_info
       ~GenericActionableStructure.display
       ~GenericActionableStructure.distance_to
+      ~GenericActionableStructure.load
       ~GenericActionableStructure.overlappable
       ~GenericActionableStructure.pickable
       ~GenericActionableStructure.position_as_vector
       ~GenericActionableStructure.render_to_buffer
       ~GenericActionableStructure.restorable
+      ~GenericActionableStructure.serialize
       ~GenericActionableStructure.set_overlappable
       ~GenericActionableStructure.set_pickable
       ~GenericActionableStructure.set_restorable

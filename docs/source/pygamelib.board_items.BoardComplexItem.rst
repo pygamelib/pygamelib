@@ -25,10 +25,12 @@ BoardComplexItem
       ~BoardComplexItem.distance_to
       ~BoardComplexItem.inventory_space
       ~BoardComplexItem.item
+      ~BoardComplexItem.load
       ~BoardComplexItem.overlappable
       ~BoardComplexItem.pickable
       ~BoardComplexItem.position_as_vector
       ~BoardComplexItem.render_to_buffer
+      ~BoardComplexItem.serialize
       ~BoardComplexItem.store_position
       ~BoardComplexItem.update_sprite
    

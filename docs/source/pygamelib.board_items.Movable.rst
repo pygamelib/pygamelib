@@ -25,10 +25,12 @@ Movable
       ~Movable.distance_to
       ~Movable.has_inventory
       ~Movable.inventory_space
+      ~Movable.load
       ~Movable.overlappable
       ~Movable.pickable
       ~Movable.position_as_vector
       ~Movable.render_to_buffer
+      ~Movable.serialize
       ~Movable.store_position
    
    

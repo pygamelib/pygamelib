@@ -25,10 +25,12 @@ Player
       ~Player.distance_to
       ~Player.has_inventory
       ~Player.inventory_space
+      ~Player.load
       ~Player.overlappable
       ~Player.pickable
       ~Player.position_as_vector
       ~Player.render_to_buffer
+      ~Player.serialize
       ~Player.store_position
    
    

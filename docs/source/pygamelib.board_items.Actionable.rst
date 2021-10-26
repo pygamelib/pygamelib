@@ -23,11 +23,13 @@ Actionable
       ~Actionable.debug_info
       ~Actionable.display
       ~Actionable.distance_to
+      ~Actionable.load
       ~Actionable.overlappable
       ~Actionable.pickable
       ~Actionable.position_as_vector
       ~Actionable.render_to_buffer
       ~Actionable.restorable
+      ~Actionable.serialize
       ~Actionable.store_position
    
    

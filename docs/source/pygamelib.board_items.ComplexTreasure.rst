@@ -24,11 +24,13 @@ ComplexTreasure
       ~ComplexTreasure.display
       ~ComplexTreasure.distance_to
       ~ComplexTreasure.item
+      ~ComplexTreasure.load
       ~ComplexTreasure.overlappable
       ~ComplexTreasure.pickable
       ~ComplexTreasure.position_as_vector
       ~ComplexTreasure.render_to_buffer
       ~ComplexTreasure.restorable
+      ~ComplexTreasure.serialize
       ~ComplexTreasure.store_position
       ~ComplexTreasure.update_sprite
    

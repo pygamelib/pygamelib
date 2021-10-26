@@ -1,5 +1,5 @@
 # import pygamelib.board_items as pgl_board_items
-from pygamelib import board_items, constants, base
+from pygamelib import board_items, constants, base, actuators
 import pygamelib.gfx.core as gfx_core
 import unittest
 
@@ -122,6 +122,11 @@ class TestBoard(unittest.TestCase):
         self.assertIsInstance(bic.item(1, 1), board_items.BoardItemVoid)
         with self.assertRaises(board_items.base.PglOutOfItemBoundException):
             bic.item(5, 6)
+        data = bic.serialize()
+        data["has_inventory"] = False
+        self.assertEqual(bic.size, data["size"])
+        bic2 = board_items.BoardComplexItem.load(data)
+        self.assertEqual(bic.size, bic2.size)
 
     def test_movable(self):
         bi = board_items.Movable(step=2)
@@ -226,6 +231,22 @@ class TestBoard(unittest.TestCase):
         p = board_items.Player(inventory=board_items.engine.Inventory())
         self.assertFalse(p.pickable())
         self.assertTrue(p.has_inventory())
+        sprite = gfx_core.Sprite(
+            name="test_sprite",
+            sprixels=[
+                [
+                    gfx_core.Sprixel(" ", gfx_core.Color(255, 0, 0)),
+                    gfx_core.Sprixel(" ", gfx_core.Color(255, 0, 0)),
+                ]
+            ],
+        )
+        n = board_items.ComplexPlayer(name="Test Player", sprite=sprite)
+        n.actuator = actuators.RandomActuator()
+        data = n.serialize()
+        self.assertEqual(n.name, data["name"])
+        self.assertEqual(n.sprite.name, data["sprite"]["name"])
+        n2 = board_items.ComplexPlayer.load(data)
+        self.assertEqual(n.name, n2.name)
 
     def test_npc(self):
         npc = board_items.NPC(actuator=board_items.actuators.RandomActuator(), step=1)
@@ -259,7 +280,22 @@ class TestBoard(unittest.TestCase):
         self.assertEqual(cl.intelligence, 27)
 
     def test_complexnpc(self):
-        board_items.ComplexNPC()
+        sprite = gfx_core.Sprite(
+            name="test_sprite",
+            sprixels=[
+                [
+                    gfx_core.Sprixel(" ", gfx_core.Color(255, 0, 0)),
+                    gfx_core.Sprixel(" ", gfx_core.Color(255, 0, 0)),
+                ]
+            ],
+        )
+        n = board_items.ComplexNPC(name="Test NPC", sprite=sprite)
+        n.actuator = actuators.RandomActuator()
+        data = n.serialize()
+        self.assertEqual(n.name, data["name"])
+        self.assertEqual(n.sprite.name, data["sprite"]["name"])
+        n2 = board_items.ComplexNPC.load(data)
+        self.assertEqual(n.name, n2.name)
 
     def test_textitem(self):
         with self.assertRaises(board_items.base.PglInvalidTypeException):
@@ -274,6 +310,10 @@ class TestBoard(unittest.TestCase):
         self.assertEqual(bi.text.text, "value change")
         with self.assertRaises(board_items.base.PglInvalidTypeException):
             bi.text = board_items.BoardComplexItem()
+        data = bi.serialize()
+        data["has_inventory"] = False
+        bi2 = board_items.TextItem.load(data)
+        self.assertEqual(bi.text.text, bi2.text.text)
 
     def test_wall(self):
         bi = board_items.Wall()
@@ -321,17 +361,39 @@ class TestBoard(unittest.TestCase):
     def test_tile(self):
         bi = board_items.Tile()
         self.assertFalse(bi.pickable())
+        data = bi.serialize()
+        data["has_inventory"] = False
+        self.assertEqual(bi.overlappable(), data["overlappable"])
+        self.assertEqual(bi.pickable(), data["pickable"])
+        bi2 = board_items.Tile.load(data)
+        self.assertEqual(bi.overlappable(), bi2.overlappable())
+        self.assertEqual(bi.pickable(), bi2.pickable())
 
     def test_complex_version(self):
         ci = board_items.ComplexDoor()
         self.assertFalse(ci.pickable())
         self.assertTrue(ci.overlappable())
+        data = ci.serialize()
+        data["has_inventory"] = False
+        self.assertEqual(ci.overlappable(), data["overlappable"])
+        ci2 = board_items.ComplexDoor.load(data)
+        self.assertEqual(ci.overlappable(), ci2.overlappable())
         ci = board_items.ComplexWall()
         self.assertFalse(ci.pickable())
         self.assertFalse(ci.overlappable())
+        data = ci.serialize()
+        data["has_inventory"] = False
+        self.assertEqual(ci.overlappable(), data["overlappable"])
+        ci2 = board_items.ComplexWall.load(data)
+        self.assertEqual(ci.overlappable(), ci2.overlappable())
         ci = board_items.ComplexTreasure()
         self.assertTrue(ci.pickable())
         self.assertFalse(ci.overlappable())
+        data = ci.serialize()
+        data["has_inventory"] = False
+        self.assertEqual(ci.overlappable(), data["overlappable"])
+        ci2 = board_items.ComplexTreasure.load(data)
+        self.assertEqual(ci.overlappable(), ci2.overlappable())
 
     def test_camera(self):
         cam = board_items.Camera()

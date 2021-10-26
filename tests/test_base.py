@@ -194,6 +194,24 @@ class TestBase(unittest.TestCase):
         with self.assertRaises(pgl_base.PglInvalidTypeException):
             pgl_base.Text("This is a test", font=42)
         self.assertEqual(text.length, 126)
+        text = pgl_base.Text(
+            "Serialization test",
+            core.Color(255, 0, 0),
+            core.Color(0, 200, 200),
+            "",
+            font=core.Font("8bits"),
+        )
+        text2 = pgl_base.Text.load(text.serialize())
+        self.assertEqual(text.text, text2.text)
+        self.assertEqual(text.bg_color, text2.bg_color)
+        self.assertEqual(text.fg_color, text2.fg_color)
+        self.assertEqual(text.style, text2.style)
+        text = pgl_base.Text("Serialization test", style=None)
+        text2 = pgl_base.Text.load(text.serialize())
+        self.assertEqual(text.text, text2.text)
+        self.assertEqual(text.bg_color, text2.bg_color)
+        self.assertEqual(text.fg_color, text2.fg_color)
+        self.assertEqual(text.style, None)
 
     def test_pgl_base_object(self):
         o1 = pgl_base.PglBaseObject()

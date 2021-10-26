@@ -26,10 +26,12 @@ ComplexPlayer
       ~ComplexPlayer.has_inventory
       ~ComplexPlayer.inventory_space
       ~ComplexPlayer.item
+      ~ComplexPlayer.load
       ~ComplexPlayer.overlappable
       ~ComplexPlayer.pickable
       ~ComplexPlayer.position_as_vector
       ~ComplexPlayer.render_to_buffer
+      ~ComplexPlayer.serialize
       ~ComplexPlayer.store_position
       ~ComplexPlayer.update_sprite
    

@@ -24,11 +24,13 @@ ComplexWall
       ~ComplexWall.display
       ~ComplexWall.distance_to
       ~ComplexWall.item
+      ~ComplexWall.load
       ~ComplexWall.overlappable
       ~ComplexWall.pickable
       ~ComplexWall.position_as_vector
       ~ComplexWall.render_to_buffer
       ~ComplexWall.restorable
+      ~ComplexWall.serialize
       ~ComplexWall.store_position
       ~ComplexWall.update_sprite
    

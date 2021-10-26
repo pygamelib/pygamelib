@@ -24,11 +24,13 @@ Tile
       ~Tile.display
       ~Tile.distance_to
       ~Tile.item
+      ~Tile.load
       ~Tile.overlappable
       ~Tile.pickable
       ~Tile.position_as_vector
       ~Tile.render_to_buffer
       ~Tile.restorable
+      ~Tile.serialize
       ~Tile.set_overlappable
       ~Tile.set_pickable
       ~Tile.set_restorable

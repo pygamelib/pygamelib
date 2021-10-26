@@ -23,11 +23,13 @@ GenericStructureComplexComponent
       ~GenericStructureComplexComponent.debug_info
       ~GenericStructureComplexComponent.display
       ~GenericStructureComplexComponent.distance_to
+      ~GenericStructureComplexComponent.load
       ~GenericStructureComplexComponent.overlappable
       ~GenericStructureComplexComponent.pickable
       ~GenericStructureComplexComponent.position_as_vector
       ~GenericStructureComplexComponent.render_to_buffer
       ~GenericStructureComplexComponent.restorable
+      ~GenericStructureComplexComponent.serialize
       ~GenericStructureComplexComponent.set_overlappable
       ~GenericStructureComplexComponent.set_pickable
       ~GenericStructureComplexComponent.set_restorable

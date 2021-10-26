@@ -23,11 +23,13 @@ GenericStructure
       ~GenericStructure.debug_info
       ~GenericStructure.display
       ~GenericStructure.distance_to
+      ~GenericStructure.load
       ~GenericStructure.overlappable
       ~GenericStructure.pickable
       ~GenericStructure.position_as_vector
       ~GenericStructure.render_to_buffer
       ~GenericStructure.restorable
+      ~GenericStructure.serialize
       ~GenericStructure.set_overlappable
       ~GenericStructure.set_pickable
       ~GenericStructure.set_restorable

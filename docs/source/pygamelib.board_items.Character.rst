@@ -18,7 +18,8 @@ Character
    .. autosummary::
    
       ~Character.__init__
-   
+      ~Character.load
+      ~Character.serialize
    
 
    

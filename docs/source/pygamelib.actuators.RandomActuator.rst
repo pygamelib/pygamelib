@@ -18,8 +18,10 @@ RandomActuator
    .. autosummary::
    
       ~RandomActuator.__init__
+      ~RandomActuator.load
       ~RandomActuator.next_move
       ~RandomActuator.pause
+      ~RandomActuator.serialize
       ~RandomActuator.start
       ~RandomActuator.stop
    

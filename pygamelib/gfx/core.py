@@ -1346,7 +1346,7 @@ class Sprite(object):
         """
         Property that returns the height of the Sprite.
 
-        Contrary to Sprite.size[0], this property *always* calls Sprite.calculate_size()
+        Contrary to Sprite.size[1], this property *always* calls Sprite.calculate_size()
         before returning the height.
         """
         self.calculate_size()

@@ -23,11 +23,13 @@ Immovable
       ~Immovable.debug_info
       ~Immovable.display
       ~Immovable.distance_to
+      ~Immovable.load
       ~Immovable.overlappable
       ~Immovable.pickable
       ~Immovable.position_as_vector
       ~Immovable.render_to_buffer
       ~Immovable.restorable
+      ~Immovable.serialize
       ~Immovable.store_position
    
    

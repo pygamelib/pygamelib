@@ -25,10 +25,12 @@ NPC
       ~NPC.distance_to
       ~NPC.has_inventory
       ~NPC.inventory_space
+      ~NPC.load
       ~NPC.overlappable
       ~NPC.pickable
       ~NPC.position_as_vector
       ~NPC.render_to_buffer
+      ~NPC.serialize
       ~NPC.store_position
    
    

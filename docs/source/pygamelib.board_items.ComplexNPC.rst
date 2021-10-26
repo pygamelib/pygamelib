@@ -26,10 +26,12 @@ ComplexNPC
       ~ComplexNPC.has_inventory
       ~ComplexNPC.inventory_space
       ~ComplexNPC.item
+      ~ComplexNPC.load
       ~ComplexNPC.overlappable
       ~ComplexNPC.pickable
       ~ComplexNPC.position_as_vector
       ~ComplexNPC.render_to_buffer
+      ~ComplexNPC.serialize
       ~ComplexNPC.store_position
       ~ComplexNPC.update_sprite
    

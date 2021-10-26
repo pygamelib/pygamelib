@@ -25,10 +25,12 @@ Camera
       ~Camera.distance_to
       ~Camera.has_inventory
       ~Camera.inventory_space
+      ~Camera.load
       ~Camera.overlappable
       ~Camera.pickable
       ~Camera.position_as_vector
       ~Camera.render_to_buffer
+      ~Camera.serialize
       ~Camera.store_position
    
    
