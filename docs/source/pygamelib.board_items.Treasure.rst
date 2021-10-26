@@ -23,11 +23,13 @@ Treasure
       ~Treasure.debug_info
       ~Treasure.display
       ~Treasure.distance_to
+      ~Treasure.load
       ~Treasure.overlappable
       ~Treasure.pickable
       ~Treasure.position_as_vector
       ~Treasure.render_to_buffer
       ~Treasure.restorable
+      ~Treasure.serialize
       ~Treasure.store_position
    
    

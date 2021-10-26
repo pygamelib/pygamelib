@@ -23,11 +23,13 @@ Door
       ~Door.debug_info
       ~Door.display
       ~Door.distance_to
+      ~Door.load
       ~Door.overlappable
       ~Door.pickable
       ~Door.position_as_vector
       ~Door.render_to_buffer
       ~Door.restorable
+      ~Door.serialize
       ~Door.set_overlappable
       ~Door.set_pickable
       ~Door.set_restorable

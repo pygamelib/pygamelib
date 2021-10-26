@@ -24,11 +24,13 @@ BoardItemComplexComponent
       ~BoardItemComplexComponent.display
       ~BoardItemComplexComponent.distance_to
       ~BoardItemComplexComponent.inventory_space
+      ~BoardItemComplexComponent.load
       ~BoardItemComplexComponent.overlappable
       ~BoardItemComplexComponent.pickable
       ~BoardItemComplexComponent.position_as_vector
       ~BoardItemComplexComponent.render_to_buffer
       ~BoardItemComplexComponent.restorable
+      ~BoardItemComplexComponent.serialize
       ~BoardItemComplexComponent.store_position
    
    

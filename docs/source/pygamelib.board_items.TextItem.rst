@@ -25,10 +25,12 @@ TextItem
       ~TextItem.distance_to
       ~TextItem.inventory_space
       ~TextItem.item
+      ~TextItem.load
       ~TextItem.overlappable
       ~TextItem.pickable
       ~TextItem.position_as_vector
       ~TextItem.render_to_buffer
+      ~TextItem.serialize
       ~TextItem.store_position
       ~TextItem.update_sprite
    

@@ -23,11 +23,13 @@ PathFinder
       ~PathFinder.current_path
       ~PathFinder.current_waypoint
       ~PathFinder.find_path
+      ~PathFinder.load
       ~PathFinder.next_action
       ~PathFinder.next_move
       ~PathFinder.next_waypoint
       ~PathFinder.pause
       ~PathFinder.remove_waypoint
+      ~PathFinder.serialize
       ~PathFinder.set_destination
       ~PathFinder.start
       ~PathFinder.stop

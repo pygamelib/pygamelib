@@ -18,8 +18,10 @@ UnidirectionalActuator
    .. autosummary::
    
       ~UnidirectionalActuator.__init__
+      ~UnidirectionalActuator.load
       ~UnidirectionalActuator.next_move
       ~UnidirectionalActuator.pause
+      ~UnidirectionalActuator.serialize
       ~UnidirectionalActuator.start
       ~UnidirectionalActuator.stop
    

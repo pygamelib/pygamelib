@@ -18,8 +18,10 @@ Actuator
    .. autosummary::
    
       ~Actuator.__init__
+      ~Actuator.load
       ~Actuator.next_move
       ~Actuator.pause
+      ~Actuator.serialize
       ~Actuator.start
       ~Actuator.stop
    

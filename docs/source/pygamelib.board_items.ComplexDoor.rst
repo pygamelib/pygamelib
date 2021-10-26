@@ -24,11 +24,13 @@ ComplexDoor
       ~ComplexDoor.display
       ~ComplexDoor.distance_to
       ~ComplexDoor.item
+      ~ComplexDoor.load
       ~ComplexDoor.overlappable
       ~ComplexDoor.pickable
       ~ComplexDoor.position_as_vector
       ~ComplexDoor.render_to_buffer
       ~ComplexDoor.restorable
+      ~ComplexDoor.serialize
       ~ComplexDoor.set_overlappable
       ~ComplexDoor.set_pickable
       ~ComplexDoor.set_restorable

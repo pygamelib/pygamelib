@@ -18,9 +18,11 @@ Behavioral
    .. autosummary::
    
       ~Behavioral.__init__
+      ~Behavioral.load
       ~Behavioral.next_action
       ~Behavioral.next_move
       ~Behavioral.pause
+      ~Behavioral.serialize
       ~Behavioral.start
       ~Behavioral.stop
    

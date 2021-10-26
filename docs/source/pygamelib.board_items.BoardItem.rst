@@ -24,10 +24,12 @@ BoardItem
       ~BoardItem.display
       ~BoardItem.distance_to
       ~BoardItem.inventory_space
+      ~BoardItem.load
       ~BoardItem.overlappable
       ~BoardItem.pickable
       ~BoardItem.position_as_vector
       ~BoardItem.render_to_buffer
+      ~BoardItem.serialize
       ~BoardItem.store_position
    
    

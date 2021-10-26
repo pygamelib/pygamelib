@@ -30,6 +30,7 @@ Projectile
       ~Projectile.has_inventory
       ~Projectile.hit
       ~Projectile.inventory_space
+      ~Projectile.load
       ~Projectile.overlappable
       ~Projectile.pickable
       ~Projectile.position_as_vector
@@ -37,6 +38,7 @@ Projectile
       ~Projectile.remove_directional_model
       ~Projectile.render_to_buffer
       ~Projectile.restorable
+      ~Projectile.serialize
       ~Projectile.set_direction
       ~Projectile.store_position
    

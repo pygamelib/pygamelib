@@ -23,11 +23,13 @@ Wall
       ~Wall.debug_info
       ~Wall.display
       ~Wall.distance_to
+      ~Wall.load
       ~Wall.overlappable
       ~Wall.pickable
       ~Wall.position_as_vector
       ~Wall.render_to_buffer
       ~Wall.restorable
+      ~Wall.serialize
       ~Wall.store_position
    
    
