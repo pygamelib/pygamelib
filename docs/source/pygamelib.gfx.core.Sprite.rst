@@ -25,12 +25,14 @@ Sprite
       ~Sprite.from_text
       ~Sprite.load
       ~Sprite.load_from_ansi_file
+      ~Sprite.modulate
       ~Sprite.render_to_buffer
       ~Sprite.scale
       ~Sprite.serialize
       ~Sprite.set_sprixel
       ~Sprite.set_transparency
       ~Sprite.sprixel
+      ~Sprite.tint
    
    
 
