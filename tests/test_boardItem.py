@@ -148,7 +148,7 @@ class TestBoard(unittest.TestCase):
     def test_projectile(self):
         with self.assertRaises(board_items.base.PglException) as e:
             board_items.Projectile(range=6, step=4)
-            self.assertEqual(e.error, "incorrect_range_step")
+        self.assertEqual(e.exception.error, "incorrect_range_step")
         p = board_items.Projectile()
         self.assertFalse(p.has_inventory())
         self.assertTrue(p.overlappable())

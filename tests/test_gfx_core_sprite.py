@@ -19,16 +19,16 @@ class TestBase(unittest.TestCase):
             spr.sprixel(1, "crash")
         with self.assertRaises(gfx_core.base.PglException) as e:
             spr.sprixel(1, 10)
-            self.assertEqual(e.error, "out_of_sprite_boundaries")
+        self.assertEqual(e.exception.error, "out_of_sprite_boundaries")
         self.assertTrue(type(spr.sprixel(1)) is list)
         with self.assertRaises(gfx_core.base.PglException) as e:
             spr.sprixel(10, 1)
-            self.assertEqual(e.error, "out_of_sprite_boundaries")
+        self.assertEqual(e.exception.error, "out_of_sprite_boundaries")
         with self.assertRaises(gfx_core.base.PglInvalidTypeException):
             spr.set_sprixel(1, "crash", "bork")
         with self.assertRaises(gfx_core.base.PglException) as e:
             spr.set_sprixel(1, 10, "bork")
-            self.assertEqual(e.error, "out_of_sprite_boundaries")
+        self.assertEqual(e.exception.error, "out_of_sprite_boundaries")
         with self.assertRaises(gfx_core.base.PglInvalidTypeException):
             spr.set_sprixel(1, 1, "bork")
 
@@ -132,7 +132,7 @@ class TestBase(unittest.TestCase):
     def test_load(self):
         with self.assertRaises(gfx_core.base.PglException) as e:
             gfx_core.Sprite.load_from_ansi_file("tests/house-red-borked.ans")
-            self.assertEqual(e.error, "sprite_file_format_not_supported")
+        self.assertEqual(e.exception.error, "sprite_file_format_not_supported")
         spr = gfx_core.Sprite.load_from_ansi_file("tests/house-red-double.ans")
         self.assertEqual(spr.width, 17)
         gfx_core.Sprite.load_from_ansi_file("tests/house-red.ans")
@@ -179,7 +179,7 @@ class TestBase(unittest.TestCase):
                     ],
                 }
             )
-            self.assertEqual(e.error, "invalid_sprite_size")
+        self.assertEqual(e.exception.error, "invalid_sprite_size")
 
     def test_collection(self):
         spr = gfx_core.Sprite(
@@ -218,10 +218,10 @@ class TestBase(unittest.TestCase):
         self.assertEqual(spr3.sprixel(1, 1), sc2.get(spr3.name).sprixel(1, 1))
         with self.assertRaises(gfx_core.base.PglException) as e:
             gfx_core.SpriteCollection.load({})
-            self.assertEqual(e.error, "invalid_sprite_data")
+        self.assertEqual(e.exception.error, "invalid_sprite_data")
         with self.assertRaises(gfx_core.base.PglException) as e:
             gfx_core.SpriteCollection.load({"sprites_count": 2, "sprites": {}})
-            self.assertEqual(e.error, "corrupted_sprite_data")
+        self.assertEqual(e.exception.error, "corrupted_sprite_data")
 
     def test_scale(self):
         spr = gfx_core.Sprite(
