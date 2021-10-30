@@ -103,6 +103,7 @@ class TestBase(unittest.TestCase):
             g.add_board("1", 1)
         with self.assertRaises(base.PglInvalidTypeException):
             g.get_board("1")
+        g.add_board(1, b)
         self.assertIsInstance(g.get_board(1), engine.Board)
         with self.assertRaises(base.PglInvalidLevelException):
             g.current_board()
