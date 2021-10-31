@@ -46,11 +46,11 @@ class TestBase(unittest.TestCase):
         self.assertEqual(self.inv.get_item("test").name, "test")
         with self.assertRaises(engine.base.PglInventoryException) as e:
             self.inv.get_item("crash")
-            self.assertEqual(e.error, "no_item_by_that_name")
+        self.assertEqual(e.exception.error, "no_item_by_that_name")
         self.assertIsNone(self.inv.delete_item("test"))
         with self.assertRaises(engine.base.PglInventoryException) as e:
             self.inv.delete_item("test")
-            self.assertEqual(e.error, "no_item_by_that_name")
+        self.assertEqual(e.exception.error, "no_item_by_that_name")
 
     def test_str(self):
         self.inv.empty()
