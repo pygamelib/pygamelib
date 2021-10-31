@@ -27,6 +27,10 @@ clean:
 	find ./ -iname '__pycache__' | xargs rm -rf
 	(cd docs && make clean)
 
+devenv:
+	pip3 install --user pipenv
+	pipenv install --dev
+
 all: coverage doc clean pp
 
 .PHONY: tpp pp test clean doc
