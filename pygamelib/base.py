@@ -1176,7 +1176,16 @@ class Math(object):
         super().__init__()
 
     @staticmethod
-    def intersect(row1, column1, width1, height1, row2, column2, width2, height2):
+    def intersect(
+        row1: int,
+        column1: int,
+        width1: int,
+        height1: int,
+        row2: int,
+        column2: int,
+        width2: int,
+        height2: int,
+    ) -> bool:
         """This function check if 2 rectangles intersect.
 
         The 2 rectangles are defined by their positions (row, column) and dimension
@@ -1218,7 +1227,7 @@ class Math(object):
         )
 
     @staticmethod
-    def distance(row1, column1, row2, column2):
+    def distance(row1: int, column1: int, row2: int, column2: int) -> float:
         """Return the euclidian distance between to points.
 
         Points are identified by their row and column.
@@ -1244,3 +1253,6 @@ class Math(object):
                                             npc.column)
         """
         return math.sqrt((column2 - column1) ** 2 + (row2 - row1) ** 2)
+
+    def lerp(v0: float, v1: float, t: float) -> float:
+        return (1 - t) * v0 + t * v1
