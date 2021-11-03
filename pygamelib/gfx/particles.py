@@ -940,6 +940,7 @@ class ParticleEmitter(base.PglBaseObject):
         #             buffer[sr][c] = Sprixel()
 
 
+# NOTE: OUTDATED DO NOT USE!!!
 class BaseParticle(board_items.Movable):
     """
     Particles are not ready. This is only an early early test.
