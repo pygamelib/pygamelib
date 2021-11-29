@@ -1,13 +1,19 @@
-from copy import deepcopy
+from copy import deepcopy, copy
 from pygamelib.gfx import core
 import pygamelib.board_items as board_items
 import pygamelib.assets.graphics as graphics
 import pygamelib.constants as constants
 import pygamelib.base as base
 
+# from dataclasses import dataclass
+
+# DEBUG ONLY
+from pygamelib import engine
+
 import time
 import random
 import uuid
+import math
 
 __docformat__ = "restructuredtext"
 
@@ -37,10 +43,14 @@ class Particle(base.PglBaseObject):
         self.velocity = velocity
         # print(f"Particle constructor: self.velocity={self.velocity}")
         if self.velocity is None:
-            self.velocity = base.Vector2D(random.uniform(-1, 1), random.uniform(-1, 1))
-            # print(
-            #     f"Particle constructor: created a velocity vector so self.velocity={self.velocity}"
-            # )
+            self.velocity = base.Vector2D(
+                random.uniform(-1, 1), 2 * random.uniform(-1, 1)
+            )
+            if abs(self.velocity.column) < abs(self.velocity.row) * 2:
+                self.velocity.column = (
+                    self.velocity.column / abs(self.velocity.column)
+                ) * (abs(self.velocity.row) * 2)
+        self.__velocity_accumulator = base.Vector2D(0.0, 0.0)
         self.acceleration = base.Vector2D(0.0, 0.0)
         self.lifespan = lifespan
         if self.lifespan is None:
@@ -49,6 +59,35 @@ class Particle(base.PglBaseObject):
         self.sprixel = sprixel
         if sprixel is None:
             self.sprixel = core.Sprixel(graphics.GeometricShapes.BULLET)
+        self.__last_update = time.time()
+
+    def reset(
+        self,
+        row: int = 0,
+        column: int = 0,
+        velocity: base.Vector2D = None,
+        lifespan: int = None,
+    ):
+        self.__pos_x = self._initial_column = column
+        self.__pos_y = self._initial_row = row
+        if velocity is not None:
+            self.velocity = velocity
+        # if self.velocity is None:
+        #     self.velocity = base.Vector2D(
+        #         random.uniform(-1, 1), 2 * random.uniform(-1, 1)
+        #     )
+        #     if abs(self.velocity.column) < abs(self.velocity.row) * 2:
+        #         self.velocity.column = (
+        #             self.velocity.column / abs(self.velocity.column)
+        #         ) * (abs(self.velocity.row) * 2)
+        self.__velocity_accumulator = base.Vector2D(0.0, 0.0)
+        self.acceleration = base.Vector2D(0.0, 0.0)
+        if lifespan is not None:
+            self.reset_lifespan(lifespan)
+
+        # if sprixel is not None:
+        #     self.sprixel = sprixel
+        self.__last_update = time.time()
 
     @property
     def x(self):
@@ -90,11 +129,14 @@ class Particle(base.PglBaseObject):
         if force is not None and isinstance(force, base.Vector2D):
             self.acceleration += force
 
+    def reset_lifespan(self, lifespan):
+        self.lifespan = lifespan
+        if self.lifespan is None:
+            self.lifespan = 20
+        self._initial_lifespan = self.lifespan
+
     def update(self):
-        # print(f"\tParticle.update() CURRENT position={self.row}x{self.column}")
-        # print(
-        #     f"\tParticle.update() CURRENT acceleration={self.acceleration} velocity={self.velocity}"
-        # )
+        now = time.time()
         self.velocity += self.acceleration
         # print(f"\tParticle.update() NEW velocity={self.velocity}")
         # sign_c = sign_r = 1.0
@@ -115,8 +157,22 @@ class Particle(base.PglBaseObject):
 
         # self.row += round(self.velocity.row)
         # self.column += round(self.velocity.column)
-        self.row = int(self._initial_row + self.velocity.row)
-        self.column = int(self._initial_column + self.velocity.column)
+
+        self.__velocity_accumulator += self.velocity
+        # self.__velocity_accumulator.row += self.velocity.row * (
+        #     now - self.__last_update
+        # )
+        # self.__velocity_accumulator.column += self.velocity.column * (
+        #     now - self.__last_update
+        # )
+
+        # V1
+        # self.row = int(self._initial_row + self.velocity.row)
+        # self.column = int(self._initial_column + self.velocity.column)
+
+        # V2
+        self.row = int(self._initial_row + self.__velocity_accumulator.row)
+        self.column = int(self._initial_column + self.__velocity_accumulator.column)
 
         #     print(f"\tivr: {self.velocity.row} - {int(self.velocity.row)} = {ivr}")
         #     print(
@@ -125,9 +181,34 @@ class Particle(base.PglBaseObject):
         # print(f"\tParticle.update() NEW position={self.row}x{self.column}\n")
         self.acceleration *= 0
         self.lifespan -= 1
+        self.__last_update = now
 
     def render(self, sprixel: core.Sprixel = None):
-        return self.sprixel
+        # If you override this method, it's your responsibility to return a copy of
+        # yourself (or just use super().render(sprixel) as it already returns a copy).
+        if isinstance(sprixel, ParticleSprixel):
+            sprixel.model = self.sprixel.model
+            return sprixel
+        elif isinstance(sprixel, core.Sprixel):
+            # This sprixel might be modified later in the rendering cycle so we want to
+            # make sure that the next particle will only overide the rendered sprixel,
+            # not our live one. While preserving the
+            # NOTE: on the other hand, the model is overwritten at each update... I need
+            # to test to see if I could save the copy...
+            # # TODO: DEV
+            # return None
+            # ret = deepcopy(self.sprixel)
+            ret = copy(self.sprixel)
+            ret.bg_color = sprixel.bg_color
+            return ret
+        else:
+            # This sprixel might be modified later in the rendering cycle so we want to
+            # make sure that the next particle will only overide the rendered sprixel,
+            # not our live one.
+            # NOTE: on the other hand, the model is overwritten at each update... I need
+            # to test to see if I could save the copy...
+            # return deepcopy(self.sprixel)
+            return copy(self.sprixel)
 
     def finished(self):
         return self.lifespan <= 0
@@ -560,13 +641,6 @@ class PartitionParticle(Particle):
         # If you override this method, it's your responsibility to return a copy of
         # yourself (or just use super().render(sprixel) as it already returns a copy).
         if isinstance(sprixel, ParticleSprixel):
-            # A particle has already been rendered here.
-            # print(
-            #     f"sprix='{self.sprixel}' param='{sprixel}' combi='{self.sprixel.model + sprixel.model}'"
-            # )
-            # print("self.partition_blending_table:")
-            # print(self.partition_blending_table)
-
             if self.sprixel.model + sprixel.model in self.partition_blending_table:
                 sprixel.model = self.partition_blending_table[
                     self.sprixel.model + sprixel.model
@@ -582,8 +656,6 @@ class PartitionParticle(Particle):
             # not our live one. While preserving the
             # NOTE: on the other hand, the model is overwritten at each update... I need
             # to test to see if I could save the copy...
-            # # TODO: DEV
-            # return None
             ret = deepcopy(self.sprixel)
             ret.bg_color = sprixel.bg_color
             return ret
@@ -749,7 +821,28 @@ class ColorPartitionParticle(PartitionParticle):
         )
 
 
-class ParticleEmitter(base.PglBaseObject):
+# Emitters
+
+
+# Ideally that would be a @dataclass, but support for KW_ONLY is restricted to
+# Python 3.10+. Too bad.
+class EmitterProperties:
+    """
+    EmitterProperties is a class that hold configuration variables for a particle
+    emitter. The idea is that it's easier to carry around for multiple emitters with the
+    same configuration than multiple values in the emitter's constructor.
+
+    It holds all possible parmeters for all types of emitters. Emitters uses only the
+    ones that they really need.
+
+    .. Important:: In most cases these values are copied by the emitter's constructor.
+       So changing the values during an emitter's alive cycle is not going to do
+       anything.
+
+    .. Note:: This class should be a @dataclass. However, support for keyword only
+       data classes is specific to python 3.10+. So for now, it is a regular class.
+    """
+
     def __init__(
         self,
         row: int = 0,
@@ -761,22 +854,200 @@ class ParticleEmitter(base.PglBaseObject):
         parent: board_items.BoardItem = None,
         particle_velocity=None,
         particle_acceleration=None,
-        particle=Particle,
-        particle_lifespan=5,
+        particle_lifespan=5.0,
+        radius=1.0,
+        particle: Particle = Particle,
     ) -> None:
-        super().__init__()
-        self.__pos_x = column
-        self.__pos_y = row
-        self.particles = list()
+        """
+
+        :param row: The row where the emitter is. It is only important for the first
+           rendering cycle. After that, the emitter will know its position on screen.
+        :type row: int
+        :param column: The row where the emitter is. It is only important for the first
+           rendering cycle. After that, the emitter will know its position on screen.
+        :type column: int
+        :param variance: The variance is the amount of randomness that is allowed when
+           emitting a particle. The exact use of this parameter is specific to each
+           emitter.
+        :type variance: float
+        :param emit_number: The number of particle emitted at each timer tick.
+        :type emit_number: int
+        :param emit_rate: The rate of emission in seconds. This value needs to be
+           understood as "the emitter will emit **emit_number** particles every
+           **emit_rate** seconds".
+        :type emit_rate: float
+        :param lifespan: The lifespan of the emitter in number of emission cycle. If
+           lifespan is set to 1 for example, the emitter will only emit one burst of
+           particles.
+        :type lifespan: int
+        :param parent: A parent board item. If you do that manually, you will probably
+           want to set it specifically for each emitter.
+        :type parent: :class:`~pygamelib.board_items.BoardItem`
+        :param particle_velocity: The initial particle velocity. Please read the
+           documentation of each emitter for the specific use of particle velocity.
+        :type particle_velocity: :class:`~pygamelib.base.Vector2D`
+        :param particle_acceleration: The initial particle acceleration. Please read the
+           documentation of each emitter for the specific use of particle acceleration.
+        :type particle_acceleration: :class:`~pygamelib.base.Vector2D`
+        :param particle_lifespan: The lifespan of the particle in number of cycles.
+        :type particle_lifespan: int
+        :param radius: For emitter that supports it (like the CircleEmitter), sets the
+           radius of emission (which translate into a velocity vector for each particle).
+        :type radius: float
+        :param particle: The particle that the emitter will emit. This can be a class
+           reference or a fully instanciated particle. Emitters will copy it in the
+           particle pool.
+        :type particle: :class:`Particle`
+
+        Example::
+
+            method()
+        """
+        self.row = row
+        self.column = column
         self.variance = variance
         self.emit_number = emit_number
         self.emit_rate = emit_rate
         self.lifespan = lifespan
         self.parent = parent
         self.particle_velocity = particle_velocity
-        self.particle = particle
-        self.particle_lifespan = particle_lifespan
         self.particle_acceleration = particle_acceleration
+        self.particle_lifespan = particle_lifespan
+        self.radius = radius
+        self.particle = particle
+
+
+class ParticlePool:
+    def __init__(
+        self, size: int = None, emitter_properties: EmitterProperties = None
+    ) -> None:
+
+        if size is None:
+            self.size = (
+                emitter_properties.emit_number * emitter_properties.particle_lifespan
+            )
+        elif type(size) is int:
+            self.size = size
+        elif type(size) is float:
+            self.size = int(size)
+        else:
+            self.size = 100
+        if self.size % emitter_properties.emit_number != 0:
+            self.size += emitter_properties.emit_number - (
+                self.size % emitter_properties.emit_number
+            )
+        self.emitter_properties = None
+        if isinstance(emitter_properties, EmitterProperties):
+            self.emitter_properties = emitter_properties
+        else:
+            self.emitter_properties = EmitterProperties()
+        self.current_idx = 0
+
+        # Init the particle pool. Beware: it's a tuple, therefore it's immutable.
+        self.__particle_pool = ()
+        # Here we don't care about the particles configuration (position, velocity,
+        # variance, etc.) because the emitter will reset it when it actually emit it.
+        if callable(self.emitter_properties.particle):
+            self.__particle_pool = tuple(
+                self.emitter_properties.particle() for _ in range(self.size)
+            )
+        else:
+            self.__particle_pool = tuple(
+                deepcopy(self.emitter_properties.particle) for _ in range(self.size)
+            )
+        # Finally, we make sure that all are terminated.
+        for p in self.__particle_pool:
+            p.terminate()
+
+    @property
+    def pool(self) -> tuple:
+        """
+        A read-only property that returns the particle pool tuple.
+        """
+        return self.__particle_pool
+
+    def get_particles(self, amount):
+        if amount is None:
+            amount = self.emitter_properties.emit_number
+        lp = self.size
+        # We cannot return more particles than there is in the pool
+        if amount > lp:
+            amount = lp - 1
+
+        idx = self.current_idx
+
+        # If there's still enough unused particles in the pool we return them.
+        if idx + amount < lp:
+            self.current_idx += amount
+            return self.pool[idx : idx + amount - 1]
+        # If not, but there's enough dead particle at the beginning of the pool we
+        # return these.
+        elif self.pool[amount - 1].finished():
+            self.current_idx = amount
+            return self.pool[idx : (idx + amount)]
+        # Else we return what we have left and reset the index. It is highly probable
+        # that we have not enough particle left...
+        else:
+            self.current_idx = 0
+            return self.pool[idx:]
+
+    def count_active_particles(self) -> int:
+        """Returns the number of active particle (i.e not finished) in the pool.
+
+        .. Important:: The only way to know the amount of alive particles is to go
+           through the entire pool. Be aware of the performance impact on large particle
+           pools.
+
+        :returns: the number of active particles.
+        :rtype: int
+
+        Example::
+
+            if emitter.particles.count_active_particles() > 0:
+                emitter.apply_force(gravity)
+        """
+        np = 0
+        for p in self.__particle_pool:
+            if not p.finished():
+                np += 1
+        return np
+
+    def resize(self, new_size: int):
+        if new_size is not None:
+            if new_size > self.size:
+                new_pool = ()
+                tmpl = self.emitter_properties.particle
+                if callable(tmpl):
+                    new_pool = tuple(tmpl() for _ in range(new_size - self.size))
+                else:
+                    new_pool = tuple(
+                        deepcopy(tmpl) for _ in range(new_size - self.size)
+                    )
+                for p in new_pool:
+                    p.terminate()
+                self.__particle_pool = self.__particle_pool + new_pool
+            elif new_size < self.size:
+                self.__particle_pool = self.__particle_pool[0:new_size]
+                if self.current_idx >= new_size - 1:
+                    self.current_idx = 0
+
+
+class ParticleEmitter(base.PglBaseObject):
+    def __init__(self, emitter_properties=None) -> None:
+        super().__init__()
+        if emitter_properties is None:
+            emitter_properties = EmitterProperties()
+        self.__pos_x = emitter_properties.column
+        self.__pos_y = emitter_properties.row
+        self.variance = emitter_properties.variance
+        self.emit_number = emitter_properties.emit_number
+        self.emit_rate = emitter_properties.emit_rate
+        self.lifespan = emitter_properties.lifespan
+        self.parent = emitter_properties.parent
+        self.particle_velocity = emitter_properties.particle_velocity
+        self.particle = emitter_properties.particle
+        self.particle_lifespan = emitter_properties.particle_lifespan
+        self.particle_acceleration = emitter_properties.particle_acceleration
 
         # if particle is not callable it is an instance of a particle. So we adjust its
         # values.
@@ -786,7 +1057,18 @@ class ParticleEmitter(base.PglBaseObject):
             self.particle.lifespan = self.particle_lifespan
             self.particle._initial_lifespan = self.particle_lifespan
 
+        self.__particle_pool = ParticlePool(
+            size=self.emit_number * self.particle_lifespan,
+            emitter_properties=emitter_properties,
+        )
+
         self.__last_emit = time.time()
+        self.__active = True
+
+    @property
+    def particle_pool(self):
+        # return self.__particles
+        return self.__particle_pool
 
     @property
     def x(self):
@@ -824,70 +1106,115 @@ class ParticleEmitter(base.PglBaseObject):
         if type(value) is int:
             self.__pos_y = value
 
-    def emit(self, number_particle: int = None):
-        if time.time() - self.__last_emit >= self.emit_rate:
-            if number_particle is None:
-                number_particle = self.emit_number
+    @property
+    def active(self):
+        return self.__active
+
+    @active.setter
+    def active(self, state: bool):
+        if type(state) is bool:
+            self.__active = state
+        else:
+            raise base.PglInvalidTypeException(
+                "ParticleEmitter.active = state: state needs to be a boolean not a "
+                f"{type(state)}."
+            )
+
+    def resize_pool(self, new_size: int = None):
+        if new_size is None:
+            # If no size is specified we only resize up. Never down.
+            new_size = self.emit_number * self.particle_lifespan
+            if self.__particle_pool.size < new_size:
+                self.__particle_pool.resize(new_size)
+        else:
+            # if new_size is set, we consider that the programer knows what he is doing
+            # and we let him set whatever size he wants.
+            self.__particle_pool.resize(new_size)
+
+    def toggle_active(self):
+        self.__active = not self.__active
+
+    def emit(self, amount: int = None):
+        if (
+            self.__active
+            and (self.lifespan is not None and self.lifespan > 0)
+            and time.time() - self.__last_emit >= self.emit_rate
+        ):
+            if amount is None:
+                amount = self.emit_number
             # Poor attempt at optimization: test outside the loop.
-            # dbg_idx = 0
             if callable(self.particle):
-                for _ in range(number_particle):
-                    self.particles.append(
-                        self.particle(
-                            row=self.row,
-                            column=self.column,
-                            velocity=self.particle_velocity,
-                            lifespan=self.particle_lifespan,
-                        )
+                for p in self.__particle_pool.get_particles(amount):
+                    p.reset(
+                        row=self.row,
+                        column=self.column,
+                        velocity=self.particle_velocity,
+                        lifespan=self.particle_lifespan,
                     )
-                    # print(
-                    #     f"\t{dbg_idx} Emitter.emit() particle INITIAL velocity: {self.particles[-1].velocity}"
-                    # )
-                    self.particles[-1].velocity *= random.uniform(
-                        -self.variance, self.variance
-                    )
-                    # print(
-                    #     f"\t{dbg_idx} Emitter.emit() particle VARIATED velocity: {self.particles[-1].velocity}"
-                    # )
-                    # dbg_idx += 1
+                    dv = random.uniform(-self.variance, self.variance)
+                    p.velocity.row *= dv
+                    p.velocity.column *= 2 * dv
             else:
-                for _ in range(number_particle):
-                    p = deepcopy(self.particle)
-                    p.row = p._initial_row = self.row
-                    p.column = p._initial_column = self.column
-                    p.velocity = base.Vector2D(
-                        random.uniform(-1, 1), random.uniform(-1, 1)
+                for p in self.__particle_pool.get_particles(amount):
+                    p.reset(
+                        row=self.row,
+                        column=self.column,
+                        velocity=base.Vector2D(
+                            random.uniform(-1, 1), random.uniform(-2, 2)
+                        ),
+                        lifespan=self.particle_lifespan,
                     )
-                    # print(
-                    #     f"\t{dbg_idx} Emitter.emit() particle INITIAL velocity: {p.velocity}"
-                    # )
                     p.velocity *= random.uniform(-self.variance, self.variance)
-                    # print(
-                    #     f"\t{dbg_idx} Emitter.emit() particle VARIATED velocity: {p.velocity}"
-                    # )
-                    self.particles.append(p)
-                    # dbg_idx += 1
-            t = time.time()
+
+            # dbg_idx = 0
+            # if callable(self.particle):
+            #     for _ in range(amount):
+            #         self.particles.append(
+            #             self.particle(
+            #                 row=self.row,
+            #                 column=self.column,
+            #                 velocity=self.particle_velocity,
+            #                 lifespan=self.particle_lifespan,
+            #             )
+            #         )
+            #         dv = random.uniform(-self.variance, self.variance)
+            #         self.particles[-1].velocity.row *= dv
+            #         self.particles[-1].velocity.column *= 2 * dv
+            # else:
+            #     for _ in range(amount):
+            #         p = deepcopy(self.particle)
+            #         p.row = p._initial_row = self.row
+            #         p.column = p._initial_column = self.column
+            #         p.reset_lifespan(self.particle_lifespan)
+            #         p.velocity = base.Vector2D(
+            #             random.uniform(-1, 1), random.uniform(-2, 2)
+            #         )
+            #         p.velocity *= random.uniform(-self.variance, self.variance)
+            #         self.particles.append(p)
             if self.lifespan is not None:
-                self.lifespan -= t - self.__last_emit
-            self.__last_emit = t
+                self.lifespan -= 1
+            self.__last_emit = time.time()
 
     def apply_force(self, force: base.Vector2D):
-        for p in self.particles:
+        for p in self.particle_pool.pool:
             p.apply_force(force)
 
     def update(self):
-        particles = self.particles
+        particles = self.particle_pool
         # for p in particles:
         #     p.apply_force(self.particle_acceleration)
         #     p.update()
 
-        for i in range(len(particles) - 1, -1, -1):
-            p = particles[i]
-            p.apply_force(self.particle_acceleration)
-            p.update()
-            if p.finished():
-                del particles[i]
+        for i in range(particles.size - 1, -1, -1):
+            p = particles.pool[i]
+            if not p.finished():
+                p.apply_force(self.particle_acceleration)
+                p.update()
+            # if p.finished():
+            #     del particles[i]
+
+    def finished(self):
+        return self.lifespan <= 0 and self.particle_pool.count_active_particles() == 0
 
     def render_to_buffer(self, buffer, row, column, buffer_height, buffer_width):
         """Render all the particles of that emitter in the display buffer.
@@ -910,9 +1237,11 @@ class ParticleEmitter(base.PglBaseObject):
         # So, it needs to maintain a coherent screen coordinate.
         self.row = row
         self.column = column
-        for p in self.particles:
+        # g = engine.Game.instance()
+        for p in self.particle_pool.pool:
             if (
-                p.row < buffer_height
+                not p.finished()
+                and p.row < buffer_height
                 and p.column < buffer_width
                 and p.row >= 0
                 and p.column >= 0
@@ -921,23 +1250,102 @@ class ParticleEmitter(base.PglBaseObject):
             else:
                 p.terminate()
 
-        # # Attempt at optimization.
-        # null_sprixel = Sprixel()
-        # get_sprixel = self.sprixel
-        # for sr in range(row, min(self.size[1] + row, buffer_height)):
-        #     for sc in range(column, min(self.size[0] + column, buffer_width)):
-        #         sprix = get_sprixel(sr - row, sc - column)
-        #         # Need to check the empty/null sprixel in the sprite
-        #         # because for the sprite we just skip and leave the
-        #         # sprixel that is behind but when it comes to screen we
-        #         # cannot leave a blank cell.
-        #         if sprix == null_sprixel:
-        #             continue
-        #         # TODO: If the Sprite has sprixels with length > 1 this
-        #         # is going to be a mess.
-        #         buffer[sr][sc] = sprix.__repr__()
-        #         for c in range(sc + 1, sc + sprix.length):
-        #             buffer[sr][c] = Sprixel()
+
+class CircleEmitter(ParticleEmitter):
+    def __init__(
+        self,
+        emitter_properties: EmitterProperties = None,
+    ) -> None:
+        if emitter_properties is None:
+            emitter_properties = EmitterProperties()
+        super().__init__(emitter_properties)
+        self.radius = emitter_properties.radius
+        self.__last_emit = time.time()
+        # self.__active = True
+
+    def emit(self, amount: int = None):
+        if (
+            self.active
+            and (self.lifespan is not None and self.lifespan > 0)
+            and time.time() - self.__last_emit >= self.emit_rate
+        ):
+            if amount is None:
+                amount = self.emit_number
+            # Poor attempt at optimization: test outside the loop.
+            # dbg_idx = 0
+
+            # TODO: Finir la fonction emit (transformer le code pour utiliser le pool)
+            if callable(self.particle):
+                i = 0
+                for p in self.particle_pool.get_particles(amount):
+                    theta = 2.0 * 3.1415926 * i / amount
+                    x = self.x + self.radius * 2 * math.cos(theta)
+                    y = self.y + self.radius * math.sin(theta)
+                    p.reset(
+                        row=y,
+                        column=x,
+                        velocity=base.Vector2D(y - self.y, x - self.x),
+                        lifespan=self.particle_lifespan,
+                    )
+                    i += 1
+            else:
+                i = 0
+                for p in self.particle_pool.get_particles(amount):
+                    # NG
+                    theta = 2.0 * math.pi * i / amount
+                    # the 2 coefficient is to account for console's characters being
+                    # twice higher than larger.
+                    x = self.x + self.radius * 2 * math.cos(theta)
+                    y = self.y + self.radius * math.sin(theta)
+                    p.reset(
+                        row=y,
+                        column=x,
+                        velocity=base.Vector2D(y - self.y, x - self.x),
+                        lifespan=self.particle_lifespan,
+                    )
+                    if self.variance > 0.0:
+                        p.velocity *= random.uniform(0.1, self.variance)
+                    i += 1
+
+            # if callable(self.particle):
+            #     for i in range(amount):
+            #         theta = 2.0 * 3.1415926 * i / amount
+            #         x = self.x + self.radius * 2 * math.cos(theta)
+            #         y = self.y + self.radius * math.sin(theta)
+            #         self.particles.append(
+            #             self.particle(
+            #                 row=y,
+            #                 column=x,
+            #                 velocity=base.Vector2D(y - self.y, x - self.x),
+            #                 lifespan=self.particle_lifespan,
+            #             )
+            #         )
+            # else:
+            #     for i in range(amount):
+            #         p = deepcopy(self.particle)
+            #         theta = 2.0 * math.pi * i / amount
+            #         # the 2 coefficient is to account for console's characters being
+            #         # twice higher than larger.
+            #         x = self.x + self.radius * 2 * math.cos(theta)
+            #         y = self.y + self.radius * math.sin(theta)
+            #         p.row = p._initial_row = y
+            #         p.column = p._initial_column = x
+            #         # Set the velocity to get away from the center (Find the vector that
+            #         # goes from the center to a point on the circle)
+            #         p.velocity = base.Vector2D(y - self.y, x - self.x)
+            #         # print(
+            #         #     f"\t{dbg_idx} Emitter.emit() particle INITIAL velocity: {p.velocity}"
+            #         # )
+            #         if self.variance > 0:
+            #             p.velocity *= random.uniform(0.1, self.variance)
+            #         # print(
+            #         #     f"\t{dbg_idx} Emitter.emit() particle VARIATED velocity: {p.velocity}"
+            #         # )
+            #         self.particles.append(p)
+            #         # dbg_idx += 1
+            if self.lifespan is not None:
+                self.lifespan -= 1
+            self.__last_emit = time.time()
 
 
 # NOTE: OUTDATED DO NOT USE!!!
