@@ -32,7 +32,8 @@ from pygamelib.functions import pgl_isinstance
 import math
 from colorama import Fore, Back, Style, init
 from blessed import Terminal
-import time
+
+# import time
 from typing import Any
 
 # Initialize terminal colors for colorama.
@@ -62,11 +63,11 @@ class PglBaseObject(object):
         """
         super().__init__()
         self._observers = []
-        self._last_updated = time.time()
+        # self._last_updated = time.time()
 
-    def __setattr__(self, name: str, value: Any) -> None:
-        super().__setattr__("_last_updated", time.time())
-        return super().__setattr__(name, value)
+    # def __setattr__(self, name: str, value: Any) -> None:
+    #     super().__setattr__("_last_updated", time.time())
+    #     return super().__setattr__(name, value)
 
     def notify(self, modifier=None, attribute: str = None, value: Any = None) -> None:
 
