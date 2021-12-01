@@ -128,17 +128,17 @@ class TestBase(unittest.TestCase):
         npc.actuator.actuated_object = None
         with self.assertRaises(engine.base.PglException) as e:
             npc.actuator.find_path()
-            self.assertEqual(e.error, "actuated_object is not defined")
+        self.assertEqual(e.exception.error, "actuated_object is not defined")
         npc.actuator.actuated_object = board_items.Door()
         with self.assertRaises(engine.base.PglException) as e:
             npc.actuator.find_path()
-            self.assertEqual(e.error, "actuated_object not a Movable object")
+        self.assertEqual(e.exception.error, "actuated_object not a Movable object")
         npc.actuator.actuated_object = board_items.Door()
         npc.actuator.actuated_object = npc
         npc.actuator.destination = None
         with self.assertRaises(engine.base.PglException) as e:
             npc.actuator.find_path()
-            self.assertEqual(e.error, "destination is not defined")
+        self.assertEqual(e.exception.error, "destination is not defined")
         b.place_item(board_items.Wall(), 2, 2)
         npc.actuator.set_destination(2, 2)
         self.assertEqual(npc.actuator.find_path(), [])
@@ -182,7 +182,7 @@ class TestBase(unittest.TestCase):
             npc.actuator.remove_waypoint("10", 10)
         with self.assertRaises(engine.base.PglException) as e:
             npc.actuator.remove_waypoint(30, 30)
-            self.assertEqual(e.error, "invalid_waypoint")
+        self.assertEqual(e.exception.error, "invalid_waypoint")
         self.assertIsNone(npc.actuator.remove_waypoint(10, 10))
 
     def test_pathfinder_astar(self):
@@ -213,16 +213,16 @@ class TestBase(unittest.TestCase):
         npc.actuator.actuated_object = None
         with self.assertRaises(engine.base.PglException) as e:
             npc.actuator.find_path()
-            self.assertEqual(e.error, "actuated_object is not defined")
+        self.assertEqual(e.exception.error, "actuated_object is not defined")
         npc.actuator.actuated_object = board_items.Door()
         with self.assertRaises(engine.base.PglException) as e:
             npc.actuator.find_path()
-            self.assertEqual(e.error, "actuated_object not a Movable object")
+        self.assertEqual(e.exception.error, "actuated_object not a Movable object")
         npc.actuator.actuated_object = npc
         npc.actuator.destination = None
         with self.assertRaises(engine.base.PglException) as e:
             npc.actuator.find_path()
-            self.assertEqual(e.error, "destination is not defined")
+        self.assertEqual(e.exception.error, "destination is not defined")
         b.place_item(board_items.Wall(), 2, 2)
         npc.actuator.set_destination(2, 2)
         self.assertEqual(npc.actuator.find_path(), [])
@@ -266,7 +266,7 @@ class TestBase(unittest.TestCase):
             npc.actuator.remove_waypoint("10", 10)
         with self.assertRaises(engine.base.PglException) as e:
             npc.actuator.remove_waypoint(30, 30)
-            self.assertEqual(e.error, "invalid_waypoint")
+        self.assertEqual(e.exception.error, "invalid_waypoint")
         self.assertIsNone(npc.actuator.remove_waypoint(10, 10))
 
     def test_pathfinder_serialization(self):

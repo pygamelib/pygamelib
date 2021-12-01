@@ -206,7 +206,7 @@ class TestBoard(unittest.TestCase):
         j.store_position(2, 2)
         with self.assertRaises(pgl_base.PglException) as e:
             self.board.remove_item(j)
-            self.assertEqual(e.error, "invalid_item")
+        self.assertEqual(e.exception.error, "invalid_item")
         self.assertTrue(self.board.remove_item(i))
         b = pgl_engine.Board()
         i = pgl_board_items.ComplexNPC(

@@ -60,7 +60,7 @@ class TestBase(unittest.TestCase):
         )
         with self.assertRaises(base.PglException) as e:
             game.display_menu("main_menu_bork")
-            self.assertEqual(e.error, "invalid_menu_category")
+        self.assertEqual(e.exception.error, "invalid_menu_category")
         self.assertIsNone(game.clear_screen())
 
     def test_config(self):
@@ -77,7 +77,7 @@ class TestBase(unittest.TestCase):
             g.save_config("high_scores", None)
         with self.assertRaises(base.PglException) as e:
             g.save_config("Unknown", "test-pygamelib.engine.Game.config.json")
-            self.assertEqual(e.error, "unknown section")
+        self.assertEqual(e.exception.error, "unknown section")
         # Don't do that...
         g._configuration = None
         g._configuration_internals = None
@@ -103,12 +103,13 @@ class TestBase(unittest.TestCase):
             g.add_board("1", 1)
         with self.assertRaises(base.PglInvalidTypeException):
             g.get_board("1")
+        g.add_board(1, b)
         self.assertIsInstance(g.get_board(1), engine.Board)
         with self.assertRaises(base.PglInvalidLevelException):
             g.current_board()
         with self.assertRaises(base.PglException) as e:
             g.change_level(1)
-            self.assertEqual(e.error, "undefined_player")
+        self.assertEqual(e.exception.error, "undefined_player")
         g.player = board_items.Player()
         self.assertIsNone(g.change_level(1))
         self.assertIsNone(g.add_board(2, engine.Board()))
