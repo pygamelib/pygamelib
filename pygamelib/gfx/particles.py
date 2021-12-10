@@ -2,20 +2,40 @@ from copy import deepcopy, copy
 from pygamelib.gfx import core
 import pygamelib.board_items as board_items
 import pygamelib.assets.graphics as graphics
-import pygamelib.constants as constants
 import pygamelib.base as base
 
 # from dataclasses import dataclass
 
 # DEBUG ONLY
-from pygamelib import engine
+# from pygamelib import engine
 
 import time
 import random
-import uuid
 import math
 
 __docformat__ = "restructuredtext"
+
+"""
+The particle module contains everything related to particles.
+
+This includes utility classes like the ParticleSprixel, EmitterProperties or
+ParticlePool, as well as all type of particles and particle emitters.
+
+.. autosummary::
+   :toctree: .
+
+   pygamelib.gfx.particles.ParticleSprixel
+   pygamelib.gfx.particles.Particle
+   pygamelib.gfx.particles.PartitionParticle
+   pygamelib.gfx.particles.RandomColorParticle
+   pygamelib.gfx.particles.RandomColorPartitionParticle
+   pygamelib.gfx.particles.ColorParticle
+   pygamelib.gfx.particles.ColorPartitionParticle
+   pygamelib.gfx.particles.EmitterProperties
+   pygamelib.gfx.particles.ParticlePool
+   pygamelib.gfx.particles.ParticleEmitter
+   pygamelib.gfx.particles.CircleEmitter
+"""
 
 
 class ParticleSprixel(core.Sprixel):
@@ -772,13 +792,15 @@ class ColorParticle(Particle):
         elif self.stop_color is None and self.start_color is not None:
             self.stop_color = self.start_color
         self.sprixel.fg_color = deepcopy(self.start_color)
+        self.__color_cache = {}
 
     def update(self):
         super().update()
         lp = self.lifespan if self.lifespan >= 0 else 0
-        self.sprixel.fg_color = self.start_color.blend(
-            self.stop_color, 1 - (lp / self._initial_lifespan)
-        )
+        coeff = 1 - (lp / self._initial_lifespan)
+        if coeff not in self.__color_cache.keys():
+            self.__color_cache[coeff] = self.start_color.blend(self.stop_color, coeff)
+        self.sprixel.fg_color = self.__color_cache[coeff]
 
 
 class ColorPartitionParticle(PartitionParticle):
@@ -812,13 +834,18 @@ class ColorPartitionParticle(PartitionParticle):
         elif self.stop_color is None and self.start_color is not None:
             self.stop_color = self.start_color
         self.sprixel.fg_color = deepcopy(self.start_color)
+        self.__color_cache = {}
 
     def update(self):
         super().update()
         lp = self.lifespan if self.lifespan >= 0 else 0
-        self.sprixel.fg_color = self.start_color.blend(
-            self.stop_color, 1 - (lp / self._initial_lifespan)
-        )
+        # self.sprixel.fg_color = self.start_color.blend(
+        #     self.stop_color, 1 - (lp / self._initial_lifespan)
+        # )
+        coeff = 1 - (lp / self._initial_lifespan)
+        if coeff not in self.__color_cache.keys():
+            self.__color_cache[coeff] = self.start_color.blend(self.stop_color, coeff)
+        self.sprixel.fg_color = self.__color_cache[coeff]
 
 
 # Emitters
@@ -892,7 +919,8 @@ class EmitterProperties:
         :param particle_lifespan: The lifespan of the particle in number of cycles.
         :type particle_lifespan: int
         :param radius: For emitter that supports it (like the CircleEmitter), sets the
-           radius of emission (which translate into a velocity vector for each particle).
+           radius of emission (which translate into a velocity vector for each
+           particle).
         :type radius: float
         :param particle: The particle that the emitter will emit. This can be a class
            reference or a fully instanciated particle. Emitters will copy it in the
@@ -946,7 +974,8 @@ class ParticlePool:
         # Init the particle pool. Beware: it's a tuple, therefore it's immutable.
         self.__particle_pool = ()
         # Here we don't care about the particles configuration (position, velocity,
-        # variance, etc.) because the emitter will reset it when it actually emit it.
+        # variance, etc.) because the emitter will reset it when it actually emit the
+        # particles.
         if callable(self.emitter_properties.particle):
             self.__particle_pool = tuple(
                 self.emitter_properties.particle() for _ in range(self.size)
@@ -979,12 +1008,14 @@ class ParticlePool:
         # If there's still enough unused particles in the pool we return them.
         if idx + amount < lp:
             self.current_idx += amount
-            return self.pool[idx : idx + amount - 1]
+            # I have no idea why VSCode/black keeps adding a space here!
+            return self.pool[idx : idx + amount - 1]  # noqa: E203
         # If not, but there's enough dead particle at the beginning of the pool we
         # return these.
         elif self.pool[amount - 1].finished():
             self.current_idx = amount
-            return self.pool[idx : (idx + amount)]
+            # I have no idea why VSCode/black keeps adding a space here!
+            return self.pool[idx : (idx + amount)]  # noqa: E203
         # Else we return what we have left and reset the index. It is highly probable
         # that we have not enough particle left...
         else:
@@ -1165,32 +1196,6 @@ class ParticleEmitter(base.PglBaseObject):
                         lifespan=self.particle_lifespan,
                     )
                     p.velocity *= random.uniform(-self.variance, self.variance)
-
-            # dbg_idx = 0
-            # if callable(self.particle):
-            #     for _ in range(amount):
-            #         self.particles.append(
-            #             self.particle(
-            #                 row=self.row,
-            #                 column=self.column,
-            #                 velocity=self.particle_velocity,
-            #                 lifespan=self.particle_lifespan,
-            #             )
-            #         )
-            #         dv = random.uniform(-self.variance, self.variance)
-            #         self.particles[-1].velocity.row *= dv
-            #         self.particles[-1].velocity.column *= 2 * dv
-            # else:
-            #     for _ in range(amount):
-            #         p = deepcopy(self.particle)
-            #         p.row = p._initial_row = self.row
-            #         p.column = p._initial_column = self.column
-            #         p.reset_lifespan(self.particle_lifespan)
-            #         p.velocity = base.Vector2D(
-            #             random.uniform(-1, 1), random.uniform(-2, 2)
-            #         )
-            #         p.velocity *= random.uniform(-self.variance, self.variance)
-            #         self.particles.append(p)
             if self.lifespan is not None:
                 self.lifespan -= 1
             self.__last_emit = time.time()
@@ -1201,17 +1206,12 @@ class ParticleEmitter(base.PglBaseObject):
 
     def update(self):
         particles = self.particle_pool
-        # for p in particles:
-        #     p.apply_force(self.particle_acceleration)
-        #     p.update()
 
         for i in range(particles.size - 1, -1, -1):
             p = particles.pool[i]
             if not p.finished():
                 p.apply_force(self.particle_acceleration)
                 p.update()
-            # if p.finished():
-            #     del particles[i]
 
     def finished(self):
         return self.lifespan <= 0 and self.particle_pool.count_active_particles() == 0
@@ -1272,13 +1272,10 @@ class CircleEmitter(ParticleEmitter):
             if amount is None:
                 amount = self.emit_number
             # Poor attempt at optimization: test outside the loop.
-            # dbg_idx = 0
-
-            # TODO: Finir la fonction emit (transformer le code pour utiliser le pool)
             if callable(self.particle):
                 i = 0
                 for p in self.particle_pool.get_particles(amount):
-                    theta = 2.0 * 3.1415926 * i / amount
+                    theta = 2.0 * math.pi * i / (amount - 1)
                     x = self.x + self.radius * 2 * math.cos(theta)
                     y = self.y + self.radius * math.sin(theta)
                     p.reset(
@@ -1291,8 +1288,7 @@ class CircleEmitter(ParticleEmitter):
             else:
                 i = 0
                 for p in self.particle_pool.get_particles(amount):
-                    # NG
-                    theta = 2.0 * math.pi * i / amount
+                    theta = 2.0 * math.pi * i / (amount - 1)
                     # the 2 coefficient is to account for console's characters being
                     # twice higher than larger.
                     x = self.x + self.radius * 2 * math.cos(theta)
@@ -1306,113 +1302,6 @@ class CircleEmitter(ParticleEmitter):
                     if self.variance > 0.0:
                         p.velocity *= random.uniform(0.1, self.variance)
                     i += 1
-
-            # if callable(self.particle):
-            #     for i in range(amount):
-            #         theta = 2.0 * 3.1415926 * i / amount
-            #         x = self.x + self.radius * 2 * math.cos(theta)
-            #         y = self.y + self.radius * math.sin(theta)
-            #         self.particles.append(
-            #             self.particle(
-            #                 row=y,
-            #                 column=x,
-            #                 velocity=base.Vector2D(y - self.y, x - self.x),
-            #                 lifespan=self.particle_lifespan,
-            #             )
-            #         )
-            # else:
-            #     for i in range(amount):
-            #         p = deepcopy(self.particle)
-            #         theta = 2.0 * math.pi * i / amount
-            #         # the 2 coefficient is to account for console's characters being
-            #         # twice higher than larger.
-            #         x = self.x + self.radius * 2 * math.cos(theta)
-            #         y = self.y + self.radius * math.sin(theta)
-            #         p.row = p._initial_row = y
-            #         p.column = p._initial_column = x
-            #         # Set the velocity to get away from the center (Find the vector that
-            #         # goes from the center to a point on the circle)
-            #         p.velocity = base.Vector2D(y - self.y, x - self.x)
-            #         # print(
-            #         #     f"\t{dbg_idx} Emitter.emit() particle INITIAL velocity: {p.velocity}"
-            #         # )
-            #         if self.variance > 0:
-            #             p.velocity *= random.uniform(0.1, self.variance)
-            #         # print(
-            #         #     f"\t{dbg_idx} Emitter.emit() particle VARIATED velocity: {p.velocity}"
-            #         # )
-            #         self.particles.append(p)
-            #         # dbg_idx += 1
             if self.lifespan is not None:
                 self.lifespan -= 1
             self.__last_emit = time.time()
-
-
-# NOTE: OUTDATED DO NOT USE!!!
-class BaseParticle(board_items.Movable):
-    """
-    Particles are not ready. This is only an early early test.
-    *you should not use it*. If you do, don't complain. And if you really want to help,
-    interact on Github or Discord.
-    Thank you ;)
-    """
-
-    def __init__(
-        self,
-        model=None,
-        bg_color=None,
-        fg_color=None,
-        acceleration=None,
-        velocity=None,
-        lifespan=None,
-        directions=None,
-        **kwargs,
-    ):
-        super().__init__(**kwargs)
-        # NOTE: this cannot be done anymore for BoardItems
-        # self.size = [1, 1]
-        self.name = str(uuid.uuid4())
-        self.type = "base_particle"
-        self.sprixel = core.Sprixel(graphics.GeometricShapes.BULLET)
-        if bg_color is not None and isinstance(bg_color, core.Color):
-            self.sprixel.bg_color = bg_color
-        if fg_color is not None and isinstance(fg_color, core.Color):
-            self.sprixel.fg_color = fg_color
-        if model is not None:
-            self.sprixel.model = model
-        self.directions = [
-            base.Vector2D.from_direction(constants.UP, 1),
-            base.Vector2D.from_direction(constants.DLUP, 1),
-            base.Vector2D.from_direction(constants.DRUP, 1),
-        ]
-        self.lifespan = 5
-        if velocity is not None and isinstance(velocity, base.Vector2D):
-            self.velocity = velocity
-        else:
-            self.velocity = base.Vector2D()
-        if acceleration is not None and isinstance(acceleration, base.Vector2D):
-            self.acceleration = acceleration
-        else:
-            self.acceleration = base.Vector2D()
-        if lifespan is not None:
-            self.lifespan = lifespan
-        if directions is not None and type(directions) is list:
-            self.directions = directions
-        # for item in ["lifespan", "sprixel", "name", "type", "directions"]:
-        #     if item in kwargs:
-        #         setattr(self, item, kwargs[item])
-
-    def direction(self):
-        return random.choice(self.directions)
-
-    def pickable(self):
-        """
-        A particle is not pickable by default. So that method returns False.
-        """
-        return False
-
-    def overlappable(self):
-        """
-        Overlapable always return true. As by definition a particle is overlapable.
-        """
-        return True
