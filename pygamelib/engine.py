@@ -22,7 +22,7 @@ The Board class is the base class for all levels.
 """
 from pygamelib import board_items, base, constants, actuators
 from pygamelib.assets import graphics
-from pygamelib.gfx import core
+from pygamelib.gfx import core, particles
 from pygamelib.functions import pgl_isinstance
 from blessed import Terminal
 import uuid
@@ -182,6 +182,8 @@ class Board(base.PglBaseObject):
         # Init the list of movable and immovable objects
         self._movables = set()
         self._immovables = set()
+        # Init the list of particle emitters.
+        self._particle_emitters = set()
         # If sanity check passed then, initialize the board
         self.init_board()
 
@@ -704,7 +706,8 @@ class Board(base.PglBaseObject):
                 encoded_cell = cell.__repr__()
                 incr = cell.length
                 try:
-                    buffer[row + br - row_start][column + cidx] = encoded_cell
+                    # buffer[row + br - row_start][column + cidx] = encoded_cell
+                    buffer[row + br - row_start][column + cidx] = cell
                 except IndexError:
                     break
 
@@ -715,6 +718,23 @@ class Board(base.PglBaseObject):
                         break
                 bc += 1
                 cidx += incr
+        # I dread the performance impact...
+        # We render all the emitters attached to an item after the board has been drawn
+        # So technically it should be the same as Screen.place(r,c,2)
+        finished_emitters = []
+        for emt in self._particle_emitters:
+            if emt.finished():
+                finished_emitters.append(emt)
+                continue
+            emt.row += self.screen_row
+            emt.column += self.screen_column
+            emt.emit()
+            emt.update()
+            emt.render_to_buffer(
+                buffer, row + emt.row, column + emt.column, buffer_height, buffer_width
+            )
+        for emt in finished_emitters:
+            self._particle_emitters.discard(emt)
 
     def render_cell(self, row, column):
         """
@@ -876,6 +896,10 @@ class Board(base.PglBaseObject):
             # wants to have higher layer to draw overlays). But it's not implemented yet
             if isinstance(item, board_items.BoardItem):
                 item._auto_layer = auto_layer
+                if item.particle_emitter is not None and isinstance(
+                    item.particle_emitter, particles.ParticleEmitter
+                ):
+                    self._particle_emitters.add(item.particle_emitter)
             if isinstance(item, board_items.BoardComplexItem):
                 # First, we get the highest required layer
                 max_layer = layer
@@ -1329,6 +1353,12 @@ class Board(base.PglBaseObject):
             self._movables.discard(item)
         elif item in self._immovables:
             self._immovables.discard(item)
+
+        if (
+            item.particle_emitter is not None
+            and item.particle_emitter in self._particle_emitters
+        ):
+            self._particle_emitters.discard(item.particle_emitter)
         # self._matrix[row][column][layer] = None
         # self.init_cell(row, column, layer)
 
@@ -4119,13 +4149,6 @@ class Screen(base.PglBaseObject):
             )
         if pgl_isinstance(element, "pygamelib.gfx.ui.Dialog"):
             rendering_pass = 2
-        # if isinstance(element, base.Text):
-        #     # If it's a text object we need to convert it to a Sprite first.
-        #     self._display_buffer[row][column] = core.Sprite.from_text(element)
-        #     self._is_dirty = True
-        #     setattr(element, "__rendering_pass", rendering_pass)
-        #     return
-        # el
         if row >= self.height:
             raise base.PglException(
                 "out_of_screen_boundaries",
@@ -4138,6 +4161,9 @@ class Screen(base.PglBaseObject):
                 f"Screen.place(item, row, column) : column={column} is out of screen "
                 f"width (i.e {self.width})",
             )
+        if isinstance(element, base.PglBaseObject):
+            element.screen_row = row
+            element.screen_column = column
         if (
             isinstance(element, core.Sprixel)
             or type(element) is str
@@ -4149,7 +4175,7 @@ class Screen(base.PglBaseObject):
                 pass
             self._display_buffer[row][column] = element
             if isinstance(element, base.PglBaseObject):
-                Game.instance().session_log(f"Attaching to {element}")
+                # Game.instance().session_log(f"Attaching to {element}")
                 element.attach(self)
             self._is_dirty = True
             return
