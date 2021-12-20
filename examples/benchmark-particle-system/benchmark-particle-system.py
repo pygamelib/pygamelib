@@ -2,7 +2,7 @@ import examples_includes  # noqa: F401
 from pygamelib.gfx import particles, core
 from pygamelib import engine, base, board_items, constants
 from pygamelib.assets import graphics
-from lib import utilities
+from extra_lib import utilities
 
 import random
 import time
