@@ -1549,7 +1549,8 @@ class Sprite(object):
                     continue
                 # TODO: If the Sprite has sprixels with length > 1 this
                 # is going to be a mess.
-                buffer[sr][sc] = sprix.__repr__()
+                # buffer[sr][sc] = sprix.__repr__()
+                buffer[sr][sc] = sprix
                 for c in range(sc + 1, sc + sprix.length):
                     buffer[sr][c] = Sprixel()
 
