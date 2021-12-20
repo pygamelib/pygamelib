@@ -112,7 +112,7 @@ def init_intro_screen(g: engine.Game):
 
 
 def init_firework(screen: engine.Screen):
-    clear_screen(screen)
+    clear_screen(screen, core.Color(47, 4, 122))
     screen.place(bench_state.night_bg, 0, 0, 1)
     bench_state.frwk_create = time.time()
     bench_state.frwk_delta = random.uniform(0.05, 0.3)
@@ -678,7 +678,8 @@ if __name__ == "__main__":
         print(
             base.Text(
                 "The console dimensions need to be at least 159 columns by 65 rows, "
-                f"yours is {g.screen.width} by {g.screen.height}",
+                f"yours is {g.screen.width} by {g.screen.height}. Please resize your"
+                " terminal to the closest dimension of 159 by 65.",
                 core.Color(255, 0, 0),
             )
         )
