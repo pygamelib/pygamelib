@@ -703,7 +703,7 @@ class Board(base.PglBaseObject):
             bc = bc_start
             while bc < column_end:
                 cell = render_cell(br, bc)
-                encoded_cell = cell.__repr__()
+                # encoded_cell = cell.__repr__()
                 incr = cell.length
                 try:
                     # buffer[row + br - row_start][column + cidx] = encoded_cell
