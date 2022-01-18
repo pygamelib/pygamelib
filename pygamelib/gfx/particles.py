@@ -21,24 +21,34 @@ The particle module contains everything related to particles.
 This includes utility classes like the ParticleSprixel, EmitterProperties or
 ParticlePool, as well as all type of particles and particle emitters.
 
+.. Important:: Most objects i the particle system have a position that can be referred
+   to and manipulated using the regular x/y coordinates system or the pygamelib's
+   row/column system. They are exactly equivalent.
+
 .. autosummary::
    :toctree: .
 
-   pygamelib.gfx.particles.ParticleSprixel
-   pygamelib.gfx.particles.Particle
-   pygamelib.gfx.particles.PartitionParticle
-   pygamelib.gfx.particles.RandomColorParticle
-   pygamelib.gfx.particles.RandomColorPartitionParticle
+   pygamelib.gfx.particles.CircleEmitter
    pygamelib.gfx.particles.ColorParticle
    pygamelib.gfx.particles.ColorPartitionParticle
    pygamelib.gfx.particles.EmitterProperties
+   pygamelib.gfx.particles.Particle
+   pygamelib.gfx.particles.ParticleSprixel
    pygamelib.gfx.particles.ParticlePool
    pygamelib.gfx.particles.ParticleEmitter
-   pygamelib.gfx.particles.CircleEmitter
+   pygamelib.gfx.particles.PartitionParticle
+   pygamelib.gfx.particles.RandomColorParticle
+   pygamelib.gfx.particles.RandomColorPartitionParticle
+
 """
 
 
 class ParticleSprixel(core.Sprixel):
+    """
+    The ParticleSprixel is nothing more than a :class:`~pygamelib.gfx.core.Sprixel`.
+    Its only role is to help differentiate rendered sprixels for Partition Particles.
+    """
+
     def __init__(self, model="", bg_color=None, fg_color=None, is_bg_transparent=None):
         super().__init__(
             model=model,
@@ -49,6 +59,16 @@ class ParticleSprixel(core.Sprixel):
 
 
 class Particle(base.PglBaseObject):
+    """
+    The Particle class is the base class that is inherited from by all other particles.
+    It is mostly an "data class" in the sense that it is a class used for calculations
+    but is not able to render on screen by itsefl. All operations are pure data
+    operations until the emitter draw the particles.
+
+    Altought the Particle class can be used on its own, it is most likely to be used as
+    a template for a particle emitter.
+    """
+
     def __init__(
         self,
         row: int = 0,
@@ -57,6 +77,31 @@ class Particle(base.PglBaseObject):
         lifespan: int = None,
         sprixel: ParticleSprixel = None,
     ) -> None:
+        """
+        The constructor takes the following parameters.
+
+        :param row: The initial row position of the particle on the screen.
+        :type row: int
+        :param column: The initial column position of the particle on the screen.
+        :type column: int
+        :param velocity: The initial velocity of the particle.
+        :type velocity: :class:`~pygamelib.base.Vector2D`
+        :param lifespan: The particle lifespan in number of movements/turns. A particle
+           with a lifespan of 3 will move for 3 turns before being finished.
+        :type lifespan: int
+        :param sprixel: The sprixel that represent the particle when drawn on screen.
+        :type sprixel: :class:`~pygamelib.gfx.core.Sprixel`
+
+        Example::
+
+            single_particle = Particle(
+                row=5,
+                column=5,
+                velocity=base.Vector2D(-0.5, 0.0),
+                lifespan=10,
+                sprixel=core.Sprixel(graphics.GeometricShapes.BLACK_CIRCLE)
+            )
+        """
         super().__init__()
         self.__pos_x = self._initial_column = column
         self.__pos_y = self._initial_row = row
@@ -88,6 +133,31 @@ class Particle(base.PglBaseObject):
         velocity: base.Vector2D = None,
         lifespan: int = None,
     ):
+        """
+        Reset a particle in its initial state. This is particularly useful for the reuse
+        of particles.
+
+        This method takes almost the same parameters than the constructor.
+
+        :param row: The initial row position of the particle on the screen.
+        :type row: int
+        :param column: The initial column position of the particle on the screen.
+        :type column: int
+        :param velocity: The initial velocity of the particle.
+        :type velocity: :class:`~pygamelib.base.Vector2D`
+        :param lifespan: The particle lifespan in number of movements/turns. A particle
+           with a lifespan of 3 will move for 3 turns before being finished.
+        :type lifespan: int
+
+        Example::
+
+            single_particle.reset(
+                row=5,
+                column=5,
+                velocity=base.Vector2D(-0.5, 0.0),
+                lifespan=10,
+            )
+        """
         self.__pos_x = self._initial_column = column
         self.__pos_y = self._initial_row = row
         if velocity is not None:
@@ -111,6 +181,9 @@ class Particle(base.PglBaseObject):
 
     @property
     def x(self):
+        """
+        Access and set the x property. Equivalent to the column property.
+        """
         return self.__pos_x
 
     @x.setter
@@ -120,6 +193,9 @@ class Particle(base.PglBaseObject):
 
     @property
     def column(self):
+        """
+        Access and set the column property. Equivalent to the x property.
+        """
         return self.__pos_x
 
     @column.setter
@@ -129,6 +205,9 @@ class Particle(base.PglBaseObject):
 
     @property
     def y(self):
+        """
+        Access and set the y property. Equivalent to the row property.
+        """
         return self.__pos_y
 
     @y.setter
@@ -138,6 +217,9 @@ class Particle(base.PglBaseObject):
 
     @property
     def row(self):
+        """
+        Access and set the row property. Equivalent to the y property.
+        """
         return self.__pos_y
 
     @row.setter
@@ -145,17 +227,57 @@ class Particle(base.PglBaseObject):
         if type(value) is int:
             self.__pos_y = value
 
-    def apply_force(self, force: base.Vector2D):
+    def apply_force(self, force: base.Vector2D) -> None:
+        """
+        Apply a force to the particle acceleration vector.
+
+        You are more likely to apply forces to all particles of an emitter through the
+        :py:meth:`~pygamelib.gfx.particles.Emitter.apply_force` method of the emitter
+        class.
+
+        :param force: The force to apply.
+        :type force: :class:`~pygamelib.base.Vector2D`
+
+        Example::
+
+            gravity = Vector2D(-0.2, 0.0)
+            my_particle.apply_force(gravity)
+        """
         if force is not None and isinstance(force, base.Vector2D):
             self.acceleration += force
 
-    def reset_lifespan(self, lifespan):
+    def reset_lifespan(self, lifespan: int) -> None:
+        """
+        Reset the particle lifespan (including the initial lifespan).
+
+        :param lifespan: The particle lifespan in number of movements/turns.
+        :type lifespan: int
+
+        Example::
+
+            my_particle.reset_lifespan(10)
+        """
         self.lifespan = lifespan
         if self.lifespan is None:
             self.lifespan = 20
         self._initial_lifespan = self.lifespan
 
-    def update(self):
+    def update(self) -> None:
+        """
+        The update method perform the calculations required to process the new particle
+        position.
+        It mainly adds the acceleration to the velocity vector and update the position
+        accordingly.
+
+        After calling update() the accelertion is "consummed" in the velocity and
+        therefor resetted'
+
+        The update() method takes no parameters and returns nothing.
+
+        Example::
+
+            my_particle.update()
+        """
         now = time.time()
         self.velocity += self.acceleration
         # print(f"\tParticle.update() NEW velocity={self.velocity}")
@@ -204,6 +326,30 @@ class Particle(base.PglBaseObject):
         self.__last_update = now
 
     def render(self, sprixel: core.Sprixel = None):
+        """
+        Render the particle as a :class:`~pygamelib.gfx.core.Sprixel`. This method is
+        called by the :class:`~pygamelib.gfx.particles.ParticleEmitter` render_to_buffer
+        method.
+
+        It takes a :class:`~pygamelib.gfx.core.Sprixel` as a parameter. This Sprixel is
+        given by the ParticleEmitter.render_to_buffer() method and if it is not None,
+        the particle will render itself into that :class:`~pygamelib.gfx.core.Sprixel`
+        and return it.
+
+        .. important:: This method must be called after everything else as rendered or
+           else there will be :class:`~pygamelib.gfx.core.Sprixel` that will be
+           overwritten during their rendering cycle. Other elements could also have
+           their :class:`~pygamelib.gfx.core.Sprixel` corrupted and replaced by the
+           particle one.
+
+        :param sprixel: A sprixel already rendered in the screen buffer.
+        :type sprixel: :class:`~pygamelib.gfx.core.Sprixel`
+
+        Example::
+
+            p = my_particle
+            buffer[p.row][p.column] = p.render(buffer[p.row][p.column])
+        """
         # If you override this method, it's your responsibility to return a copy of
         # yourself (or just use super().render(sprixel) as it already returns a copy).
         if isinstance(sprixel, ParticleSprixel):
@@ -215,8 +361,6 @@ class Particle(base.PglBaseObject):
             # not our live one. While preserving the
             # NOTE: on the other hand, the model is overwritten at each update... I need
             # to test to see if I could save the copy...
-            # # TODO: DEV
-            # return None
             # ret = deepcopy(self.sprixel)
             ret = copy(self.sprixel)
             ret.bg_color = sprixel.bg_color
@@ -230,10 +374,33 @@ class Particle(base.PglBaseObject):
             # return deepcopy(self.sprixel)
             return copy(self.sprixel)
 
-    def finished(self):
+    def finished(self) -> bool:
+        """
+        Return True if the particle is done living (i.e its lifespan is lesser or equal
+        to 0). It returns False otherwise.
+
+        :rtype: bool
+
+        Example::
+
+            if not my_particle.finished():
+                my_particle.update()
+        """
         return self.lifespan <= 0
 
-    def terminate(self):
+    def terminate(self) -> None:
+        """
+        Terminate a particle, i.e sets its lifespan to -1.
+
+        In that case the ParticleEmitter and ParticlePool will recycle it. That is *IF*
+        you are managing the particle through an emitter and/or a pool of course.
+
+        Example::
+
+            p = my_particle
+            if p.row >= screen,height or p.column >= screen.width:
+                p.terminate()
+        """
         self.lifespan = -1
 
 
