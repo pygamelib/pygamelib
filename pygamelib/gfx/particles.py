@@ -61,7 +61,7 @@ class ParticleSprixel(core.Sprixel):
 class Particle(base.PglBaseObject):
     """
     The Particle class is the base class that is inherited from by all other particles.
-    It is mostly an "data class" in the sense that it is a class used for calculations
+    It is mostly a "data class" in the sense that it is a class used for calculations
     but is not able to render on screen by itsefl. All operations are pure data
     operations until the emitter draw the particles.
 
@@ -405,6 +405,45 @@ class Particle(base.PglBaseObject):
 
 
 class PartitionParticle(Particle):
+    """
+    The PartitionParticle is a more precise :class:`~pygamelib.gfx.particles.Particle`.
+    Its main difference is that it is additive. This means that the PartitionParticle
+    posess the ability to complement a sprixel that is already drawn.
+
+    For example, if two particles occupy the sane space on screen, with a regular
+    :class:`~pygamelib.gfx.particles.Particle` the last to render is the one that will
+    be displayed. If one particle is represented by '▘' and the other by '▗', only the
+    second will be displayed.
+
+    In the case of PartitionParticles, an addition of the 2 sprixels will be displayed!
+    So in the previous example the addition of the 2 particles would result in '▚'
+    because '▘' + '▗' = '▚'.
+
+    It comes at a cost though as the PartitionParticle is slower to render than the
+    :class:`~pygamelib.gfx.particles.Particle` class.
+
+    The partition particle achieve that by using a blending table. The blending table is
+    crucial for the performances to be not too catastrophic. The size of the blending
+    table is directly linked to the performances of the PartitionParticle (the bigger
+    the blending table the slower the rendering).
+
+    The blending table is a dictionnary of strings that covers all possible operations.
+
+    Example::
+       partition_blending_table = {
+            gb.QUADRANT_UPPER_LEFT
+            + gb.QUADRANT_UPPER_RIGHT: gb.UPPER_HALF_BLOCK,
+            gb.QUADRANT_UPPER_LEFT + gb.QUADRANT_LOWER_LEFT: gb.LEFT_HALF_BLOCK,
+            gb.QUADRANT_UPPER_LEFT
+            + gb.QUADRANT_LOWER_RIGHT: gb.QUADRANT_UPPER_LEFT_AND_LOWER_RIGHT,
+            # it goes on for many lines...
+        }
+
+    By default, the PartitionParticle has a blending table that is using the UTF8
+    Blocks.QUADRANT_* characters. If you want to use a different one, you need to define
+    a new blending table and pass it as parameter to the constructor.
+    """
+
     def __init__(
         self,
         row: int = 0,
