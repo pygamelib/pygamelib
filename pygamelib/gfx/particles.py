@@ -408,7 +408,11 @@ class PartitionParticle(Particle):
     """
     The PartitionParticle is a more precise :class:`~pygamelib.gfx.particles.Particle`.
     Its main difference is that it is additive. This means that the PartitionParticle
-    posess the ability to complement a sprixel that is already drawn.
+    posess the ability to complement a sprixel that is already drawn. Or to add to a
+    sprixel that is already drawn.
+
+    As a matter of facts, the primary goal of the PartitionParticle is to modify an
+    already drawn sprixel to improve the visuals/graphical effects.
 
     For example, if two particles occupy the sane space on screen, with a regular
     :class:`~pygamelib.gfx.particles.Particle` the last to render is the one that will
@@ -422,10 +426,10 @@ class PartitionParticle(Particle):
     It comes at a cost though as the PartitionParticle is slower to render than the
     :class:`~pygamelib.gfx.particles.Particle` class.
 
-    The partition particle achieve that by using a blending table. The blending table is
-    crucial for the performances to be not too catastrophic. The size of the blending
-    table is directly linked to the performances of the PartitionParticle (the bigger
-    the blending table the slower the rendering).
+    The partition particle achieve that by using a partition and a blending table. The
+    blending table is crucial for the performances to be not too catastrophic. The size
+    of the blending table is directly linked to the performances of the
+    PartitionParticle (the bigger the blending table the slower the rendering).
 
     The blending table is a dictionnary of strings that covers all possible operations.
 
@@ -442,6 +446,21 @@ class PartitionParticle(Particle):
     By default, the PartitionParticle has a blending table that is using the UTF8
     Blocks.QUADRANT_* characters. If you want to use a different one, you need to define
     a new blending table and pass it as parameter to the constructor.
+
+    The partition itself is a 2x2 array that contains the 4 quadrants of a character
+    displayed in the terminal.
+
+    As an example, if a full character were a block: '█' the partition would be:
+    [['▘', '▝'], ['▖', '▗']].
+
+    You can conceive the partition as the exploded version of the character/sprixel and
+    the blending table as the rules to blend them together.
+
+    The PartitionParticle can also be used to create reinforcement effects. For example,
+    if the partition is composed solely of '■' and the partition table only define one
+    rule: '■' + '■' = '⬛'.
+    It is a powerful particle that can be used to create a lot of different effects.
+
     """
 
     def __init__(
@@ -452,14 +471,50 @@ class PartitionParticle(Particle):
         lifespan: int = None,
         partition: list = None,
         partition_blending_table: list = None,
-        sprixel: ParticleSprixel = None,
     ) -> None:
+        """
+        The constructor takes the following parameters.
+
+        :param row: The initial row position of the particle on the screen.
+        :type row: int
+        :param column: The initial column position of the particle on the screen.
+        :type column: int
+        :param velocity: The initial velocity of the particle.
+        :type velocity: :class:`~pygamelib.base.Vector2D`
+        :param lifespan: The particle lifespan in number of movements/turns. A particle
+           with a lifespan of 3 will move for 3 turns before being finished.
+        :type lifespan: int
+        :param partition: The 2x2 array that defines the partition of the sprixel.
+        :type partition: list
+        :param partition_blending_table: The blending table that defines the rules to
+           blend the 2 sprixels.
+        :type partition_blending_table: list
+
+        Example::
+
+            # Here we'll use the default blending table
+            single_particle = PartitionParticle(
+                row=5,
+                column=5,
+                velocity=base.Vector2D(-0.5, 0.0),
+                lifespan=10,
+                self.partition = [
+                    [
+                        graphics.Blocks.QUADRANT_UPPER_LEFT,
+                        graphics.Blocks.QUADRANT_UPPER_RIGHT,
+                    ],
+                    [
+                        graphics.Blocks.QUADRANT_LOWER_LEFT,
+                        graphics.Blocks.QUADRANT_LOWER_RIGHT,
+                    ],
+                ]
+            )
+        """
         super().__init__(
             row=row,
             column=column,
             velocity=velocity,
             lifespan=lifespan,
-            sprixel=sprixel,
         )
         self.partition = partition
         self.partition_blending_table = partition_blending_table
@@ -847,6 +902,15 @@ class PartitionParticle(Particle):
                 }
 
     def update(self):
+        """
+        This method first calls the Particle.update() method, then calculates the
+        quadrant position, i.e: the actual position of the particle within a console
+        character. It then updates the particle's model based on this internal position.
+
+        Example::
+
+            my_particle.update()
+        """
         super().update()
         f_row = self._initial_row + self.velocity.row
         f_column = self._initial_column + self.velocity.column
@@ -864,6 +928,18 @@ class PartitionParticle(Particle):
             self._spx_column = spx_c
 
     def render(self, sprixel: core.Sprixel = None):
+        """
+        This method first calls the Particle.render() method. Then it updates the
+        rendered particle's model based on the blending table.
+
+        :param sprixel: A sprixel already rendered in the screen buffer.
+        :type sprixel: :class:`~pygamelib.gfx.core.Sprixel`
+
+        Example::
+
+            p = my_particle
+            buffer[p.row][p.column] = p.render(buffer[p.row][p.column])
+        """
         # If you override this method, it's your responsibility to return a copy of
         # yourself (or just use super().render(sprixel) as it already returns a copy).
         if isinstance(sprixel, ParticleSprixel):
@@ -895,6 +971,17 @@ class PartitionParticle(Particle):
 
 
 class RandomColorParticle(Particle):
+    """
+    This class is a :class:`~pygamelib.gfx.particles.Particle` that has a random
+    foreground color.
+
+    By default, if both the sprixel and color parameters are not specified, the model
+    of the :class:`~pygamelib.gfx.core.Sprixel` is going to be '•' and the color will be
+    randomly chosen.
+
+    You can also specify a color and a model.
+    """
+
     def __init__(
         self,
         row: int = 0,
@@ -904,6 +991,32 @@ class RandomColorParticle(Particle):
         sprixel: ParticleSprixel = None,
         color: core.Color = None,
     ) -> None:
+        """
+        The constructor takes the following parameters.
+
+        :param row: The initial row position of the particle on the screen.
+        :type row: int
+        :param column: The initial column position of the particle on the screen.
+        :type column: int
+        :param velocity: The initial velocity of the particle.
+        :type velocity: :class:`~pygamelib.base.Vector2D`
+        :param lifespan: The particle lifespan in number of movements/turns. A particle
+           with a lifespan of 3 will move for 3 turns before being finished.
+        :type lifespan: int
+        :param sprixel: The sprixel that represent the particle when drawn on screen.
+        :type sprixel: :class:`~pygamelib.gfx.core.Sprixel`
+        :param color: The color of the particle.
+        :type color: :class:`~pygamelib.gfx.core.Color`
+
+        Example::
+
+            single_particle = RandomColorParticle(
+                row=5,
+                column=5,
+                velocity=base.Vector2D(-0.5, 0.0),
+                lifespan=10,
+            )
+        """
         super().__init__(
             row=row,
             column=column,
@@ -921,7 +1034,7 @@ class RandomColorParticle(Particle):
                     random.randint(0, 255),
                 ),
             )
-        elif sprixel is None and color is not None:
+        elif sprixel is not None and color is None:
             self.sprixel.fg_color = core.Color(
                 random.randint(0, 255),
                 random.randint(0, 255),
@@ -932,6 +1045,13 @@ class RandomColorParticle(Particle):
 
 
 class RandomColorPartitionParticle(PartitionParticle):
+    """
+    This class is basically the same as
+    :class:`~pygamelib.gfx.particles.RandomColorParticle` but its base class is
+    :class:`~pygamelib.gfx.particles.PartitionParticle` instead of
+    :class:`~pygamelib.gfx.particles.Particle`. Everything else is the same.
+    """
+
     def __init__(
         self,
         row: int = 0,
@@ -940,9 +1060,36 @@ class RandomColorPartitionParticle(PartitionParticle):
         lifespan: int = None,
         partition: list = None,
         partition_blending_table: list = None,
-        sprixel: ParticleSprixel = None,
         color: core.Color = None,
     ) -> None:
+        """
+        The constructor takes the following parameters.
+
+        :param row: The initial row position of the particle on the screen.
+        :type row: int
+        :param column: The initial column position of the particle on the screen.
+        :type column: int
+        :param velocity: The initial velocity of the particle.
+        :type velocity: :class:`~pygamelib.base.Vector2D`
+        :param lifespan: The particle lifespan in number of movements/turns. A particle
+           with a lifespan of 3 will move for 3 turns before being finished.
+        :type lifespan: int
+        :param partition: The partition of the particle.
+        :type partition: list
+        :param partition_blending_table: The blending table of the particle.
+        :type partition_blending_table: list
+        :param color: The color of the particle.
+        :type color: :class:`~pygamelib.gfx.core.Color`
+
+        Example::
+
+            single_particle = RandomColorPartitionParticle(
+                row=5,
+                column=5,
+                velocity=base.Vector2D(-0.5, 0.0),
+                lifespan=10,
+            )
+        """
         super().__init__(
             row=row,
             column=column,
@@ -950,18 +1097,8 @@ class RandomColorPartitionParticle(PartitionParticle):
             lifespan=lifespan,
             partition=partition,
             partition_blending_table=partition_blending_table,
-            sprixel=sprixel,
         )
-        if sprixel is None and color is None:
-            self.sprixel = ParticleSprixel(
-                graphics.GeometricShapes.BULLET,
-                fg_color=core.Color(
-                    random.randint(0, 255),
-                    random.randint(0, 255),
-                    random.randint(0, 255),
-                ),
-            )
-        elif sprixel is None and color is not None:
+        if color is None:
             self.sprixel.fg_color = core.Color(
                 random.randint(0, 255),
                 random.randint(0, 255),
