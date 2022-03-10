@@ -16,6 +16,9 @@ import math
 __docformat__ = "restructuredtext"
 
 """
+
+.. versionadded:: 1.3.0
+
 The particle module contains everything related to particles.
 
 This includes utility classes like the ParticleSprixel, EmitterProperties or
@@ -45,6 +48,8 @@ ParticlePool, as well as all type of particles and particle emitters.
 
 class ParticleSprixel(core.Sprixel):
     """
+    .. versionadded:: 1.3.0
+
     The ParticleSprixel is nothing more than a :class:`~pygamelib.gfx.core.Sprixel`.
     Its only role is to help differentiate rendered sprixels for Partition Particles.
     """
@@ -60,6 +65,8 @@ class ParticleSprixel(core.Sprixel):
 
 class Particle(base.PglBaseObject):
     """
+    .. versionadded:: 1.3.0
+
     The Particle class is the base class that is inherited from by all other particles.
     It is mostly a "data class" in the sense that it is a class used for calculations
     but is not able to render on screen by itsefl. All operations are pure data
@@ -112,7 +119,9 @@ class Particle(base.PglBaseObject):
                 random.uniform(-1, 1), 2 * random.uniform(-1, 1)
             )
             if abs(self.velocity.column) < abs(self.velocity.row) * 2:
-                self.velocity.column = (
+                # Trust me it works. The "no cover" is here because random is not a
+                # reliable source of test data...
+                self.velocity.column = (  # pragma: no cover
                     self.velocity.column / abs(self.velocity.column)
                 ) * (abs(self.velocity.row) * 2)
         self.__velocity_accumulator = base.Vector2D(0.0, 0.0)
@@ -229,7 +238,7 @@ class Particle(base.PglBaseObject):
 
     def apply_force(self, force: base.Vector2D) -> None:
         """
-        Apply a force to the particle acceleration vector.
+        Apply a force to the particle's acceleration vector.
 
         You are more likely to apply forces to all particles of an emitter through the
         :py:meth:`~pygamelib.gfx.particles.Emitter.apply_force` method of the emitter
@@ -246,7 +255,7 @@ class Particle(base.PglBaseObject):
         if force is not None and isinstance(force, base.Vector2D):
             self.acceleration += force
 
-    def reset_lifespan(self, lifespan: int) -> None:
+    def reset_lifespan(self, lifespan: int = 20) -> None:
         """
         Reset the particle lifespan (including the initial lifespan).
 
@@ -269,8 +278,8 @@ class Particle(base.PglBaseObject):
         It mainly adds the acceleration to the velocity vector and update the position
         accordingly.
 
-        After calling update() the accelertion is "consummed" in the velocity and
-        therefor resetted'
+        After calling update() the acceleration is "consummed" in the velocity and
+        therefor resetted.
 
         The update() method takes no parameters and returns nothing.
 
@@ -340,7 +349,7 @@ class Particle(base.PglBaseObject):
            else there will be :class:`~pygamelib.gfx.core.Sprixel` that will be
            overwritten during their rendering cycle. Other elements could also have
            their :class:`~pygamelib.gfx.core.Sprixel` corrupted and replaced by the
-           particle one.
+           particle's one.
 
         :param sprixel: A sprixel already rendered in the screen buffer.
         :type sprixel: :class:`~pygamelib.gfx.core.Sprixel`
@@ -406,6 +415,8 @@ class Particle(base.PglBaseObject):
 
 class PartitionParticle(Particle):
     """
+    .. versionadded:: 1.3.0
+
     The PartitionParticle is a more precise :class:`~pygamelib.gfx.particles.Particle`.
     Its main difference is that it is additive. This means that the PartitionParticle
     posess the ability to complement a sprixel that is already drawn. Or to add to a
@@ -414,7 +425,7 @@ class PartitionParticle(Particle):
     As a matter of facts, the primary goal of the PartitionParticle is to modify an
     already drawn sprixel to improve the visuals/graphical effects.
 
-    For example, if two particles occupy the sane space on screen, with a regular
+    For example, if two particles occupy the same space on screen, with a regular
     :class:`~pygamelib.gfx.particles.Particle` the last to render is the one that will
     be displayed. If one particle is represented by '▘' and the other by '▗', only the
     second will be displayed.
@@ -434,6 +445,7 @@ class PartitionParticle(Particle):
     The blending table is a dictionnary of strings that covers all possible operations.
 
     Example::
+
        partition_blending_table = {
             gb.QUADRANT_UPPER_LEFT
             + gb.QUADRANT_UPPER_RIGHT: gb.UPPER_HALF_BLOCK,
@@ -460,6 +472,10 @@ class PartitionParticle(Particle):
     if the partition is composed solely of '■' and the partition table only define one
     rule: '■' + '■' = '⬛'.
     It is a powerful particle that can be used to create a lot of different effects.
+
+    .. important:: A limit of the current implementation is that the partition table
+       must be a 2x2 array. It cannot be otherwise. Even if all the quadrants are the
+       same.
 
     """
 
@@ -520,7 +536,7 @@ class PartitionParticle(Particle):
         self.partition_blending_table = partition_blending_table
         self._spx_row = 0
         self._spx_column = 0
-        if partition is None and sprixel is None:
+        if partition is None:
             self.partition = [
                 [
                     graphics.Blocks.QUADRANT_UPPER_LEFT,
@@ -1005,7 +1021,8 @@ class RandomColorParticle(Particle):
         :type lifespan: int
         :param sprixel: The sprixel that represent the particle when drawn on screen.
         :type sprixel: :class:`~pygamelib.gfx.core.Sprixel`
-        :param color: The color of the particle.
+        :param color: The color of the particle (if you want a specific color instead of
+           a random one).
         :type color: :class:`~pygamelib.gfx.core.Color`
 
         Example::
@@ -1078,7 +1095,8 @@ class RandomColorPartitionParticle(PartitionParticle):
         :type partition: list
         :param partition_blending_table: The blending table of the particle.
         :type partition_blending_table: list
-        :param color: The color of the particle.
+        :param color: The color of the particle (if you want a specific color instead of
+           a random one).
         :type color: :class:`~pygamelib.gfx.core.Color`
 
         Example::
@@ -1109,6 +1127,14 @@ class RandomColorPartitionParticle(PartitionParticle):
 
 
 class ColorParticle(Particle):
+    """
+    This class is an extension of :class:`~pygamelib.gfx.particles.Particle`. It adds
+    the possibility to gradually go from a starting color to an end color over time.
+    It is linked with the lifespan of the particle.
+    """
+
+    __color_cache = {}
+
     def __init__(
         self,
         row: int = 0,
@@ -1119,6 +1145,36 @@ class ColorParticle(Particle):
         start_color: core.Color = None,
         stop_color: core.Color = None,
     ) -> None:
+        """
+        The constructor takes the following parameters.
+
+        :param row: The initial row position of the particle on the screen.
+        :type row: int
+        :param column: The initial column position of the particle on the screen.
+        :type column: int
+        :param velocity: The initial velocity of the particle.
+        :type velocity: :class:`~pygamelib.base.Vector2D`
+        :param lifespan: The particle lifespan in number of movements/turns. A particle
+           with a lifespan of 3 will move for 3 turns before being finished.
+        :type lifespan: int
+        :param sprixel: The sprixel that represent the particle when drawn on screen.
+        :type sprixel: :class:`~pygamelib.gfx.core.Sprixel`
+        :param start_color: The color of the particle at the beginning of its lifespan.
+        :type start_color: :class:`~pygamelib.gfx.core.Color`
+        :param stop_color: The color of the particle at the end of its lifespan.
+        :type stop_color: :class:`~pygamelib.gfx.core.Color`
+
+        Example::
+
+            single_particle = ColorParticle(
+                row=5,
+                column=5,
+                velocity=base.Vector2D(-0.5, 0.0),
+                lifespan=10,
+                start_color=core.Color(255, 0, 0),
+                stop_color=core.Color(0, 255, 0),
+            )
+        """
         super().__init__(
             row=row,
             column=column,
@@ -1135,18 +1191,31 @@ class ColorParticle(Particle):
         elif self.stop_color is None and self.start_color is not None:
             self.stop_color = self.start_color
         self.sprixel.fg_color = deepcopy(self.start_color)
-        self.__color_cache = {}
 
     def update(self):
         super().update()
         lp = self.lifespan if self.lifespan >= 0 else 0
         coeff = 1 - (lp / self._initial_lifespan)
-        if coeff not in self.__color_cache.keys():
-            self.__color_cache[coeff] = self.start_color.blend(self.stop_color, coeff)
-        self.sprixel.fg_color = self.__color_cache[coeff]
+        if coeff not in ColorParticle.__color_cache.keys():
+            ColorParticle.__color_cache[coeff] = self.start_color.blend(
+                self.stop_color, coeff
+            )
+        self.sprixel.fg_color = ColorParticle.__color_cache[coeff]
 
 
 class ColorPartitionParticle(PartitionParticle):
+    """
+    This class is basically the same as
+    :class:`~pygamelib.gfx.particles.ColorParticle` but its base class is
+    :class:`~pygamelib.gfx.particles.PartitionParticle` instead of
+    :class:`~pygamelib.gfx.particles.Particle`. Everything else is the same.
+
+    It serves the same purpose as the :class:`~pygamelib.gfx.particles.ColorParticle`
+    with the added partition particle capabilities.
+    """
+
+    __color_cache = {}
+
     def __init__(
         self,
         row: int = 0,
@@ -1155,10 +1224,39 @@ class ColorPartitionParticle(PartitionParticle):
         lifespan: int = None,
         partition: list = None,
         partition_blending_table: list = None,
-        sprixel: ParticleSprixel = None,
         start_color: core.Color = None,
         stop_color: core.Color = None,
     ) -> None:
+        """
+        The constructor takes the following parameters.
+
+        :param row: The initial row position of the particle on the screen.
+        :type row: int
+        :param column: The initial column position of the particle on the screen.
+        :type column: int
+        :param velocity: The initial velocity of the particle.
+        :type velocity: :class:`~pygamelib.base.Vector2D`
+        :param lifespan: The particle lifespan in number of movements/turns. A particle
+           with a lifespan of 3 will move for 3 turns before being finished.
+        :type lifespan: int
+        :param partition: The partition of the particle.
+        :type partition: list
+        :param partition_blending_table: The blending table of the particle.
+        :type partition_blending_table: list
+        :param start_color: The color of the particle at the beginning of its lifespan.
+        :type start_color: :class:`~pygamelib.gfx.core.Color`
+        :param stop_color: The color of the particle at the end of its lifespan.
+        :type stop_color: :class:`~pygamelib.gfx.core.Color`
+
+        Example::
+
+            single_particle = RandomColorPartitionParticle(
+                row=5,
+                column=5,
+                velocity=base.Vector2D(-0.5, 0.0),
+                lifespan=10,
+            )
+        """
         super().__init__(
             row=row,
             column=column,
@@ -1166,7 +1264,6 @@ class ColorPartitionParticle(PartitionParticle):
             lifespan=lifespan,
             partition=partition,
             partition_blending_table=partition_blending_table,
-            sprixel=sprixel,
         )
         self.start_color = start_color
         if self.start_color is None:
@@ -1186,9 +1283,14 @@ class ColorPartitionParticle(PartitionParticle):
         #     self.stop_color, 1 - (lp / self._initial_lifespan)
         # )
         coeff = 1 - (lp / self._initial_lifespan)
-        if coeff not in self.__color_cache.keys():
-            self.__color_cache[coeff] = self.start_color.blend(self.stop_color, coeff)
-        self.sprixel.fg_color = self.__color_cache[coeff]
+        # if coeff not in self.__color_cache.keys():
+        #     self.__color_cache[coeff] = self.start_color.blend(self.stop_color, coeff)
+        # self.sprixel.fg_color = self.__color_cache[coeff]
+        if coeff not in ColorPartitionParticle.__color_cache.keys():
+            ColorPartitionParticle.__color_cache[coeff] = self.start_color.blend(
+                self.stop_color, coeff
+            )
+        self.sprixel.fg_color = ColorPartitionParticle.__color_cache[coeff]
 
 
 # Emitters
@@ -1220,12 +1322,12 @@ class EmitterProperties:
         variance: float = 2.0,
         emit_number: int = 1,
         emit_rate: float = 0.1,
-        lifespan=200,
-        parent: board_items.BoardItem = None,
+        lifespan: int = 200,
+        parent=None,
         particle_velocity=None,
         particle_acceleration=None,
-        particle_lifespan=5.0,
-        radius=1.0,
+        particle_lifespan: float = 5.0,
+        radius: float = 1.0,
         particle: Particle = Particle,
     ) -> None:
         """
@@ -1289,10 +1391,37 @@ class EmitterProperties:
 
 
 class ParticlePool:
+    """
+    The particle pool is a structure that holds a large number of particles and make
+    them available to the emitters.
+
+    Its main role is to optimize the performances (both speed and memory usage). It
+    works by pre-instantiating a desired number of particles according to the
+    :class:`EmitterProperties` that is given to the constructor.
+
+    It also recycle particles that are :py:meth:`~Particle.finished` to avoid a constant
+    cycle of creation/destruction of a large amount of particle objects.
+    """
+
     def __init__(
         self, size: int = None, emitter_properties: EmitterProperties = None
     ) -> None:
+        """
+        The constructor takes the following parameters:
 
+        :param size: The size of the pool in number of particles. For this to be
+           efficient, be sure to have enough particles to cover for enough cycles before
+           your first emitted particles are finished. The :class:`ParticleEmitter` uses
+           the following rule to size the pool: emit_rate * particle_lifespan.
+        :type size: int
+        :param emitter_properties: The properties of the particles that needs to be
+           pre-instantiated.
+        :type emitter_properties: :class:`EmitterProperties`
+
+        Example::
+
+            my_particle_pool = ParticlePool(500, my_properties)
+        """
         if size is None:
             self.size = (
                 emitter_properties.emit_number * emitter_properties.particle_lifespan
@@ -1338,7 +1467,27 @@ class ParticlePool:
         """
         return self.__particle_pool
 
-    def get_particles(self, amount):
+    def get_particles(self, amount: int = None) -> tuple:
+        """
+        Returns the requested amount of particles.
+
+        It is important to know that no particle is created during that call. This
+        method returns available particles in the pool. Particles are recycled after
+        they "died".
+
+        If amount is not specified the pool returns EmitterProperties.emit_number
+        particles.
+
+        :param amount: The amount of particles to return.
+        :type amount: int
+
+        :returns: A tuple containing the desired amount of particles.
+        :rtype: tuple
+
+        Example::
+
+            fresh_particles = my_particle_pool.get_particles(30)
+        """
         if amount is None:
             amount = self.emitter_properties.emit_number
         lp = self.size
@@ -1387,6 +1536,20 @@ class ParticlePool:
         return np
 
     def resize(self, new_size: int):
+        """Resize the particle pool to a new size.
+
+        If the new size is greater than the old one, the pool will be filled by
+        pre-instanciated particles.
+        If it's shorter however, the extra particles will be destroyed.
+
+        :param new_size: The new size of the pool.
+        :type new_size: int
+
+        Example::
+
+            # Resize the particle pool to hold 100 particles.
+            my_particle_pool.resize(100)
+        """
         if new_size is not None:
             if new_size > self.size:
                 new_pool = ()
@@ -1407,7 +1570,77 @@ class ParticlePool:
 
 
 class ParticleEmitter(base.PglBaseObject):
+    """
+    The particle emitter is a key piece of the pygamelib's particle system: it's the
+    part that actually do something!
+
+    The emitter takes care of managing the particles' life cycle. It emits, move, apply
+    forces, update and draw particles on screen. It also provide convenient methods to
+    manage the particle pool or apply forces to all active particles in the pool.
+
+    Particle emitters are configured with :class:`EmitterProperties`. This is a
+    convenient way to place multiple emitters with the same configuration. For example,
+    if you create a "torch fire" emitter, you can use the same properties to create
+    multiple emitters. It's less cumbersome than having the parameters tied to an
+    instance of the emitter.
+
+    Here is an example of that taken from examples/benchmark-particle-system:
+
+    Example::
+
+        # The torch fire properties
+        emt_props = particles.EmitterProperties(
+            screen.vcenter, # Position is not important as it will be updated by the
+            screen.hcenter, # ParticleEmitter.render_to_buffer method.
+            lifespan=150,
+            variance=0.3,
+            emit_number=10,
+            emit_rate=0.1,
+            particle=particles.ColorPartitionParticle(
+                start_color=core.Color(45, 151, 227),
+                stop_color=core.Color(7, 2, 40),
+            ),
+            particle_lifespan=5,
+            radius=0.4,
+        )
+        # Now create multiple emitters at different position with the same properties.
+        for c in [[20, 24], [20, 35], [20, 122], [20, 133]]:
+            bench_state.particle_emitters.append(particles.CircleEmitter(emt_props))
+            screen.place(
+                bench_state.particle_emitters[-1],
+                screen.vcenter - int(bench_state.altar_sprite.height / 2) + c[0],
+                c[1],
+                2, # Always set your emitters to be rendered on the second pass.
+            )
+
+    .. important:: The entire particle system is build around the **Screen Buffer**
+       system and is completely incompatible with the direct display system. If you
+       want to use the particle system you **have to** use Screen.place() and the other
+       methods of the **Screen Buffer** system.
+
+    An emitter should always be placed on screen and set to render on the second
+    rendering pass.
+
+    It is important if you want to avoid artifacts (like particles being rendered only
+    under the position of the emitter).
+
+    The particles by themselves are not able to render on screen, the emitter is doing
+    that job for them.
+
+    It also means that the particles are rendered and displayed over a screen that is
+    already rendered. Therefor, by default and for the moment, they cannot interact with
+    elements on screen or items in a board. It also means that there is no built in
+    particle physics (for the moment).
+    """
+
     def __init__(self, emitter_properties=None) -> None:
+        """
+        The constructor takes the following parameter:
+
+        :param emitter_properties: The properties of that particle emitter.
+        :type emitter_properties: :class:`EmitterProperties`
+
+        """
         super().__init__()
         if emitter_properties is None:
             emitter_properties = EmitterProperties()
@@ -1441,11 +1674,17 @@ class ParticleEmitter(base.PglBaseObject):
 
     @property
     def particle_pool(self):
+        """
+        This property holds this emitter's instance of a :class:`ParticlePool`.
+        """
         # return self.__particles
         return self.__particle_pool
 
     @property
     def x(self):
+        """
+        Access and set the x property (i.e: column).
+        """
         return self.__pos_x
 
     @x.setter
@@ -1455,6 +1694,9 @@ class ParticleEmitter(base.PglBaseObject):
 
     @property
     def column(self):
+        """
+        Access and set the column property (i.e: x).
+        """
         return self.__pos_x
 
     @column.setter
@@ -1464,6 +1706,9 @@ class ParticleEmitter(base.PglBaseObject):
 
     @property
     def y(self):
+        """
+        Access and set the y property (i.e: row).
+        """
         return self.__pos_y
 
     @y.setter
@@ -1473,6 +1718,9 @@ class ParticleEmitter(base.PglBaseObject):
 
     @property
     def row(self):
+        """
+        Access and set the row property (i.e: y).
+        """
         return self.__pos_y
 
     @row.setter
@@ -1482,6 +1730,12 @@ class ParticleEmitter(base.PglBaseObject):
 
     @property
     def active(self):
+        """
+        Access and set the active property.
+
+        An emitter only emits particles if he is active. Emitted particles keeps being
+        updated even if the emitter is not active anymore, for obvious reasons.
+        """
         return self.__active
 
     @active.setter
@@ -1495,6 +1749,20 @@ class ParticleEmitter(base.PglBaseObject):
             )
 
     def resize_pool(self, new_size: int = None):
+        """
+        In substance, this method is an alias for
+        :py:meth:`ParticleEmitter.particle_pool.resize()`. However, called without
+        parameter, it will try to resize the particle pool to emit_number *
+        particle_lifespan. It will do so only if the resulting number is greater than
+        the current particle pool size.
+
+        :param new_size: The desired new size of the pool.
+        :type new_size: int
+
+        Example::
+
+            my_emitter.resize_pool(3000)
+        """
         if new_size is None:
             # If no size is specified we only resize up. Never down.
             new_size = self.emit_number * self.particle_lifespan
@@ -1506,9 +1774,36 @@ class ParticleEmitter(base.PglBaseObject):
             self.__particle_pool.resize(new_size)
 
     def toggle_active(self):
+        """Toggle the emitter's state between active and inactive.
+
+        An inactive emitter does not emit new particles but keeps processing particles
+        that have already been emitted.
+
+        Example::
+
+            if not my_emitter.active:
+                my_emitter.toggle_active()
+        """
         self.__active = not self.__active
 
-    def emit(self, amount: int = None):
+    def emit(self, amount: int = None) -> None:
+        """Emit a certain amount of particles.
+
+        The emitter will request particles from the particle pool. This in turn will
+        trigger the recycling of dead particles if needed.
+
+        Calling this method faster than the configured emit_rate is not going to emit
+        more particles. An emitter cannot emit particles faster than its emit_rate.
+
+        If amount is None, the emitter emits emit_number particles.
+
+        :param amount: The amount (number) of particles to be emitted.
+        :type amount: int
+
+        Example::
+
+            my_emitter.emit(50)
+        """
         if (
             self.__active
             and (self.lifespan is not None and self.lifespan > 0)
@@ -1544,10 +1839,31 @@ class ParticleEmitter(base.PglBaseObject):
             self.__last_emit = time.time()
 
     def apply_force(self, force: base.Vector2D):
+        """Apply a force to all alive particles.
+
+        The force needs to be a :class:`~pygamelib.base.Vector2D`.
+
+        :param force: The force to apply to the particles.
+        :type force: :class:`~pygamelib.base.Vector2D`
+
+        Example::
+
+            my_emitter.apply_force(base.Vector2D(0,0.3)) # slight wind.
+        """
         for p in self.particle_pool.pool:
-            p.apply_force(force)
+            if not p.finished():
+                p.apply_force(force)
 
     def update(self):
+        """Update all the particles in the pool.
+
+        Updating a particle means applying particle_acceleration to every particle and
+        then call :py:meth:`Particle.update()`.
+
+        Example::
+
+            my_emitter.update()
+        """
         particles = self.particle_pool
 
         for i in range(particles.size - 1, -1, -1):
@@ -1557,6 +1873,26 @@ class ParticleEmitter(base.PglBaseObject):
                 p.update()
 
     def finished(self):
+        """Returns True if the emitter is finished.
+
+        A finished emitter has both:
+
+         * Reach the end of its lifespan (i.e lifespan == 0)
+         * And all particles are finished too.
+
+        This means that an emitter will, in most cases, not be finished as soon as its
+        lifespan reaches 0 but a bit after. When all of its managed particles are dead.
+
+        This is on purpose for both aesthetic reasons (avoiding particles sudden
+        removal) and for optimization (counting active particles is a O(n) operation
+        and can be very long when there's a lot of particles so we want to do it only
+        when necessary).
+
+        Example::
+
+            if my_emitter.finished():
+                    screen.delete(my_emitter.row, my_emitter.column)
+        """
         return self.lifespan <= 0 and self.particle_pool.count_active_particles() == 0
 
     def render_to_buffer(self, buffer, row, column, buffer_height, buffer_width):
@@ -1595,10 +1931,27 @@ class ParticleEmitter(base.PglBaseObject):
 
 
 class CircleEmitter(ParticleEmitter):
+    """
+    The CircleEmitter differs from the :class:`ParticleEmitter` in only one thing: it
+    emits its particle in a circular shape, like this:
+
+    .. image:: circle_emitter_example.gif
+       :alt: menu
+       :align: center
+
+    Aside from that specificity it's exactly the same as a regular particle emitter.
+    """
+
     def __init__(
         self,
         emitter_properties: EmitterProperties = None,
     ) -> None:
+        """The CircleEmitter takes the same parameters than the :class:`ParticleEmitter`
+        and make use of EmitterProperties.radius.
+
+        The radius is used as the initial distance from the center of the circle (i.e
+        the emitter's position).
+        """
         if emitter_properties is None:
             emitter_properties = EmitterProperties()
         super().__init__(emitter_properties)

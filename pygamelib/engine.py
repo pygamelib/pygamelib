@@ -4177,6 +4177,7 @@ class Screen(base.PglBaseObject):
             if isinstance(element, base.PglBaseObject):
                 # Game.instance().session_log(f"Attaching to {element}")
                 element.attach(self)
+                element.store_screen_position(row, column)
             self._is_dirty = True
             return
         else:

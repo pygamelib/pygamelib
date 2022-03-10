@@ -75,13 +75,18 @@ class PglBaseObject(object):
     #     return super().__setattr__(name, value)
 
     def store_screen_position(self, row: int, column: int) -> bool:
-        """Store the screen
-        :param name: some param
-        :type name: str
+        """Store the screen position of the object.
+
+        This method is automatically called by Screen.place().
+
+        :param row: The row (or y) coordinate.
+        :type row: int
+        :param column: The column (or x) coordinate.
+        :type column: int
 
         Example::
 
-            method()
+            an_object.store_screen_coordinate(3,8)
         """
         if type(row) is int and type(column) is int:
             self.screen_column = column
