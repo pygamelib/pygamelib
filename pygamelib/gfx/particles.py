@@ -1,13 +1,11 @@
 from copy import deepcopy, copy
 from pygamelib.gfx import core
-import pygamelib.board_items as board_items
+
+# import pygamelib.board_items as board_items
 import pygamelib.assets.graphics as graphics
 import pygamelib.base as base
 
 # from dataclasses import dataclass
-
-# DEBUG ONLY
-# from pygamelib import engine
 
 import time
 import random
@@ -1183,12 +1181,12 @@ class ColorParticle(Particle):
             sprixel=sprixel,
         )
         self.start_color = start_color
-        if self.start_color is None:
+        if start_color is None:
             self.start_color = core.Color(255, 0, 0)
         self.stop_color = stop_color
-        if self.stop_color is None and self.start_color is None:
+        if stop_color is None and start_color is None:
             self.stop_color = core.Color(0, 0, 0)
-        elif self.stop_color is None and self.start_color is not None:
+        elif stop_color is None and start_color is not None:
             self.stop_color = self.start_color
         self.sprixel.fg_color = deepcopy(self.start_color)
 
@@ -1266,12 +1264,12 @@ class ColorPartitionParticle(PartitionParticle):
             partition_blending_table=partition_blending_table,
         )
         self.start_color = start_color
-        if self.start_color is None:
+        if start_color is None:
             self.start_color = core.Color(255, 0, 0)
         self.stop_color = stop_color
-        if self.stop_color is None and self.start_color is None:
+        if stop_color is None and start_color is None:
             self.stop_color = core.Color(0, 0, 0)
-        elif self.stop_color is None and self.start_color is not None:
+        elif stop_color is None and start_color is not None:
             self.stop_color = self.start_color
         self.sprixel.fg_color = deepcopy(self.start_color)
         self.__color_cache = {}
@@ -1374,7 +1372,7 @@ class EmitterProperties:
 
         Example::
 
-            method()
+            props = EmitterProperties(emit_number=10, emit_rate=0.1, lifespan=10)
         """
         self.row = row
         self.column = column
@@ -1422,8 +1420,12 @@ class ParticlePool:
 
             my_particle_pool = ParticlePool(500, my_properties)
         """
+        if emitter_properties is None or not isinstance(
+            emitter_properties, EmitterProperties
+        ):
+            emitter_properties = EmitterProperties()
         if size is None:
-            self.size = (
+            self.size = int(
                 emitter_properties.emit_number * emitter_properties.particle_lifespan
             )
         elif type(size) is int:
@@ -1436,11 +1438,12 @@ class ParticlePool:
             self.size += emitter_properties.emit_number - (
                 self.size % emitter_properties.emit_number
             )
-        self.emitter_properties = None
-        if isinstance(emitter_properties, EmitterProperties):
-            self.emitter_properties = emitter_properties
-        else:
-            self.emitter_properties = EmitterProperties()
+        self.emitter_properties = emitter_properties
+        # self.emitter_properties = None
+        # if isinstance(emitter_properties, EmitterProperties):
+        #     self.emitter_properties = emitter_properties
+        # else:
+        #     self.emitter_properties = EmitterProperties()
         self.current_idx = 0
 
         # Init the particle pool. Beware: it's a tuple, therefore it's immutable.
@@ -1493,7 +1496,7 @@ class ParticlePool:
         lp = self.size
         # We cannot return more particles than there is in the pool
         if amount > lp:
-            amount = lp - 1
+            amount = lp
 
         idx = self.current_idx
 
@@ -1501,13 +1504,13 @@ class ParticlePool:
         if idx + amount < lp:
             self.current_idx += amount
             # I have no idea why VSCode/black keeps adding a space here!
-            return self.pool[idx : idx + amount - 1]  # noqa: E203
+            return self.pool[idx : idx + amount]  # noqa: E203
         # If not, but there's enough dead particle at the beginning of the pool we
         # return these.
         elif self.pool[amount - 1].finished():
-            self.current_idx = amount
+            self.current_idx = amount - 1
             # I have no idea why VSCode/black keeps adding a space here!
-            return self.pool[idx : (idx + amount)]  # noqa: E203
+            return self.pool[:amount]  # noqa: E203
         # Else we return what we have left and reset the index. It is highly probable
         # that we have not enough particle left...
         else:
@@ -1563,10 +1566,12 @@ class ParticlePool:
                 for p in new_pool:
                     p.terminate()
                 self.__particle_pool = self.__particle_pool + new_pool
+                self.size = len(self.__particle_pool)
             elif new_size < self.size:
                 self.__particle_pool = self.__particle_pool[0:new_size]
                 if self.current_idx >= new_size - 1:
                     self.current_idx = 0
+                self.size = new_size
 
 
 class ParticleEmitter(base.PglBaseObject):
