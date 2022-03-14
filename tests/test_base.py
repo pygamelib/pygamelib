@@ -224,6 +224,7 @@ class TestBase(unittest.TestCase):
         self.assertIsNone(o2.notify(o3))
         self.assertTrue(o2.detach(o1))
         self.assertFalse(o2.detach(o2))
+        self.assertFalse(o1.store_screen_position(1, "2"))
 
     def test_math_distance(self):
         self.assertEqual(self.math.distance(0, 0, 0, 0), 0)
@@ -236,6 +237,11 @@ class TestBase(unittest.TestCase):
         self.assertTrue(self.math.intersect(0, 0, 1, 1, 0, 0, 2, 2))
         self.assertTrue(self.math.intersect(0, 0, 2, 2, 1, 1, 2, 2))
         self.assertFalse(self.math.intersect(0, 0, 2, 2, 3, 1, 2, 2))
+
+    def test_math_lerp(self):
+        self.assertEqual(self.math.lerp(0, 1, 0), 0)
+        self.assertEqual(self.math.lerp(0, 1, 1), 1)
+        self.assertEqual(self.math.lerp(0, 1, 0.5), 0.5)
 
     def test_exceptions(self):
         e = pgl_base.PglException("error", "message")

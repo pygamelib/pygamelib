@@ -1275,5 +1275,19 @@ class Math(object):
         """
         return math.sqrt((column2 - column1) ** 2 + (row2 - row1) ** 2)
 
-    def lerp(v0: float, v1: float, t: float) -> float:
-        return (1 - t) * v0 + t * v1
+    @staticmethod
+    def lerp(a: float, b: float, t: float) -> float:
+        """Return the linear interpolation between 2 values relative to a third value.
+
+        :param a: Start value of the interpolation. Returned if t is 0.
+        :type a: float
+        :param b: End value of the interpolation. Returned if t is 1.
+        :type b: float
+        :param t: A value between 0 and 1 used to interpolate between a and b.
+        :type t: float
+
+        Example::
+
+            value = lerp(0, 100, 0.5) # 50
+        """
+        return (1 - t) * a + t * b
