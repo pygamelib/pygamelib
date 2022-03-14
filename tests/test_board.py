@@ -2,6 +2,7 @@ import pygamelib.engine as pgl_engine
 import pygamelib.base as pgl_base
 import pygamelib.board_items as pgl_board_items
 import pygamelib.gfx.core as gfx_core
+from pygamelib.gfx import particles
 from pygamelib import constants
 import unittest
 
@@ -178,12 +179,15 @@ class TestBoard(unittest.TestCase):
         sprix.is_bg_transparent = True
         self.board.place_item(
             pgl_board_items.Door(
-                sprixel=gfx_core.Sprixel(bg_color=gfx_core.Color(15, 15, 15))
+                sprixel=gfx_core.Sprixel(bg_color=gfx_core.Color(15, 15, 15)),
+                particle_emitter=particles.ParticleEmitter(),
             ),
             5,
             5,
         )
-
+        self.assertEqual(len(self.board._particle_emitters), 1)
+        self.board.clear_cell(5, 5)
+        self.assertEqual(len(self.board._particle_emitters), 0)
         i = pgl_board_items.NPC(sprixel=sprix)
         self.assertIsNone(self.board.place_item(i, 5, 5))
         self.assertIsNone(
@@ -310,7 +314,7 @@ class TestBoard(unittest.TestCase):
         self.assertEqual(i.inventory.value(), 50)
         b.place_item(
             pgl_board_items.Door(
-                sprixel=gfx_core.Sprixel(bg_color=gfx_core.Color(45, 45, 45))
+                sprixel=gfx_core.Sprixel(bg_color=gfx_core.Color(45, 45, 45)),
             ),
             i.row + 1,
             i.column,

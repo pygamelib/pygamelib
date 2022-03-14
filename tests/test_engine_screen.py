@@ -1,5 +1,6 @@
 from pygamelib import engine, board_items, functions, base
 from pygamelib.gfx.core import SpriteCollection, Sprixel, Color, Sprite, Font
+from pygamelib.gfx import particles
 import unittest
 
 
@@ -99,7 +100,7 @@ class TestBase(unittest.TestCase):
         b.place_item(board_items.Door(), 19, 19)
         b.place_item(
             board_items.Door(
-                sprixel=Sprixel("*", Color(125, 125, 0), is_bg_transparent=False)
+                sprixel=Sprixel("*", Color(125, 125, 0), is_bg_transparent=False),
             ),
             19,
             19,
@@ -130,7 +131,12 @@ class TestBase(unittest.TestCase):
         self.assertTrue(functions.pgl_isinstance(s.buffer, "numpy.ndarray"))
         self.assertIsNone(s.update())
         b = engine.Board(size=[1, 1])
-        b.place_item(board_items.Wall(model="##"), 0, 0)
+        emt = particles.ParticleEmitter(particles.EmitterProperties(lifespan=5))
+        b.place_item(
+            board_items.Wall(model="##", particle_emitter=emt),
+            0,
+            0,
+        )
         self.assertIsNone(s.place("test", 0, 0))
         self.assertIsNone(s.place(b, 1, 0))
         self.assertIsInstance(s.get(1, 0), engine.Board)
@@ -165,7 +171,8 @@ class TestBase(unittest.TestCase):
                 0,
             )
         )
-        s.force_render()
+        while not emt.finished():
+            s.force_render()
         with self.assertRaises(base.PglInvalidTypeException):
             s.place(None, 0, 0)
         with self.assertRaises(base.PglInvalidTypeException):
