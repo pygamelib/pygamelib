@@ -1326,7 +1326,7 @@ class EmitterProperties:
         particle_acceleration=None,
         particle_lifespan: float = 5.0,
         radius: float = 1.0,
-        particle: Particle = Particle,
+        particle: Particle = None,
     ) -> None:
         """
 
@@ -1385,6 +1385,8 @@ class EmitterProperties:
         self.particle_acceleration = particle_acceleration
         self.particle_lifespan = particle_lifespan
         self.radius = radius
+        if particle is None:
+            particle = Particle
         self.particle = particle
 
 
@@ -1396,6 +1398,11 @@ class ParticlePool:
     Its main role is to optimize the performances (both speed and memory usage). It
     works by pre-instantiating a desired number of particles according to the
     :class:`EmitterProperties` that is given to the constructor.
+
+    The particle pool is optimized to avoid searching for available particles. It sets
+    its own size to avoid relying on anything but its last known particle made available
+    to the emitter. So unless for specific behavior, it is probably a good idea to let
+    it sets its own size.
 
     It also recycle particles that are :py:meth:`~Particle.finished` to avoid a constant
     cycle of creation/destruction of a large amount of particle objects.
@@ -1410,7 +1417,8 @@ class ParticlePool:
         :param size: The size of the pool in number of particles. For this to be
            efficient, be sure to have enough particles to cover for enough cycles before
            your first emitted particles are finished. The :class:`ParticleEmitter` uses
-           the following rule to size the pool: emit_rate * particle_lifespan.
+           the following rule to size the pool: emit_rate * particle_lifespan. It is the
+           default value if size is not specified.
         :type size: int
         :param emitter_properties: The properties of the particles that needs to be
            pre-instantiated.
