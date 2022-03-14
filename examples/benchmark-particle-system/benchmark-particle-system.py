@@ -136,9 +136,12 @@ def benchmark_intro_update(g: engine.Game, key, dt):
     # 15,47
     screen = g.screen
     ph = bench_timer.phases[bench_state.current_state]
+    val = round(
+        ph["frames"] / (time.perf_counter() - ph["start"] - g.input_lag * ph["frames"])
+    )
     screen.place(
         base.Text(
-            f"Phase: {bench_state.current_state} FPS: {round(ph['frames']/(time.perf_counter()-ph['start']-g.input_lag*ph['frames']))}",
+            f"Phase: {bench_state.current_state} FPS: {val}",
             bg_color=bench_state.black,
         ),
         0,
@@ -178,7 +181,8 @@ def benchmark_intro_update(g: engine.Game, key, dt):
             bench_timer.start_timer(bench_state.current_state)
             bench_timer.set_label(
                 bench_state.current_state,
-                f"Pygamelib logo + particles [create {len(utilities.logo_positions)} particle emitters]",
+                f"Pygamelib logo + particles [create {len(utilities.logo_positions)} "
+                "particle emitters]",
             )
 
     else:
@@ -340,9 +344,12 @@ def update_mid_emitter(g: engine.Game, key, dt):
     global test
     screen = g.screen
     ph = bench_timer.phases[bench_state.current_state]
+    val = round(
+        ph["frames"] / (time.perf_counter() - ph["start"] - g.input_lag * ph["frames"])
+    )
     screen.place(
         base.Text(
-            f"Phase: {bench_state.current_state} FPS: {round(ph['frames']/(time.perf_counter()-ph['start']-g.input_lag*ph['frames']))}",
+            f"Phase: {bench_state.current_state} FPS: {val}",
             bg_color=bench_state.black,
         ),
         0,
@@ -406,9 +413,12 @@ def update_high_emitter(g: engine.Game, key, dt):
     global test
     screen = g.screen
     ph = bench_timer.phases[bench_state.current_state]
+    val = round(
+        ph["frames"] / (time.perf_counter() - ph["start"] - g.input_lag * ph["frames"])
+    )
     screen.place(
         base.Text(
-            f"Phase: {bench_state.current_state} FPS: {round(ph['frames']/(time.perf_counter()-ph['start']-g.input_lag*ph['frames']))}",
+            f"Phase: {bench_state.current_state} FPS: {val}",
             bg_color=bench_state.black,
         ),
         0,
@@ -512,9 +522,6 @@ def firework_update(g: engine.Game, key, dt):
 
     for i in range(len(bench_state.particle_emitters) - 1, -1, -1):
         if bench_state.particle_emitters[i].finished():
-            # g.session_log(
-            #     f"[FIREWORK::Run] emitter at {bench_state.particle_emitters[i].row},{bench_state.particle_emitters[i].column} is finished => Removing"
-            # )
             screen.delete(
                 bench_state.particle_emitters[i].row,
                 bench_state.particle_emitters[i].column,
@@ -659,11 +666,13 @@ if __name__ == "__main__":
         total_frames = 0
         for pk in bench_timer.phases.keys():
             ph = bench_timer.phases[pk]
+            val = round(
+                ph["frames"] / (ph["stop"] - ph["start"] - g.input_lag * ph["frames"])
+            )
             print(
-                f"{base.Text(ph['label'],core.Color(0,255,0))}: {ph['frames']} frames in "
-                f"{round(ph['stop']-ph['start']-g.input_lag*ph['frames'],2)} sec. or "
-                f"{round(ph['frames']/(ph['stop']-ph['start']-g.input_lag*ph['frames']))} "
-                f"FPS"
+                f"{base.Text(ph['label'],core.Color(0,255,0))}: {ph['frames']} frames "
+                f"in {round(ph['stop']-ph['start']-g.input_lag*ph['frames'],2)} sec. or"
+                f" {val} FPS"
             )
             total_frames += ph["frames"]
             total_time += ph["stop"] - ph["start"] - g.input_lag * ph["frames"]
@@ -685,5 +694,5 @@ if __name__ == "__main__":
         )
 
 
-for l in g.session_logs():
-    print(l)
+for log in g.session_logs():
+    print(log)
