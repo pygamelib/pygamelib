@@ -2353,13 +2353,13 @@ class GridSelector(object):
         """
         Move the selection cursor one row up.
         """
-        self.current_choice -= int(self.max_width / 2)
+        self.current_choice -= round(self.max_width / 2)
 
     def cursor_down(self) -> None:
         """
         Move the selection cursor one row down.
         """
-        self.current_choice += int(self.max_width / 2)
+        self.current_choice += round(self.max_width / 2)
 
     def cursor_left(self) -> None:
         """
@@ -2437,7 +2437,8 @@ class GridSelector(object):
         start = self.__current_page * self.__items_per_page
         for i in range(start, len(self.__cache)):
             buffer[row + row_offset][column + col_offset] = self.__cache[i]
-            if i == self.__current_choice % len(self.__choices):
+            # if i == self.__current_choice % len(self.__choices):
+            if i == self.__current_choice % len(self.__cache):
                 border_fg_color = self._config.border_fg_color
                 self._config.border_fg_color = core.Color(0, 255, 0)
                 sel = Box(self.__cache[i].length + 2, 3, config=self._config)
@@ -2930,7 +2931,7 @@ class ColorPickerDialog(Dialog):
             self.__title = value
         else:
             raise base.PglInvalidTypeException(
-                "GridSelectorDialog.title = value: 'value' must be a str. "
+                "ColorPickerDialog.title = value: 'value' must be a str. "
                 f"'{value}' is not a str"
             )
 
