@@ -3984,10 +3984,11 @@ class Screen(base.PglBaseObject):
         print(self.terminal.home, end="")
         screen_buffer = self._screen_buffer
         for row in range(0, screen_buffer.shape[0] - 1):
-            print("".join(map(str, screen_buffer[row])))
+            print("".join(map(str, screen_buffer[row])), flush=False)
         print(
             "".join(map(str, screen_buffer[screen_buffer.shape[0] - 1])),
             end="",
+            flush=True,
         )
 
     def render(self):
