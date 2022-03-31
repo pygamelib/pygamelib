@@ -1198,7 +1198,7 @@ class Projectile(Movable):
         fireball = Projectile(
                                 name="fireball",
                                 model=Utils.red_bright(black_circle),
-                                hit_model=Sprites.EXPLOSION,
+                                hit_model=graphics.Models.EXPLOSION,
                             )
         fireball.set_direction(constants.RIGHT)
         my_game.add_projectile(1, fireball,
@@ -2392,7 +2392,9 @@ class Treasure(Immovable):
 
     Example::
 
-        money_bag = Treasure(model=Sprites.MONEY_BAG,value=100,inventory_space=2)
+        money_bag = Treasure(
+            model=graphics.Models.MONEY_BAG,value=100,inventory_space=2
+        )
         print(f"This is a money bag {money_bag}")
         player.inventory.add_item(money_bag)
         print(f"The inventory value is {player.inventory.value()} and is at
@@ -2528,7 +2530,7 @@ class Door(GenericStructure):
 
     Example::
 
-        door1 = Door(model=Sprites.DOOR,type='locked_door')
+        door1 = Door(model=graphics.Models.DOOR,type='locked_door')
     """
 
     def __init__(self, **kwargs):

@@ -3436,11 +3436,15 @@ class Inventory(base.PglBaseObject):
 
         :param item: the item you want to add
         :type item: :class:`~pygamelib.board_items.BoardItem`
-        :raises: PglInventoryException, PglInvalidTypeException
+        :return: The index of the newly added item in the inventory or None if the item
+           could not be added.
+        :rtype: int|None
+        :raise: :class:`~pygamelib.base.PglInventoryException`,
+           :class:`~pygamelib.base.PglInvalidTypeException`
 
         Example::
 
-            item = Treasure(model=Sprites.MONEY_BAG,size=2,name='Money bag')
+            item = Treasure(model=graphics.Models.MONEY_BAG,size=2,name='Money bag')
             try:
                 mygame.player.inventory.add_item(item)
             expect PglInventoryException as e:
@@ -3470,6 +3474,7 @@ class Inventory(base.PglBaseObject):
                 ):
                     self.__items.append(item)
                     self.notify(self, "pygamelib.engine.Inventory.add_item", item)
+                    return len(self.__items) - 1
                 else:
                     raise base.PglInventoryException(
                         "not_enough_space",
@@ -3570,7 +3575,7 @@ class Inventory(base.PglBaseObject):
         ]
 
     def get_item(self, name):
-        """Return the first item corresponding to the name given in argument.
+        """Return the FIRST item corresponding to the name given in argument.
 
         :param name: the name of the item you want to get.
         :type name: str
@@ -3585,6 +3590,10 @@ class Inventory(base.PglBaseObject):
 
         .. note:: Please note that the item object reference is returned but nothing is
             changed in the inventory. The item hasn't been removed.
+
+        .. important:: Starting with version 1.3.0 this method does not raise exceptions
+           anymore. Instead it returns None if no item is found. It's behavior also
+           changed from returning a precise item to the first one that matches the name.
 
         """
         for i in self.__items:
@@ -3608,6 +3617,8 @@ class Inventory(base.PglBaseObject):
         .. note:: Please note that the item object reference is returned but nothing is
             changed in the inventory. The item hasn't been removed.
 
+        .. versionadded:: 1.3.0
+
         """
         rv = []
         for i in self.__items:
@@ -3626,6 +3637,10 @@ class Inventory(base.PglBaseObject):
         Example::
 
             mygame.player.inventory.delete_item('heart_1')
+
+        .. important:: Starting with version 1.3.0 this method does not raise exceptions
+           anymore. It's behavior also changed from deleting a precise item to deleting
+           the first one that matches the name.
 
         """
         for i in range(len(self.__items)):
@@ -3647,6 +3662,8 @@ class Inventory(base.PglBaseObject):
         Example::
 
             mygame.player.inventory.delete_items('heart_1')
+
+        .. versionadded:: 1.3.0
 
         """
         for i in range(len(self.__items) - 1, -1, -1):
