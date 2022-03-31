@@ -418,12 +418,12 @@ class Text(PglBaseObject):
                 self.__fg_color.detach(self)
             self.__fg_color = value
             self.__fg_color.attach(self)
-            self.notify(self, "base.Text.fg_color:changed", value)
+            self.notify(self, "pygamelib.base.Text.fg_color:changed", value)
         elif value is None:
             if self.__fg_color is not None:
                 self.__fg_color.detach(self)
             self.__fg_color = value
-            self.notify(self, "base.Text.fg_color:changed", value)
+            self.notify(self, "pygamelib.base.Text.fg_color:changed", value)
             self.__fgcc = Fore.RESET
         else:
             raise PglInvalidTypeException(
