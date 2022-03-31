@@ -25,7 +25,6 @@ from pygamelib.assets import graphics
 from pygamelib.gfx import core, particles
 from pygamelib.functions import pgl_isinstance
 from blessed import Terminal
-import uuid
 import random
 import json
 import sys
@@ -3364,7 +3363,7 @@ class Game:
         return local_object
 
 
-class Inventory:
+class Inventory(base.PglBaseObject):
     """A class that represent the Player (or NPC) inventory.
 
     This class is pretty straightforward: it is an object container, you can add, get
@@ -3389,8 +3388,9 @@ class Inventory:
     """
 
     def __init__(self, max_size=10, parent=None):
+        super().__init__()
         self.max_size = max_size
-        self.__items = {}
+        self.__items = []
         self.parent = parent
 
     def __str__(self):
@@ -3398,17 +3398,31 @@ class Inventory:
         s += "= inventory =\n"
         s += "============="
         types = {}
-        for k in self.__items.keys():
-            if self.__items[k].type in types.keys():
-                types[self.__items[k].type]["size"] += self.__items[k].inventory_space
+        for i in self.__items:
+            if i.name in types.keys():
+                types[i.name]["size"] += i.inventory_space
             else:
-                types[self.__items[k].type] = {
-                    "size": self.__items[k].inventory_space,
-                    "model": self.__items[k].model,
+                types[i.name] = {
+                    "size": i.inventory_space,
+                    "model": i.model,
                 }
         for k in types.keys():
             s += f"\n{types[k]['model']} : {types[k]['size']}"
         return s
+
+    @property
+    def items(self):
+        """Return the list of all items in the inventory.
+
+        :return: a list of :class:`~pygamelib.board_items.BoardItem`
+        :rtype: list
+
+        Example::
+
+            for item in game.player.inventory.items:
+                print(f"This is a mighty item: {item.name}")
+        """
+        return self.__items
 
     def add_item(self, item):
         """Add an item to the inventory.
@@ -3444,17 +3458,18 @@ class Inventory:
         """
         if isinstance(item, board_items.BoardItem):
             if item.pickable():
-                if (
-                    item.name is None
-                    or item.name == ""
-                    or item.name in self.__items.keys()
-                ):
-                    item.name = f"{item.name}_{uuid.uuid4().hex}"
+                # if (
+                #     item.name is None
+                #     or item.name == ""
+                #     or item.name in self.__items.keys()
+                # ):
+                #     item.name = f"{item.name}_{uuid.uuid4().hex}"
                 if (
                     hasattr(item, "inventory_space")
                     and self.max_size >= self.size() + item.inventory_space
                 ):
-                    self.__items[item.name] = item
+                    self.__items.append(item)
+                    self.notify(self, "pygamelib.engine.Inventory.add_item", item)
                 else:
                     raise base.PglInventoryException(
                         "not_enough_space",
@@ -3491,9 +3506,9 @@ class Inventory:
             "{mygame.player.inventory.max_size}")
         """
         val = 0
-        for k in self.__items.keys():
-            if hasattr(self.__items[k], "_inventory_space"):
-                val += self.__items[k].inventory_space
+        for i in self.__items:
+            if hasattr(i, "inventory_space"):
+                val += i.inventory_space
         return val
 
     def empty(self):
@@ -3504,7 +3519,8 @@ class Inventory:
             if inventory.size() > 0:
                 inventory.empty()
         """
-        self.__items = {}
+        self.__items = []
+        self.notify(self, "pygamelib.engine.Inventory.empty", None)
 
     def value(self):
         """
@@ -3521,9 +3537,9 @@ class Inventory:
                 break
         """
         val = 0
-        for k in self.__items.keys():
-            if hasattr(self.__items[k], "value"):
-                val += self.__items[k].value
+        for i in self.__items:
+            if hasattr(i, "value"):
+                val += i.value
         return val
 
     def items_name(self):
@@ -3533,7 +3549,7 @@ class Inventory:
         :rtype: list
 
         """
-        return self.__items.keys()
+        return [i.name for i in self.__items]
 
     def search(self, query):
         """Search for objects in the inventory.
@@ -3549,21 +3565,17 @@ class Inventory:
             for item in game.player.inventory.search('mighty'):
                 print(f"This is a mighty item: {item.name}")
         """
-        return [item for ikey, item in self.__items.items() if query in ikey]
+        return [
+            item for item in self.__items if query in item.name or query in item.type
+        ]
 
     def get_item(self, name):
-        """Return the item corresponding to the name given in argument.
+        """Return the first item corresponding to the name given in argument.
 
         :param name: the name of the item you want to get.
         :type name: str
         :return: An item.
-        :rtype: :class:`~pygamelib.board_items.BoardItem`
-        :raises: PglInventoryException
-
-        .. note:: in case an execpetion is raised, the error will be
-            'no_item_by_that_name' and the message is giving the specifics.
-
-        .. seealso:: :class:`pygamelib.base.PglInventoryException`.
+        :rtype: :class:`~pygamelib.board_items.BoardItem` | None
 
         Example::
 
@@ -3575,40 +3587,74 @@ class Inventory:
             changed in the inventory. The item hasn't been removed.
 
         """
-        if name in self.__items.keys():
-            return self.__items[name]
-        else:
-            raise base.PglInventoryException(
-                "no_item_by_that_name",
-                f'There is no item named "{name}" in the inventory.',
-            )
+        for i in self.__items:
+            if i.name == name:
+                return i
 
-    def delete_item(self, name):
-        """Delete the item corresponding to the name given in argument.
+    def get_items(self, name):
+        """Return ALL items matching the name given in argument.
 
-        :param name: the name of the item you want to delete.
+        :param name: the name of the item you want to get.
         :type name: str
-
-        .. note:: in case an execpetion is raised, the error will be
-            'no_item_by_that_name' and the message is giving the specifics.
-
-        .. seealso:: :class:`pygamelib.base.PglInventoryException`.
+        :return: An array of items.
+        :rtype: list
 
         Example::
 
-            life_container = mygame.player.inventory.get_item('heart_1')
-            if isinstance(life_container,GenericActionableStructure):
-                life_container.action(life_container.action_parameters)
-                mygame.player.inventory.delete_item('heart_1')
+            for life_container in mygame.player.inventory.get_items('heart_1'):
+                if isinstance(life_container,GenericActionableStructure):
+                    life_container.action(life_container.action_parameters)
+
+        .. note:: Please note that the item object reference is returned but nothing is
+            changed in the inventory. The item hasn't been removed.
 
         """
-        if name in self.__items.keys():
-            del self.__items[name]
-        else:
-            raise base.PglInventoryException(
-                "no_item_by_that_name",
-                f'There is no item named "{name}" in the inventory.',
-            )
+        rv = []
+        for i in self.__items:
+            if i.name == name:
+                rv.append(i)
+        return rv
+
+    def delete_item(self, name):
+        """Delete THE FIRST item matching the name given in argument.
+
+        :param name: the name of the items you want to delete.
+        :type name: str
+
+        .. note:: The observers for this object will be notified of all removed items.
+
+        Example::
+
+            mygame.player.inventory.delete_item('heart_1')
+
+        """
+        for i in range(len(self.__items)):
+            if self.__items[i].name == name:
+                self.notify(
+                    self, "pygamelib.engine.Inventory.delete_items", self.__items[i]
+                )
+                del self.__items[i]
+                break
+
+    def delete_items(self, name):
+        """Delete ALL items matching the name given in argument.
+
+        :param name: the name of the items you want to delete.
+        :type name: str
+
+        .. note:: The observers for this object will be notified of all removed items.
+
+        Example::
+
+            mygame.player.inventory.delete_items('heart_1')
+
+        """
+        for i in range(len(self.__items) - 1, -1, -1):
+            if self.__items[i].name == name:
+                self.notify(
+                    self, "pygamelib.engine.Inventory.delete_items", self.__items[i]
+                )
+                del self.__items[i]
 
     def serialize(self):
         """Serialize the inventory in a dictionary.
@@ -3622,7 +3668,7 @@ class Inventory:
         """
         ret_data = dict()
         ret_data["max_size"] = self.max_size
-        ret_data["items"] = [self.__items[k].serialize() for k in self.__items.keys()]
+        ret_data["items"] = [i.serialize() for i in self.__items]
         return ret_data
 
     @classmethod
