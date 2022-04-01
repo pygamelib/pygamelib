@@ -3369,14 +3369,17 @@ class Inventory(base.PglBaseObject):
     This class is pretty straightforward: it is an object container, you can add, get
     and remove items and you can get a value from the objects in the inventory.
 
-    The constructor takes only one parameter: the maximum size of the inventory. Each
-    :class:`~pygamelib.board_items.BoardItem` that is going to be put in the inventory
-    has a size (default is 1), the total addition of all these size cannot exceed
-    max_size.
+    On top of that, starting with version 1.3.0, a constraints system has been added.
+    It allows to specify a certain amount of constraints that will be applied to the
+    items when they are added to the inventory.
 
-    :param max_size: The maximum size of the inventory. Deafult value: 10.
-    :type max_size: int
-    :param parent: The parent object (usually a BoardItem).
+    For the moment, constraints are limited to the number of items with a given type/
+    name/value (any combination of these three).
+
+    When a constraint is violated, the item is not added to the inventory and a
+    notification is broadcasted to the observers of the inventory. A
+    PglInventoryException is also raised with name "constraint_violation" and the
+    constraint details in description.
 
     .. note:: You can print() the inventory. This is mostly useful for debug as you want
         to have a better display in your game.
@@ -3388,10 +3391,23 @@ class Inventory(base.PglBaseObject):
     """
 
     def __init__(self, max_size=10, parent=None):
+        """
+        The constructor takes two parameters: the maximum size of the inventory. And the
+        Inventory owner/parent.
+
+        Each :class:`~pygamelib.board_items.BoardItem` that is going to be put in the
+        inventory has a size (default is 1), the total addition of all these size cannot
+        exceed max_size.
+
+        :param max_size: The maximum size of the inventory. Deafult value: 10.
+        :type max_size: int
+        :param parent: The parent object (usually a BoardItem).
+        """
         super().__init__()
         self.max_size = max_size
         self.__items = []
         self.parent = parent
+        self.__constraints = {}
 
     def __str__(self):
         s = "=============\n"
@@ -3424,6 +3440,20 @@ class Inventory(base.PglBaseObject):
         """
         return self.__items
 
+    @property
+    def constraints(self):
+        """Return the list of all constraints in the inventory.
+
+        :return: a list of constraints (dict)
+        :rtype: list
+
+        Example::
+
+            for cstr in game.player.inventory.constraints:
+                print(f" - {cstr[name]}")
+        """
+        return self.__constraints.values()
+
     def add_item(self, item):
         """Add an item to the inventory.
 
@@ -3433,6 +3463,7 @@ class Inventory(base.PglBaseObject):
          * you try to add an item that is not pickable,
          * there is no more space left in the inventory (i.e: the cumulated size of the
            inventory + your item.inventory_space is greater than the inventory max_size)
+         * An existing constraint is violated.
 
         :param item: the item you want to add
         :type item: :class:`~pygamelib.board_items.BoardItem`
@@ -3472,6 +3503,20 @@ class Inventory(base.PglBaseObject):
                     hasattr(item, "inventory_space")
                     and self.max_size >= self.size() + item.inventory_space
                 ):
+                    itm_cstr = ["item_name", "item_type", "item_value"]
+                    for cstr in self.__constraints.values():
+                        for ics in itm_cstr:
+                            if (
+                                cstr[ics] is not None
+                                and getattr(item, ics.split("_")[1]) == cstr[ics]
+                                and len(self.search(cstr[ics])) >= cstr["max_number"]
+                            ):
+                                raise base.PglInventoryException(
+                                    "constraint_violation",
+                                    f"{item.name} cannot be added to the inventory, "
+                                    f"the constraint {cstr['constraint_name']} is "
+                                    "violated!",
+                                )
                     self.__items.append(item)
                     self.notify(self, "pygamelib.engine.Inventory.add_item", item)
                     return len(self.__items) - 1
@@ -3559,10 +3604,12 @@ class Inventory(base.PglBaseObject):
     def search(self, query):
         """Search for objects in the inventory.
 
-        All objects that matches the query are going to be returned.
+        All objects that matches the query are going to be returned. Search is performed
+        on the name and type of the object.
+
         :param query: the query that items in the inventory have to match to be returned
         :type name: str
-        :returns: a table of BoardItems.
+        :returns: a list of BoardItems.
         :rtype: list
 
         Example::
@@ -3570,8 +3617,12 @@ class Inventory(base.PglBaseObject):
             for item in game.player.inventory.search('mighty'):
                 print(f"This is a mighty item: {item.name}")
         """
+        if query is None:
+            return []
         return [
-            item for item in self.__items if query in item.name or query in item.type
+            item
+            for item in self.__items
+            if query in item.name or query in item.type or query in item.value
         ]
 
     def get_item(self, name):
@@ -3672,6 +3723,84 @@ class Inventory(base.PglBaseObject):
                     self, "pygamelib.engine.Inventory.delete_items", self.__items[i]
                 )
                 del self.__items[i]
+
+    def add_constraint(
+        self,
+        constraint_name: str,
+        item_type: str = None,
+        item_name: str = None,
+        item_value: int = None,
+        max_number: int = 1,
+    ):
+        """Add a constraint to the inventory.
+
+        :param constraint_name: the name of the constraint.
+        :type constraint_name: str
+        :param item_type: the type of the item.
+        :type item_type: str
+        :param item_name: the name of the item.
+        :type item_name: str
+        :param item_value: the value of the item.
+        :type item_name: int
+        :param max_number: the maximum number of items that match the item_* parameters
+           that can be in the inventory.
+        :type max_number: int
+
+        .. versionadded:: 1.3.0
+
+        """
+        if item_name is None and item_type is None and item_value is None:
+            raise base.PglInventoryException(
+                "invalid_constraint",
+                "You must specify at least one of item_name, item_type or item_value",
+            )
+        if constraint_name is None or constraint_name == "" or max_number is None:
+            raise base.PglInventoryException(
+                "invalid_constraint",
+                "You must specify constraint_name and max_number",
+            )
+        self.__constraints[constraint_name] = {
+            "constraint_name": constraint_name,
+            "max_number": max_number,
+            "item_type": item_type,
+            "item_name": item_name,
+            "item_value": item_value,
+        }
+        self.notify(
+            self,
+            "pygamelib.engine.Inventory.add_constraint",
+            self.__constraints[constraint_name],
+        )
+
+    def remove_constraint(self, constraint_name: str):
+        """Remove a constraint from the inventory.
+
+        :param constraint_name: the name of the constraint.
+        :type constraint_name: str
+
+        .. versionadded:: 1.3.0
+
+        """
+        if constraint_name in self.__constraints:
+            self.notify(
+                self,
+                "pygamelib.engine.Inventory.remove_constraint",
+                self.__constraints[constraint_name],
+            )
+            del self.__constraints[constraint_name]
+
+    def clear_constraints(self):
+        """Remove all constraints from the inventory.
+
+        .. versionadded:: 1.3.0
+
+        """
+        self.notify(
+            self,
+            "pygamelib.engine.Inventory.clear_constraints",
+            None,
+        )
+        self.__constraints = {}
 
     def serialize(self):
         """Serialize the inventory in a dictionary.
