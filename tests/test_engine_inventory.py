@@ -46,6 +46,7 @@ class TestBase(unittest.TestCase):
         self.assertEqual(len(self.inv.search("test")), 1)
         self.assertEqual(self.inv.get_item("test").name, "test")
         self.assertIsNone(self.inv.delete_item("test"))
+        self.assertEqual(self.inv.search(None), [])
 
     def test_get_items(self):
         inv = engine.Inventory()
@@ -129,6 +130,12 @@ class TestBase(unittest.TestCase):
             )
         inv.clear_constraints()
         self.assertEqual(len(inv.constraints), 0)
+        with self.assertRaises(engine.base.PglInventoryException) as context:
+            inv.add_constraint("fail")
+        self.assertEqual(context.exception.args[0], "invalid_constraint")
+        with self.assertRaises(engine.base.PglInventoryException) as context:
+            inv.add_constraint("", item_name="fail")
+        self.assertEqual(context.exception.args[0], "invalid_constraint")
 
     def test_str(self):
         self.inv.empty()
