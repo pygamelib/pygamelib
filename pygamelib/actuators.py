@@ -704,7 +704,7 @@ class PathFinder(Behavioral):
 
         Example::
 
-            seeker = NPC(model=Sprites.SKULL)
+            seeker = NPC(model=graphics.Models.SKULL)
             seeker.actuator = PathFinder(game=mygame,actuated_object=seeker)
             while True:
                 seeker.actuator.set_destination(mygame.player.pos[0],mygame.player.pos[1])
