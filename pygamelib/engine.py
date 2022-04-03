@@ -3442,7 +3442,10 @@ class Inventory(base.PglBaseObject):
 
     @property
     def constraints(self):
-        """Return the list of all constraints in the inventory.
+        """
+        .. image:: https://img.shields.io/badge/-Alpha-orange
+
+        Return the list of all constraints in the inventory.
 
         :return: a list of constraints (dict)
         :rtype: list
@@ -3732,7 +3735,10 @@ class Inventory(base.PglBaseObject):
         item_value: int = None,
         max_number: int = 1,
     ):
-        """Add a constraint to the inventory.
+        """
+        .. image:: https://img.shields.io/badge/-Alpha-orange
+
+        Add a constraint to the inventory.
 
         :param constraint_name: the name of the constraint.
         :type constraint_name: str
@@ -3773,7 +3779,10 @@ class Inventory(base.PglBaseObject):
         )
 
     def remove_constraint(self, constraint_name: str):
-        """Remove a constraint from the inventory.
+        """
+        .. image:: https://img.shields.io/badge/-Alpha-orange
+
+        Remove a constraint from the inventory.
 
         :param constraint_name: the name of the constraint.
         :type constraint_name: str
