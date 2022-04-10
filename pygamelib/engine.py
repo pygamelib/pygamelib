@@ -3399,7 +3399,7 @@ class Inventory(base.PglBaseObject):
         inventory has a size (default is 1), the total addition of all these size cannot
         exceed max_size.
 
-        :param max_size: The maximum size of the inventory. Deafult value: 10.
+        :param max_size: The maximum size of the inventory. Default value: 10.
         :type max_size: int
         :param parent: The parent object (usually a BoardItem).
         """
