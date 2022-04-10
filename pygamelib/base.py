@@ -1,17 +1,11 @@
 __docformat__ = "restructuredtext"
 """
-The Game.py module has only one class: Game. It is what could be called the game engine.
-It holds a lot of methods that helps taking care of some complex mechanics behind the
-curtain.
-
-This module contains the Inventory class.
+The base module is a collection of base objects that are used by the entire library,
+from Math module to specific exceptions.
 
 This module regroup all the specific exceptions of the library.
 The idea behind most exceptions is to provide more context and info that the standard
 exceptions.
-
-This module contains the Board class.
-It is the base class for all levels.
 
 .. autosummary::
    :toctree: .
@@ -32,7 +26,8 @@ from pygamelib.functions import pgl_isinstance
 import math
 from colorama import Fore, Back, Style, init
 from blessed import Terminal
-import time
+
+# import time
 from typing import Any
 
 # Initialize terminal colors for colorama.
@@ -43,17 +38,26 @@ class PglBaseObject(object):
     """
     The PglBaseObject has 2 goals:
 
-     * Timestamp the last change in an attribute.
+     * Store the object's screen position.
      * Implements a modified observer design pattern.
 
-    It is modified as it acts both as the observer and the client. The idea behind it is
-    that any object can observe and be observed by any other objects.
+    It is "modified" as it acts both as the observer and the client. The idea behind it
+    is that any object can observe and be observed by any other objects.
 
     The base logic of the pattern is already implemented and probably does not require
     re-implementation on the child object.
     However, the :func:`~pygamelib.base.PglBaseObject.be_notified()` method needs to be
     implemented in each client. The actual processing of the notification is indeed
     specific to each object.
+
+    Storing the screen position is particularly useful for
+    :class:`~pygamelib.board_items.BoardItem` subclasses as they only know their
+    position relative to the :class:`~pygamelib.engine.Board` but might need to know
+    their absolute screen coordinates.
+
+    This is a lightweight solution to that issue. It is not foolproof however! The
+    screen_row and screen_column attributes are not wrapped properties and can be
+    modified to mess up things. It shouldn't be done lightly. You have been warned!
     """
 
     def __init__(self) -> None:
@@ -62,21 +66,38 @@ class PglBaseObject(object):
         """
         super().__init__()
         self._observers = []
-        self._last_updated = time.time()
+        self.screen_row = -1
+        self.screen_column = -1
+        # self._last_updated = time.time()
 
-    def __setattr__(self, name: str, value: Any) -> None:
-        super().__setattr__("_last_updated", time.time())
-        return super().__setattr__(name, value)
+    # def __setattr__(self, name: str, value: Any) -> None:
+    #     super().__setattr__("_last_updated", time.time())
+    #     return super().__setattr__(name, value)
+
+    def store_screen_position(self, row: int, column: int) -> bool:
+        """Store the screen position of the object.
+
+        This method is automatically called by Screen.place().
+
+        :param row: The row (or y) coordinate.
+        :type row: int
+        :param column: The column (or x) coordinate.
+        :type column: int
+
+        Example::
+
+            an_object.store_screen_coordinate(3,8)
+        """
+        if type(row) is int and type(column) is int:
+            self.screen_column = column
+            self.screen_row = row
+            return True
+        return False
 
     def notify(self, modifier=None, attribute: str = None, value: Any = None) -> None:
 
         """
-        Notify all the observers that a change occurred. Two important points:
-
-         1. The "change" that occurred is not specified (but the notifying object is
-            passed as parameter)
-         2. No parameters are passed to the :func:`be_notified` method except the
-            notifying object.
+        Notify all the observers that a change occurred.
 
         :param modifier: An optional parameter that identify the modifier object to
            exclude it from the notified objects.
@@ -397,12 +418,12 @@ class Text(PglBaseObject):
                 self.__fg_color.detach(self)
             self.__fg_color = value
             self.__fg_color.attach(self)
-            self.notify(self, "base.Text.fg_color:changed", value)
+            self.notify(self, "pygamelib.base.Text.fg_color:changed", value)
         elif value is None:
             if self.__fg_color is not None:
                 self.__fg_color.detach(self)
             self.__fg_color = value
-            self.notify(self, "base.Text.fg_color:changed", value)
+            self.notify(self, "pygamelib.base.Text.fg_color:changed", value)
             self.__fgcc = Fore.RESET
         else:
             raise PglInvalidTypeException(
@@ -1176,7 +1197,16 @@ class Math(object):
         super().__init__()
 
     @staticmethod
-    def intersect(row1, column1, width1, height1, row2, column2, width2, height2):
+    def intersect(
+        row1: int,
+        column1: int,
+        width1: int,
+        height1: int,
+        row2: int,
+        column2: int,
+        width2: int,
+        height2: int,
+    ) -> bool:
         """This function check if 2 rectangles intersect.
 
         The 2 rectangles are defined by their positions (row, column) and dimension
@@ -1218,7 +1248,7 @@ class Math(object):
         )
 
     @staticmethod
-    def distance(row1, column1, row2, column2):
+    def distance(row1: int, column1: int, row2: int, column2: int) -> float:
         """Return the euclidian distance between to points.
 
         Points are identified by their row and column.
@@ -1244,3 +1274,20 @@ class Math(object):
                                             npc.column)
         """
         return math.sqrt((column2 - column1) ** 2 + (row2 - row1) ** 2)
+
+    @staticmethod
+    def lerp(a: float, b: float, t: float) -> float:
+        """Return the linear interpolation between 2 values relative to a third value.
+
+        :param a: Start value of the interpolation. Returned if t is 0.
+        :type a: float
+        :param b: End value of the interpolation. Returned if t is 1.
+        :type b: float
+        :param t: A value between 0 and 1 used to interpolate between a and b.
+        :type t: float
+
+        Example::
+
+            value = lerp(0, 100, 0.5) # 50
+        """
+        return (1 - t) * a + t * b

@@ -35,6 +35,7 @@ from pygamelib import base
 from pygamelib import constants
 from pygamelib.gfx import core
 from pygamelib import actuators
+from pygamelib.functions import pgl_isinstance
 
 
 class BoardItem(base.PglBaseObject):
@@ -89,6 +90,10 @@ class BoardItem(base.PglBaseObject):
        pickable, so every BoardItem can now take space in the inventory. Default value
        is 1.
     :type inventory_space: int
+    :param animation: An animation to animate the item sprixel.
+    :type animation: :class:`~pygamelib.gfx.core.Animation`
+    :param particle_emitter: A particle emitter that is attached to this item.
+    :type particle_emitter: :class:`~pygamelib.gfx.particles.ParticleEmitter`
 
     .. note:: Starting with version 1.2.0 and introduction of complex items,
        BoardItems have a size. That size **CANNOT** be set. It is always 1x1.
@@ -124,6 +129,8 @@ class BoardItem(base.PglBaseObject):
         pos=None,
         value=None,
         inventory_space=1,
+        animation: core.Animation = None,
+        particle_emitter=None,
     ):
         super().__init__()
         self.name = "Board item"
@@ -142,6 +149,11 @@ class BoardItem(base.PglBaseObject):
             self.pos = pos
         # DEPRECATED
         # self.model = "*"
+        self.particle_emitter = None
+        if particle_emitter is not None and pgl_isinstance(
+            particle_emitter, "pygamelib.gfx.particles.ParticleEmitter"
+        ):
+            self.particle_emitter = particle_emitter
         self.animation = None
         self.parent = None
         if parent is not None:
@@ -330,6 +342,9 @@ class BoardItem(base.PglBaseObject):
             item.store_position(3,4)
         """
         self.pos = [row, column, layer]
+        if self.particle_emitter is not None:
+            self.particle_emitter.row = row
+            self.particle_emitter.column = column
 
     def position_as_vector(self):
         """Returns the current item position as a Vector2D
@@ -774,6 +789,7 @@ class BoardComplexItem(BoardItem):
         self.base_item_type = BoardItemComplexComponent
         if base_item_type is not None:
             self.base_item_type = base_item_type
+        self.particle_emitter_position = [0, 0]
         # for item in ["sprite", "size", "null_sprixel", "base_item_type"]:
         #     if item in kwargs:
         #         setattr(self, item, kwargs[item])
@@ -1182,7 +1198,7 @@ class Projectile(Movable):
         fireball = Projectile(
                                 name="fireball",
                                 model=Utils.red_bright(black_circle),
-                                hit_model=Sprites.EXPLOSION,
+                                hit_model=graphics.Models.EXPLOSION,
                             )
         fireball.set_direction(constants.RIGHT)
         my_game.add_projectile(1, fireball,
@@ -2376,7 +2392,9 @@ class Treasure(Immovable):
 
     Example::
 
-        money_bag = Treasure(model=Sprites.MONEY_BAG,value=100,inventory_space=2)
+        money_bag = Treasure(
+            model=graphics.Models.MONEY_BAG,value=100,inventory_space=2
+        )
         print(f"This is a money bag {money_bag}")
         player.inventory.add_item(money_bag)
         print(f"The inventory value is {player.inventory.value()} and is at
@@ -2512,7 +2530,7 @@ class Door(GenericStructure):
 
     Example::
 
-        door1 = Door(model=Sprites.DOOR,type='locked_door')
+        door1 = Door(model=graphics.Models.DOOR,type='locked_door')
     """
 
     def __init__(self, **kwargs):

@@ -216,7 +216,7 @@ class Color(base.PglBaseObject):
         if type(fraction) is not float or fraction < 0.0 or fraction > 1.0:
             raise base.PglInvalidTypeException(
                 "Color.blend(other_color, fraction): fraction needs to be a float "
-                "between 0.0 and 1.0."
+                f"between 0.0 and 1.0 (faction={fraction})."
             )
         if not isinstance(other_color, Color):
             raise base.PglInvalidTypeException(
@@ -1549,7 +1549,8 @@ class Sprite(object):
                     continue
                 # TODO: If the Sprite has sprixels with length > 1 this
                 # is going to be a mess.
-                buffer[sr][sc] = sprix.__repr__()
+                # buffer[sr][sc] = sprix.__repr__()
+                buffer[sr][sc] = sprix
                 for c in range(sc + 1, sc + sprix.length):
                     buffer[sr][c] = Sprixel()
 

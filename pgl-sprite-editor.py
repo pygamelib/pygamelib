@@ -1046,7 +1046,6 @@ def edit_new_brush():
     key_pressed = msg.show()
     ev.ui_config_popup.bg_color = bgc
     if key_pressed.name == "KEY_ENTER":
-        new_sprixel = core.Sprixel()
         width = int(screen.width / 2)
         height = 15
         gs = ui.GridSelectorDialog(
@@ -1064,22 +1063,18 @@ def edit_new_brush():
         )
         sprix = gs.show()
         if sprix is not None and sprix.model != "":
-            new_sprixel.model = sprix.model
+            model = sprix.model
             cp = ui.ColorPickerDialog(
                 "Pick a FOREGROUND color", config=ev.ui_config_popup
             )
             screen.place(cp, screen.vcenter, screen.hcenter - 13)
-            color = cp.show()
-            if color is not None:
-                new_sprixel.fg_color = color
+            fg_color = cp.show()
             cp.set_color(core.Color(128, 128, 128))
             cp.set_selection(0)
             cp.title = "Pick a BACKGROUND color"
             screen.place(cp, screen.vcenter, screen.hcenter - 13)
-            color = cp.show()
-            if color is not None:
-                new_sprixel.bg_color = color
-            ev.brushes.append(new_sprixel)
+            bg_color = cp.show()
+            ev.brushes.append(core.Sprixel(model, bg_color, fg_color))
 
 
 def update_screen(g: engine.Game, inkey, dt: float):
@@ -1194,6 +1189,7 @@ def update_screen(g: engine.Game, inkey, dt: float):
                     board_items.Door(sprixel=copy.deepcopy(ev.brushes[ev.brushes_idx])),
                     pos[0],
                     pos[1],
+                    0,
                 )
                 _current_sprite.set_sprixel(pos[0], pos[1], ev.brushes[ev.brushes_idx])
         elif inkey == "l":
@@ -1676,6 +1672,7 @@ if __name__ == "__main__":
         mode=constants.MODE_RT,
         input_lag=0.0001,
     )
+    g.DEBUG = True
     if g.screen.width < 102 or g.screen.height < 42:
         print(
             base.Text(

@@ -1,6 +1,7 @@
 # import pygamelib.board_items as pgl_board_items
 from pygamelib import board_items, constants, base, actuators
 import pygamelib.gfx.core as gfx_core
+from pygamelib.gfx import particles
 import unittest
 
 
@@ -93,6 +94,13 @@ class TestBoard(unittest.TestCase):
             bi.set_can_move("True")
         with self.assertRaises(base.PglInvalidTypeException):
             bi.set_pickable("False")
+        bi = board_items.BoardItem(particle_emitter=particles.ParticleEmitter())
+        self.assertIsInstance(bi.particle_emitter, particles.ParticleEmitter)
+        bi.store_position(2, 3)
+        self.assertEqual(bi.particle_emitter.row, 2)
+        self.assertEqual(bi.particle_emitter.column, 3)
+        self.assertEqual(bi.particle_emitter.row, bi.row)
+        self.assertEqual(bi.particle_emitter.column, bi.column)
 
     def test_boarditemvoid(self):
         bi = board_items.BoardItemVoid()
