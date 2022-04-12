@@ -25,10 +25,9 @@ class PglEditor:
         self.config_dir = os.path.join(self.base_config_dir, "config")
         self.editor_config_dir = os.path.join(self.config_dir, "editor")
         self.default_map_dir = os.path.join(self.base_config_dir, "editor", "maps")
-        self.viewport_height = 10
-        self.viewport_width = 30
-
         self.game = engine.Game()
+        self.viewport_height = int(self.game.screen.height / 2) - 11
+        self.viewport_width = int(self.game.screen.width / 4) - 2
         self.game.player = board_items.Player(model="[]")
         self.current_menu = "main"
         self.object_history = []
@@ -251,7 +250,7 @@ class PglEditor:
             elif choice == "5":
                 picked = game.get_menu_entry(
                     "graphics_geometric_shapes",
-                    self.utf8_picker("graphics_geometric_shapes")
+                    self.utf8_picker("graphics_geometric_shapes"),
                 )
                 if picked is not None:
                     return picked["data"]
@@ -477,106 +476,92 @@ class PglEditor:
                         "before turning back ?"
                     )
                     r = int(input_digit("(please enter an integer)> "))
-                    new_object.actuator.path += \
-                        [constants.UP for i in range(0, r, 1)]
-                    new_object.actuator.path += \
-                        [constants.DOWN for i in range(0, r, 1)]
+                    new_object.actuator.path += [constants.UP for i in range(0, r, 1)]
+                    new_object.actuator.path += [constants.DOWN for i in range(0, r, 1)]
                 elif r == "2":
                     print(
                         "How many steps should the NPC go in one "
                         "direction before turning back ?"
                     )
                     r = int(input_digit("(please enter an integer)> "))
-                    new_object.actuator.path += \
-                        [constants.DOWN for i in range(0, r, 1)]
-                    new_object.actuator.path += \
-                        [constants.UP for i in range(0, r, 1)]
+                    new_object.actuator.path += [constants.DOWN for i in range(0, r, 1)]
+                    new_object.actuator.path += [constants.UP for i in range(0, r, 1)]
                 elif r == "3":
                     print(
                         "How many steps should the NPC go in one "
                         "direction before turning back ?"
                     )
                     r = int(input_digit("(please enter an integer)> "))
-                    new_object.actuator.path += \
-                        [constants.LEFT for i in range(0, r, 1)]
-                    new_object.actuator.path += \
-                        [constants.RIGHT for i in range(0, r, 1)]
+                    new_object.actuator.path += [constants.LEFT for i in range(0, r, 1)]
+                    new_object.actuator.path += [
+                        constants.RIGHT for i in range(0, r, 1)
+                    ]
                 elif r == "3":
                     print(
                         "How many steps should the NPC go in one direction "
                         "before turning back ?"
                     )
                     r = int(input_digit("(please enter an integer)> "))
-                    new_object.actuator.path += \
-                        [constants.RIGHT for i in range(0, r, 1)]
-                    new_object.actuator.path += \
-                        [constants.LEFT for i in range(0, r, 1)]
+                    new_object.actuator.path += [
+                        constants.RIGHT for i in range(0, r, 1)
+                    ]
+                    new_object.actuator.path += [constants.LEFT for i in range(0, r, 1)]
                 elif r == "4":
                     print(
                         "How many steps should the NPC go in one "
                         "direction before turning back ?"
                     )
                     r = int(input_digit("(please enter an integer)> "))
-                    new_object.actuator.path += \
-                        [constants.DOWN for i in range(0, r, 1)]
-                    new_object.actuator.path += \
-                        [constants.UP for i in range(0, r, 1)]
+                    new_object.actuator.path += [constants.DOWN for i in range(0, r, 1)]
+                    new_object.actuator.path += [constants.UP for i in range(0, r, 1)]
                 elif r == "5":
                     print(
                         "How many steps should the NPC go in EACH "
                         "direction before changing ?"
                     )
                     r = int(input_digit("(please enter an integer)> "))
-                    new_object.actuator.path += \
-                        [constants.LEFT for i in range(0, r, 1)]
-                    new_object.actuator.path += \
-                        [constants.DOWN for i in range(0, r, 1)]
-                    new_object.actuator.path += \
-                        [constants.RIGHT for i in range(0, r, 1)]
-                    new_object.actuator.path += \
-                        [constants.UP for i in range(0, r, 1)]
+                    new_object.actuator.path += [constants.LEFT for i in range(0, r, 1)]
+                    new_object.actuator.path += [constants.DOWN for i in range(0, r, 1)]
+                    new_object.actuator.path += [
+                        constants.RIGHT for i in range(0, r, 1)
+                    ]
+                    new_object.actuator.path += [constants.UP for i in range(0, r, 1)]
                 elif r == "6":
                     print(
                         "How many steps should the NPC go in EACH "
                         "direction before changing ?"
                     )
                     r = int(input_digit("(please enter an integer)> "))
-                    new_object.actuator.path += \
-                        [constants.LEFT for i in range(0, r, 1)]
-                    new_object.actuator.path += \
-                        [constants.UP for i in range(0, r, 1)]
-                    new_object.actuator.path += \
-                        [constants.RIGHT for i in range(0, r, 1)]
-                    new_object.actuator.path += \
-                        [constants.DOWN for i in range(0, r, 1)]
+                    new_object.actuator.path += [constants.LEFT for i in range(0, r, 1)]
+                    new_object.actuator.path += [constants.UP for i in range(0, r, 1)]
+                    new_object.actuator.path += [
+                        constants.RIGHT for i in range(0, r, 1)
+                    ]
+                    new_object.actuator.path += [constants.DOWN for i in range(0, r, 1)]
                 elif r == "7":
                     print(
                         "How many steps should the NPC go in EACH "
                         "direction before changing ?"
                     )
                     r = int(input_digit("(please enter an integer)> "))
-                    new_object.actuator.path += \
-                        [constants.RIGHT for i in range(0, r, 1)]
-                    new_object.actuator.path += \
-                        [constants.DOWN for i in range(0, r, 1)]
-                    new_object.actuator.path += \
-                        [constants.LEFT for i in range(0, r, 1)]
-                    new_object.actuator.path += \
-                        [constants.UP for i in range(0, r, 1)]
+                    new_object.actuator.path += [
+                        constants.RIGHT for i in range(0, r, 1)
+                    ]
+                    new_object.actuator.path += [constants.DOWN for i in range(0, r, 1)]
+                    new_object.actuator.path += [constants.LEFT for i in range(0, r, 1)]
+                    new_object.actuator.path += [constants.UP for i in range(0, r, 1)]
                 elif r == "8":
                     print(
                         "How many steps should the NPC go in EACH direction "
                         "before changing ?"
                     )
                     r = int(input_digit("(please enter an integer)> "))
-                    new_object.actuator.path += \
-                        [constants.RIGHT for i in range(0, r, 1)]
-                    new_object.actuator.path += \
-                        [constants.UP for i in range(0, r, 1)]
-                    new_object.actuator.path += \
-                        [constants.LEFT for i in range(0, r, 1)]
-                    new_object.actuator.path += \
-                        [constants.DOWN for i in range(0, r, 1)]
+                    new_object.actuator.path += [
+                        constants.RIGHT for i in range(0, r, 1)
+                    ]
+                    new_object.actuator.path += [constants.UP for i in range(0, r, 1)]
+                    new_object.actuator.path += [constants.LEFT for i in range(0, r, 1)]
+                    new_object.actuator.path += [constants.DOWN for i in range(0, r, 1)]
                 elif r == "9":
                     print(
                         "Write your own path using only words from this list: "
@@ -715,8 +700,7 @@ class PglEditor:
                         new_object.sprixel = gfx_core.Sprixel(chosen_model)
                         new_object.model = chosen_model
                     print(
-                        "Is this object pickable? "
-                        "(can it be picked up " "by the player)?"
+                        "Is this object pickable? (can it be picked up by the player)?"
                     )
                     print("0 - No")
                     print("1 - Yes")
@@ -724,8 +708,7 @@ class PglEditor:
                     if r == "1":
                         new_object.set_pickable(True)
                     print(
-                        "Is this object overlappable? "
-                        "(can it be walked " "over by player?"
+                        "Is this object overlappable? (can it be walked over by player?"
                     )
                     print("0 - No")
                     print("1 - Yes")
@@ -809,20 +792,28 @@ class PglEditor:
         game.get_board(1).use_complex_item = use_complex_item
         self.is_modified = True
         self.current_file = os.path.join(
-            self.default_map_dir, name.replace(" ", "_") + ".json")
+            self.default_map_dir, name.replace(" ", "_") + ".json"
+        )
         game.config("settings")["last_used_board_parameters"] = {
             "name": name,
             "width": width,
             "height": height,
         }
-        if game.get_board(1).size[0] > 20 or game.get_board(1).size[1] > 20:
+        if (
+            game.get_board(1).width >= game.screen.width - 4
+            or game.get_board(1).height >= game.screen.height - 19
+        ):
             game.enable_partial_display = True
-            game.partial_display_viewport = [10, 10]
+            game.partial_display_viewport = [
+                int(game.screen.height / 2) - 11,
+                int(game.screen.width / 4) - 2,
+            ]
+            self.viewport_height = game.partial_display_viewport[0]
+            self.viewport_width = game.partial_display_viewport[1]
 
     def first_use(self):
         game = self.game
-        print(base.Text.yellow_bright(
-            "Configuration wizard (fresh install or update)"))
+        print(base.Text.yellow_bright("Configuration wizard (fresh install or update)"))
         print(
             "You may see that wizard because hgl-editor was updated with new settings."
             "\n"
@@ -864,7 +855,10 @@ class PglEditor:
             ]
             game.config("settings")["config_file_version"] = 10100
             game.config("settings")["enable_partial_display"] = True
-            game.config("settings")["partial_display_viewport"] = [10, 30]
+            game.config("settings")["partial_display_viewport"] = [
+                int(game.screen.height / 2) - 11,
+                int(game.screen.width / 4) - 2,
+            ]
             game.config("settings")["menu_mode"] = "full"
             game.config("settings")["last_used_board_parameters"] = {
                 "name": None,
@@ -888,8 +882,11 @@ class PglEditor:
         game.add_board(2, viewport_board)
         while True:
             game.clear_screen()
-            print(base.Text.cyan_bright(
-                "PYGAMELIB - EDITOR v" + constants.PYGAMELIB_VERSION))
+            print(
+                base.Text.cyan_bright(
+                    "PYGAMELIB - EDITOR v" + constants.PYGAMELIB_VERSION
+                )
+            )
             # Create config_dir if not exist and populate it with a directories.json
             # file.
             settings_file = os.path.join(self.editor_config_dir, "settings.json")
@@ -904,10 +901,13 @@ class PglEditor:
                 self.first_use()
             else:
                 game.load_config(settings_file, "settings")
-                self.viewport_height, self.viewport_width = \
-                    game.config("settings")["partial_display_viewport"]
-                viewport_board.size = \
-                    [self.viewport_width * 2, self.viewport_height * 2]
+                self.viewport_height, self.viewport_width = game.config("settings")[
+                    "partial_display_viewport"
+                ]
+                viewport_board.size = [
+                    self.viewport_width * 2,
+                    self.viewport_height * 2,
+                ]
                 viewport_board.init_board()
                 # The objects library is stored as a list of references.
                 # We need to convert that before using the objects.
@@ -918,7 +918,7 @@ class PglEditor:
             print(
                 "Looking for existing maps in selected directories...",
                 end="",
-                flush=True
+                flush=True,
             )
             self.default_map_dir = None
             hmaps = []
@@ -951,7 +951,8 @@ class PglEditor:
                 for m in hmaps:
                     print(f"{map_num} - edit {m}")
                     game.add_menu_entry(
-                        "boards_list", str(map_num), f"edit {m}", f"{m}")
+                        "boards_list", str(map_num), f"edit {m}", f"{m}"
+                    )
                     map_num += 1
                 game.add_menu_entry("boards_list", "B", "Go Back to main menu")
             else:
@@ -974,8 +975,10 @@ class PglEditor:
                 )
                 if is_board_bigger_than_viewport:
                     game.enable_partial_display = True
-                    game.partial_display_viewport = \
-                        [self.viewport_height, self.viewport_width]
+                    game.partial_display_viewport = [
+                        self.viewport_height,
+                        self.viewport_width,
+                    ]
                 else:
                     game.enable_partial_display = False
                 break
@@ -1063,7 +1066,7 @@ class PglEditor:
         game.add_menu_entry(
             "main",
             None,
-            "\n=== Menu (" + game.config("settings")["menu_mode"] + ") ==="
+            "\n=== Menu (" + game.config("settings")["menu_mode"] + ") ===",
         )
         game.add_menu_entry(
             "main", base.Text.white_bright("Space"), "Switch between edit/delete mode"
@@ -1092,23 +1095,23 @@ class PglEditor:
             + " previous one is placed in history)",
         )
         game.add_menu_entry(
-            "main", base.Text.white_bright("p"), "Modify board parameters")
+            "main", base.Text.white_bright("p"), "Modify board parameters"
+        )
         game.add_menu_entry(
-            "main", base.Text.white_bright("P"), "Set player starting position")
+            "main", base.Text.white_bright("P"), "Set player starting position"
+        )
         game.add_menu_entry(
             "main",
             base.Text.white_bright("V"),
-            "Modify partial display viewport (resolution)"
+            "Modify partial display viewport (resolution)",
         )
         game.add_menu_entry(
             "main",
             base.Text.white_bright("S"),
-            f"Save the current Board to {self.current_file}"
+            f"Save the current Board to {self.current_file}",
         )
         game.add_menu_entry(
-            "main",
-            base.Text.white_bright("+"),
-            "Save this Board and create a new one"
+            "main", base.Text.white_bright("+"), "Save this Board and create a new one"
         )
         game.add_menu_entry(
             "main", base.Text.white_bright("L"), "Save this Board and load a new one"
@@ -1124,16 +1127,17 @@ class PglEditor:
         game.add_menu_entry(
             "board",
             "1",
-            "Change " + base.Text.white_bright("width") + " (only sizing up)"
+            "Change " + base.Text.white_bright("width") + " (only sizing up)",
         )
         game.add_menu_entry(
             "board",
             "2",
-            "Change " + base.Text.white_bright("height") + " (only sizing up)"
+            "Change " + base.Text.white_bright("height") + " (only sizing up)",
         )
         game.add_menu_entry("board", "3", "Change " + base.Text.white_bright("name"))
         game.add_menu_entry(
-            "board", "4", "Change " + base.Text.white_bright("top") + " border")
+            "board", "4", "Change " + base.Text.white_bright("top") + " border"
+        )
         game.add_menu_entry(
             "board", "5", "Change " + base.Text.white_bright("bottom") + " border"
         )
@@ -1144,7 +1148,8 @@ class PglEditor:
             "board", "7", "Change " + base.Text.white_bright("right") + " border"
         )
         game.add_menu_entry(
-            "board", "8", "Change " + base.Text.white_bright("void cell"))
+            "board", "8", "Change " + base.Text.white_bright("void cell")
+        )
         game.add_menu_entry("board", "0", "Go back to the main menu")
         game.add_menu_entry(
             "viewport",
@@ -1184,10 +1189,9 @@ class PglEditor:
                     )
                     answer = str(input("> "))
                     if answer.startswith("y"):
-                        need_pgl_maps_dir = (
-                            not os.path.exists("pgl-maps")
-                            or not os.path.isdir("pgl-maps")
-                        )
+                        need_pgl_maps_dir = not os.path.exists(
+                            "pgl-maps"
+                        ) or not os.path.isdir("pgl-maps")
                         if need_pgl_maps_dir:
                             os.makedirs("pgl-maps")
                         game.object_library = self.object_history
@@ -1220,23 +1224,31 @@ class PglEditor:
                     game.move_player(constants.RIGHT, 1)
                 elif key == "k" and self.edit_mode:
                     current_object_instance = self.place_and_go(
-                        current_object, game.player.pos[0], game.player.pos[1],
-                        constants.DOWN
+                        current_object,
+                        game.player.pos[0],
+                        game.player.pos[1],
+                        constants.DOWN,
                     )
                 elif key == "i" and self.edit_mode:
                     current_object_instance = self.place_and_go(
-                        current_object, game.player.pos[0], game.player.pos[1],
-                        constants.UP
+                        current_object,
+                        game.player.pos[0],
+                        game.player.pos[1],
+                        constants.UP,
                     )
                 elif key == "j" and self.edit_mode:
                     current_object_instance = self.place_and_go(
-                        current_object, game.player.pos[0], game.player.pos[1],
-                        constants.LEFT
+                        current_object,
+                        game.player.pos[0],
+                        game.player.pos[1],
+                        constants.LEFT,
                     )
                 elif key == "l" and self.edit_mode:
                     current_object_instance = self.place_and_go(
-                        current_object, game.player.pos[0], game.player.pos[1],
-                        constants.RIGHT
+                        current_object,
+                        game.player.pos[0],
+                        game.player.pos[1],
+                        constants.RIGHT,
                     )
                 elif key == "k" and not self.edit_mode:
                     self.clear_and_go(constants.DOWN)
@@ -1308,9 +1320,7 @@ class PglEditor:
                                         parent=current_board,
                                     )
                                 ]
-                        current_board._matrix = np.append(
-                            current_board._matrix, ext, 1
-                        )
+                        current_board._matrix = np.append(current_board._matrix, ext, 1)
                         self.is_modified = True
 
                 elif key == "2":
@@ -1339,9 +1349,7 @@ class PglEditor:
                                         parent=current_board,
                                     )
                                 ]
-                        current_board._matrix = np.append(
-                            current_board._matrix, ext, 0
-                        )
+                        current_board._matrix = np.append(current_board._matrix, ext, 0)
                         self.is_modified = True
 
                 elif key == "3":
@@ -1372,7 +1380,9 @@ class PglEditor:
                         if board.size[0] >= 50 or board.size[1] >= 50:
                             game.enable_partial_display = True
                             game.partial_display_viewport = [
-                                self.viewport_height, self.viewport_width]
+                                self.viewport_height,
+                                self.viewport_width,
+                            ]
                         else:
                             game.enable_partial_display = False
                         board.place_item(
@@ -1405,12 +1415,17 @@ class PglEditor:
                 elif key == engine.key.RIGHT:
                     self.viewport_width += 1
                 viewport_board.size = [
-                    self.viewport_width * 2, self.viewport_height * 2]
+                    self.viewport_width * 2,
+                    self.viewport_height * 2,
+                ]
                 viewport_board.init_board()
-                (game.config("settings")["partial_display_viewport"][0],
-                 game.config("settings")["partial_display_viewport"][1]) = \
-                    game.partial_display_viewport = \
-                    [self.viewport_height, self.viewport_width]
+                (
+                    game.config("settings")["partial_display_viewport"][0],
+                    game.config("settings")["partial_display_viewport"][1],
+                ) = game.partial_display_viewport = [
+                    self.viewport_height,
+                    self.viewport_width,
+                ]
             elif self.current_menu == "waypoint_edition":
                 game.player.model = base.Text.green_bright("[]")
                 initial_position = game.player.pos
@@ -1420,7 +1435,8 @@ class PglEditor:
                 for wp in current_object_instance.actuator.waypoints:
                     game.current_board().place_item(
                         board_items.Door(
-                            model=graphics.GREEN_SQUARE, type="waypoint_marker"),
+                            model=graphics.GREEN_SQUARE, type="waypoint_marker"
+                        ),
                         wp[0],
                         wp[1],
                     )
@@ -1441,7 +1457,8 @@ class PglEditor:
                 elif key == "k" and self.edit_mode:
                     self.place_and_go(
                         board_items.Door(
-                            model=graphics.GREEN_SQUARE, type="waypoint_marker"),
+                            model=graphics.GREEN_SQUARE, type="waypoint_marker"
+                        ),
                         game.player.pos[0],
                         game.player.pos[1],
                         constants.DOWN,
@@ -1453,7 +1470,8 @@ class PglEditor:
                 elif key == "i" and self.edit_mode:
                     self.place_and_go(
                         board_items.Door(
-                            model=graphics.GREEN_SQUARE, type="waypoint_marker"),
+                            model=graphics.GREEN_SQUARE, type="waypoint_marker"
+                        ),
                         game.player.pos[0],
                         game.player.pos[1],
                         constants.UP,
@@ -1465,7 +1483,8 @@ class PglEditor:
                 elif key == "j" and self.edit_mode:
                     self.place_and_go(
                         board_items.Door(
-                            model=graphics.GREEN_SQUARE, type="waypoint_marker"),
+                            model=graphics.GREEN_SQUARE, type="waypoint_marker"
+                        ),
                         game.player.pos[0],
                         game.player.pos[1],
                         constants.LEFT,
@@ -1477,7 +1496,8 @@ class PglEditor:
                 elif key == "l" and self.edit_mode:
                     self.place_and_go(
                         board_items.Door(
-                            model=graphics.GREEN_SQUARE, type="waypoint_marker"),
+                            model=graphics.GREEN_SQUARE, type="waypoint_marker"
+                        ),
                         game.player.pos[0],
                         game.player.pos[1],
                         constants.RIGHT,
@@ -1549,7 +1569,8 @@ class PglEditor:
         game.config("settings")["partial_display_viewport"][0] = self.viewport_height
         game.config("settings")["partial_display_viewport"][1] = self.viewport_width
         game.save_config(
-            "settings", os.path.join(self.editor_config_dir, "settings.json"))
+            "settings", os.path.join(self.editor_config_dir, "settings.json")
+        )
 
 
 def input_digit(msg):
