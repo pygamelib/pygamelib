@@ -39,13 +39,18 @@ class PglEditor:
         initial_position = game.player.pos
         game.move_player(direction, 1)
         if initial_position != game.player.pos:
-            game.current_board().place_item(deepcopy(obj), x, y)
+            new_obj = deepcopy(obj)
+            if new_obj.sprixel.bg_color is None:
+                new_obj.sprixel.bg_color = (
+                    game.current_board().ui_board_void_cell_sprixel.bg_color
+                )
+            game.current_board().place_item(new_obj, x, y)
             self.is_modified = True
             if isinstance(obj, board_items.NPC) and isinstance(
                 obj.actuator, actuators.PathFinder
             ):
                 self.current_menu = "waypoint_edition"
-            return game.current_board().item(x, y)
+            return new_obj
         return None
 
     def clear_and_go(self, direction):
@@ -310,10 +315,10 @@ class PglEditor:
             if isinstance(chosen_model, gfx_core.Sprixel):
                 new_object.sprixel = chosen_model
                 # also sets new_objects model, for backward compatibility
-                new_object.model = str(chosen_model)
+                # new_object.model = str(chosen_model)
             else:
+                # new_object.model = chosen_model
                 new_object.sprixel = gfx_core.Sprixel(chosen_model)
-                new_object.model = chosen_model
 
             game.clear_screen()
             print(
@@ -765,11 +770,11 @@ class PglEditor:
             "Your choice: "
         )
         ui_borders = graphics.WHITE_SQUARE
-        ui_board_void_cell = graphics.BLACK_SQUARE
+        ui_board_void_cell = gfx_core.Sprixel.black_square()
         use_complex_item = False
         if use_square == "0":
             ui_borders = graphics.WHITE_RECT
-            ui_board_void_cell = graphics.BLACK_RECT
+            ui_board_void_cell = gfx_core.Sprixel.black_rect()
             base.Text.warn(
                 "You have to pay attention to the items movements, you probably"
                 " want to make sure the items move faster horizontally than vertically."
@@ -786,7 +791,7 @@ class PglEditor:
                 name=name,
                 size=[width, height],
                 ui_borders=ui_borders,
-                ui_board_void_cell=ui_board_void_cell,
+                ui_board_void_cell_sprixel=ui_board_void_cell,
             ),
         )
         game.get_board(1).use_complex_item = use_complex_item
@@ -815,7 +820,7 @@ class PglEditor:
         game = self.game
         print(base.Text.yellow_bright("Configuration wizard (fresh install or update)"))
         print(
-            "You may see that wizard because hgl-editor was updated with new settings."
+            "You may see that wizard because pgl-editor was updated with new settings."
             "\n"
             "Please check that everything is fine (your previous values are shown as"
             "default values)\n"
@@ -1370,7 +1375,15 @@ class PglEditor:
                     game.current_board().ui_border_right = self.model_picker()
                     self.is_modified = True
                 elif key == "8":
-                    game.current_board().ui_board_void_cell = self.model_picker()
+                    b = game.current_board()
+                    spr = self.model_picker()
+                    b.ui_board_void_cell_sprixel = spr
+                    b.ui_board_void_cell = str(spr)
+                    for r in range(b.height):
+                        for c in range(b.width):
+                            itm = b.item(r, c)
+                            if isinstance(itm, board_items.BoardItemVoid):
+                                itm.sprixel = b.ui_board_void_cell_sprixel
                     self.is_modified = True
             elif self.current_menu == "boards_list":
                 if key in "1234567890":
