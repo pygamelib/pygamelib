@@ -32,12 +32,16 @@ class PglEditor:
         self.current_menu = "main"
         self.object_history = []
         self.current_file = ""
+        self.use_complex_item = False
 
     # Functions definition
     def place_and_go(self, obj, x, y, direction):
         game = self.game
         initial_position = game.player.pos
-        game.move_player(direction, 1)
+        if direction == constants.LEFT or direction == constants.RIGHT:
+            game.move_player(direction, obj.width)
+        elif direction == constants.UP or direction == constants.DOWN:
+            game.move_player(direction, obj.height)
         if initial_position != game.player.pos:
             new_obj = deepcopy(obj)
             if new_obj.sprixel.bg_color is None:
@@ -58,13 +62,13 @@ class PglEditor:
         new_x = game.player.pos[0]
         new_y = game.player.pos[1]
         if direction == constants.DOWN:
-            new_x += 1
+            new_x += game.player.height
         elif direction == constants.UP:
-            new_x -= 1
+            new_x -= game.player.height
         elif direction == constants.LEFT:
-            new_y -= 1
+            new_y -= game.player.width
         elif direction == constants.RIGHT:
-            new_y += 1
+            new_y += game.player.width
 
         if (
             new_x < 0
@@ -771,7 +775,7 @@ class PglEditor:
         )
         ui_borders = graphics.WHITE_SQUARE
         ui_board_void_cell = gfx_core.Sprixel.black_square()
-        use_complex_item = False
+        self.use_complex_item = False
         if use_square == "0":
             ui_borders = graphics.WHITE_RECT
             ui_board_void_cell = gfx_core.Sprixel.black_rect()
@@ -779,11 +783,14 @@ class PglEditor:
                 "You have to pay attention to the items movements, you probably"
                 " want to make sure the items move faster horizontally than vertically."
             )
-            cursor = gfx_core.Sprite(
-                sprixels=[[gfx_core.Sprixel("["), gfx_core.Sprixel("]")]]
+            # cursor = gfx_core.Sprite(
+            #     sprixels=[[gfx_core.Sprixel("["), gfx_core.Sprixel("]")]]
+            # )
+            # game.player = board_items.ComplexPlayer(sprite=cursor)
+            # self.use_complex_item = True
+            game.player.sprixel = gfx_core.Sprixel(
+                graphics.BoxDrawings.HEAVY_VERTICAL_AND_HORIZONTAL,
             )
-            game.player = board_items.ComplexPlayer(sprite=cursor)
-            use_complex_item = True
             input("\n\nPress ENTER to continue.")
         game.add_board(
             1,
@@ -794,7 +801,6 @@ class PglEditor:
                 ui_board_void_cell_sprixel=ui_board_void_cell,
             ),
         )
-        game.get_board(1).use_complex_item = use_complex_item
         self.is_modified = True
         self.current_file = os.path.join(
             self.default_map_dir, name.replace(" ", "_") + ".json"
