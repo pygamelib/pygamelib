@@ -936,6 +936,7 @@ class Board(base.PglBaseObject):
                 for ir in range(0, item.size[1]):
                     for ic in range(0, item.size[0]):
                         itm = item.item(ir, ic)
+                        print(f"Placing {itm} at {ir},{ic}")
                         if not isinstance(itm, board_items.BoardItemVoid):
                             self.place_item(
                                 itm,
@@ -3625,7 +3626,9 @@ class Inventory(base.PglBaseObject):
         return [
             item
             for item in self.__items
-            if query in item.name or query in item.type or query in item.value
+            if query in item.name
+            or query in item.type
+            or (type(query) is int and query == item.value)
         ]
 
     def get_item(self, name):
