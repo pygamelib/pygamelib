@@ -936,7 +936,6 @@ class Board(base.PglBaseObject):
                 for ir in range(0, item.size[1]):
                     for ic in range(0, item.size[0]):
                         itm = item.item(ir, ic)
-                        print(f"Placing {itm} at {ir},{ic}")
                         if not isinstance(itm, board_items.BoardItemVoid):
                             self.place_item(
                                 itm,
