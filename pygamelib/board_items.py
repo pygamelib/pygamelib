@@ -2631,15 +2631,6 @@ class Tile(BoardComplexItem, GenericStructure):
     It is particularly useful to display a :class:`~pygamelib.gfx.core.Sprite` on the
     background or to create terrain.
 
-    :param overlappable: Defines if the Tile can be overlapped.
-    :type overlappable: bool
-    :param restorable: Defines is the Tile should be restored after being overlapped.
-    :type restorable: bool
-    :param pickable: Defines if the Tile can be picked up by the Player or NPC.
-    :type pickable: bool
-
-    Please see :class:`BoardComplexItem` for additional parameters.
-
     Example::
 
         grass_sprite = Sprite.load_from_ansi_file('textures/grass.ans')
@@ -2648,6 +2639,17 @@ class Tile(BoardComplexItem, GenericStructure):
     """
 
     def __init__(self, **kwargs):
+        """
+        :param overlappable: Defines if the Tile can be overlapped.
+        :type overlappable: bool
+        :param restorable: Defines is the Tile should be restored after being
+           overlapped.
+        :type restorable: bool
+        :param pickable: Defines if the Tile can be picked up by the Player or NPC.
+        :type pickable: bool
+
+        Please see :class:`BoardComplexItem` for additional parameters.
+        """
         kwargs["parent"] = self
         kwargs["base_item_type"] = GenericStructureComplexComponent
         if "overlappable" not in kwargs:
@@ -2694,6 +2696,24 @@ class Tile(BoardComplexItem, GenericStructure):
         exec("import pygamelib")
         itm.base_item_type = eval(f"{obj}")
         return itm
+
+
+class ActionableTile(Actionable, Tile):
+    """
+    The ActionableTile is the complex (i.e: multi-cells items) version of the
+    :class:`GenericActionableStructure`. It allows you to create any type of in game
+    object that is represented with more than one character in the terminal and that is
+    :class:`Actionable`.
+    Actionable object have a callback system that is automatically called when the
+    player collide with the object.
+    """
+
+    def __init__(self, **kwargs):
+        """
+        Please have a look at the documentation for :class:`Tile` and
+        :class:`Actionable` for the list of possible constructor's parameters.
+        """
+        super().__init__(**kwargs)
 
 
 class Camera(Movable):
