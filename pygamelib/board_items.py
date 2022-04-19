@@ -941,7 +941,12 @@ class BoardComplexItem(BoardItem):
         ret_data = super().serialize()
         ret_data["sprite"] = self.sprite.serialize()
         ret_data["size"] = self.size
-        ret_data["null_sprixel"] = self.null_sprixel
+        if self.null_sprixel is not None and isinstance(
+            self.null_sprixel, core.Sprixel
+        ):
+            ret_data["null_sprixel"] = self.null_sprixel.serialize()
+        else:
+            print(f"serialyze null_sprixel: {self.null_sprixel}")
         ret_data["base_item_type"] = str(self.base_item_type)
         return ret_data
 
@@ -959,7 +964,7 @@ class BoardComplexItem(BoardItem):
         obj = data["base_item_type"].split("'")[-2]
         del data["object"]
         del data["base_item_type"]
-        fields = ["sprite", "size", "null_sprixel", "base_item_type"]
+        fields = ["sprite", "size", "base_item_type"]
         for field in fields:
             if field not in data.keys():
                 data[field] = None
@@ -972,6 +977,10 @@ class BoardComplexItem(BoardItem):
             del data["type"]
         if "sprixel" in data.keys():
             data["sprixel"] = core.Sprixel.load(data["sprixel"])
+        if "null_sprixel" in data.keys():
+            data["null_sprixel"] = core.Sprixel.load(data["null_sprixel"])
+        else:
+            data["null_sprixel"] = None
         itm = cls(**data)
         exec("import pygamelib")
         itm.base_item_type = eval(f"{obj}")
@@ -1822,6 +1831,10 @@ class ComplexPlayer(Player, BoardComplexItem):
             data["sprixel"] = core.Sprixel.load(data["sprixel"])
         if "sprite" in data.keys() and data["sprite"] is not None:
             data["sprite"] = core.Sprite.load(data["sprite"])
+        if "null_sprixel" in data.keys():
+            data["null_sprixel"] = core.Sprixel.load(data["null_sprixel"])
+        else:
+            data["null_sprixel"] = None
         itm = cls(**data)
         exec("import pygamelib")
         itm.base_item_type = eval(f"{obj}")
@@ -2059,6 +2072,10 @@ class ComplexNPC(NPC, BoardComplexItem):
             data["sprixel"] = core.Sprixel.load(data["sprixel"])
         if "sprite" in data.keys() and data["sprite"] is not None:
             data["sprite"] = core.Sprite.load(data["sprite"])
+        if "null_sprixel" in data.keys():
+            data["null_sprixel"] = core.Sprixel.load(data["null_sprixel"])
+        else:
+            data["null_sprixel"] = None
         itm = cls(**data)
         exec("import pygamelib")
         itm.base_item_type = eval(f"{obj}")
@@ -2297,6 +2314,10 @@ class ComplexWall(Wall, BoardComplexItem):
             data["sprixel"] = core.Sprixel.load(data["sprixel"])
         if "sprite" in data.keys() and data["sprite"] is not None:
             data["sprite"] = core.Sprite.load(data["sprite"])
+        if "null_sprixel" in data.keys():
+            data["null_sprixel"] = core.Sprixel.load(data["null_sprixel"])
+        else:
+            data["null_sprixel"] = None
         itm = cls(**data)
         exec("import pygamelib")
         itm.base_item_type = eval(f"{obj}")
@@ -2491,6 +2512,10 @@ class ComplexTreasure(Treasure, BoardComplexItem):
             data["sprixel"] = core.Sprixel.load(data["sprixel"])
         if "sprite" in data.keys() and data["sprite"] is not None:
             data["sprite"] = core.Sprite.load(data["sprite"])
+        if "null_sprixel" in data.keys():
+            data["null_sprixel"] = core.Sprixel.load(data["null_sprixel"])
+        else:
+            data["null_sprixel"] = None
         itm = cls(**data)
         exec("import pygamelib")
         itm.base_item_type = eval(f"{obj}")
@@ -2599,6 +2624,10 @@ class ComplexDoor(Door, BoardComplexItem):
             data["sprixel"] = core.Sprixel.load(data["sprixel"])
         if "sprite" in data.keys() and data["sprite"] is not None:
             data["sprite"] = core.Sprite.load(data["sprite"])
+        if "null_sprixel" in data.keys():
+            data["null_sprixel"] = core.Sprixel.load(data["null_sprixel"])
+        else:
+            data["null_sprixel"] = None
         itm = cls(**data)
         exec("import pygamelib")
         itm.base_item_type = eval(f"{obj}")
@@ -2692,6 +2721,10 @@ class Tile(BoardComplexItem, GenericStructure):
             data["sprixel"] = core.Sprixel.load(data["sprixel"])
         if "sprite" in data.keys() and data["sprite"] is not None:
             data["sprite"] = core.Sprite.load(data["sprite"])
+        if "null_sprixel" in data.keys():
+            data["null_sprixel"] = core.Sprixel.load(data["null_sprixel"])
+        else:
+            data["null_sprixel"] = None
         itm = cls(**data)
         exec("import pygamelib")
         itm.base_item_type = eval(f"{obj}")
