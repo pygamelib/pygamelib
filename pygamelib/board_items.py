@@ -700,7 +700,27 @@ class BoardItemComplexComponent(BoardItem):
     """
 
     def __init__(self, **kwargs):
-        super().__init__(**kwargs)
+        valid_kwargs_opts = [
+            "sprixel",
+            "model",
+            "name",
+            "item_type",
+            "parent",
+            "pickable",
+            "overlappable",
+            "restorable",
+            "can_move",
+            "pos",
+            "value",
+            "inventory_space",
+            "animation",
+            "particle_emitter",
+        ]
+        valid_kwargs = {}
+        for opt in valid_kwargs_opts:
+            if opt in kwargs:
+                valid_kwargs[opt] = kwargs[opt]
+        super().__init__(**valid_kwargs)
         self.__is_restorable = False
         self.__is_overlappable = False
         self.__can_move = False
@@ -775,7 +795,27 @@ class BoardComplexItem(BoardItem):
         self.__kwargs = kwargs
         self.name = "Board Multi Item"
         self.type = "multi_item"
-        super().__init__(**kwargs)
+        valid_kwargs_opts = [
+            "sprixel",
+            "model",
+            "name",
+            "item_type",
+            "parent",
+            "pickable",
+            "overlappable",
+            "restorable",
+            "can_move",
+            "pos",
+            "value",
+            "inventory_space",
+            "animation",
+            "particle_emitter",
+        ]
+        valid_kwargs = {}
+        for opt in valid_kwargs_opts:
+            if opt in kwargs:
+                valid_kwargs[opt] = kwargs[opt]
+        super().__init__(**valid_kwargs)
         self.__sprite = core.Sprite()
         if sprite is not None:
             self.__sprite = sprite
@@ -945,8 +985,6 @@ class BoardComplexItem(BoardItem):
             self.null_sprixel, core.Sprixel
         ):
             ret_data["null_sprixel"] = self.null_sprixel.serialize()
-        else:
-            print(f"serialyze null_sprixel: {self.null_sprixel}")
         ret_data["base_item_type"] = str(self.base_item_type)
         return ret_data
 
