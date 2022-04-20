@@ -816,6 +816,10 @@ def paste_clipboard(g: engine.Game):
     ]
     sr = g.player.row
     sc = g.player.column
+    # Get the curseur out of the way
+    b = g.current_board()
+    b.remove_item(g.player)
+    b.place_item(g.player, sr, sc, 1)
     start_row = min(ev.copy_paste_start[0], ev.copy_paste_stop[0])
     stop_row = max(ev.copy_paste_start[0], ev.copy_paste_stop[0])
     start_col = min(ev.copy_paste_start[1], ev.copy_paste_stop[1])
@@ -829,16 +833,15 @@ def paste_clipboard(g: engine.Game):
                 break
             sprix = clip_sprite.sprixel(r, c)
             if sprix != core.Sprixel():
-                g.current_board().place_item(
-                    board_items.Door(sprixel=copy.deepcopy(sprix)),
+                b.place_item(
+                    board_items.Door(sprixel=copy.copy(sprix)),
                     sr + r - start_row,
                     sc + c - start_col,
+                    0,
                 )
             else:
-                g.current_board().place_item(
-                    g.current_board().generate_void_cell(),
-                    sr + r - start_row,
-                    sc + c - start_col,
+                b.place_item(
+                    b.generate_void_cell(), sr + r - start_row, sc + c - start_col, 0
                 )
             _current_sprite.set_sprixel(sr + r - start_row, sc + c - start_col, sprix)
 
