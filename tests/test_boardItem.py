@@ -135,6 +135,10 @@ class TestBoard(unittest.TestCase):
         self.assertEqual(bic.size, data["size"])
         bic2 = board_items.BoardComplexItem.load(data)
         self.assertEqual(bic.size, bic2.size)
+        data = bic2.serialize()
+        del data["null_sprixel"]
+        bic3 = board_items.BoardComplexItem.load(data)
+        self.assertIsInstance(bic3.null_sprixel, gfx_core.Sprixel)
 
     def test_movable(self):
         bi = board_items.Movable(step=2)
@@ -255,6 +259,10 @@ class TestBoard(unittest.TestCase):
         self.assertEqual(n.sprite.name, data["sprite"]["name"])
         n2 = board_items.ComplexPlayer.load(data)
         self.assertEqual(n.name, n2.name)
+        data = n2.serialize()
+        del data["null_sprixel"]
+        n3 = board_items.ComplexPlayer.load(data)
+        self.assertIsInstance(n3.null_sprixel, gfx_core.Sprixel)
 
     def test_npc(self):
         npc = board_items.NPC(actuator=board_items.actuators.RandomActuator(), step=1)
@@ -304,6 +312,10 @@ class TestBoard(unittest.TestCase):
         self.assertEqual(n.sprite.name, data["sprite"]["name"])
         n2 = board_items.ComplexNPC.load(data)
         self.assertEqual(n.name, n2.name)
+        data = n2.serialize()
+        del data["null_sprixel"]
+        n3 = board_items.ComplexNPC.load(data)
+        self.assertIsInstance(n3.null_sprixel, gfx_core.Sprixel)
 
     def test_textitem(self):
         with self.assertRaises(board_items.base.PglInvalidTypeException):
@@ -376,6 +388,13 @@ class TestBoard(unittest.TestCase):
         bi2 = board_items.Tile.load(data)
         self.assertEqual(bi.overlappable(), bi2.overlappable())
         self.assertEqual(bi.pickable(), bi2.pickable())
+        data = bi2.serialize()
+        del data["null_sprixel"]
+        bi3 = board_items.Tile.load(data)
+        self.assertIsInstance(bi3.null_sprixel, gfx_core.Sprixel)
+        self.assertIsInstance(board_items.ActionableTile(), board_items.Tile)
+        self.assertIsInstance(board_items.ActionableTile(), board_items.Actionable)
+        self.assertIsInstance(board_items.ActionableTile(), board_items.ActionableTile)
 
     def test_complex_version(self):
         ci = board_items.ComplexDoor()
@@ -386,6 +405,10 @@ class TestBoard(unittest.TestCase):
         self.assertEqual(ci.overlappable(), data["overlappable"])
         ci2 = board_items.ComplexDoor.load(data)
         self.assertEqual(ci.overlappable(), ci2.overlappable())
+        data = ci2.serialize()
+        del data["null_sprixel"]
+        ci3 = board_items.ComplexDoor.load(data)
+        self.assertIsInstance(ci3.null_sprixel, gfx_core.Sprixel)
         ci = board_items.ComplexWall()
         self.assertFalse(ci.pickable())
         self.assertFalse(ci.overlappable())
@@ -394,6 +417,10 @@ class TestBoard(unittest.TestCase):
         self.assertEqual(ci.overlappable(), data["overlappable"])
         ci2 = board_items.ComplexWall.load(data)
         self.assertEqual(ci.overlappable(), ci2.overlappable())
+        data = ci2.serialize()
+        del data["null_sprixel"]
+        ci3 = board_items.ComplexWall.load(data)
+        self.assertIsInstance(ci3.null_sprixel, gfx_core.Sprixel)
         ci = board_items.ComplexTreasure()
         self.assertTrue(ci.pickable())
         self.assertFalse(ci.overlappable())
@@ -402,6 +429,10 @@ class TestBoard(unittest.TestCase):
         self.assertEqual(ci.overlappable(), data["overlappable"])
         ci2 = board_items.ComplexTreasure.load(data)
         self.assertEqual(ci.overlappable(), ci2.overlappable())
+        data = ci2.serialize()
+        del data["null_sprixel"]
+        ci3 = board_items.ComplexTreasure.load(data)
+        self.assertIsInstance(ci3.null_sprixel, gfx_core.Sprixel)
 
     def test_camera(self):
         cam = board_items.Camera()

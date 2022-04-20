@@ -3625,7 +3625,9 @@ class Inventory(base.PglBaseObject):
         return [
             item
             for item in self.__items
-            if query in item.name or query in item.type or query in item.value
+            if query in item.name
+            or query in item.type
+            or (type(query) is int and query == item.value)
         ]
 
     def get_item(self, name):

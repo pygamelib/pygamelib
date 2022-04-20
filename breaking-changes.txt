@@ -44,3 +44,5 @@ pygamelib.actuators: all the next_move() methods now returns pygamelib.constants
         # And in that case, changing a color element will have the intended effect.
         text.fg_color.g = 255
         screen.update()  # Here the screen is going to be repainted.
+
+Player: the player object is not anymore forced to be non overlappable. Overlappable is now a property that can be set, like any board item.

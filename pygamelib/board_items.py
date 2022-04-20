@@ -700,7 +700,27 @@ class BoardItemComplexComponent(BoardItem):
     """
 
     def __init__(self, **kwargs):
-        super().__init__(**kwargs)
+        valid_kwargs_opts = [
+            "sprixel",
+            "model",
+            "name",
+            "item_type",
+            "parent",
+            "pickable",
+            "overlappable",
+            "restorable",
+            "can_move",
+            "pos",
+            "value",
+            "inventory_space",
+            "animation",
+            "particle_emitter",
+        ]
+        valid_kwargs = {}
+        for opt in valid_kwargs_opts:
+            if opt in kwargs:
+                valid_kwargs[opt] = kwargs[opt]
+        super().__init__(**valid_kwargs)
         self.__is_restorable = False
         self.__is_overlappable = False
         self.__can_move = False
@@ -775,7 +795,27 @@ class BoardComplexItem(BoardItem):
         self.__kwargs = kwargs
         self.name = "Board Multi Item"
         self.type = "multi_item"
-        super().__init__(**kwargs)
+        valid_kwargs_opts = [
+            "sprixel",
+            "model",
+            "name",
+            "item_type",
+            "parent",
+            "pickable",
+            "overlappable",
+            "restorable",
+            "can_move",
+            "pos",
+            "value",
+            "inventory_space",
+            "animation",
+            "particle_emitter",
+        ]
+        valid_kwargs = {}
+        for opt in valid_kwargs_opts:
+            if opt in kwargs:
+                valid_kwargs[opt] = kwargs[opt]
+        super().__init__(**valid_kwargs)
         self.__sprite = core.Sprite()
         if sprite is not None:
             self.__sprite = sprite
@@ -941,7 +981,10 @@ class BoardComplexItem(BoardItem):
         ret_data = super().serialize()
         ret_data["sprite"] = self.sprite.serialize()
         ret_data["size"] = self.size
-        ret_data["null_sprixel"] = self.null_sprixel
+        if self.null_sprixel is not None and isinstance(
+            self.null_sprixel, core.Sprixel
+        ):
+            ret_data["null_sprixel"] = self.null_sprixel.serialize()
         ret_data["base_item_type"] = str(self.base_item_type)
         return ret_data
 
@@ -959,7 +1002,7 @@ class BoardComplexItem(BoardItem):
         obj = data["base_item_type"].split("'")[-2]
         del data["object"]
         del data["base_item_type"]
-        fields = ["sprite", "size", "null_sprixel", "base_item_type"]
+        fields = ["sprite", "size", "base_item_type"]
         for field in fields:
             if field not in data.keys():
                 data[field] = None
@@ -972,6 +1015,10 @@ class BoardComplexItem(BoardItem):
             del data["type"]
         if "sprixel" in data.keys():
             data["sprixel"] = core.Sprixel.load(data["sprixel"])
+        if "null_sprixel" in data.keys():
+            data["null_sprixel"] = core.Sprixel.load(data["null_sprixel"])
+        else:
+            data["null_sprixel"] = None
         itm = cls(**data)
         exec("import pygamelib")
         itm.base_item_type = eval(f"{obj}")
@@ -1822,6 +1869,10 @@ class ComplexPlayer(Player, BoardComplexItem):
             data["sprixel"] = core.Sprixel.load(data["sprixel"])
         if "sprite" in data.keys() and data["sprite"] is not None:
             data["sprite"] = core.Sprite.load(data["sprite"])
+        if "null_sprixel" in data.keys():
+            data["null_sprixel"] = core.Sprixel.load(data["null_sprixel"])
+        else:
+            data["null_sprixel"] = None
         itm = cls(**data)
         exec("import pygamelib")
         itm.base_item_type = eval(f"{obj}")
@@ -2059,6 +2110,10 @@ class ComplexNPC(NPC, BoardComplexItem):
             data["sprixel"] = core.Sprixel.load(data["sprixel"])
         if "sprite" in data.keys() and data["sprite"] is not None:
             data["sprite"] = core.Sprite.load(data["sprite"])
+        if "null_sprixel" in data.keys():
+            data["null_sprixel"] = core.Sprixel.load(data["null_sprixel"])
+        else:
+            data["null_sprixel"] = None
         itm = cls(**data)
         exec("import pygamelib")
         itm.base_item_type = eval(f"{obj}")
@@ -2297,6 +2352,10 @@ class ComplexWall(Wall, BoardComplexItem):
             data["sprixel"] = core.Sprixel.load(data["sprixel"])
         if "sprite" in data.keys() and data["sprite"] is not None:
             data["sprite"] = core.Sprite.load(data["sprite"])
+        if "null_sprixel" in data.keys():
+            data["null_sprixel"] = core.Sprixel.load(data["null_sprixel"])
+        else:
+            data["null_sprixel"] = None
         itm = cls(**data)
         exec("import pygamelib")
         itm.base_item_type = eval(f"{obj}")
@@ -2491,6 +2550,10 @@ class ComplexTreasure(Treasure, BoardComplexItem):
             data["sprixel"] = core.Sprixel.load(data["sprixel"])
         if "sprite" in data.keys() and data["sprite"] is not None:
             data["sprite"] = core.Sprite.load(data["sprite"])
+        if "null_sprixel" in data.keys():
+            data["null_sprixel"] = core.Sprixel.load(data["null_sprixel"])
+        else:
+            data["null_sprixel"] = None
         itm = cls(**data)
         exec("import pygamelib")
         itm.base_item_type = eval(f"{obj}")
@@ -2599,6 +2662,10 @@ class ComplexDoor(Door, BoardComplexItem):
             data["sprixel"] = core.Sprixel.load(data["sprixel"])
         if "sprite" in data.keys() and data["sprite"] is not None:
             data["sprite"] = core.Sprite.load(data["sprite"])
+        if "null_sprixel" in data.keys():
+            data["null_sprixel"] = core.Sprixel.load(data["null_sprixel"])
+        else:
+            data["null_sprixel"] = None
         itm = cls(**data)
         exec("import pygamelib")
         itm.base_item_type = eval(f"{obj}")
@@ -2631,15 +2698,6 @@ class Tile(BoardComplexItem, GenericStructure):
     It is particularly useful to display a :class:`~pygamelib.gfx.core.Sprite` on the
     background or to create terrain.
 
-    :param overlappable: Defines if the Tile can be overlapped.
-    :type overlappable: bool
-    :param restorable: Defines is the Tile should be restored after being overlapped.
-    :type restorable: bool
-    :param pickable: Defines if the Tile can be picked up by the Player or NPC.
-    :type pickable: bool
-
-    Please see :class:`BoardComplexItem` for additional parameters.
-
     Example::
 
         grass_sprite = Sprite.load_from_ansi_file('textures/grass.ans')
@@ -2648,6 +2706,17 @@ class Tile(BoardComplexItem, GenericStructure):
     """
 
     def __init__(self, **kwargs):
+        """
+        :param overlappable: Defines if the Tile can be overlapped.
+        :type overlappable: bool
+        :param restorable: Defines is the Tile should be restored after being
+           overlapped.
+        :type restorable: bool
+        :param pickable: Defines if the Tile can be picked up by the Player or NPC.
+        :type pickable: bool
+
+        Please see :class:`BoardComplexItem` for additional parameters.
+        """
         kwargs["parent"] = self
         kwargs["base_item_type"] = GenericStructureComplexComponent
         if "overlappable" not in kwargs:
@@ -2690,10 +2759,32 @@ class Tile(BoardComplexItem, GenericStructure):
             data["sprixel"] = core.Sprixel.load(data["sprixel"])
         if "sprite" in data.keys() and data["sprite"] is not None:
             data["sprite"] = core.Sprite.load(data["sprite"])
+        if "null_sprixel" in data.keys():
+            data["null_sprixel"] = core.Sprixel.load(data["null_sprixel"])
+        else:
+            data["null_sprixel"] = None
         itm = cls(**data)
         exec("import pygamelib")
         itm.base_item_type = eval(f"{obj}")
         return itm
+
+
+class ActionableTile(Actionable, Tile):
+    """
+    The ActionableTile is the complex (i.e: multi-cells items) version of the
+    :class:`GenericActionableStructure`. It allows you to create any type of in game
+    object that is represented with more than one character in the terminal and that is
+    :class:`Actionable`.
+    Actionable object have a callback system that is automatically called when the
+    player collide with the object.
+    """
+
+    def __init__(self, **kwargs):
+        """
+        Please have a look at the documentation for :class:`Tile` and
+        :class:`Actionable` for the list of possible constructor's parameters.
+        """
+        super().__init__(**kwargs)
 
 
 class Camera(Movable):
