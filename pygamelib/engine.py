@@ -3702,7 +3702,7 @@ class Inventory(base.PglBaseObject):
         for i in range(len(self.__items)):
             if self.__items[i].name == name:
                 self.notify(
-                    self, "pygamelib.engine.Inventory.delete_items", self.__items[i]
+                    self, "pygamelib.engine.Inventory.delete_item", self.__items[i]
                 )
                 del self.__items[i]
                 break
