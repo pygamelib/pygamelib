@@ -63,6 +63,7 @@ The Graphics module contains the following classes:
     pygamelib.assets.graphics.Blocks
     pygamelib.assets.graphics.BoxDrawings
     pygamelib.assets.graphics.GeometricShapes
+    pygamelib.assets.graphics.MiscTechnicals
     pygamelib.assets.graphics.Models
 
 .. automodule:: pygamelib.assets.graphics
