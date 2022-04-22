@@ -7,6 +7,16 @@ import time
 import sys
 import random
 
+# ====================================++ WARNING ++====================================#
+# This game is a very old example dating back to the first release of the library.     #
+# It is not very good and certainly does not represent how you should do a game with   #
+# the pygamelib library, nor is it deserving to be an example.                         #
+# It is not even a good example of a Python application.                               #
+# There are some good ideas though (like the orientation of the player's model or the  #
+# pure text or text+emoji rendering). Like all code: not everything is bad.            #
+# =====================================================================================#
+
+
 sprixel_mode = "nosprite"
 
 sprixel_player = {
@@ -43,7 +53,6 @@ else:
         sprixel_mode = "nosprite"
 
 if sprixel_mode == "sprite":
-    # sprixel_player = graphics.Models.SHEEP
     sprixel_portal = core.Sprixel(graphics.Models.CYCLONE)
     sprixel_treasure = core.Sprixel(graphics.Models.GEM_STONE)
     sprixel_treasure2 = core.Sprixel(graphics.Models.MONEY_BAG)
@@ -55,7 +64,6 @@ if sprixel_mode == "sprite":
     sprixel_heart_minor = core.Sprixel(graphics.Models.BLUE_HEART)
     sprixel_unipici = core.Sprixel(graphics.Models.UNICORN)
 else:
-    # sprixel_player = Utils.RED_BLUE_SQUARE
     sprixel_portal = core.Sprixel("()", fg_color=core.Color(0, 255, 255))
     sprixel_treasure = core.Sprixel("[]", fg_color=core.Color(255, 255, 0))
     sprixel_treasure2 = core.Sprixel("$$", fg_color=core.Color(255, 255, 0))
@@ -82,7 +90,7 @@ def refresh_screen(mygame, player, menu):
         for item_name in player.inventory.items_name():
             item = player.inventory.get_item(item_name)
             if item.type in items_by_type.keys():
-                items_by_type[item.type]["cumulated_size"] += item.inventory_space()
+                items_by_type[item.type]["cumulated_size"] += item.inventory_space
             else:
                 items_by_type[item.type] = {
                     "cumulated_size": item.inventory_space,
@@ -147,7 +155,7 @@ lvl2 = engine.Board(
     player_starting_position=[0, 0],
 )
 
-game = engine.Game(name="HAC Game")
+game = engine.Game(name="Simple Game (Deprecated)")
 p = board_items.Player(sprixel=sprixel_player["right"], name="Nazbrok")
 npc1 = board_items.NPC(sprixel=sprixel_npc, name="Bad guy 1", step=1)
 # Test of the PathActuator
@@ -412,6 +420,7 @@ while key != "q":
     elif current_menu == "unipici_dialog":
         if key == "4":
             current_menu = "main_menu"
+            game.move_player(constants.RIGHT, 1)
         elif key == "2":
             game.player.hp -= game.player.max_hp - 5
         elif key == "1":
