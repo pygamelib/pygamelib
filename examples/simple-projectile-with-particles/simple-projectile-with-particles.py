@@ -93,14 +93,16 @@ def update(g: engine.Game, key, dt):
     row = 1
     for emt in g.current_board()._particle_emitters:
         screen.place(
-            f"Emitter #{row}: lifespan={emt.lifespan} row={emt.row} column={emt.column} active={not emt.finished()}",
+            f"Emitter #{row}: lifespan={emt.lifespan} row={emt.row} column={emt.column}"
+            f" active={not emt.finished()}",
             row,
             0,
         )
         row += 1
     for emt in global_emitters:
         screen.place(
-            f"Global Emitter: lifespan={emt.lifespan} row={emt.row} column={emt.column} active={not emt.finished()}",
+            f"Global Emitter: lifespan={emt.lifespan} row={emt.row} column={emt.column}"
+            f" active={not emt.finished()}",
             row,
             0,
         )
@@ -108,8 +110,8 @@ def update(g: engine.Game, key, dt):
         emt.emit()
         emt.update()
     if len(g.session_logs()) < (g.screen.height - b.height - 2) - row:
-        for l in g.session_logs():
-            screen.place(l, row, 0)
+        for log in g.session_logs():
+            screen.place(log, row, 0)
             row += 1
     else:
         stop = len(g.session_logs())
