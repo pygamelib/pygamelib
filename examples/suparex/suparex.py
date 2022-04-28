@@ -4,6 +4,7 @@ import os
 import sys
 import examples_includes  # noqa F401
 from pygamelib import engine, base, constants, board_items
+from pygamelib.gfx import core
 from pygamelib.assets import graphics
 from time import sleep, process_time
 from blessed import Terminal
@@ -30,15 +31,16 @@ logo = []
 term = Terminal()
 menu_indicator_left = "> "
 menu_indicator_right = " <"
-bg_color = "\033[48;5;26m"
-traps_color = "\033[38;5;226m"
+bg_color = core.Color(0, 51, 204)
+traps_color = core.Color(255, 255, 0)
 brick_colors = [
-    "\033[48;5;130m",
-    "\033[48;5;166m",
-    "\033[48;5;214m",
-    "\033[48;5;94m",
-    "\033[48;5;136m",
+    core.Color(153, 51, 0),
+    core.Color(204, 51, 0),
+    core.Color(255, 153, 0),
+    core.Color(102, 51, 0),
+    core.Color(153, 102, 0),
 ]
+
 fps = {"last": process_time(), "count": 0, "sum": 0}
 
 # Get current working directory
@@ -162,9 +164,7 @@ def title_screen(g):
                 g.score = 0
                 g.player.remaining_lives = 3
                 # Then reset the player model in case he died
-                g.player.model = (
-                    bg_color + graphics.Models.PANDA + graphics.Style.RESET_ALL
-                )
+                g.player.sprixel = core.Sprixel(graphics.Models.PANDA, bg_color)
                 g.clear_screen()
                 change_level([g])
             elif menu_index == 2:
@@ -340,14 +340,16 @@ def ui_threaded(g):
                     trap.fire_timer -= 0.1
                     if trap.fire_timer <= 0.0:
                         proj = board_items.Projectile(
-                            model=bg_color
-                            + base.Text.yellow_bright("\U00002301\U00002301")
-                            + graphics.Style.RESET_ALL,
+                            sprixel=core.Sprixel(
+                                graphics.MiscTechnicals.ELECTRIC_ARROW
+                                + graphics.MiscTechnicals.ELECTRIC_ARROW,
+                                fg_color=core.Color(255, 255, 0),
+                            ),
                             name="zap",
                             range=5,
-                            hit_model=bg_color
-                            + graphics.Models.HIGH_VOLTAGE
-                            + graphics.Style.RESET_ALL,
+                            hit_model=str(
+                                core.Sprixel(graphics.Models.HIGH_VOLTAGE, bg_color)
+                            ),
                             hit_callback=zap_callback,
                         )
                         proj.set_direction(trap.fdir)
@@ -365,14 +367,12 @@ def ui_threaded(g):
                     trap.fire_timer -= 0.1
                     if trap.fire_timer <= 0.0:
                         proj = board_items.Projectile(
-                            model=bg_color
-                            + graphics.Models.BOMB
-                            + graphics.Style.RESET_ALL,
+                            sprixel=core.Sprixel(graphics.Models.BOMB, bg_color),
                             name="boom",
                             range=2,
-                            hit_model=bg_color
-                            + graphics.Models.COLLISION
-                            + graphics.Style.RESET_ALL,
+                            hit_model=str(
+                                core.Sprixel(graphics.Models.COLLISION, bg_color)
+                            ),
                             hit_callback=boom_callback,
                             is_aoe=True,
                             aoe_radius=1,
@@ -387,7 +387,7 @@ def ui_threaded(g):
         if g.player.pos[0] == g.current_board().size[1] - 1:
             g.timer = 0.0
         if round(g.timer, 1) <= 0.0:
-            g.player.model = bg_color + graphics.Models.SKULL + graphics.Style.RESET_ALL
+            g.player.sprixel = core.Sprixel(graphics.Models.SKULL, bg_color)
             g.player.remaining_lives -= 1
             refresh_screen(g)
         if (
@@ -408,9 +408,7 @@ def ui_threaded(g):
                 death_wave_obj.play()
                 g.current_board().clear_cell(g.player.pos[0], g.player.pos[1])
                 potential_respawns = g.neighbors(2, g.player)
-                g.player.model = (
-                    bg_color + graphics.Models.PANDA + graphics.Style.RESET_ALL
-                )
+                g.player.sprixel = core.Sprixel(graphics.Models.PANDA, bg_color)
                 for o in potential_respawns:
                     if o.type == "platform":
                         g.current_board().place_item(
@@ -469,11 +467,17 @@ def change_level(params):
     board = engine.Board(
         size=[250, 30],
         ui_borders="",
-        ui_board_void_cell=bg_color + "  " + graphics.Style.RESET_ALL,
+        ui_board_void_cell_sprixel=core.Sprixel("  ", bg_color),
         player_starting_position=[25, 0],
         DISPLAY_SIZE_WARNINGS=False,
     )
-    board.ui_border_bottom = graphics.Models.RADIOACTIVE + " "
+    board.ui_border_bottom = str(
+        core.Sprixel(
+            graphics.Models.RADIOACTIVE + " ",
+            core.Color(0, 255, 0),
+            core.Color(255, 255, 0),
+        )
+    )
     board.sprouted_count = 0
     # Let's use a nice curve to increase the trap number.
     board.available_traps = int(10 + 10 * g.current_level * 0.2)
@@ -481,7 +485,7 @@ def change_level(params):
     for i in range(0, board.size[0]):
         board.place_item(
             board_items.Wall(
-                model=block_color() + "  " + graphics.Style.RESET_ALL,
+                sprixel=core.Sprixel("  ", block_color()),
                 item_type="platform",
             ),
             board.size[1] - 1,
@@ -533,8 +537,10 @@ def make_platform(b, row, column):
                 if e.type == "ground":
                     get_up = 4
                     break
-        m = block_color() + "  " + graphics.Style.RESET_ALL
-        plateform.append([board_items.Wall(model=m, item_type="platform"), row, i])
+        sprix = core.Sprixel("  ", block_color())
+        plateform.append(
+            [board_items.Wall(sprixel=sprix, item_type="platform"), row, i]
+        )
     for i in plateform:
         b.place_item(i[0], i[1] - get_up, i[2])
         if random.choice([True, False]):
@@ -558,9 +564,7 @@ def generate_treasure(b, row, column):
         if t == "scorers":
             b.place_item(
                 board_items.Treasure(
-                    model=bg_color
-                    + graphics.Models.TANABATA_TREE
-                    + graphics.Style.RESET_ALL,
+                    sprixel=core.Sprixel(graphics.Models.TANABATA_TREE, bg_color),
                     value=25,
                     item_type="treasure.scorers",
                 ),
@@ -570,9 +574,7 @@ def generate_treasure(b, row, column):
         elif t == "timers":
             b.place_item(
                 board_items.Treasure(
-                    model=bg_color
-                    + graphics.Models.HOURGLASS_NOT_DONE
-                    + graphics.Style.RESET_ALL,
+                    sprixel=core.Sprixel(graphics.Models.HOURGLASS_NOT_DONE, bg_color),
                     value=15,
                     item_type="treasure.timers",
                 ),
@@ -582,9 +584,7 @@ def generate_treasure(b, row, column):
         elif t == "diamond":
             b.place_item(
                 board_items.Treasure(
-                    model=bg_color
-                    + graphics.Models.GEM_STONE
-                    + graphics.Style.RESET_ALL,
+                    sprixel=core.Sprixel(graphics.Models.GEM_STONE, bg_color),
                     value=30,
                     item_type="treasure.diamond",
                 ),
@@ -594,9 +594,7 @@ def generate_treasure(b, row, column):
         elif t == "1UP":
             b.place_item(
                 board_items.Treasure(
-                    model=bg_color
-                    + graphics.Models.HEART_WITH_RIBBON
-                    + graphics.Style.RESET_ALL,
+                    sprixel=core.Sprixel(graphics.Models.HEART_WITH_RIBBON, bg_color),
                     value=30,
                     item_type="treasure.1UP",
                 ),
@@ -615,11 +613,12 @@ def generate_trap(b, row, column):
         if random.randint(0, 100) >= 100 - chance:
             if random.choice([True, False]):
                 trap = board_items.Wall(
-                    model=bg_color
-                    + traps_color
-                    + graphics.Blocks.QUADRANT_UPPER_LEFT_AND_LOWER_RIGHT
-                    + graphics.Blocks.QUADRANT_UPPER_RIGHT_AND_LOWER_LEFT
-                    + graphics.Style.RESET_ALL,
+                    sprixel=core.Sprixel(
+                        graphics.Blocks.QUADRANT_UPPER_LEFT_AND_LOWER_RIGHT
+                        + graphics.Blocks.QUADRANT_UPPER_RIGHT_AND_LOWER_LEFT,
+                        bg_color,
+                        traps_color,
+                    ),
                     item_type="trap.hfire",
                 )
                 trap.fire_timer = random.uniform(1.0, 4.0)
@@ -630,12 +629,12 @@ def generate_trap(b, row, column):
                     trap.fdir = constants.RIGHT
             else:
                 trap = board_items.Wall(
-                    model=bg_color
-                    + base.Text.red_bright(
+                    sprixel=core.Sprixel(
                         graphics.Blocks.QUADRANT_UPPER_RIGHT_AND_LOWER_LEFT_AND_LOWER_RIGHT  # noqa E501
-                        + graphics.Blocks.QUADRANT_UPPER_LEFT_AND_LOWER_LEFT_AND_LOWER_RIGHT  # noqa E501
-                    )
-                    + graphics.Style.RESET_ALL,
+                        + graphics.Blocks.QUADRANT_UPPER_LEFT_AND_LOWER_LEFT_AND_LOWER_RIGHT,  # noqa E501
+                        bg_color,
+                        core.Color(255, 0, 0),
+                    ),
                     item_type="trap.vfire",
                 )
                 trap.fire_timer = random.uniform(2.0, 6.0)
@@ -682,7 +681,7 @@ def generate_level(g, b):
                 # print(f"[d] generate level y={y}")
                 b.place_item(
                     board_items.Wall(
-                        model=block_color() + "  " + graphics.Style.RESET_ALL,
+                        sprixel=core.Sprixel("  ", block_color()),
                         item_type="ground",
                     ),
                     y,
@@ -702,7 +701,7 @@ def generate_level(g, b):
             if random.randint(0, 100) >= 66:
                 b.place_item(
                     board_items.Door(
-                        model=bg_color + "\U00002601 " + graphics.Style.RESET_ALL
+                        sprixel=core.Sprixel(f"{graphics.Models.CLOUD} ", bg_color),
                     ),
                     alt - 8 + random.randint(-2, 2),
                     x,
@@ -715,7 +714,7 @@ def generate_level(g, b):
             gap += 1
     b.place_item(
         board_items.GenericActionableStructure(
-            model=bg_color + graphics.Models.CYCLONE + graphics.Style.RESET_ALL,
+            sprixel=core.Sprixel(graphics.Models.CYCLONE, bg_color),
             item_type="exit",
             action=change_level,
             action_parameters=[g],
@@ -812,7 +811,7 @@ def sprout(p, *args):
     #     return None
     if p is not None:
         o = board_items.Wall(
-            model=bg_color + graphics.Models.DECIDUOUS_TREE + graphics.Style.RESET_ALL,
+            sprixel=core.Sprixel(graphics.Models.DECIDUOUS_TREE, bg_color),
             item_type="sprouted_trees",
         )
         o.pos = p.pos
@@ -847,148 +846,147 @@ def adapt_resolution(g):
     g.partial_display_viewport = [10, int(term_res / 4)]
 
 
-# We need the hac-game-lib v1.1+
-if constants.PYGAMELIB_VERSION < "1.2.0":
-    base.Text.print_white_on_red(
-        "Super Panda Run EX require the hac-game-lib version 1.1.0 or greater."
-        f" Version installed is {constants.PYGAMELIB_VERSION}"
-    )
-    raise SystemExit()
-
-# Start background music
-bg_music_play_obj = bg_music_wave_obj.play()
-
-g = engine.Game()
-g.enable_partial_display = True
-g.partial_display_viewport = [10, int(term_res / 4)]
-g.current_level = 0
-g.player = board_items.Player(
-    model=bg_color + graphics.Models.PANDA + graphics.Style.RESET_ALL
-)
-g.player.name = "Zigomar"
-g.player.max_y = g.player.pos[0]
-g.player.dy = gravity_speed
-g.player.last_y = g.player.pos[0]
-g.player.last_x = g.player.pos[1]
-g.timer = 60
-g.score = 0
-g.obj_stack = []
-g.pause()
-
-if os.path.exists("settings-suparex.json"):
-    g.load_config("settings-suparex.json", "settings")
-    if g.config("settings")["player_name"] is not None:
-        g.player.name = g.config("settings")["player_name"]
-else:
-    g.create_config("settings")
-    g.config("settings")["player_name"] = g.player.name
-    g.config("settings")["hiscores"] = []
-    names = [
-        "Marie Curie",
-        "Jane Goodall",
-        "Ada Lovelace",
-        "Rosalind Franklin",
-        "Dorothy Hodgkin",
-        "Jocelyn Bell Burnell",
-        "Chien-Shiung Wu",
-        "Irène Joliot-Curie",
-        "Vera Rubin",
-        "Grace Hopper",
-        "Katherine Johnson",
-        "Emmy Noether",
-        "Sally Ride",
-        "Sophie Germain",
-    ]
-    # fill the scoreboard with some names that I would have love to meet.
-    # Let's use random numbers to insult no one's memory ;)
-    i = 0
-    while i < 10:
-        g.config("settings")["hiscores"].append(
-            [random.choice(names), random.randint(10, 600)]
+if __name__ == "__main__":
+    # We need the pygamelib v1.3+
+    if constants.PYGAMELIB_VERSION < "1.2.0":
+        base.Text.print_white_on_red(
+            "Super Panda Run EX require the pygamelib version 1.3.0 or greater."
+            f" Version installed is {constants.PYGAMELIB_VERSION}"
         )
-        i += 1
+        raise SystemExit()
 
-while current_state != "eop":
-    if current_state == "title":
-        adapt_resolution(g)
-        load_logo()
-        title_screen(g)
-    elif current_state == "game":
-        key = "None"
-        g.start()
-        _thread.start_new_thread(ui_threaded, (g,))
-        while g.state != constants.STOPPED:
-            g.score += g.player.pos[1] - g.player.last_x
-            if g.player.pos[1] - g.player.last_x > 0:
-                # That is clearly where the difficulty should be:
-                # the smaller the recuperation time, the bigger the score should be
-                # awarded
-                # 0.2 is hard
-                # The timer automatically refill but with less and less time the further
-                # the player goes.
-                g.timer += 1 / g.current_level
-                # On the other end, the player gains more points the further he goes
-                g.score += int(
-                    (g.player.pos[1] - g.player.last_x)
-                    - 1 / (g.player.pos[1] - g.player.last_x)
-                )
-            g.player.last_x = g.player.pos[1]
-            if key == engine.key.LEFT:
-                g.move_player(constants.LEFT, 1)
-            elif key == engine.key.RIGHT:
-                g.move_player(constants.RIGHT, 1)
-            # elif key == engine.key.DOWN:
-            #     gravity_friction -= 0.1
-            # elif key == engine.key.UP:
-            #     gravity_friction += 0.1
-            elif key == engine.key.SPACE:
-                if g.player.dy == 0 and len(g.neighbors(1, g.player)) > 0:
-                    # Jump
-                    # Start with sound
-                    jump_wave_obj.play()
-                    g.player.max_y = g.player.pos[0] - 3
-                    g.player.dy = 1
-            elif key == "X":
-                g.stop()
-                break
-            elif key in "awsdzq":
-                projectile = board_items.Projectile(
-                    name="treeball",
-                    direction=constants.RIGHT,
-                    range=2,
-                    model=base.Text.green_bright(
-                        bg_color + " *" + graphics.Style.RESET_ALL
-                    ),
-                    hit_model=bg_color
-                    + graphics.Models.DECIDUOUS_TREE
-                    + graphics.Style.RESET_ALL,
-                    hit_callback=sprout,
-                )
-                row = g.player.pos[0]
-                column = g.player.pos[1] + 1
-                if key == "w" or key == "z":
-                    projectile.set_direction(constants.UP)
-                    row = g.player.pos[0] - 1
-                    column = g.player.pos[1]
-                elif key == "s":
-                    projectile.set_direction(constants.DOWN)
-                    row = g.player.pos[0] + 1
-                    column = g.player.pos[1]
-                elif key == "a" or key == "q":
-                    projectile.set_direction(constants.LEFT)
+    # Start background music
+    bg_music_play_obj = bg_music_wave_obj.play()
+
+    g = engine.Game()
+    g.enable_partial_display = True
+    g.partial_display_viewport = [10, int(term_res / 4)]
+    g.current_level = 0
+    g.player = board_items.Player(
+        sprixel=core.Sprixel(graphics.Models.PANDA, bg_color),
+    )
+    g.player.name = "Zigomar"
+    g.player.max_y = g.player.pos[0]
+    g.player.dy = gravity_speed
+    g.player.last_y = g.player.pos[0]
+    g.player.last_x = g.player.pos[1]
+    g.timer = 60
+    g.score = 0
+    g.obj_stack = []
+    g.pause()
+
+    if os.path.exists("settings-suparex.json"):
+        g.load_config("settings-suparex.json", "settings")
+        if g.config("settings")["player_name"] is not None:
+            g.player.name = g.config("settings")["player_name"]
+    else:
+        g.create_config("settings")
+        g.config("settings")["player_name"] = g.player.name
+        g.config("settings")["hiscores"] = []
+        names = [
+            "Marie Curie",
+            "Jane Goodall",
+            "Ada Lovelace",
+            "Rosalind Franklin",
+            "Dorothy Hodgkin",
+            "Jocelyn Bell Burnell",
+            "Chien-Shiung Wu",
+            "Irène Joliot-Curie",
+            "Vera Rubin",
+            "Grace Hopper",
+            "Katherine Johnson",
+            "Emmy Noether",
+            "Sally Ride",
+            "Sophie Germain",
+        ]
+        # fill the scoreboard with some names that I would have love to meet.
+        # Let's use random numbers to insult no one's memory ;)
+        i = 0
+        while i < 10:
+            g.config("settings")["hiscores"].append(
+                [random.choice(names), random.randint(10, 600)]
+            )
+            i += 1
+
+    while current_state != "eop":
+        if current_state == "title":
+            adapt_resolution(g)
+            load_logo()
+            title_screen(g)
+        elif current_state == "game":
+            key = "None"
+            g.start()
+            _thread.start_new_thread(ui_threaded, (g,))
+            while g.state != constants.STOPPED:
+                g.score += g.player.pos[1] - g.player.last_x
+                if g.player.pos[1] - g.player.last_x > 0:
+                    # That is clearly where the difficulty should be:
+                    # the smaller the recuperation time, the bigger the score should be
+                    # awarded
+                    # 0.2 is hard
+                    # The timer automatically refill but with less and less time the further
+                    # the player goes.
+                    g.timer += 1 / g.current_level
+                    # On the other end, the player gains more points the further he goes
+                    g.score += int(
+                        (g.player.pos[1] - g.player.last_x)
+                        - 1 / (g.player.pos[1] - g.player.last_x)
+                    )
+                g.player.last_x = g.player.pos[1]
+                if key == engine.key.LEFT:
+                    g.move_player(constants.LEFT, 1)
+                elif key == engine.key.RIGHT:
+                    g.move_player(constants.RIGHT, 1)
+                # elif key == engine.key.DOWN:
+                #     gravity_friction -= 0.1
+                # elif key == engine.key.UP:
+                #     gravity_friction += 0.1
+                elif key == engine.key.SPACE:
+                    if g.player.dy == 0 and len(g.neighbors(1, g.player)) > 0:
+                        # Jump
+                        # Start with sound
+                        jump_wave_obj.play()
+                        g.player.max_y = g.player.pos[0] - 3
+                        g.player.dy = 1
+                elif key == "X":
+                    g.stop()
+                    break
+                elif key in "awsdzq":
+                    projectile = board_items.Projectile(
+                        name="treeball",
+                        direction=constants.RIGHT,
+                        range=2,
+                        sprixel=core.Sprixel(" *", bg_color, core.Color(0, 255, 0)),
+                        hit_model=str(
+                            core.Sprixel(graphics.Models.DECIDUOUS_TREE, bg_color)
+                        ),
+                        hit_callback=sprout,
+                    )
                     row = g.player.pos[0]
-                    column = g.player.pos[1] - 1
-                hit_wave_obj.play()
-                g.add_projectile(g.current_level, projectile, row, column)
-                g.timer -= projectile.range
-            elif key == "p":
-                if g.state == constants.RUNNING:
-                    g.pause()
-                else:
-                    g.start()
-            if not bg_music_play_obj.is_playing():
-                bg_music_play_obj = bg_music_wave_obj.play()
-            key = engine.Game.get_key()
-        current_state = "title"
+                    column = g.player.pos[1] + 1
+                    if key == "w" or key == "z":
+                        projectile.set_direction(constants.UP)
+                        row = g.player.pos[0] - 1
+                        column = g.player.pos[1]
+                    elif key == "s":
+                        projectile.set_direction(constants.DOWN)
+                        row = g.player.pos[0] + 1
+                        column = g.player.pos[1]
+                    elif key == "a" or key == "q":
+                        projectile.set_direction(constants.LEFT)
+                        row = g.player.pos[0]
+                        column = g.player.pos[1] - 1
+                    hit_wave_obj.play()
+                    g.add_projectile(g.current_level, projectile, row, column)
+                    g.timer -= projectile.range
+                elif key == "p":
+                    if g.state == constants.RUNNING:
+                        g.pause()
+                    else:
+                        g.start()
+                if not bg_music_play_obj.is_playing():
+                    bg_music_play_obj = bg_music_wave_obj.play()
+                key = engine.Game.get_key()
+            current_state = "title"
 
-g.save_config("settings", "settings-suparex.json")
+    g.save_config("settings", "settings-suparex.json")
