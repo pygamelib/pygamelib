@@ -1603,6 +1603,50 @@ class Board(base.PglBaseObject):
                 raise e
         return item
 
+    def neighbors(self, obj: board_items.BoardItem, radius: int = 1):
+        """Returns a list of neighbors (non void item) around an object.
+
+        This method returns a list of objects that are all around an object between the
+        position of an object and all the cells at **radius**.
+
+        :param radius: The radius in which non void item should be included
+        :type radius: int
+        :param object: The central object. The neighbors are calculated for that object.
+        :type object: pygamelib.board_items.BoardItem
+        :return: A list of BoardItem. No BoardItemVoid is included.
+        :raises PglInvalidTypeException: If radius is not an int.
+
+        Example::
+
+            for item in game.neighbors(npc, 2):
+                print(f'{item.name} is around {npc.name} at coordinates '
+                    '({item.pos[0]},{item.pos[1]})')
+        """
+        if type(radius) is not int:
+            raise base.PglInvalidTypeException(
+                "In Board.neighbors(obj, radius), radius must be an integer."
+                f" Got {radius} of type {type(radius)} instead."
+            )
+        if obj is None:
+            obj = self.player
+        elif not isinstance(obj, board_items.BoardItem):
+            raise base.PglInvalidTypeException(
+                "In Board.neighbors(object, radius), object must be a BoardItem."
+                f" Got {obj} of type {type(obj)} instead."
+            )
+        return_array = []
+        for x in range(-radius, radius + 1, 1):
+            for y in range(-radius, radius + 1, 1):
+                if x == 0 and y == 0:
+                    continue
+                true_x = obj.pos[0] + x
+                true_y = obj.pos[1] + y
+                if (true_x < self.size[1] and true_y < self.size[0]) and not isinstance(
+                    self.item(true_x, true_y), board_items.BoardItemVoid
+                ):
+                    return_array.append(self.item(true_x, true_y))
+        return return_array
+
 
 class Game:
     """A class that serve as a game engine.
@@ -2983,31 +3027,9 @@ class Game:
                 print(f'{item.name} is around player at coordinates '
                     '({item.pos[0]},{item.pos[1]})')
         """
-        if type(radius) is not int:
-            raise base.PglInvalidTypeException(
-                "In Game.neighbors(radius), radius must be an integer."
-            )
         if obj is None:
             obj = self.player
-        elif not isinstance(obj, board_items.BoardItem):
-            raise base.PglInvalidTypeException(
-                "In Game.neighbors(radius, object), object must be a BoardItem."
-            )
-        return_array = []
-        for x in range(-radius, radius + 1, 1):
-            for y in range(-radius, radius + 1, 1):
-                if x == 0 and y == 0:
-                    continue
-                true_x = obj.pos[0] + x
-                true_y = obj.pos[1] + y
-                if (
-                    true_x < self.current_board().size[1]
-                    and true_y < self.current_board().size[0]
-                ) and not isinstance(
-                    self.current_board().item(true_x, true_y), board_items.BoardItemVoid
-                ):
-                    return_array.append(self.current_board().item(true_x, true_y))
-        return return_array
+        return self.current_board().neighbors(obj, radius)
 
     def load_board(self, filename, lvl_number=0):
         """Load a saved board
