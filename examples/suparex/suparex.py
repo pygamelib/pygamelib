@@ -13,6 +13,15 @@ import random
 import math
 import simpleaudio as sa
 
+
+# ------------------------------------- WARNING ------------------------------------- #
+#                                                                                     #
+# Suparex was developped for the version 1.1.0 of the pygamelib. It is no longer      #
+# representative of the structure of a program developped with the pygamelib 1.3+.    #
+# The threading is not even adequate with the current state of the art of Python.     #
+# There's some good ideas though and it IS compatible with the pygamelib 1.3+.        #
+# ----------------------------------------------------------------------------------- #
+
 gravity_speed = 1
 gravity_friction = 1.5
 enable_rebound = False
@@ -27,7 +36,7 @@ title_screen_menu = [
     "Quit",
 ]
 current_state = "title"
-logo = []
+logo = None
 term = Terminal()
 menu_indicator_left = "> "
 menu_indicator_right = " <"
@@ -39,6 +48,14 @@ brick_colors = [
     core.Color(255, 153, 0),
     core.Color(102, 51, 0),
     core.Color(153, 102, 0),
+]
+
+brick_sprixels = [
+    core.Sprixel("  ", core.Color(153, 51, 0)),
+    core.Sprixel("  ", core.Color(204, 51, 0)),
+    core.Sprixel("  ", core.Color(255, 153, 0)),
+    core.Sprixel("  ", core.Color(102, 51, 0)),
+    core.Sprixel("  ", core.Color(153, 102, 0)),
 ]
 
 fps = {"last": process_time(), "count": 0, "sum": 0}
@@ -73,31 +90,56 @@ bg_music_wave_obj = sa.WaveObject.from_wave_file(
     os.path.join(wd, "sfx", "background-music.wav")
 )
 
+# Welcome screen sprite
+sprite_collection = core.SpriteCollection.load_json_file("./suparex-logo-cropped.spr")
+suparex_sprite = sprite_collection["suparex-logo-cropped"]
+
 
 def block_color():
     return random.choice(brick_colors)
 
 
-def title_screen(g):
+def block_sprixel():
+    return random.choice(brick_sprixels)
+
+
+def title_screen(g: engine.Game):
     global logo, current_state, term_res
     menu_index = 0
     key = None
+    sr = sc = 0
+    center = g.screen.width // 2
+    scaled = None
+    if suparex_sprite.width > g.screen.width:
+        scaled = suparex_sprite.scale(g.screen.width / suparex_sprite.width)
+    else:
+        scaled = suparex_sprite
+        sc = center - scaled.width // 2
     while current_state == "title":
         g.clear_screen()
-        for logo_line in logo:
-            print(logo_line, end="\r")
-        print("\r")
-        print(base.Text.blue(f"{' '*int(term_res/2-10)}Welcome {g.player.name}!\r"))
+
+        g.screen.display_sprite_at(scaled, sr, sc)
+
+        msg = f"Welcome {g.player.name}!"
+        g.screen.display_at(
+            base.Text.blue(f"{msg}\r"), sr + scaled.height + 1, center - len(msg) // 2
+        )
         for i in range(0, len(title_screen_menu)):
             if i == menu_index:
-                print(
-                    base.Text.green_bright(
-                        f"{' '*int(term_res/2-10)}{menu_indicator_left}"
-                        f"{title_screen_menu[i]}{menu_indicator_right}\r"
-                    )
+                msg = (
+                    f"{menu_indicator_left}{title_screen_menu[i]}{menu_indicator_right}"
+                )
+                g.screen.display_at(
+                    base.Text.green_bright(f"{msg}\r"),
+                    sr + scaled.height + 2 + i,
+                    center - len(msg) // 2,
                 )
             else:
-                print(f"  {' '*int(term_res/2-10)}{title_screen_menu[i]}\r")
+                g.screen.display_at(
+                    f"{title_screen_menu[i]}\r",
+                    sr + scaled.height + 2 + i,
+                    center - len(title_screen_menu[i]) // 2,
+                )
         key = engine.Game.get_key()
         if key == engine.key.DOWN:
             menu_move_wave_object.play()
@@ -474,7 +516,7 @@ def change_level(params):
     board.ui_border_bottom = str(
         core.Sprixel(
             graphics.Models.RADIOACTIVE + " ",
-            core.Color(0, 255, 0),
+            None,
             core.Color(255, 255, 0),
         )
     )
@@ -485,13 +527,15 @@ def change_level(params):
     for i in range(0, board.size[0]):
         board.place_item(
             board_items.Wall(
-                sprixel=core.Sprixel("  ", block_color()),
+                sprixel=block_sprixel(),
                 item_type="platform",
             ),
             board.size[1] - 1,
             i,
         )
+    # start_generation = process_time()
     generate_level(game, board)
+    # input(f"Generation time: {process_time() - start_generation}")
     game.score += 50 * game.current_level
     new_level = game.current_level + 1
     game.add_board(new_level, board)
@@ -507,16 +551,12 @@ def change_level(params):
 def make_platform(b, row, column):
     psize = random.randint(2, 10)
     plateform = []
-    tmp_game = engine.Game()
-    # Only because Game needs it, we don't care.
-    tmp_game.player = board_items.Player()
-    tmp_game.add_board(0, b)
-    tmp_game.change_level(0)
     # print(
     #     f"[d] make_platform at {row}, {column}, psize is {psize} column will be "
     #     f"between {column} and {column + psize + 1}"
     # )
     get_up = 0
+    dummy_door = board_items.Door()
     # for i in range(column, column + psize + 1):
     for i in range(column - psize - 1, column):
         if i >= b.size[0]:
@@ -528,16 +568,20 @@ def make_platform(b, row, column):
         # Check if we have other platforms around.
         # If yes moving the platform up.
         if get_up < 3:
-            for e in tmp_game.neighbors(2, board_items.Door(pos=[row, i])):
+            dummy_door.pos = [row, i]
+            # for e in tmp_game.neighbors(2, board_items.Door(pos=[row, i])):
+            for e in b.neighbors(dummy_door, 2):
                 if e.type == "ground":
                     get_up = 3
                     break
         if get_up < 4:
-            for e in tmp_game.neighbors(1, board_items.Door(pos=[row, i])):
+            dummy_door.pos = [row, i]
+            # for e in tmp_game.neighbors(1, board_items.Door(pos=[row, i])):
+            for e in b.neighbors(dummy_door, 1):
                 if e.type == "ground":
                     get_up = 4
                     break
-        sprix = core.Sprixel("  ", block_color())
+        sprix = block_sprixel()
         plateform.append(
             [board_items.Wall(sprixel=sprix, item_type="platform"), row, i]
         )
@@ -666,6 +710,9 @@ def generate_level(g, b):
         "1UP": {"count": 1, "rate": int(math.log(g.current_level + 1)), "placed": 0},
         "diamond": {"count": 1, "rate": 2, "placed": 0},
     }
+    cloud = board_items.Door(
+        sprixel=core.Sprixel(f"{graphics.Models.CLOUD} ", bg_color),
+    )
     # We go through all the column of the map.
     for x in range(5, b.size[0]):
         # print(f"[d] generate level x={x}")
@@ -681,7 +728,7 @@ def generate_level(g, b):
                 # print(f"[d] generate level y={y}")
                 b.place_item(
                     board_items.Wall(
-                        sprixel=core.Sprixel("  ", block_color()),
+                        sprixel=block_sprixel(),
                         item_type="ground",
                     ),
                     y,
@@ -693,16 +740,13 @@ def generate_level(g, b):
                 # them later.
                 if random.randint(0, 100) >= 80:
                     make_platform(b, last_alt - random.randint(2, 3), x)
-
             # if y < b.size[1] - 1:
             #     generate_trap(b, alt, x)
             # Just to break monotony, we have 33% chance of putting a cloud
             # in the background
             if random.randint(0, 100) >= 66:
                 b.place_item(
-                    board_items.Door(
-                        sprixel=core.Sprixel(f"{graphics.Models.CLOUD} ", bg_color),
-                    ),
+                    cloud,
                     alt - 8 + random.randint(-2, 2),
                     x,
                 )
@@ -798,7 +842,7 @@ def generate_level(g, b):
                         if good_candidate:
                             candidates.append(item)
                 for c in candidates:
-                    generate_trap(b, c.pos[0], c.pos[1])
+                    generate_treasure(b, c.pos[0], c.pos[1])
         idx += 1
         if b.treasures["scorers"]["count"] <= 0 and b.treasures["timers"]["count"] <= 0:
             break
@@ -848,7 +892,7 @@ def adapt_resolution(g):
 
 if __name__ == "__main__":
     # We need the pygamelib v1.3+
-    if constants.PYGAMELIB_VERSION < "1.2.0":
+    if constants.PYGAMELIB_VERSION < "1.3.0":
         base.Text.print_white_on_red(
             "Super Panda Run EX require the pygamelib version 1.3.0 or greater."
             f" Version installed is {constants.PYGAMELIB_VERSION}"
@@ -924,8 +968,8 @@ if __name__ == "__main__":
                     # the smaller the recuperation time, the bigger the score should be
                     # awarded
                     # 0.2 is hard
-                    # The timer automatically refill but with less and less time the further
-                    # the player goes.
+                    # The timer automatically refill but with less and less time the
+                    # further the player goes.
                     g.timer += 1 / g.current_level
                     # On the other end, the player gains more points the further he goes
                     g.score += int(
