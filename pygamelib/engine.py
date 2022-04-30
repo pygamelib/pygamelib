@@ -1603,7 +1603,7 @@ class Board(base.PglBaseObject):
                 raise e
         return item
 
-    def neighbors(self, obj: board_items.BoardItem, radius: int = 1):
+    def neighbors(self, obj, radius: int = 1):
         """Returns a list of neighbors (non void item) around an object.
 
         This method returns a list of objects that are all around an object between the
@@ -1611,8 +1611,8 @@ class Board(base.PglBaseObject):
 
         :param radius: The radius in which non void item should be included
         :type radius: int
-        :param object: The central object. The neighbors are calculated for that object.
-        :type object: pygamelib.board_items.BoardItem
+        :param obj: The central object. The neighbors are calculated for that object.
+        :type obj: :class:`~pygamelib.board_items.BoardItem`
         :return: A list of BoardItem. No BoardItemVoid is included.
         :raises PglInvalidTypeException: If radius is not an int.
 
@@ -1627,9 +1627,7 @@ class Board(base.PglBaseObject):
                 "In Board.neighbors(obj, radius), radius must be an integer."
                 f" Got {radius} of type {type(radius)} instead."
             )
-        if obj is None:
-            obj = self.player
-        elif not isinstance(obj, board_items.BoardItem):
+        if not isinstance(obj, board_items.BoardItem):
             raise base.PglInvalidTypeException(
                 "In Board.neighbors(object, radius), object must be a BoardItem."
                 f" Got {obj} of type {type(obj)} instead."
