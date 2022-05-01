@@ -415,6 +415,11 @@ class Sprixel(object):
         else:
             return False
 
+    def __mul__(self, other):
+        if isinstance(other, int):
+            return [copy.deepcopy(self)] * other
+        raise NotImplementedError
+
     @staticmethod
     def from_ansi(string, model="▄"):
         """Takes an ANSI string, parse it and return a Sprixel.
