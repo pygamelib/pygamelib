@@ -158,10 +158,6 @@ class Board(base.PglBaseObject):
         self.partial_display_focus = partial_display_focus
         self.enable_partial_display = enable_partial_display
         self._matrix = np.array([])
-        # The overlapped matrix is used as an invisible layer were overlapped
-        # restorable items are parked momentarily (until the cell they were on
-        # is free again).
-        self._overlapped_matrix = np.array([])
 
         # if ui_borders is set then set all borders to that value
         if ui_borders is not None:
@@ -334,26 +330,34 @@ class Board(base.PglBaseObject):
             raise base.PglException(
                 "SANITY_CHECK_KO", "The 'name' parameter must be a string."
             )
-        if type(self.ui_border_bottom) is str:
+        if type(self.ui_border_bottom) is str or isinstance(
+            self.ui_border_bottom, core.Sprixel
+        ):
             sanity_check += 1
         else:
             raise base.PglException(
                 "SANITY_CHECK_KO",
                 ("The 'ui_border_bottom' parameter must be a string."),
             )
-        if type(self.ui_border_top) is str:
+        if type(self.ui_border_top) is str or isinstance(
+            self.ui_border_top, core.Sprixel
+        ):
             sanity_check += 1
         else:
             raise base.PglException(
                 "SANITY_CHECK_KO", ("The 'ui_border_top' parameter must be a string.")
             )
-        if type(self.ui_border_left) is str:
+        if type(self.ui_border_left) is str or isinstance(
+            self.ui_border_left, core.Sprixel
+        ):
             sanity_check += 1
         else:
             raise base.PglException(
                 "SANITY_CHECK_KO", ("The 'ui_border_left' parameter must be a string.")
             )
-        if type(self.ui_border_right) is str:
+        if type(self.ui_border_right) is str or isinstance(
+            self.ui_border_right, core.Sprixel
+        ):
             sanity_check += 1
         else:
             raise base.PglException(
@@ -547,9 +551,9 @@ class Board(base.PglBaseObject):
                 bt_size = self.size[0]
                 # if pos_col - column_radius > 0:
                 #     bt_size = self.size[0] - (pos_col - column_radius)
-            print(f"{self.ui_border_top * bt_size}{clear_eol}", end="")
+            print(f"{str(self.ui_border_top) * bt_size}{clear_eol}", end="")
             if column_min_bound <= 0 and column_max_bound >= self.size[0] - 1:
-                print(f"{self.ui_border_top * 2}{clear_eol}", end="")
+                print(f"{str(self.ui_border_top) * 2}{clear_eol}", end="")
             elif column_min_bound <= 0 or column_max_bound >= self.size[0]:
                 print(f"{self.ui_border_top}{clear_eol}", end="")
             print("\r")
@@ -572,9 +576,9 @@ class Board(base.PglBaseObject):
                 bb_size = self.size[0]
                 # if pos_col - column_radius > 0:
                 #     bb_size = self.size[0] - (pos_col - column_radius)
-            print(f"{self.ui_border_bottom * bb_size}{clear_eol}", end="")
+            print(f"{str(self.ui_border_bottom) * bb_size}{clear_eol}", end="")
             if column_min_bound <= 0 and column_max_bound >= self.size[0] - 1:
-                print(f"{self.ui_border_bottom * 2}{clear_eol}", end="")
+                print(f"{str(self.ui_border_bottom) * 2}{clear_eol}", end="")
             elif column_min_bound <= 0 or column_max_bound >= self.size[0]:
                 print(f"{self.ui_border_bottom}{clear_eol}", end="")
             print("\r")
@@ -599,8 +603,8 @@ class Board(base.PglBaseObject):
         print(
             "".join(
                 [
-                    self.ui_border_top * len(self._matrix[0]),
-                    self.ui_border_top * 2,
+                    str(self.ui_border_top) * len(self._matrix[0]),
+                    str(self.ui_border_top) * 2,
                     clear_eol,
                     "\r",
                 ]
@@ -611,12 +615,12 @@ class Board(base.PglBaseObject):
             print(self.ui_border_left, end="")
             for column in range(0, self.size[0]):
                 print(render_cell(row, column), end="")
-            print(self.ui_border_right + clear_eol + "\r")
+            print(str(self.ui_border_right) + clear_eol + "\r")
         print(
             "".join(
                 [
-                    self.ui_border_bottom * len(self._matrix[0]),
-                    self.ui_border_bottom * 2,
+                    str(self.ui_border_bottom) * len(self._matrix[0]),
+                    str(self.ui_border_bottom) * 2,
                     clear_eol,
                     "\r",
                 ]
@@ -2404,6 +2408,8 @@ class Game:
                     )
 
                 self.current_level = level_number
+                if isinstance(self.screen, Screen):
+                    self.screen.trigger_rendering()
             else:
                 raise base.PglInvalidLevelException(
                     f"Impossible to change level to an unassociated level (level number"
@@ -2963,6 +2969,8 @@ class Game:
             and self.player != constants.NO_PLAYER
         ):
             self._boards[self.current_level]["board"].move(self.player, direction, step)
+            if isinstance(self.screen, Screen):
+                self.screen.trigger_rendering()
 
     def display_board(self):
         """Display the current board.
