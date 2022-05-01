@@ -1,5 +1,13 @@
 #!/usr/bin/env python3
 
+# -------------------------------------- WARNING ------------------------------------- #
+#                                                                                      #
+# This game is also sorely outdated, it's been converted to version 1.3.0 but it is    #
+# not how you should develop your game with the pygamelib library version 1.3+.        #
+# A new version is coming and will serve as a real tutorial this time!                 #
+# ------------------------------------------------------------------------------------ #
+
+
 import sys
 import os
 import time
