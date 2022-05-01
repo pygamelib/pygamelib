@@ -4,7 +4,7 @@
 
 In this folder you will find 2 different kinds of examples: 
  1. Code examples (filename starts with a number like '01_board_and_wall.py')
- 2. Implementation example (mostly tutorials like 'tutorial_01.py')
+ 2. Implementation example (mostly tutorials like 'tutorials/01-game-basics.py')
 
 ## Code examples
 
@@ -17,5 +17,5 @@ For example, the 06_inventory.py script gives example on using the Inventory cla
 
 On the contrary, tutorial_[0-9+].py files are implementation examples of how the features of the pygamelib could (and probably should) be used in real game developments.
 
-They are **always** linked to an article on [https://8bitscoding.io](https://8bitscoding.io/) and most of the time also to a video on [Youtube](https://www.youtube.com/channel/UCEVqAhJDQC5GxNcK0Sc75dA/).  
-The link to the article is always in the comments of the Python file.
+They are (or will be) linked to an article on [https://8bitscoding.io](https://8bitscoding.io/) and most of the time also to a video on [Youtube](https://www.youtube.com/channel/UCEVqAhJDQC5GxNcK0Sc75dA/).  
+When available, the link to the article is in the comments of the Python file.
