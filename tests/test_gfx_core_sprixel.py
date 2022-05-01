@@ -150,6 +150,12 @@ class TestBase(unittest.TestCase):
         self.assertEqual(s.model, "  ")
         self.assertEqual(s.bg_color, gfx_core.Color.from_ansi("\x1b[47m"))
 
+    def test_sprixel_mul(self):
+        s = gfx_core.Sprixel.black_rect()
+        self.assertEqual(len(s * 5), 5)
+        with self.assertRaises(NotImplementedError):
+            s * s
+
 
 if __name__ == "__main__":
     unittest.main()
