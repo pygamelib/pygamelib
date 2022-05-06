@@ -33,7 +33,6 @@ import copy
 import ast
 import numpy as np
 
-
 # We need to ignore that one as it is used by user to compare keys (i.e Utils.key.UP)
 from readchar import readkey, key  # noqa: F401
 
@@ -158,10 +157,6 @@ class Board(base.PglBaseObject):
         self.partial_display_focus = partial_display_focus
         self.enable_partial_display = enable_partial_display
         self._matrix = np.array([])
-        # The overlapped matrix is used as an invisible layer were overlapped
-        # restorable items are parked momentarily (until the cell they were on
-        # is free again).
-        self._overlapped_matrix = np.array([])
 
         # if ui_borders is set then set all borders to that value
         if ui_borders is not None:
@@ -334,26 +329,34 @@ class Board(base.PglBaseObject):
             raise base.PglException(
                 "SANITY_CHECK_KO", "The 'name' parameter must be a string."
             )
-        if type(self.ui_border_bottom) is str:
+        if type(self.ui_border_bottom) is str or isinstance(
+            self.ui_border_bottom, core.Sprixel
+        ):
             sanity_check += 1
         else:
             raise base.PglException(
                 "SANITY_CHECK_KO",
                 ("The 'ui_border_bottom' parameter must be a string."),
             )
-        if type(self.ui_border_top) is str:
+        if type(self.ui_border_top) is str or isinstance(
+            self.ui_border_top, core.Sprixel
+        ):
             sanity_check += 1
         else:
             raise base.PglException(
                 "SANITY_CHECK_KO", ("The 'ui_border_top' parameter must be a string.")
             )
-        if type(self.ui_border_left) is str:
+        if type(self.ui_border_left) is str or isinstance(
+            self.ui_border_left, core.Sprixel
+        ):
             sanity_check += 1
         else:
             raise base.PglException(
                 "SANITY_CHECK_KO", ("The 'ui_border_left' parameter must be a string.")
             )
-        if type(self.ui_border_right) is str:
+        if type(self.ui_border_right) is str or isinstance(
+            self.ui_border_right, core.Sprixel
+        ):
             sanity_check += 1
         else:
             raise base.PglException(
@@ -547,9 +550,9 @@ class Board(base.PglBaseObject):
                 bt_size = self.size[0]
                 # if pos_col - column_radius > 0:
                 #     bt_size = self.size[0] - (pos_col - column_radius)
-            print(f"{self.ui_border_top * bt_size}{clear_eol}", end="")
+            print(f"{str(self.ui_border_top) * bt_size}{clear_eol}", end="")
             if column_min_bound <= 0 and column_max_bound >= self.size[0] - 1:
-                print(f"{self.ui_border_top * 2}{clear_eol}", end="")
+                print(f"{str(self.ui_border_top) * 2}{clear_eol}", end="")
             elif column_min_bound <= 0 or column_max_bound >= self.size[0]:
                 print(f"{self.ui_border_top}{clear_eol}", end="")
             print("\r")
@@ -572,9 +575,9 @@ class Board(base.PglBaseObject):
                 bb_size = self.size[0]
                 # if pos_col - column_radius > 0:
                 #     bb_size = self.size[0] - (pos_col - column_radius)
-            print(f"{self.ui_border_bottom * bb_size}{clear_eol}", end="")
+            print(f"{str(self.ui_border_bottom) * bb_size}{clear_eol}", end="")
             if column_min_bound <= 0 and column_max_bound >= self.size[0] - 1:
-                print(f"{self.ui_border_bottom * 2}{clear_eol}", end="")
+                print(f"{str(self.ui_border_bottom) * 2}{clear_eol}", end="")
             elif column_min_bound <= 0 or column_max_bound >= self.size[0]:
                 print(f"{self.ui_border_bottom}{clear_eol}", end="")
             print("\r")
@@ -599,8 +602,8 @@ class Board(base.PglBaseObject):
         print(
             "".join(
                 [
-                    self.ui_border_top * len(self._matrix[0]),
-                    self.ui_border_top * 2,
+                    str(self.ui_border_top) * len(self._matrix[0]),
+                    str(self.ui_border_top) * 2,
                     clear_eol,
                     "\r",
                 ]
@@ -611,12 +614,12 @@ class Board(base.PglBaseObject):
             print(self.ui_border_left, end="")
             for column in range(0, self.size[0]):
                 print(render_cell(row, column), end="")
-            print(self.ui_border_right + clear_eol + "\r")
+            print(str(self.ui_border_right) + clear_eol + "\r")
         print(
             "".join(
                 [
-                    self.ui_border_bottom * len(self._matrix[0]),
-                    self.ui_border_bottom * 2,
+                    str(self.ui_border_bottom) * len(self._matrix[0]),
+                    str(self.ui_border_bottom) * 2,
                     clear_eol,
                     "\r",
                 ]
@@ -1603,6 +1606,48 @@ class Board(base.PglBaseObject):
                 raise e
         return item
 
+    def neighbors(self, obj, radius: int = 1):
+        """Returns a list of neighbors (non void item) around an object.
+
+        This method returns a list of objects that are all around an object between the
+        position of an object and all the cells at **radius**.
+
+        :param radius: The radius in which non void item should be included
+        :type radius: int
+        :param obj: The central object. The neighbors are calculated for that object.
+        :type obj: :class:`~pygamelib.board_items.BoardItem`
+        :return: A list of BoardItem. No BoardItemVoid is included.
+        :raises PglInvalidTypeException: If radius is not an int.
+
+        Example::
+
+            for item in game.neighbors(npc, 2):
+                print(f'{item.name} is around {npc.name} at coordinates '
+                    '({item.pos[0]},{item.pos[1]})')
+        """
+        if type(radius) is not int:
+            raise base.PglInvalidTypeException(
+                "In Board.neighbors(obj, radius), radius must be an integer."
+                f" Got {radius} of type {type(radius)} instead."
+            )
+        if not isinstance(obj, board_items.BoardItem):
+            raise base.PglInvalidTypeException(
+                "In Board.neighbors(object, radius), object must be a BoardItem."
+                f" Got {obj} of type {type(obj)} instead."
+            )
+        return_array = []
+        for x in range(-radius, radius + 1, 1):
+            for y in range(-radius, radius + 1, 1):
+                if x == 0 and y == 0:
+                    continue
+                true_x = obj.pos[0] + x
+                true_y = obj.pos[1] + y
+                if (true_x < self.size[1] and true_y < self.size[0]) and not isinstance(
+                    self.item(true_x, true_y), board_items.BoardItemVoid
+                ):
+                    return_array.append(self.item(true_x, true_y))
+        return return_array
+
 
 class Game:
     """A class that serve as a game engine.
@@ -2362,6 +2407,8 @@ class Game:
                     )
 
                 self.current_level = level_number
+                if isinstance(self.screen, Screen):
+                    self.screen.trigger_rendering()
             else:
                 raise base.PglInvalidLevelException(
                     f"Impossible to change level to an unassociated level (level number"
@@ -2921,6 +2968,8 @@ class Game:
             and self.player != constants.NO_PLAYER
         ):
             self._boards[self.current_level]["board"].move(self.player, direction, step)
+            if isinstance(self.screen, Screen):
+                self.screen.trigger_rendering()
 
     def display_board(self):
         """Display the current board.
@@ -2983,31 +3032,9 @@ class Game:
                 print(f'{item.name} is around player at coordinates '
                     '({item.pos[0]},{item.pos[1]})')
         """
-        if type(radius) is not int:
-            raise base.PglInvalidTypeException(
-                "In Game.neighbors(radius), radius must be an integer."
-            )
         if obj is None:
             obj = self.player
-        elif not isinstance(obj, board_items.BoardItem):
-            raise base.PglInvalidTypeException(
-                "In Game.neighbors(radius, object), object must be a BoardItem."
-            )
-        return_array = []
-        for x in range(-radius, radius + 1, 1):
-            for y in range(-radius, radius + 1, 1):
-                if x == 0 and y == 0:
-                    continue
-                true_x = obj.pos[0] + x
-                true_y = obj.pos[1] + y
-                if (
-                    true_x < self.current_board().size[1]
-                    and true_y < self.current_board().size[0]
-                ) and not isinstance(
-                    self.current_board().item(true_x, true_y), board_items.BoardItemVoid
-                ):
-                    return_array.append(self.current_board().item(true_x, true_y))
-        return return_array
+        return self.current_board().neighbors(obj, radius)
 
     def load_board(self, filename, lvl_number=0):
         """Load a saved board
@@ -3702,7 +3729,7 @@ class Inventory(base.PglBaseObject):
         for i in range(len(self.__items)):
             if self.__items[i].name == name:
                 self.notify(
-                    self, "pygamelib.engine.Inventory.delete_items", self.__items[i]
+                    self, "pygamelib.engine.Inventory.delete_item", self.__items[i]
                 )
                 del self.__items[i]
                 break

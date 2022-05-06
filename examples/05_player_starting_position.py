@@ -3,6 +3,7 @@ import examples_includes  # noqa: F401
 # For this example we need to import engine, board items and base module
 from pygamelib import engine, board_items, base
 from pygamelib.assets import graphics
+from pygamelib.gfx import core
 
 # import system modules
 import time
@@ -29,21 +30,21 @@ def countdown():
 # On this board the player starts at the top left corner
 lvl1 = engine.Board(
     ui_borders=graphics.CYAN_SQUARE,
-    ui_board_void_cell=graphics.BLACK_SQUARE,
+    ui_board_void_cell_sprixel=core.Sprixel.black_square(),
     player_starting_position=[0, 0],
 )
 
 # On that board the player starts at the center
 lvl2 = engine.Board(
     ui_borders=graphics.MAGENTA_SQUARE,
-    ui_board_void_cell=graphics.BLACK_SQUARE,
+    ui_board_void_cell_sprixel=core.Sprixel.black_square(),
     player_starting_position=[5, 5],
 )
 
 # And on that board the player starts at the bottom right corner
 lvl3 = engine.Board(
     ui_borders=graphics.RED_SQUARE,
-    ui_board_void_cell=graphics.BLACK_SQUARE,
+    ui_board_void_cell_sprixel=core.Sprixel.black_square(),
     player_starting_position=[9, 9],
 )
 

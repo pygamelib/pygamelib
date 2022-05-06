@@ -1,5 +1,13 @@
 #!/usr/bin/env python3
 
+# -------------------------------------- WARNING ------------------------------------- #
+#                                                                                      #
+# This game is also sorely outdated, it's been converted to version 1.3.0 but it is    #
+# not how you should develop your game with the pygamelib library version 1.3+.        #
+# A new version is coming and will serve as a real tutorial this time!                 #
+# ------------------------------------------------------------------------------------ #
+
+
 import sys
 import os
 import time
@@ -7,22 +15,15 @@ import random
 
 sys.path.append(os.path.abspath(os.path.join("..", "..", "..")))
 
-from gamelib.Game import Game  # noqa: E402
-from gamelib.Board import Board  # noqa: E402
-from gamelib.Characters import Player  # noqa: E402
-from gamelib.Characters import NPC  # noqa: E402
-import gamelib.Sprites as Sprites  # noqa: E402
-import gamelib.Constants as Constants  # noqa: E402
-import gamelib.Utils as Utils  # noqa: E402
-from gamelib.Structures import Door  # noqa: E402
-from gamelib.Structures import Treasure  # noqa: E402
-from gamelib.BoardItem import BoardItemVoid  # noqa: E402
+from pygamelib import base, engine, board_items, constants  # noqa: E402
+from pygamelib.assets import graphics  # noqa: E402
+from pygamelib.gfx import core  # noqa: E402
 
 # Here are our global variables (it is usually a bad idea to use global variables but
 # it will simplify that tutorial, keep in mind that we don't usually rely on global
 # variables)
 # The board we want to load for the first level
-level_1 = "levels/TutoMap-hac-game-lib.json"
+level_1 = "levels/mighty_wizard_lvl_1.json"
 
 # The help level (a header for our menu, boards can be used for many things)
 help_menu = "levels/Help_Menu.json"
@@ -47,7 +48,7 @@ fairy_gold = 0
 level_2_turns_left = 21
 
 # Create the game object. We are going to use this as a global variable.
-g = Game()
+g = engine.Game()
 
 
 def print_animated(message):
@@ -61,13 +62,14 @@ def print_animated(message):
 
 def introduction_scene():
     intro_dialog = (
-        f"{Sprites.MAGE}: Hu... Where am I?\n"
-        f"{Sprites.UNICORN_FACE}: Welcome Mighty Wizard!\n"
-        f"{Sprites.UNICORN_FACE}: Your help is needed to bring balance to the "
+        f"{graphics.Models.MAGE}: Hu... Where am I?\n"
+        f"{graphics.Models.UNICORN}: Welcome Mighty Wizard!\n"
+        f"{graphics.Models.UNICORN}: Your help is needed to bring balance to the "
         f"wildlife of this world.\n"
-        f"{Sprites.UNICORN_FACE}: Only then will you be able to ask the portal fairy "
-        f"to open the portal to continue your journey.\n"
-        f"{Sprites.UNICORN_FACE}: Good luck!\n{Sprites.MAGE}: Ok then, let's go!"
+        f"{graphics.Models.UNICORN}: Only then will you be able to ask the portal"
+        f" fairy to open the portal to continue your journey.\n"
+        f"{graphics.Models.UNICORN}: Good luck!\n{graphics.Models.MAGE}: Ok then,"
+        " let's go!"
     )
 
     g.clear_screen()
@@ -86,15 +88,15 @@ def refresh_screen():
     g.display_board()
     if g.current_level == 2:
         print(
-            Utils.cyan_bright(
+            base.Text.cyan_bright(
                 f"Inventory ({g.player.inventory.size()}/"
                 f"{g.player.inventory.max_size})  "
             )
-            + Utils.green_bright(f"Turns left: {level_2_turns_left} ")
+            + base.Text.green_bright(f"Turns left: {level_2_turns_left} ")
         )
     else:
         print(
-            Utils.cyan_bright(
+            base.Text.cyan_bright(
                 (
                     f"Inventory ({g.player.inventory.size()}/"
                     f"{g.player.inventory.max_size})  "
@@ -107,10 +109,10 @@ def refresh_screen():
         for item_name in g.player.inventory.items_name():
             item = g.player.inventory.get_item(item_name)
             if item.type in items_by_type.keys():
-                items_by_type[item.type]["cumulated_size"] += item.size()
+                items_by_type[item.type]["cumulated_size"] += item.inventory_space
             else:
                 items_by_type[item.type] = {
-                    "cumulated_size": item.size(),
+                    "cumulated_size": item.inventory_space,
                     "model": item.model,
                     "name": item.name,
                 }
@@ -126,7 +128,7 @@ def refresh_screen():
                 print("\n", end="")
         print("\n", end="")
     # Then we display the menu
-    g.display_menu(current_menu, Constants.ORIENTATION_VERTICAL, 15)
+    g.display_menu(current_menu, constants.ORIENTATION_VERTICAL, 15)
     # And finally the notifications
     for n in notifications:
         print(n)
@@ -143,7 +145,7 @@ def explosion(params):
     exploded_model = params[1]
     damage_value = params[2]
     if item.model != exploded_model:
-        item.model = Sprites.BOMB
+        item.model = graphics.Models.BOMB
         refresh_screen()
         time.sleep(0.5)
         item.model = exploded_model
@@ -160,19 +162,20 @@ def activate_portal(params):
     global g
     level = params[0]
     if level == 1:
-        if g.current_board().item(3, 3).model == Sprites.CYCLONE:
+        if g.current_board().item(3, 3).model == graphics.Models.CYCLONE:
             # That logic is just a placeholder for the moment, ultimately it will lead
             # to the next level
             g.clear_screen()
-            print(Utils.green_bright("CONGRATULATIONS\n\nYOU WIN!"))
+            print(base.Text.green_bright("CONGRATULATIONS\n\nYOU WIN!"))
             exit()
     elif level == 2:
         g.clear_screen()
         print_animated(
-            f"{Sprites.UNICORN_FACE}: Congratulations {g.player.name},"
-            f" you found the entrance to a world of riches!\n{Sprites.UNICORN_FACE}:"
+            f"{graphics.Models.UNICORN}: Congratulations {g.player.name},"
+            f" you found the entrance to a world of riches!\n"
+            f"{graphics.Models.UNICORN}:"
             f" However, your time is limited and you will need to grab as much"
-            f" treasures as you can in 20 moves only!\n{Sprites.UNICORN_FACE}:"
+            f" treasures as you can in 20 moves only!\n{graphics.Models.UNICORN}:"
             f" Good luck!"
         )
         input("\n\n(Hit ENTER when you are ready to enter the world of riches)")
@@ -205,7 +208,7 @@ def whale_behavior():
             # Let's look at the neighborhood of the whales (within a 2 cells radius)
             for item in g.neighbors(2, whale):
                 # If there is a Player around, then look into the inventory...
-                if isinstance(item, Player):
+                if isinstance(item, board_items.Player):
                     inventory_item_name = None
                     # And reserve that Happy Octopus if present
                     for item_name in g.player.inventory.items_name():
@@ -218,12 +221,12 @@ def whale_behavior():
                         if whale.type == "left_whale":
                             g.add_npc(
                                 1,
-                                NPC(
-                                    model=Utils.Back.BLUE
-                                    + Sprites.OCTOPUS
-                                    + Utils.Style.RESET_ALL,
+                                board_items.NPC(
+                                    sprixel=core.Sprixel(
+                                        graphics.Models.OCTOPUS, core.Color(0, 0, 255)
+                                    ),
                                     name="Swimming Octopus (Left)",
-                                    type="swimming_octopus",
+                                    item_type="swimming_octopus",
                                 ),
                                 8,
                                 16,
@@ -233,12 +236,12 @@ def whale_behavior():
                         else:
                             g.add_npc(
                                 1,
-                                NPC(
-                                    model=Utils.Back.BLUE
-                                    + Sprites.OCTOPUS
-                                    + Utils.Style.RESET_ALL,
+                                board_items.NPC(
+                                    sprixel=core.Sprixel(
+                                        graphics.Models.OCTOPUS, core.Color(0, 0, 255)
+                                    ),
                                     name="Swimming Octopus (Right)",
-                                    type="swimming_octopus",
+                                    item_type="swimming_octopus",
                                 ),
                                 14,
                                 37,
@@ -249,9 +252,13 @@ def whale_behavior():
                             f"{whale.model}: Thank you! Here, let me extinguish that "
                             f"fire for you!"
                         )
-                        notifications.append(f"{whale.model}: {Sprites.WATER_DROP}")
+                        notifications.append(
+                            f"{whale.model}: {graphics.Models.DROPLET}"
+                        )
                         g.player.inventory.delete_item(inventory_item_name)
-                        g.current_board().item(row, column).model = Sprites.WATER_DROP
+                        g.current_board().item(
+                            row, column
+                        ).model = graphics.Models.DROPLET
                         whale.type = f"happy_{whale.type}"
                         refresh_screen()
                         time.sleep(1.5)
@@ -275,19 +282,20 @@ def update_fairy_dialog():
     g.add_menu_entry(
         "portal_fairy_dialog",
         None,
-        f"{Sprites.FAIRY} Welcome, I am the portal fairy, I can open a portal to a"
-        f" secret place.",
+        f"{graphics.Models.FAIRY} Welcome, I am the portal fairy, I can open a portal"
+        f" to a secret place.",
     )
     g.add_menu_entry(
         "portal_fairy_dialog",
         None,
-        f"{Utils.BLACK_SQUARE} At last I could but I am all out of gold. *sigh*",
+        f"{core.Sprixel.black_square()} At last I could but I am all out of gold. "
+        "*sigh*",
     )
     g.add_menu_entry(
         "portal_fairy_dialog",
         None,
-        f"{Utils.BLACK_SQUARE} If only I had some I would be happy to open a portal"
-        f" for you.",
+        f"{core.Sprixel.black_square()} If only I had some I would be happy to open a"
+        f" portal for you.",
     )
     g.add_menu_entry("portal_fairy_dialog", "1", "Tell the fairy you have no gold.")
     money_bags = g.player.inventory.search("Money")
@@ -333,9 +341,9 @@ def portal_fairy_behavior():
             # return.
             # Note: This is going to be a problem when we multithread this code. But
             # it's going to be a good exercise.
-            key = Utils.get_key()
+            key = engine.Game.get_key()
             if key == "1":
-                print(f"{Sprites.FAIRY} That is too bad, good bye.")
+                print(f"{graphics.Models.FAIRY} That is too bad, good bye.")
                 current_menu = "default"
                 refresh_screen()
             elif key == "2":
@@ -354,12 +362,15 @@ def portal_fairy_behavior():
             refresh_screen()
             if fairy_gold >= 300:
                 refresh_screen()
-                print(f"{Sprites.FAIRY} Great! Thank you!! Now let's do some magic.")
                 print(
-                    f"{Utils.BLACK_SQUARE}{Sprites.CYCLONE} By my powers, cometh forth"
-                    f" dimensional portal {Sprites.CYCLONE}"
+                    f"{graphics.Models.FAIRY} Great! Thank you!! Now let's do some "
+                    "magic."
                 )
-                portal[0].model = Sprites.CYCLONE
+                print(
+                    f"{core.Sprixel.black_square()}{graphics.Models.CYCLONE} By my "
+                    f"powers, cometh forth dimensional portal {graphics.Models.CYCLONE}"
+                )
+                portal[0].model = graphics.Models.CYCLONE
                 portal[0].set_overlappable(False)
                 time.sleep(2)
                 current_menu = "default"
@@ -368,15 +379,15 @@ def portal_fairy_behavior():
                 key == "1" or key == "2" or key == "3" or key == "4"
             ):
                 print(
-                    f"{Sprites.FAIRY} Thank you, that is a good start but I still "
-                    f"don't have enough gold to open a portal."
+                    f"{graphics.Models.FAIRY} Thank you, that is a good start but I "
+                    f"still don't have enough gold to open a portal."
                 )
             # When we are finished we un-pause the game
             g.start()
         else:
             print(
-                f"{Sprites.FAIRY} I have already opened the only portal I could in "
-                f"this world!"
+                f"{graphics.Models.FAIRY} I have already opened the only portal I could"
+                f" in this world!"
             )
 
 
@@ -397,12 +408,12 @@ g.load_board(help_menu, 998)
 # First we need a board. Same size 50x30 but the player starting position is random.
 player_starting_row = random.randint(0, 29)
 player_starting_column = random.randint(0, 49)
-bonus_board = Board(
+bonus_board = engine.Board(
     name="Bonus Stage",
     size=[50, 30],
     player_starting_position=[player_starting_row, player_starting_column],
-    ui_borders=Utils.YELLOW_SQUARE,
-    ui_board_void_cell=Utils.BLACK_SQUARE,
+    ui_borders=core.Sprixel.yellow_square(),
+    ui_board_void_cell_sprixel=core.Sprixel.black_square(),
 )
 g.add_board(2, bonus_board)
 # To place the treasures we have 30*50 = 1500 cells available on the map, minus the
@@ -417,7 +428,7 @@ for k in range(0, 300):
             row = random.randint(0, bonus_board.size[1] - 1)
         if column is None:
             column = random.randint(0, bonus_board.size[0] - 1)
-        if isinstance(bonus_board.item(row, column), BoardItemVoid):
+        if isinstance(bonus_board.item(row, column), board_items.BoardItemVoid):
             break
         elif retry > 20:
             break
@@ -426,7 +437,11 @@ for k in range(0, 300):
             column = None
             retry += 1
     bonus_board.place_item(
-        Treasure(model=Sprites.MONEY_BAG, value=100, name=f"gold_bag_{k}"), row, column
+        board_items.Treasure(
+            model=graphics.Models.MONEY_BAG, value=100, name=f"gold_bag_{k}"
+        ),
+        row,
+        column,
     )
 
 # And finally let's put 100 diamonds. Each diamond increase the score by 1000.
@@ -439,7 +454,7 @@ for k in range(0, 100):
             row = random.randint(0, bonus_board.size[1] - 1)
         if column is None:
             column = random.randint(0, bonus_board.size[0] - 1)
-        if isinstance(bonus_board.item(row, column), BoardItemVoid):
+        if isinstance(bonus_board.item(row, column), board_items.BoardItemVoid):
             break
         elif retry > 20:
             break
@@ -448,7 +463,11 @@ for k in range(0, 100):
             column = None
             retry += 1
     bonus_board.place_item(
-        Treasure(model=Sprites.GEM_STONE, value=1000, name=f"diamond_{k}"), row, column
+        board_items.Treasure(
+            model=graphics.Models.GEM_STONE, value=1000, name=f"diamond_{k}"
+        ),
+        row,
+        column,
     )
 
 # And ultimately 25 crown with a super high value of 5000.
@@ -461,7 +480,7 @@ for k in range(0, 100):
             row = random.randint(0, bonus_board.size[1] - 1)
         if column is None:
             column = random.randint(0, bonus_board.size[0] - 1)
-        if isinstance(bonus_board.item(row, column), BoardItemVoid):
+        if isinstance(bonus_board.item(row, column), board_items.BoardItemVoid):
             break
         elif retry > 20:
             break
@@ -470,23 +489,34 @@ for k in range(0, 100):
             column = None
             retry += 1
     bonus_board.place_item(
-        Treasure(model=Sprites.CROWN, value=5000, name=f"crown_{k}"), row, column
+        board_items.Treasure(
+            model=graphics.Models.CROWN, value=5000, name=f"crown_{k}"
+        ),
+        row,
+        column,
     )
 
 
 # Create the player object.
-g.player = Player(name="Mighty Wizard", model=Sprites.MAGE)
+g.player = board_items.Player(
+    name="Mighty Wizard",
+    sprixel=core.Sprixel(graphics.Models.MAGE, is_bg_transparent=True),
+)
 g.change_level(1)
 
-introduction_scene()
+# introduction_scene()
 
 # Now we need to fix the river (it's missing 2 tiles of water)
 # First let's move the NPCs so the whales are not replaced by our new tiles.
 g.actuate_npcs(1)
 # Now let's place the 2 river tiles (we use the Door object as a shortcut to get a
 # overlapable, restorable item)
-g.current_board().place_item(Door(model=Utils.BLUE_SQUARE), 0, 26)
-g.current_board().place_item(Door(model=Utils.BLUE_SQUARE), 11, 0)
+g.current_board().place_item(
+    board_items.Door(sprixel=core.Sprixel.blue_square()), 0, 26
+)
+g.current_board().place_item(
+    board_items.Door(sprixel=core.Sprixel.blue_square()), 11, 0
+)
 
 # Now we need to take care of the explosions. Hide them and set the callback functions.
 for item in g.current_board().get_immovables():
@@ -503,10 +533,10 @@ for item in g.current_board().get_immovables():
         # a model to use when it's exploded and a damage value to hurt the player.
         if item.type == "simple_explosion":
             item.action = explosion
-            item.action_parameters = [item, Sprites.FIRE, 10]
+            item.action_parameters = [item, graphics.Models.FIRE, 10]
         else:
             item.action = explosion
-            item.action_parameters = [item, Sprites.EXPLOSION, 80]
+            item.action_parameters = [item, graphics.Models.COLLISION, 80]
     elif item.type == "portal":
         item.model = g.current_board().ui_board_void_cell
         item.action = activate_portal
@@ -567,25 +597,25 @@ while run:
     elif current_menu == "default":
         # If we are in the default menu we use the normal controls.
         if key == "w":
-            g.move_player(Constants.UP, 1)
+            g.move_player(constants.UP, 1)
             # If we are in level 2, we need to decrease the number of turn left for each
             # move
             if g.current_level == 2:
                 level_2_turns_left -= 1
         elif key == "s":
-            g.move_player(Constants.DOWN, 1)
+            g.move_player(constants.DOWN, 1)
             # If we are in level 2, we need to decrease the number of turn left for each
             # move
             if g.current_level == 2:
                 level_2_turns_left -= 1
         elif key == "a":
-            g.move_player(Constants.LEFT, 1)
+            g.move_player(constants.LEFT, 1)
             # If we are in level 2, we need to decrease the number of turn left for each
             # move
             if g.current_level == 2:
                 level_2_turns_left -= 1
         elif key == "d":
-            g.move_player(Constants.RIGHT, 1)
+            g.move_player(constants.RIGHT, 1)
             # If we are in level 2, we need to decrease the number of turn left for each
             # move
             if g.current_level == 2:
@@ -622,7 +652,7 @@ while run:
             g.player.hp = g.player.max_hp
             # Warn the player
             print(
-                Utils.red_bright(
+                base.Text.red_bright(
                     "You have been saved by the Scroll of Wisdom, be careful next time"
                     " you will die!"
                 )
@@ -632,7 +662,7 @@ while run:
         else:
             # If he doesn't, well... Death is the sentence and that's game over.
             g.clear_screen()
-            Utils.print_white_on_red(
+            base.Text.print_white_on_red(
                 f"\n\n\n\t{g.player.name} is dead!\n\t      ** Game over **     \n\n"
             )
             g.change_level(999)
@@ -642,14 +672,14 @@ while run:
     if level_2_turns_left == 0:
         g.clear_screen()
         print_animated(
-            f"{Sprites.UNICORN_FACE}: Congratulations Mighty Wizard!\n"
-            f"{Sprites.UNICORN_FACE}: The whales are happy and the sheep are "
+            f"{graphics.Models.UNICORN}: Congratulations Mighty Wizard!\n"
+            f"{graphics.Models.UNICORN}: The whales are happy and the sheep are "
             f"patrolling!\n"
-            f"{Sprites.UNICORN_FACE}: You also got "
-            f"{Utils.green_bright(str(g.player.inventory.value()+(g.player.hp*100)))}"
+            f"{graphics.Models.UNICORN}: You also got "
+            f"{base.Text.green_bright(str(g.player.inventory.value()+(g.player.hp*100)))}"  # noqa: E501
             f" points!\n"
-            f"{Sprites.UNICORN_FACE}: Try to do even better next time.\n\n"
-            f"{Sprites.UNICORN_FACE}: Thank you for playing!\n"
+            f"{graphics.Models.UNICORN}: Try to do even better next time.\n\n"
+            f"{graphics.Models.UNICORN}: Thank you for playing!\n"
         )
         break
-    key = Utils.get_key()
+    key = engine.Game.get_key()

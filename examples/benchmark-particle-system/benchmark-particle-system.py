@@ -114,7 +114,7 @@ def init_intro_screen(g: engine.Game):
 def init_firework(screen: engine.Screen):
     clear_screen(screen, core.Color(47, 4, 122))
     screen.place(bench_state.night_bg, 0, 0, 1)
-    bench_state.frwk_create = time.time()
+    bench_state.frwk_create = time.process_time()
     bench_state.frwk_delta = random.uniform(0.05, 0.3)
 
 
@@ -486,7 +486,7 @@ def firework_update(g: engine.Game, key, dt):
 
     # Firework
 
-    if time.time() - bench_state.frwk_create >= bench_state.frwk_delta:
+    if time.process_time() - bench_state.frwk_create >= bench_state.frwk_delta:
         row = random.randrange(5, screen.height - 5)
         col = random.randrange(10, screen.width - 10)
         c = copy.copy(random.choice(bench_state.firework_colors))
@@ -510,7 +510,7 @@ def firework_update(g: engine.Game, key, dt):
         # g.session_log(f"[FIREWORK::Run] Placing new emitter at {row},{col}")
         screen.place(cur_emt, row, col, 2)
         bench_state.particle_emitters.append(cur_emt)
-        bench_state.frwk_create = time.time()
+        bench_state.frwk_create = time.process_time()
         bench_state.frwk_delta = random.uniform(0.1, 1.0)
         bench_state.frwk_remaining -= 1
 

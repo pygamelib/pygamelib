@@ -7,8 +7,9 @@ from pygamelib import engine
 # Then we need to get the Player object from Characters.py
 from pygamelib.board_items import Player
 
-# Also import graphics for the graphical things
+# Also import graphics and gfx for the graphical things
 from pygamelib.assets import graphics
+from pygamelib.gfx import core
 
 from pygamelib import base
 
@@ -21,19 +22,16 @@ from pygamelib import constants
 myboard = engine.Board(
     name="A demo board",
     size=[40, 20],
-    ui_border_left=graphics.WHITE_SQUARE,
-    ui_border_right=graphics.WHITE_SQUARE,
-    ui_border_top=graphics.WHITE_SQUARE,
-    ui_border_bottom=graphics.WHITE_SQUARE,
-    ui_board_void_cell=graphics.BLACK_SQUARE,
+    ui_borders=graphics.WHITE_SQUARE,
+    ui_board_void_cell_sprixel=core.Sprixel.black_square(),
     player_starting_position=[10, 10],
 )
 
 # Then create a Game object
-game = engine.Game()
+game = engine.Game.instance()
 
 # Then create a player, and give it to manage to the Game engine
-game.player = Player(model=base.Text.yellow_bright("××"))
+game.player = Player(sprixel=core.Sprixel("××", None, core.Color(255, 255, 0)))
 
 # Associate the board to level number 1
 game.add_board(1, myboard)
@@ -48,15 +46,15 @@ for k in range(1, 10, 1):
     game.clear_screen()
     # Print a debug message
     base.Text.debug(
-        f"Round {k} player position is ({game.player.pos[0]},"
-        f"{game.player.pos[1]}) -- BEFORE moving"
+        f"Round {k} player position is ({game.player.row},"
+        f"{game.player.column}) -- BEFORE moving"
     )
     # Ask the game object to manage the movement of the player to the right by one cell
     game.move_player(constants.RIGHT, 1)
     # print another debug message
     base.Text.debug(
-        f"Round {k} player position is now ({game.player.pos[0]},"
-        f"{game.player.pos[1]}) -- AFTER moving"
+        f"Round {k} player position is now ({game.player.row},"
+        f"{game.player.column}) -- AFTER moving"
     )
     # and display the board
     game.display_board()

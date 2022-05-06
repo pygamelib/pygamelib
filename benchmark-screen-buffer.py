@@ -41,9 +41,9 @@ def draw_box(game, row, column, height, width, title=""):
 
 print("pygamelib Screen Buffer benchmark\n")
 print("Loading game engine...", end="", flush=True)
-g_start = time.time()
+g_start = time.process_time()
 g = engine.Game(user_update=upd, mode=constants.MODE_TBT)
-g_stop = time.time()
+g_stop = time.process_time()
 print("done")
 if g.screen.width < 155:
     print(
@@ -63,7 +63,7 @@ if g.screen.height < 65:
     exit()
 g.player = board_items.Player(sprixel=core.Sprixel("@@", None, core.Color(0, 255, 255)))
 print("Loading resources: ", end="", flush=True)
-load_start = time.time()
+load_start = time.process_time()
 sprites = core.SpriteCollection.load_json_file("tests/pgl-benchmark.spr")
 
 panda = board_items.Camera()
@@ -71,10 +71,10 @@ panda_frames = [sprites["panda"], sprites["panda2"]]
 panda_frame_idx = 0
 polus = sprites["Polus_Map"]
 # p4ter = polus.scale(0.1)
-load_stop = time.time()
+load_stop = time.process_time()
 print("done")
 print("Generating Boards: ", end="", flush=True)
-gen_start = time.time()
+gen_start = time.process_time()
 print("Benchmark Board ", end="", flush=True)
 g.load_board("hac-maps/benchmark.json", 1)
 print("[ok] ", end="", flush=True)
@@ -95,7 +95,7 @@ polus_map = engine.Board(
 polus_cam.row = 120
 polus_cam.column = 0
 polus_map.place_item(board_items.Tile(sprite=polus), 0, 0)
-gen_stop = time.time()
+gen_stop = time.process_time()
 print("[ok]...done")
 
 g.clear_screen()
@@ -114,7 +114,7 @@ for row in range(0, g.screen._display_buffer.shape[0]):
             row,
             col,
         )
-spr_start = time.time()
+spr_start = time.process_time()
 g.screen.place(
     sprites["pgl-benchmark"],
     int(g.screen.height / 2) - 14,
@@ -128,19 +128,19 @@ go = True
 g.start()
 g.clear_screen()
 with g.terminal.cbreak(), g.terminal.hidden_cursor(), g.terminal.fullscreen():
-    spr_stop = time.time()
+    spr_stop = time.process_time()
     results.append(
         f"Sprite (place, render and update screen), size "
         f"({sprites['pgl-benchmark'].width}x"
         f"{sprites['pgl-benchmark'].height}): {round(spr_stop-spr_start, 2)*1000}"
         f" msec. or {round(1/(spr_stop-spr_start))} FPS."
     )
-    spr_start = time.time()
+    spr_start = time.process_time()
     for i in range(0, 200):
         g.screen.update()
         time.sleep(0.01)
-    spr_stop = time.time()
-    baseline_fps = round(200 / (spr_stop - spr_start))
+    spr_stop = time.process_time()
+    baseline_fps = round(200 / (spr_stop - spr_start + 0.01 * 200))
     results.append(
         f"Sprite 200 updates in: {round(spr_stop-spr_start, 2)*1000}"
         f" msec. or {baseline_fps} FPS."
@@ -150,7 +150,7 @@ with g.terminal.cbreak(), g.terminal.hidden_cursor(), g.terminal.fullscreen():
     # **BUFFER BENCHMARK**
     dt = 0.02
     frame_count = 0
-    start = time.time()
+    start = time.process_time()
     phase2 = 0
 
     g.screen.place(
@@ -220,7 +220,10 @@ with g.terminal.cbreak(), g.terminal.hidden_cursor(), g.terminal.fullscreen():
     last_col = 0
     while frame_count < max_frames:
         bench_rem_frames.text = str(max_frames - frame_count)
-        current_fps = round(frame_count / ((time.time() - start) - dt * frame_count))
+        # current_fps = round(
+        #     frame_count / ((time.process_time() - start) - dt * frame_count)
+        # )
+        current_fps = round(frame_count / (time.process_time() - start))
         if current_fps > max_fps:
             max_fps = current_fps
             g.screen.place(
@@ -258,14 +261,14 @@ with g.terminal.cbreak(), g.terminal.hidden_cursor(), g.terminal.fullscreen():
                 )
             last_col = current_col
         if frame_count == int(max_frames / 2):
-            stop = time.time()
+            stop = time.process_time()
             results.append(
                 f"Benchmark (Screen Buffer - phase 1):\n\tdt={dt}\n\tframes rendered="
                 f"{frame_count} in "
                 f"{round(stop - start, 5)} sec. or {round((stop-start)/frame_count, 5)}"
                 f" sec. per frame\n\tActual rendering time per frame: "
-                f"{round(((stop-start)/frame_count - dt)*1000, 2)} "
-                f"msec.\n\tFPS: {round(1/((stop-start)/frame_count - dt))}"
+                f"{round(((stop-start)/frame_count)*1000, 2)} "
+                f"msec.\n\tFPS: {round(1/((stop-start)/frame_count))}"
             )
             g.screen.place(polus_map, 2, 0)
             # g.screen.place(
@@ -274,7 +277,7 @@ with g.terminal.cbreak(), g.terminal.hidden_cursor(), g.terminal.fullscreen():
             #     g.screen.hcenter - int(p4ter.width / 2),
             #     2,
             # )
-            phase2 = time.time()
+            phase2 = time.process_time()
             bench_status.text = "Phase 1 + high definition board + camera movement"
         if frame_count % panda_steps == 0:
             g.screen.delete(panda.row, panda.column)
@@ -296,7 +299,7 @@ with g.terminal.cbreak(), g.terminal.hidden_cursor(), g.terminal.fullscreen():
         g.screen.update()
         time.sleep(dt)
         frame_count += 1
-    stop = time.time()
+    stop = time.process_time()
     results.append(
         f"Benchmark (Screen Buffer - phase 2):\n\tdt={dt}\n\tframes rendered="
         f"{frame_count-int(max_frames/2)}"
@@ -304,8 +307,8 @@ with g.terminal.cbreak(), g.terminal.hidden_cursor(), g.terminal.fullscreen():
         f"{round((stop-phase2)/(frame_count-int(max_frames/2)),5)}"
         f" sec. per frame\n\t"
         f"Actual rendering time per frame: "
-        f"{round(((stop-phase2)/(frame_count-int(max_frames/2)) - dt)*1000,2)} "
-        f"msec.\n\tFPS: {round(1/((stop-phase2)/(frame_count-int(max_frames/2)) - dt))}"
+        f"{round(((stop-phase2)/(frame_count-int(max_frames/2)))*1000,2)} "
+        f"msec.\n\tFPS: {round(1/((stop-phase2)/(frame_count-int(max_frames/2))))}"
     )
     results.append(
         f"Benchmark (Screen Buffer - overall):\n\tdt={dt}\n\tframes rendered="
@@ -313,8 +316,8 @@ with g.terminal.cbreak(), g.terminal.hidden_cursor(), g.terminal.fullscreen():
         f" in {round(stop - start,5)} sec. or {round((stop-start)/frame_count,5)} sec. "
         "per frame\n\t"
         f"Actual rendering time per frame: "
-        f"{round(((stop-start)/frame_count - dt)*1000,2)} "
-        f"msec.\n\tFPS: {round(1/((stop-start)/frame_count - dt))}"
+        f"{round(((stop-start)/frame_count)*1000,2)} "
+        f"msec.\n\tFPS: {round(1/((stop-start)/frame_count))}"
     )
 
 print("\n=========== Screen Buffer Benchmark results ===========")
