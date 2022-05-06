@@ -498,7 +498,10 @@ for k in range(0, 100):
 
 
 # Create the player object.
-g.player = board_items.Player(name="Mighty Wizard", model=graphics.Models.MAGE)
+g.player = board_items.Player(
+    name="Mighty Wizard",
+    sprixel=core.Sprixel(graphics.Models.MAGE, is_bg_transparent=True),
+)
 g.change_level(1)
 
 # introduction_scene()

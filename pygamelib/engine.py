@@ -33,7 +33,6 @@ import copy
 import ast
 import numpy as np
 
-
 # We need to ignore that one as it is used by user to compare keys (i.e Utils.key.UP)
 from readchar import readkey, key  # noqa: F401
 

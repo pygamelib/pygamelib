@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 
+import examples_includes  # noqa: F401
 from pygamelib import engine, board_items, base, constants, actuators
 from pygamelib.gfx import core
 from pygamelib.assets import graphics
