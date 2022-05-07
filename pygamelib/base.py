@@ -220,7 +220,7 @@ class Console:
 
         Example::
 
-        term = Console.instance()
+           term = Console.instance()
 
         """
         if cls.__instance is None:
