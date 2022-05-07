@@ -1,5 +1,5 @@
-pygamelib.base.Text
-===================
+Text
+====
 
 .. currentmodule:: pygamelib.base
 
