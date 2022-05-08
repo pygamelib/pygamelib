@@ -16,6 +16,7 @@ exceptions.
    pygamelib.base.PglException
    pygamelib.base.PglInvalidLevelException
    pygamelib.base.PglInvalidTypeException
+   pygamelib.base.PglInventoryException
    pygamelib.base.PglObjectIsNotMovableException
    pygamelib.base.PglOutOfBoardBoundException
    pygamelib.base.Vector2D
@@ -384,7 +385,14 @@ class Text(PglBaseObject):
     @property
     def bg_color(self):
         """The bg_color attribute sets the background color. It needs to be a
-        :class:`~pyagemlib.gfx.core.Color`."""
+        :class:`~pyagemlib.gfx.core.Color`.
+
+        .. role:: boldblue
+
+        When the background color is changed, the observers are notified of the change
+        with the :boldblue:`pygamelib.base.Text.bg_color:changed` event. The new color
+        is passed as the `value` parameter.
+        """
         return self.__bg_color
 
     @bg_color.setter
@@ -407,8 +415,16 @@ class Text(PglBaseObject):
 
     @property
     def fg_color(self):
-        """The bg_color attribute sets the foreground color. It needs to be a
-        :class:`~pyagemlib.gfx.core.Color`."""
+        """
+        The fg_color attribute sets the foreground color. It needs to be a
+        :class:`~pyagemlib.gfx.core.Color`.
+
+        .. role:: boldblue
+
+        When the foreground color is changed, the observers are notified of the change
+        with the :boldblue:`pygamelib.base.Text.fg_color:changed` event. The new color
+        is passed as the `value` parameter.
+        """
         return self.__fg_color
 
     @fg_color.setter
