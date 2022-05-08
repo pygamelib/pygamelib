@@ -2258,7 +2258,9 @@ class Wall(Immovable):
     """
 
     def __init__(self, **kwargs):
-        if "sprixel" not in kwargs.keys():
+        if "sprixel" not in kwargs and "model" in kwargs:
+            kwargs["sprixel"] = core.Sprixel(kwargs["model"])
+        elif "sprixel" not in kwargs.keys():
             kwargs["sprixel"] = core.Sprixel("#")
         if "name" not in kwargs.keys():
             kwargs["name"] = "wall"
@@ -2398,7 +2400,9 @@ class GenericStructure(Immovable):
     """
 
     def __init__(self, value=0, **kwargs):
-        if "sprixel" not in kwargs.keys():
+        if "sprixel" not in kwargs and "model" in kwargs:
+            kwargs["sprixel"] = core.Sprixel(kwargs["model"])
+        elif "sprixel" not in kwargs.keys():
             kwargs["sprixel"] = core.Sprixel("#")
         if "name" not in kwargs.keys():
             kwargs["name"] = "structure"
@@ -2461,8 +2465,8 @@ class Treasure(Immovable):
     """
 
     def __init__(self, value=10, **kwargs):
-        if "sprixel" not in kwargs.keys():
-            if "model" in kwargs.keys():
+        if "sprixel" not in kwargs:
+            if "model" in kwargs:
                 kwargs["sprixel"] = core.Sprixel(kwargs["model"])
             else:
                 kwargs["sprixel"] = core.Sprixel("¤")
@@ -2597,21 +2601,23 @@ class Door(GenericStructure):
     """
 
     def __init__(self, **kwargs):
-        if "sprixel" not in kwargs.keys():
+        if "sprixel" not in kwargs and "model" in kwargs:
+            kwargs["sprixel"] = core.Sprixel(kwargs["model"])
+        elif "sprixel" not in kwargs:
             kwargs["sprixel"] = core.Sprixel("]")
         if "value" not in kwargs.keys():
             kwargs["value"] = 0
-        if "inventory_space" not in kwargs.keys():
+        if "inventory_space" not in kwargs:
             kwargs["inventory_space"] = 1
-        if "name" not in kwargs.keys():
+        if "name" not in kwargs:
             kwargs["name"] = "Door"
-        if "item_type" not in kwargs.keys():
+        if "item_type" not in kwargs:
             kwargs["item_type"] = "door"
-        if "pickable" not in kwargs.keys():
+        if "pickable" not in kwargs:
             kwargs["pickable"] = False
-        if "overlappable" not in kwargs.keys():
+        if "overlappable" not in kwargs:
             kwargs["overlappable"] = True
-        if "restorable" not in kwargs.keys():
+        if "restorable" not in kwargs:
             kwargs["restorable"] = True
         super().__init__(**kwargs)
 
