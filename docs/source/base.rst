@@ -13,6 +13,7 @@ The base module provide basic objects and exceptions that are used by the entire
    pygamelib.base.PglException.rst
    pygamelib.base.PglInvalidLevelException.rst
    pygamelib.base.PglInvalidTypeException.rst
+   pygamelib.base.PglInventoryException.rst
    pygamelib.base.PglObjectIsNotMovableException.rst
    pygamelib.base.PglOutOfBoardBoundException.rst
    pygamelib.base.Text.rst
