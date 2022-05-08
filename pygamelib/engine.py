@@ -19,6 +19,7 @@ The Board class is the base class for all levels.
    pygamelib.engine.Game
    pygamelib.engine.Inventory
    pygamelib.engine.Screen
+
 """
 from pygamelib import board_items, base, constants, actuators
 from pygamelib.assets import graphics
@@ -3422,6 +3423,9 @@ class Inventory(base.PglBaseObject):
         The constructor takes two parameters: the maximum size of the inventory. And the
         Inventory owner/parent.
 
+        .. role:: boldblue
+        .. role:: blue
+
         Each :class:`~pygamelib.board_items.BoardItem` that is going to be put in the
         inventory has a size (default is 1), the total addition of all these size cannot
         exceed max_size.
@@ -3502,6 +3506,20 @@ class Inventory(base.PglBaseObject):
         :rtype: int|None
         :raise: :class:`~pygamelib.base.PglInventoryException`,
            :class:`~pygamelib.base.PglInvalidTypeException`
+
+        When an item is successfully added, the observers are notified of the change
+        with the :boldblue:`pygamelib.engine.Inventory.add_item` event. The item that
+        was added is passed as the :blue:`value` of the event.
+
+        When something goes wrong exceptions are raised. The following exceptions can be
+        raised (:class:`~pygamelib.base.PglInventoryException`):
+
+        * not_pickable: The item you try to add is not pickable.
+        * not_enough_space: There is not enough space left in the inventory.
+        * constraint_violation: A constraint is violated.
+
+        A :class:`~pygamelib.base.PglInvalidTypeException` is raised when the item you
+        try to add is not a :class:`~pygamelib.board_items.BoardItem`.
 
         Example::
 
@@ -3715,7 +3733,9 @@ class Inventory(base.PglBaseObject):
         :param name: the name of the items you want to delete.
         :type name: str
 
-        .. note:: The observers for this object will be notified of all removed items.
+        When an item is successfully removed, the observers are notified of the change
+        with the :boldblue:`pygamelib.engine.Inventory.delete_item` event. The item that
+        was deleted is passed as the :blue:`value` of the event.
 
         Example::
 
@@ -3740,7 +3760,9 @@ class Inventory(base.PglBaseObject):
         :param name: the name of the items you want to delete.
         :type name: str
 
-        .. note:: The observers for this object will be notified of all removed items.
+        The observers are notified of all each deletion
+        with the :boldblue:`pygamelib.engine.Inventory.delete_item` event. The item
+        that was deleted is passed as the :blue:`value` of the event.
 
         Example::
 
@@ -3752,7 +3774,7 @@ class Inventory(base.PglBaseObject):
         for i in range(len(self.__items) - 1, -1, -1):
             if self.__items[i].name == name:
                 self.notify(
-                    self, "pygamelib.engine.Inventory.delete_items", self.__items[i]
+                    self, "pygamelib.engine.Inventory.delete_item", self.__items[i]
                 )
                 del self.__items[i]
 
@@ -3780,6 +3802,10 @@ class Inventory(base.PglBaseObject):
         :param max_number: the maximum number of items that match the item_* parameters
            that can be in the inventory.
         :type max_number: int
+
+        The observers are notified of the addition of the constraint with the
+        :boldblue:`pygamelib.engine.Inventory.add_constraint` event. The constraint that
+        was added is passed as the :blue:`value` of the event as a dictionnary.
 
         .. versionadded:: 1.3.0
 
@@ -3816,6 +3842,10 @@ class Inventory(base.PglBaseObject):
         :param constraint_name: the name of the constraint.
         :type constraint_name: str
 
+        The observers are notified of the removal of the constraint with the
+        :boldblue:`pygamelib.engine.Inventory.remove_constraint` event. The constraint
+        that was removed is passed as the :blue:`value` of the event as a dictionnary.
+
         .. versionadded:: 1.3.0
 
         """
@@ -3829,6 +3859,11 @@ class Inventory(base.PglBaseObject):
 
     def clear_constraints(self):
         """Remove all constraints from the inventory.
+
+
+        The observers are notified with the
+        :boldblue:`pygamelib.engine.Inventory.clear_constraints` event. The
+        :blue:`value` is set to None for this event.
 
         .. versionadded:: 1.3.0
 
