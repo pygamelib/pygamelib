@@ -43,8 +43,10 @@ ComplexNPC
 
    .. autosummary::
    
+      ~ComplexNPC.animation
       ~ComplexNPC.column
       ~ComplexNPC.dtmove
+      ~ComplexNPC.heading
       ~ComplexNPC.height
       ~ComplexNPC.model
       ~ComplexNPC.row

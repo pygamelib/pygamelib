@@ -44,6 +44,7 @@ GenericActionableStructure
 
    .. autosummary::
    
+      ~GenericActionableStructure.animation
       ~GenericActionableStructure.column
       ~GenericActionableStructure.height
       ~GenericActionableStructure.inventory_space

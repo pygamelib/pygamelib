@@ -50,8 +50,10 @@ Projectile
 
    .. autosummary::
    
+      ~Projectile.animation
       ~Projectile.column
       ~Projectile.dtmove
+      ~Projectile.heading
       ~Projectile.height
       ~Projectile.model
       ~Projectile.row

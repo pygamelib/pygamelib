@@ -40,6 +40,7 @@ Immovable
 
    .. autosummary::
    
+      ~Immovable.animation
       ~Immovable.column
       ~Immovable.height
       ~Immovable.inventory_space

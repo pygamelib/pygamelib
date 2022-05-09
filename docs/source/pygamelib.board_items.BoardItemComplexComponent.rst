@@ -41,7 +41,9 @@ BoardItemComplexComponent
 
    .. autosummary::
    
+      ~BoardItemComplexComponent.animation
       ~BoardItemComplexComponent.column
+      ~BoardItemComplexComponent.heading
       ~BoardItemComplexComponent.height
       ~BoardItemComplexComponent.model
       ~BoardItemComplexComponent.row

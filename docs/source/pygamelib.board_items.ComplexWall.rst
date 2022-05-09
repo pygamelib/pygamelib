@@ -42,6 +42,7 @@ ComplexWall
 
    .. autosummary::
    
+      ~ComplexWall.animation
       ~ComplexWall.column
       ~ComplexWall.height
       ~ComplexWall.inventory_space

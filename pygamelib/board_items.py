@@ -154,7 +154,8 @@ class BoardItem(base.PglBaseObject):
             particle_emitter, "pygamelib.gfx.particles.ParticleEmitter"
         ):
             self.particle_emitter = particle_emitter
-        self.animation = None
+        self.__animation = None
+        self.animation = animation
         self.parent = None
         if parent is not None:
             self.parent = parent
@@ -168,6 +169,8 @@ class BoardItem(base.PglBaseObject):
             self.sprixel.is_bg_transparent = True
         self.value = value
         self._inventory_space = inventory_space
+        self.__heading = base.Vector2D(0, 0)
+        self.__centroidcc = base.Vector2D(0, 0)
         # Init the pickable, overlappable and restorable states
         self.__is_pickable = pickable
         self.__is_overlappable = overlappable
@@ -264,6 +267,47 @@ class BoardItem(base.PglBaseObject):
         return itm
 
     @property
+    def heading(self):
+        """Return the heading of the item.
+
+        This is a read only property that is updated by :py:meth:`store_position()`.
+
+        The property represent the orientation and movement of the item in the board. It
+        gives the difference between the item's centroid current and previous position.
+        Thus, giving you both the direction and the distance of the movement. You can
+        get the angle from here.
+
+        One of the possible usage of that property is to set the sprite/sprixel/model of
+        a moving item.
+
+        :return: The heading of the item.
+        :rtype: :class:`~pygamelib.base.Vector2D`
+
+        Example::
+
+            if my_item.heading.column > 0:
+                my_item.sprixel.model = item_models["heading_right"]
+
+        .. warning:: Just after placing an item on the board, and before moving it, the
+           heading cannot be trusted! The heading represent the direction and
+           orientation of the **movement**, therefore, it is not reliable before the
+           item moved.
+        """
+        return self.__heading
+
+    @property
+    def animation(self):
+        """A property to get and set an :class:`~pygamelib.gfx.core.Animation` for
+        this item."""
+        return self.__animation
+
+    @animation.setter
+    def animation(self, animation: core.Animation):
+        if isinstance(animation, core.Animation):
+            animation.parent = self
+            self.__animation = animation
+
+    @property
     def model(self):
         return self.sprixel.model
 
@@ -342,6 +386,12 @@ class BoardItem(base.PglBaseObject):
             item.store_position(3,4)
         """
         self.pos = [row, column, layer]
+        pcr = self.__centroidcc.row
+        pcc = self.__centroidcc.column
+        self.__centroidcc.row = row + self.height / 2
+        self.__centroidcc.column = column + self.width / 2
+        self.__heading.row = self.__centroidcc.row - pcr
+        self.__heading.column = self.__centroidcc.column - pcc
         if self.particle_emitter is not None:
             self.particle_emitter.row = row
             self.particle_emitter.column = column

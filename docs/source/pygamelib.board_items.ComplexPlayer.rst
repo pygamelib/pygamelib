@@ -43,8 +43,10 @@ ComplexPlayer
 
    .. autosummary::
    
+      ~ComplexPlayer.animation
       ~ComplexPlayer.column
       ~ComplexPlayer.dtmove
+      ~ComplexPlayer.heading
       ~ComplexPlayer.height
       ~ComplexPlayer.model
       ~ComplexPlayer.row

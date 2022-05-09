@@ -43,6 +43,7 @@ GenericStructureComplexComponent
 
    .. autosummary::
    
+      ~GenericStructureComplexComponent.animation
       ~GenericStructureComplexComponent.column
       ~GenericStructureComplexComponent.height
       ~GenericStructureComplexComponent.inventory_space

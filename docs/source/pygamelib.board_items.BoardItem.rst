@@ -40,7 +40,9 @@ BoardItem
 
    .. autosummary::
    
+      ~BoardItem.animation
       ~BoardItem.column
+      ~BoardItem.heading
       ~BoardItem.height
       ~BoardItem.model
       ~BoardItem.row

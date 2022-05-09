@@ -2029,6 +2029,7 @@ class Game:
            This function will be removed in version 1.4.0
 
         This method return a dictionnary with 3 entries :
+
             * shortcut
             * message
             * data

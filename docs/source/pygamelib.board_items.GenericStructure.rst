@@ -43,6 +43,7 @@ GenericStructure
 
    .. autosummary::
    
+      ~GenericStructure.animation
       ~GenericStructure.column
       ~GenericStructure.height
       ~GenericStructure.inventory_space
