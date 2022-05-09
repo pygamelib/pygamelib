@@ -367,7 +367,7 @@ class BoardItem(base.PglBaseObject):
             string += f"'model' = '{self.model}'"
         return string
 
-    def store_position(self, row, column, layer=0):
+    def store_position(self, row: int, column: int, layer: int = 0):
         """Store the BoardItem position for self access.
 
         The stored position is used for consistency and quick access to the self
@@ -386,12 +386,13 @@ class BoardItem(base.PglBaseObject):
             item.store_position(3,4)
         """
         self.pos = [row, column, layer]
-        pcr = self.__centroidcc.row
-        pcc = self.__centroidcc.column
-        self.__centroidcc.row = row + self.height / 2
-        self.__centroidcc.column = column + self.width / 2
-        self.__heading.row = self.__centroidcc.row - pcr
-        self.__heading.column = self.__centroidcc.column - pcc
+        if row is not None and column is not None:
+            pcr = self.__centroidcc.row
+            pcc = self.__centroidcc.column
+            self.__centroidcc.row = row + self.height / 2
+            self.__centroidcc.column = column + self.width / 2
+            self.__heading.row = self.__centroidcc.row - pcr
+            self.__heading.column = self.__centroidcc.column - pcc
         if self.particle_emitter is not None:
             self.particle_emitter.row = row
             self.particle_emitter.column = column
