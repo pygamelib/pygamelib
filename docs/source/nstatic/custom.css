@@ -24,3 +24,11 @@
 .blue {
     color: blue;
 }
+
+.deprecated {
+    color: orangered;
+}
+
+.added {
+    color: green;
+}
