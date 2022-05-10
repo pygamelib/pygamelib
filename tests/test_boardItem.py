@@ -101,6 +101,8 @@ class TestBoard(unittest.TestCase):
         self.assertEqual(bi.particle_emitter.column, 3)
         self.assertEqual(bi.particle_emitter.row, bi.row)
         self.assertEqual(bi.particle_emitter.column, bi.column)
+        bi.store_position(3, 3)
+        self.assertEqual(bi.heading, base.Vector2D(1, 0))
 
     def test_boarditemvoid(self):
         bi = board_items.BoardItemVoid()
@@ -350,7 +352,8 @@ class TestBoard(unittest.TestCase):
             bi.set_restorable(1)
         bi.set_restorable(True)
         self.assertTrue(bi.restorable())
-        bi = board_items.GenericActionableStructure()
+        bi = board_items.GenericActionableStructure(model="T")
+        self.assertEqual(bi.sprixel.model, "T")
 
     def test_treasure(self):
         bi = board_items.Treasure(value=1000, inventory_space=5)
