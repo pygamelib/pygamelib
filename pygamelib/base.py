@@ -68,7 +68,9 @@ class PglBaseObject(object):
         super().__init__()
         self._observers = []
         self.screen_row = -1
+        """The absolute row (or y) coordinate on the screen."""
         self.screen_column = -1
+        """The absolute column (or x) coordinate on the screen."""
         # self._last_updated = time.time()
 
     # def __setattr__(self, name: str, value: Any) -> None:

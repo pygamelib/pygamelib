@@ -23,7 +23,12 @@ PglBaseObject
       ~PglBaseObject.detach
       ~PglBaseObject.notify
    
+   .. rubric:: Attributes
+
+   .. autosummary::
    
+      ~PglBaseObject.screen_column
+      ~PglBaseObject.screen_row
 
    
    
