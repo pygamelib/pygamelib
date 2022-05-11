@@ -67,7 +67,7 @@ class Board(base.PglBaseObject):
     .. Important:: Partial display related parameters are information used by the
        :func:`~pygamelib.engine.Board.display_around()` method and the :class:`Screen`
        object to either display directly the board (display_around) or render the Board
-       in the screen buffer. **You have to make sure that the focus element's position
+       in the frame buffer. **You have to make sure that the focus element's position
        is updated**. If you use the player, you have nothing to do but the Camera object
        needs to be manually updated for example.
 
@@ -630,11 +630,11 @@ class Board(base.PglBaseObject):
     def render_to_buffer(
         self, buffer, row, column, buffer_height, buffer_width
     ) -> None:
-        """Render the board into a display buffer (not a screen buffer).
+        """Render the board into a display buffer (not a frame buffer).
 
         This method is automatically called by :func:`pygamelib.engine.Screen.render`.
 
-        :param buffer: A screen buffer to render the item into.
+        :param buffer: A frame buffer to render the item into.
         :type buffer: numpy.array
         :param row: The row to render in.
         :type row: int
@@ -3906,6 +3906,8 @@ class Screen(base.PglBaseObject):
     The screen object is pretty straightforward: it is an object that allow manipulation
     of the screen.
 
+    .. role:: boldgreen
+
     .. WARNING:: Starting with version 1.3.0 the terminal parameter has been removed.
        The Screen object now takes advantage of base.Console.instance() to get a
        reference to a blessed.Terminal object.
@@ -3919,15 +3921,16 @@ class Screen(base.PglBaseObject):
 
     This change introduce two ways of displaying things on the screen:
 
-       * The **Screen Buffer** stack.
-       * The **Direct Display** stack.
+       * The **Improved Screen Management** stack (referred to as :boldgreen:`ISM` later
+         in the doc).
+       * The **Legacy Direct Display** stack.
 
-    It is safer to consider them mutually incompatible. In reality the **Screen Buffer**
-    will always use the whole display but you can use the methods from the **Direct
-    Display** stack to write over the buffer. It is really **NOT** advised.
+    It is safer to consider them mutually incompatible. In reality the **Improved Screen
+    Management** will always use the whole display but you can use the methods from the
+    **Direct Display** stack to write over the buffer. It is really **NOT** advised.
 
-    We introduced the **Screen Buffer** stack because the direct display is messy and
-    does not allow us to do what we want in term of positioning, UI, etc.
+    We introduced the **Improved Screen Management** stack because the direct display is
+    messy and does not allow us to do what we want in term of positioning, UI, etc.
 
     A typical usage consist of:
 
@@ -3936,7 +3939,7 @@ class Screen(base.PglBaseObject):
 
     That's it! The screen maintain its own state and knows when to re-render the display
     buffer. You don't need to manually call :func:`render()`. This helps with
-    performances as the screen buffer is only rendered when needed.
+    performances as the frame buffer is only rendered when needed.
 
     Example::
 
@@ -3947,7 +3950,8 @@ class Screen(base.PglBaseObject):
         screen.update()
         # Direct Display style
         screen.display_at('This is centered', screen.vcenter, screen.hcenter)
-        # The rest of this example uses the Screen Buffer.
+        # The rest of this example uses the Screen Buffer (because placing a Board
+        # anywhere on the Screen is not supported by the Direct Display stack).
         # delete the previous message and place a Board at the center of the screen
         screen.delete(screen.vcenter, screen.hcenter)
         screen.place(
@@ -3957,15 +3961,15 @@ class Screen(base.PglBaseObject):
         )
         screen.update()
 
-    **Precisions about the Screen Buffer stack:**
+    **Precisions about the Improved Screen Management stack:**
 
-    You don't need to know how the screen buffer works to use it. However, if you are
+    You don't need to know how the frame buffer works to use it. However, if you are
     interested in more details, here they are.
 
-    The Screen Buffer stacks uses a double numpy buffer to represent the screen. One
-    buffer is used to place elements as objects (that's the buffer managed by
-    :func:`place()` or :func:`delete()`). It is never directly printed to the screen. It
-    is here to simplify screen maintenance. This buffer is called the **display
+    The Improved Screen Management stacks uses a double numpy buffer to represent the
+    screen. One buffer is used to place elements as objects (that's the buffer managed
+    by :func:`place()` or :func:`delete()`). It is never directly printed to the screen.
+    It is here to simplify screen maintenance. This buffer is called the **display
     buffer**. It is practical to use to place, move and delete elements on the screen
     space. But as said before it cannot be directly printed to the screen. It needs to
     be rendered first.
@@ -3976,7 +3980,7 @@ class Screen(base.PglBaseObject):
     overwrite all the sprite with spaces to erase and replace and/or move it. And that's
     very slow.
 
-    With the **Screen Buffer System** you :func:`place()` the sprite and then just
+    With the **Improved Screen Management** you :func:`place()` the sprite and then just
     :func:`delete()` it. And since it is only one object reference it is a very fast
     operation (we only place or delete one cell of the buffer).
 
@@ -3990,7 +3994,7 @@ class Screen(base.PglBaseObject):
     the top left corner. This allows for cleaning junk characters at no additional cost.
 
     **TL;DR:** The **display buffer** hold the objects placed on the screen while the
-    **screen buffer** hold the rendered representation of the display buffer.
+    **frame buffer** hold the rendered representation of the display buffer.
 
     The Screen object also inherits from the :class:`~pygamelib.base.PglBaseObject` and
     if the object that is :func:`place()`-ed is an instance of
@@ -4007,7 +4011,7 @@ class Screen(base.PglBaseObject):
     If these are not good enough for you, the Direct Display stack is for you. You just
     need to deal with more stuff with less helper methods.
 
-    The screen buffer system has been tested on the following terminals:
+    The frame buffer system has been tested on the following terminals:
 
     * xterm-256color
     * Konsole
@@ -4067,7 +4071,7 @@ class Screen(base.PglBaseObject):
                 for j in range(0, self.__height, 1)
             ]
         )
-        self._screen_buffer = np.array(
+        self._frame_buffer = np.array(
             [
                 [core.Sprixel(" ") for i in range(0, self.__width, 1)]
                 for j in range(0, self.__height, 1)
@@ -4083,7 +4087,7 @@ class Screen(base.PglBaseObject):
         sys.stdout.flush()
 
     def clear_buffers(self):
-        """This methods clear the Screen's buffers (both display and screen buffer).
+        """This methods clear the Screen's buffers (both display and frame buffer).
 
         Make sure that you really want to clear the buffers before doing so, because
         this is a slow operation.
@@ -4093,11 +4097,11 @@ class Screen(base.PglBaseObject):
 
         .. versionadded:: 1.3.0
 
-        .. image:: https://img.shields.io/badge/rendering%20stack-Screen%20Buffer-green
+        .. image:: https://img.shields.io/badge/rendering%20stack-ISM-green
 
-        .. NOTE:: This method is part of the **Screen Buffer** rendering stack and is
-           incompatible with the methods identified as being part of the **Direct
-           Display** stack.
+        .. NOTE:: This method is part of the **Improved Screen Management** rendering
+           stack and is incompatible with the methods identified as being part of the
+           **Legacy Direct Display** stack.
 
         """
         self._display_buffer = np.array(
@@ -4106,7 +4110,7 @@ class Screen(base.PglBaseObject):
                 for j in range(0, self.__height, 1)
             ]
         )
-        self._screen_buffer = np.array(
+        self._frame_buffer = np.array(
             [
                 [core.Sprixel(" ") for i in range(0, self.__width, 1)]
                 for j in range(0, self.__height, 1)
@@ -4114,9 +4118,9 @@ class Screen(base.PglBaseObject):
         )
         self._is_dirty = False
 
-    def clear_screen_buffer(self):
+    def clear_frame_buffer(self):
         """
-        This methods clear the screen buffer (but not the display buffer). This means
+        This methods clear the frame buffer (but not the display buffer). This means
         that the next time :func:`update()` is called, rendering will be triggered.
 
         Make sure that you really want to clear the buffers before doing so, because
@@ -4128,13 +4132,13 @@ class Screen(base.PglBaseObject):
 
         .. versionadded:: 1.3.0
 
-        .. image:: https://img.shields.io/badge/rendering%20stack-Screen%20Buffer-green
+        .. image:: https://img.shields.io/badge/rendering%20stack-ISM-green
 
-        .. NOTE:: This method is part of the **Screen Buffer** rendering stack and is
-           incompatible with the methods identified as being part of the **Direct
-           Display** stack.
+        .. NOTE:: This method is part of the **Improved Screen Management** rendering
+           stack and is incompatible with the methods identified as being part of the
+           **Legacy Direct Display** stack.
         """
-        self._screen_buffer = np.array(
+        self._frame_buffer = np.array(
             [
                 [core.Sprixel(" ") for i in range(0, self.__width, 1)]
                 for j in range(0, self.__height, 1)
@@ -4145,16 +4149,14 @@ class Screen(base.PglBaseObject):
     @property
     def width(self):
         """
-        This method wraps Terminal.width and return the width of the terminal window in
-        number of characters.
+        This property returns the width of the terminal window in number of characters.
         """
         return self.__width
 
     @property
     def height(self):
         """
-        This method wraps Terminal.height and return the height of the terminal window
-        in number of characters.
+        This property returns the height of the terminal window in number of characters.
         """
         return self.__height
 
@@ -4162,17 +4164,17 @@ class Screen(base.PglBaseObject):
     def need_rendering(self):
         """
         This property return True if the display buffer has been updated since the last
-        rendering cycle and the screen needs to re-render the screen buffer.
+        rendering cycle and the screen needs to re-render the frame buffer.
 
         It returns False otherwise.
 
         .. versionadded:: 1.3.0
 
-        .. image:: https://img.shields.io/badge/rendering%20stack-Screen%20Buffer-green
+        .. image:: https://img.shields.io/badge/rendering%20stack-ISM-green
 
-        .. NOTE:: This method is part of the **Screen Buffer** rendering stack and is
-           incompatible with the methods identified as being part of the **Direct
-           Display** stack.
+        .. NOTE:: This method is part of the **Improved Screen Management** rendering
+           stack and is incompatible with the methods identified as being part of the
+           **Legacy Direct Display** stack.
 
         """
         return self._is_dirty
@@ -4180,7 +4182,7 @@ class Screen(base.PglBaseObject):
     @property
     def buffer(self):
         """
-        The buffer property return a numpy.array as a writable screen buffer.
+        The buffer property return a numpy.array as a writable frame buffer.
 
         The buffer is a 2D plane (like a screen) and anything can render in it. However,
         it is recommended to place objects through Screen.place() and update the screen
@@ -4188,22 +4190,22 @@ class Screen(base.PglBaseObject):
         display).
 
         .. WARNING:: Everything that is stored in the buffer *must* be printable. Each
-           cell of the screen buffer represent a single character on screen, so you need
+           cell of the frame buffer represent a single character on screen, so you need
            to take care of that when you write into that buffer or you will corrupt the
            display. If :attr:`need_rendering` returns True, you need to manually call
-           :func:`render()` before writing anything into the screen buffer. Or else it
+           :func:`render()` before writing anything into the frame buffer. Or else it
            will be squashed in the next rendering cycle.
 
         .. versionadded:: 1.3.0
 
-        .. image:: https://img.shields.io/badge/rendering%20stack-Screen%20Buffer-green
+        .. image:: https://img.shields.io/badge/rendering%20stack-ISM-green
 
-        .. NOTE:: This method is part of the **Screen Buffer** rendering stack and is
-           incompatible with the methods identified as being part of the **Direct
-           Display** stack.
+        .. NOTE:: This method is part of the **Improved Screen Management** rendering
+           stack and is incompatible with the methods identified as being part of the
+           **Legacy Direct Display** stack.
 
         """
-        return self._screen_buffer
+        return self._frame_buffer
 
     @property
     def vcenter(self):
@@ -4227,7 +4229,7 @@ class Screen(base.PglBaseObject):
 
     def update(self):
         """
-        Update the screen. Update means write the screen buffer on screen.
+        Update the screen. Update means write the frame buffer on screen.
 
         Example::
 
@@ -4238,17 +4240,17 @@ class Screen(base.PglBaseObject):
 
         .. versionadded:: 1.3.0
 
-        .. image:: https://img.shields.io/badge/rendering%20stack-Screen%20Buffer-green
+        .. image:: https://img.shields.io/badge/rendering%20stack-ISM-green
 
-        .. NOTE:: This method is part of the **Screen Buffer** rendering stack and is
-           incompatible with the methods identified as being part of the **Direct
-           Display** stack.
+        .. NOTE:: This method is part of the **Improved Screen Management** rendering
+           stack and is incompatible with the methods identified as being part of the
+           **Legacy Direct Display** stack.
 
         """
         if self._is_dirty:
             self.render()
         print(self.terminal.home, end="")
-        screen_buffer = self._screen_buffer
+        screen_buffer = self._frame_buffer
         for row in range(0, screen_buffer.shape[0] - 1):
             print("".join(map(str, screen_buffer[row])), flush=False)
         print(
@@ -4258,7 +4260,7 @@ class Screen(base.PglBaseObject):
         )
 
     def render(self):
-        """Render the display buffer into the screen buffer.
+        """Render the display buffer into the frame buffer.
 
         Example::
 
@@ -4267,38 +4269,51 @@ class Screen(base.PglBaseObject):
 
         .. versionadded:: 1.3.0
 
-        .. image:: https://img.shields.io/badge/rendering%20stack-Screen%20Buffer-green
+        .. image:: https://img.shields.io/badge/rendering%20stack-ISM-green
 
-        .. NOTE:: This method is part of the **Screen Buffer** rendering stack and is
-           incompatible with the methods identified as being part of the **Direct
-           Display** stack.
+        .. NOTE:: This method is part of the **Improved Screen Management** rendering
+           stack and is incompatible with the methods identified as being part of the
+           **Legacy Direct Display** stack.
 
         """
-        # TODO: There's only 2 pass rendering but we should be able to render any number
-        # of passes.
         if self._is_dirty is False:
             return
-        second_pass = []
         # All these variables are here for performances.
         # https://wiki.python.org/moin/PythonSpeed/PerformanceTips (old but I do get
         # better performances with that trick)
         row = self._display_buffer.shape[0] - 1
-        screen_buffer = self._screen_buffer
+        screen_buffer = self._frame_buffer
         display_buffer = self._display_buffer
         s_width = display_buffer.shape[1]
         s_height = display_buffer.shape[0]
+        later_passes = []
         while row >= 0:
             col = display_buffer.shape[1] - 1
             while col >= 0:
                 i = display_buffer[row][col]
+                # Test if the cell should be rendered on a later pass.
                 if (
                     hasattr(i, "__rendering_pass")
-                    and getattr(i, "__rendering_pass") == 2
+                    and getattr(i, "__rendering_pass") > 1
+                    and hasattr(i, "render_to_buffer")
                 ):
-                    # print(f"Deferred rendering for: {i}")
-                    second_pass.append({"item": i, "row": row, "column": col})
+                    if getattr(i, "__rendering_pass") < len(later_passes):
+                        later_passes[getattr(i, "__rendering_pass")].append(
+                            {"item": i, "row": row, "column": col}
+                        )
+                    else:
+                        later_passes.extend(
+                            []
+                            for _ in range(
+                                getattr(i, "__rendering_pass") - len(later_passes)
+                            )
+                        )
+                        later_passes[getattr(i, "__rendering_pass") - 1].append(
+                            {"item": i, "row": row, "column": col}
+                        )
                     col -= 1
                     continue
+                # If not, we render the cell now.
                 if hasattr(i, "render_to_buffer"):
                     # If the item is capable of rendering itself in the buffer, we let
                     # it do so.
@@ -4310,6 +4325,7 @@ class Screen(base.PglBaseObject):
                         s_width,
                     )
                 elif type(i) is str and len(i) > 1:
+                    # If the cell is a string, we render one character per terminal cell
                     idx = 0
                     for char in i:
                         if col + idx >= s_width:
@@ -4317,11 +4333,16 @@ class Screen(base.PglBaseObject):
                         screen_buffer[row][col + idx] = char
                         idx += 1
                 elif hasattr(i, "__repr__"):
+                    # Else we use the __repr__ method to render the cell.
+                    # It is unlikely that things will go well here...
                     screen_buffer[row][col] = i.__repr__()
                 col -= 1
             row -= 1
-        for i in second_pass:
-            if hasattr(i["item"], "render_to_buffer"):
+        # Now we render the later passes.
+        for items in later_passes:
+            for i in items:
+                # Since we already cheched if the item is capable of rendering itself,
+                # we can safely assume it has a render_to_buffer method.
                 i["item"].render_to_buffer(
                     screen_buffer, i["row"], i["column"], s_height, s_width
                 )
@@ -4333,7 +4354,7 @@ class Screen(base.PglBaseObject):
 
         Force the immediate rendering of the display buffer.
 
-        If you just want to mark the screen buffer for rendering before the next update
+        If you just want to mark the frame buffer for rendering before the next update
         use :func:`trigger_rendering` instead.
 
         Example::
@@ -4342,11 +4363,11 @@ class Screen(base.PglBaseObject):
 
         .. versionadded:: 1.3.0
 
-        .. image:: https://img.shields.io/badge/rendering%20stack-Screen%20Buffer-green
+        .. image:: https://img.shields.io/badge/rendering%20stack-ISM-green
 
-        .. NOTE:: This method is part of the **Screen Buffer** rendering stack and is
-           incompatible with the methods identified as being part of the **Direct
-           Display** stack.
+        .. NOTE:: This method is part of the **Improved Screen Management** rendering
+           stack and is incompatible with the methods identified as being part of the
+           **Legacy Direct Display** stack.
 
         """
         self._is_dirty = True
@@ -4363,11 +4384,11 @@ class Screen(base.PglBaseObject):
 
         .. versionadded:: 1.3.0
 
-        .. image:: https://img.shields.io/badge/rendering%20stack-Screen%20Buffer-green
+        .. image:: https://img.shields.io/badge/rendering%20stack-ISM-green
 
-        .. NOTE:: This method is part of the **Screen Buffer** rendering stack and is
-           incompatible with the methods identified as being part of the **Direct
-           Display** stack.
+        .. NOTE:: This method is part of the **Improved Screen Management** rendering
+           stack and is incompatible with the methods identified as being part of the
+           **Legacy Direct Display** stack.
 
         """
         self._is_dirty = True
@@ -4375,7 +4396,7 @@ class Screen(base.PglBaseObject):
 
     def trigger_rendering(self):
         """
-        Trigger the screen buffer for rendering at the next update.
+        Trigger the frame buffer for rendering at the next update.
 
         Example::
 
@@ -4383,11 +4404,11 @@ class Screen(base.PglBaseObject):
 
         .. versionadded:: 1.3.0
 
-        .. image:: https://img.shields.io/badge/rendering%20stack-Screen%20Buffer-green
+        .. image:: https://img.shields.io/badge/rendering%20stack-ISM-green
 
-        .. NOTE:: This method is part of the **Screen Buffer** rendering stack and is
-           incompatible with the methods identified as being part of the **Direct
-           Display** stack.
+        .. NOTE:: This method is part of the **Improved Screen Management** rendering
+           stack and is incompatible with the methods identified as being part of the
+           **Direct Display** stack.
 
         """
         self._is_dirty = True
@@ -4396,7 +4417,7 @@ class Screen(base.PglBaseObject):
         """Place an element on the screen.
 
         This method places an element in the screen display buffer. The element is then
-        going to be rendered in the screen buffer before being printed on screen.
+        going to be rendered in the frame buffer before being printed on screen.
 
         The following elements can be placed on screen:
 
@@ -4428,10 +4449,13 @@ class Screen(base.PglBaseObject):
         :type row: int
         :param column: The column to render to.
         :type column: int
-        :param rendering_pass: When to render the element (first or second pass).
+        :param rendering_pass: When to render the element. You can have any number of
+           rendering passes but you have to be careful of performances. Higher passses
+           render on top of lower passes. You can see the render passes as plane to
+           write on. The default pass is 1.
         :type rendering_pass: int
 
-        .. Warning:: to be rendered on the second pass an element *needs* to implement
+        .. Warning:: to be rendered on the second+ pass an element *needs* to implement
            render_to_buffer(...). This excludes all standard types (but not
            :class:`~pygamelib.base.Text`). Regular Python strings and object that can be
            print() can still be used in the first pass.
@@ -4442,11 +4466,11 @@ class Screen(base.PglBaseObject):
 
         .. versionadded:: 1.3.0
 
-        .. image:: https://img.shields.io/badge/rendering%20stack-Screen%20Buffer-green
+        .. image:: https://img.shields.io/badge/rendering%20stack-ISM-green
 
-        .. NOTE:: This method is part of the **Screen Buffer** rendering stack and is
-           incompatible with the methods identified as being part of the **Direct
-           Display** stack.
+        .. NOTE:: This method is part of the **Improved Screen Management** rendering
+           stack and is incompatible with the methods identified as being part of the
+           **Legacy Direct Display** stack.
 
         """
         if element is None or row is None or column is None:
@@ -4515,11 +4539,11 @@ class Screen(base.PglBaseObject):
 
         .. versionadded:: 1.3.0
 
-        .. image:: https://img.shields.io/badge/rendering%20stack-Screen%20Buffer-green
+        .. image:: https://img.shields.io/badge/rendering%20stack-ISM-green
 
-        .. NOTE:: This method is part of the **Screen Buffer** rendering stack and is
-           incompatible with the methods identified as being part of the **Direct
-           Display** stack.
+        .. NOTE:: This method is part of the **Improved Screen Management** rendering
+           stack and is incompatible with the methods identified as being part of the
+           **Legacy Direct Display** stack.
 
         """
         if row is not None and column is not None:
@@ -4547,11 +4571,11 @@ class Screen(base.PglBaseObject):
 
         .. versionadded:: 1.3.0
 
-        .. image:: https://img.shields.io/badge/rendering%20stack-Screen%20Buffer-green
+        .. image:: https://img.shields.io/badge/rendering%20stack-ISM-green
 
-        .. NOTE:: This method is part of the **Screen Buffer** rendering stack and is
-           incompatible with the methods identified as being part of the **Direct
-           Display** stack.
+        .. NOTE:: This method is part of the **Improved Screen Management** rendering
+           stack and is incompatible with the methods identified as being part of the
+           **Legacy Direct Display** stack.
 
         """
         if type(row) is int and type(column) is int:
@@ -4592,9 +4616,9 @@ class Screen(base.PglBaseObject):
 
         .. image:: https://img.shields.io/badge/rendering%20stack-Direct%20Display-blue
 
-        .. NOTE:: This method is part of the **Direct Display** rendering stack and is
-           incompatible with the methods identified as being part of the **Screen
-           Buffer** stack.
+        .. NOTE:: This method is part of the **Legacy Direct Display** rendering stack
+           and is incompatible with the methods identified as being part of the
+           **Improved Screen Management** stack.
 
         """
         # Funny how the documentation is waaayyy bigger than the code ;)
@@ -4656,9 +4680,9 @@ class Screen(base.PglBaseObject):
 
         .. image:: https://img.shields.io/badge/rendering%20stack-Direct%20Display-blue
 
-        .. NOTE:: This method is part of the **Direct Display** rendering stack and is
-           incompatible with the methods identified as being part of the **Screen
-           Buffer** stack.
+        .. NOTE:: This method is part of the **Legacy Direct Display** rendering stack
+           and is incompatible with the methods identified as being part of the
+           **Improved Screen Management** stack.
 
         """
         eol = ""
@@ -4705,9 +4729,9 @@ class Screen(base.PglBaseObject):
 
         .. image:: https://img.shields.io/badge/rendering%20stack-Direct%20Display-blue
 
-        .. NOTE:: This method is part of the **Direct Display** rendering stack and is
-           incompatible with the methods identified as being part of the **Screen
-           Buffer** stack.
+        .. NOTE:: This method is part of the **Legacy Direct Display** rendering stack
+           and is incompatible with the methods identified as being part of the
+           **Improved Screen Management** stack.
 
         """
         for r in range(0, sprite.size[1]):
@@ -4748,9 +4772,9 @@ class Screen(base.PglBaseObject):
 
         .. image:: https://img.shields.io/badge/rendering%20stack-Direct%20Display-blue
 
-        .. NOTE:: This method is part of the **Direct Display** rendering stack and is
-           incompatible with the methods identified as being part of the **Screen
-           Buffer** stack.
+        .. NOTE:: This method is part of the **Legacy Direct Display** rendering stack
+           and is incompatible with the methods identified as being part of the
+           **Improved Screen Management** stack.
 
         """
         for r in range(0, sprite.size[1]):
