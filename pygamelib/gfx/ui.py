@@ -402,7 +402,7 @@ class Box(object):
     def render_to_buffer(
         self, buffer, row, column, buffer_height, buffer_width
     ) -> None:
-        """Render the box into a display buffer (not a screen buffer).
+        """Render the box from the display buffer to the frame buffer.
 
         This method is automatically called by :func:`pygamelib.engine.Screen.render`.
 
@@ -659,7 +659,7 @@ class ProgressBar(object):
         self.__config.game.screen.trigger_rendering()
 
     def render_to_buffer(self, buffer, row, column, buffer_height, buffer_width):
-        """Render the object into a display buffer (not a screen buffer).
+        """Render the object from the display buffer to the frame buffer.
 
         This method is automatically called by :func:`pygamelib.engine.Screen.render`.
 
@@ -849,7 +849,7 @@ class ProgressDialog(Dialog):
         self.config.game.screen.trigger_rendering()
 
     def render_to_buffer(self, buffer, row, column, buffer_height, buffer_width):
-        """Render the object into a display buffer (not a screen buffer).
+        """Render the object from the display buffer to the frame buffer.
 
         This method is automatically called by :func:`pygamelib.engine.Screen.render`.
 
@@ -1131,7 +1131,7 @@ class MessageDialog(Dialog):
     def render_to_buffer(
         self, buffer, row, column, buffer_height, buffer_width
     ) -> None:
-        """Render the object into a display buffer (not a screen buffer).
+        """Render the object from the display buffer to the frame buffer.
 
         This method is automatically called by :func:`pygamelib.engine.Screen.render`.
 
@@ -1346,7 +1346,7 @@ class LineInputDialog(Dialog):
     def render_to_buffer(
         self, buffer, row, column, buffer_height, buffer_width
     ) -> None:
-        """Render the object into a display buffer (not a screen buffer).
+        """Render the object from the display buffer to the frame buffer.
 
         This method is automatically called by :func:`pygamelib.engine.Screen.render`.
 
@@ -1567,7 +1567,7 @@ class MultiLineInputDialog(Dialog):
     def render_to_buffer(
         self, buffer, row, column, buffer_height, buffer_width
     ) -> None:
-        """Render the object into a display buffer (not a screen buffer).
+        """Render the object from the display buffer to the frame buffer.
 
         This method is automatically called by :func:`pygamelib.engine.Screen.render`.
 
@@ -1959,7 +1959,7 @@ class FileDialog(Dialog):
     def render_to_buffer(
         self, buffer, row: int, column: int, buffer_height: int, buffer_width: int
     ) -> None:
-        """Render the object into a display buffer (not a screen buffer).
+        """Render the object from the display buffer to the frame buffer.
 
         This method is automatically called by :func:`pygamelib.engine.Screen.render`.
 
@@ -2412,7 +2412,7 @@ class GridSelector(object):
     def render_to_buffer(
         self, buffer, row: int, column: int, buffer_height: int, buffer_width: int
     ) -> None:
-        """Render the object into a display buffer (not a screen buffer).
+        """Render the object from the display buffer to the frame buffer.
 
         This method is automatically called by :func:`pygamelib.engine.Screen.render`.
 
@@ -2622,7 +2622,7 @@ class GridSelectorDialog(Dialog):
     def render_to_buffer(
         self, buffer, row: int, column: int, buffer_height: int, buffer_width: int
     ) -> None:
-        """Render the object into a display buffer (not a screen buffer).
+        """Render the object from the display buffer to the frame buffer.
 
         This method is automatically called by :func:`pygamelib.engine.Screen.render`.
 
@@ -2826,7 +2826,7 @@ class ColorPicker(object):
     def render_to_buffer(
         self, buffer, row: int, column: int, buffer_height: int, buffer_width: int
     ) -> None:
-        """Render the object into a display buffer (not a screen buffer).
+        """Render the object from the display buffer to the frame buffer.
 
         This method is automatically called by :func:`pygamelib.engine.Screen.render`.
 
@@ -2968,7 +2968,7 @@ class ColorPickerDialog(Dialog):
     def render_to_buffer(
         self, buffer, row: int, column: int, buffer_height: int, buffer_width: int
     ) -> None:
-        """Render the object into a display buffer (not a screen buffer).
+        """Render the object from the display buffer to the frame buffer.
 
         This method is automatically called by :func:`pygamelib.engine.Screen.render`.
 
@@ -3279,7 +3279,7 @@ class MenuAction(object):
     def render_to_buffer(
         self, buffer, row: int, column: int, buffer_height: int, buffer_width: int
     ) -> None:
-        """Render the object into a display buffer (not a screen buffer).
+        """Render the object from the display buffer to the frame buffer.
 
         This method is automatically called by :func:`pygamelib.engine.Screen.render`.
 
@@ -3604,7 +3604,7 @@ class Menu(object):
     def render_to_buffer(
         self, buffer, row: int, column: int, buffer_height: int, buffer_width: int
     ) -> None:
-        """Render the object into a display buffer (not a screen buffer).
+        """Render the object from the display buffer to the frame buffer.
 
         This method is automatically called by :func:`pygamelib.engine.Screen.render`.
 
@@ -4114,7 +4114,7 @@ class MenuBar(object):
     def render_to_buffer(
         self, buffer, row: int, column: int, buffer_height: int, buffer_width: int
     ) -> None:
-        """Render the object into a display buffer (not a screen buffer).
+        """Render the object from the display buffer to the frame buffer.
 
         This method is automatically called by :func:`pygamelib.engine.Screen.render`.
 

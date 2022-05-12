@@ -20,7 +20,7 @@ RandomColorPartitionParticle
       ~RandomColorPartitionParticle.__init__
       ~RandomColorPartitionParticle.apply_force
       ~RandomColorPartitionParticle.attach
-      ~RandomColorPartitionParticle.be_notified
+      ~RandomColorPartitionParticle.handle_notification
       ~RandomColorPartitionParticle.detach
       ~RandomColorPartitionParticle.finished
       ~RandomColorPartitionParticle.notify

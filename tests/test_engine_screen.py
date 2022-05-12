@@ -126,7 +126,7 @@ class TestBase(unittest.TestCase):
         with self.assertRaises(base.PglOutOfBoardBoundException):
             b.render_cell(50, 50)
         self.assertIsNone(s.clear_buffers())
-        self.assertIsNone(s.clear_screen_buffer())
+        self.assertIsNone(s.clear_frame_buffer())
         self.assertTrue(s._is_dirty)
         self.assertTrue(functions.pgl_isinstance(s.buffer, "numpy.ndarray"))
         self.assertIsNone(s.update())
@@ -290,7 +290,7 @@ class TestBase(unittest.TestCase):
         self.assertTrue(s._is_dirty)
         s.render()
         self.assertFalse(s._is_dirty)
-        s.be_notified("unimportant")
+        s.handle_notification("unimportant")
         self.assertTrue(s._is_dirty)
         s.delete(0, 0)
         self.assertEqual(len(obj._observers), 0)

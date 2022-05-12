@@ -47,9 +47,9 @@ class PglBaseObject(object):
 
     The base logic of the pattern is already implemented and probably does not require
     re-implementation on the child object.
-    However, the :func:`~pygamelib.base.PglBaseObject.be_notified()` method needs to be
-    implemented in each client. The actual processing of the notification is indeed
-    specific to each object.
+    However, the :func:`~pygamelib.base.PglBaseObject.handle_notification()` method
+    needs to be implemented in each client. The actual processing of the notification is
+    indeed specific to each object.
 
     Storing the screen position is particularly useful for
     :class:`~pygamelib.board_items.BoardItem` subclasses as they only know their
@@ -126,7 +126,7 @@ class PglBaseObject(object):
         if modifier in self._observers:
             cache = self._observers.pop(self._observers.index(modifier))
         for observer in self._observers:
-            observer.be_notified(self, attribute, value)
+            observer.handle_notification(self, attribute, value)
         # Restore the cached object
         if cache is not None:
             self._observers.append(cache)
@@ -184,21 +184,22 @@ class PglBaseObject(object):
         except ValueError:
             return False
 
-    def be_notified(self, subject, attribute=None, value=None):
+    def handle_notification(self, subject, attribute=None, value=None):
         """
         A virtual method that needs to be implemented by the observer.
         By default it does nothing but each observer needs to implement it if something
         needs to be done when notified.
 
         This method always receive the notifying object as first parameter. The 2 other
-        paramters are optional and can be None.
+        parameters are optional and can be None.
 
         You can use the attribute and value as you see fit. You are free to consider
         attribute as an event and value as the event's value.
 
         :param subject: The object that has changed.
         :type subject: :class:`~pygamelib.base.PglBaseObject`
-        :param attribute: The attribute that has changed. This can be None.
+        :param attribute: The attribute that has changed, it is usually a "FQDN style"
+           string. This can be None.
         :type attribute: str
         :param value: The new value of the attribute. This can be None.
         :type value: Any
@@ -368,7 +369,7 @@ class Text(PglBaseObject):
         )
         return obj
 
-    def be_notified(self, target, attribute=None, value=None):
+    def handle_notification(self, target, attribute=None, value=None):
         self.__build_color_cache()
 
     @property
@@ -511,7 +512,7 @@ class Text(PglBaseObject):
     # The apparent reason is that the BG color is not reset by simply the background to
     # None
     def render_to_buffer(self, buffer, row, column, buffer_height, buffer_width):
-        """Render the Text object into a display buffer (not a screen buffer).
+        """Render the Text object from the display buffer to the frame buffer.
 
         This method is automatically called by :func:`pygamelib.engine.Screen.render`.
 
@@ -1145,7 +1146,7 @@ class Vector2D(object):
                 print('We are not moving... at all...')
         """
         return round(
-            math.sqrt(self.row ** 2 + self.column ** 2), self.rounding_precision
+            math.sqrt(self.row**2 + self.column**2), self.rounding_precision
         )
 
     def unit(self):

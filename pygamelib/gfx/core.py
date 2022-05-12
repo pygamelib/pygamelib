@@ -435,6 +435,25 @@ class Sprixel(object):
             return [copy.deepcopy(self)] * other
         raise NotImplementedError
 
+    def render_to_buffer(self, buffer, row, column, buffer_height, buffer_width):
+        """Render the sprixel from the display buffer to the frame buffer.
+
+        This method is automatically called by :func:`pygamelib.engine.Screen.render`.
+
+        :param buffer: A screen buffer to render the item into.
+        :type buffer: numpy.array
+        :param row: The row to render in.
+        :type row: int
+        :param column: The column to render in.
+        :type column: int
+        :param height: The total height of the display buffer.
+        :type height: int
+        :param width: The total width of the display buffer.
+        :type width: int
+
+        """
+        buffer[row][column] = self.__repr__()
+
     @staticmethod
     def from_ansi(string, model="▄"):
         """Takes an ANSI string, parse it and return a Sprixel.
@@ -1526,7 +1545,7 @@ class Sprite(object):
                     sprix.fg_color = sprix.fg_color.blend(color, ratio)
 
     def render_to_buffer(self, buffer, row, column, buffer_height, buffer_width):
-        """Render the sprite into a display buffer (not a screen buffer).
+        """Render the sprite from the display buffer to the frame buffer.
 
         This method is automatically called by :func:`pygamelib.engine.Screen.render`.
 

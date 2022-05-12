@@ -20,7 +20,7 @@ ColorPartitionParticle
       ~ColorPartitionParticle.__init__
       ~ColorPartitionParticle.apply_force
       ~ColorPartitionParticle.attach
-      ~ColorPartitionParticle.be_notified
+      ~ColorPartitionParticle.handle_notification
       ~ColorPartitionParticle.detach
       ~ColorPartitionParticle.finished
       ~ColorPartitionParticle.notify

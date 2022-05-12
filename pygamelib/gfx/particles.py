@@ -1909,7 +1909,7 @@ class ParticleEmitter(base.PglBaseObject):
         return self.lifespan <= 0 and self.particle_pool.count_active_particles() == 0
 
     def render_to_buffer(self, buffer, row, column, buffer_height, buffer_width):
-        """Render all the particles of that emitter in the display buffer.
+        """Render all the particles of that emitter in the frame buffer.
 
         This method is automatically called by :func:`pygamelib.engine.Screen.render`.
 

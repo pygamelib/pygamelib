@@ -19,7 +19,7 @@ Color
    
       ~Color.__init__
       ~Color.attach
-      ~Color.be_notified
+      ~Color.handle_notification
       ~Color.blend
       ~Color.detach
       ~Color.from_ansi

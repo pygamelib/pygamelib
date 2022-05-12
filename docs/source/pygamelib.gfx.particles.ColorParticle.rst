@@ -20,7 +20,7 @@ ColorParticle
       ~ColorParticle.__init__
       ~ColorParticle.apply_force
       ~ColorParticle.attach
-      ~ColorParticle.be_notified
+      ~ColorParticle.handle_notification
       ~ColorParticle.detach
       ~ColorParticle.finished
       ~ColorParticle.notify

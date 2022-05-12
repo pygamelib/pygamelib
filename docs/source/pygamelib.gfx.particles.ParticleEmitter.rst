@@ -20,7 +20,7 @@ ParticleEmitter
       ~ParticleEmitter.__init__
       ~ParticleEmitter.apply_force
       ~ParticleEmitter.attach
-      ~ParticleEmitter.be_notified
+      ~ParticleEmitter.handle_notification
       ~ParticleEmitter.detach
       ~ParticleEmitter.emit
       ~ParticleEmitter.finished

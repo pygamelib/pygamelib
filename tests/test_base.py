@@ -189,7 +189,7 @@ class TestBase(unittest.TestCase):
         self.assertIsNone(text.fg_color)
 
         text = pgl_base.Text("This is a test", font=core.Font("8bits"))
-        self.assertIsNone(text.be_notified(None))
+        self.assertIsNone(text.handle_notification(None))
         self.assertIsInstance(text, pgl_base.Text)
         with self.assertRaises(pgl_base.PglInvalidTypeException):
             pgl_base.Text("This is a test", font=42)

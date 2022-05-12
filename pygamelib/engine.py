@@ -630,7 +630,7 @@ class Board(base.PglBaseObject):
     def render_to_buffer(
         self, buffer, row, column, buffer_height, buffer_width
     ) -> None:
-        """Render the board into a display buffer (not a frame buffer).
+        """Render the board into from the display buffer to the frame buffer.
 
         This method is automatically called by :func:`pygamelib.engine.Screen.render`.
 
@@ -4078,6 +4078,7 @@ class Screen(base.PglBaseObject):
             ]
         )
         self._is_dirty = False
+        self.__scene_graph = []
 
     def clear(self):
         """
@@ -4324,17 +4325,9 @@ class Screen(base.PglBaseObject):
                         s_height,
                         s_width,
                     )
-                elif type(i) is str and len(i) > 1:
-                    # If the cell is a string, we render one character per terminal cell
-                    idx = 0
-                    for char in i:
-                        if col + idx >= s_width:
-                            break
-                        screen_buffer[row][col + idx] = char
-                        idx += 1
                 elif hasattr(i, "__repr__"):
                     # Else we use the __repr__ method to render the cell.
-                    # It is unlikely that things will go well here...
+                    # It is for the sprixels.
                     screen_buffer[row][col] = i.__repr__()
                 col -= 1
             row -= 1
@@ -4477,7 +4470,7 @@ class Screen(base.PglBaseObject):
             raise base.PglInvalidTypeException(
                 "Screen.place(item, row, column) none of the parameters can be None."
             )
-        if pgl_isinstance(element, "pygamelib.gfx.ui.Dialog"):
+        if pgl_isinstance(element, "pygamelib.gfx.ui.Dialog") and rendering_pass < 2:
             rendering_pass = 2
         if row >= self.height:
             raise base.PglException(
@@ -4491,23 +4484,24 @@ class Screen(base.PglBaseObject):
                 f"Screen.place(item, row, column) : column={column} is out of screen "
                 f"width (i.e {self.width})",
             )
+        if type(element) is str:
+            # If it's a string we convert it to a Text object.
+            element = base.Text(element)
+
         if isinstance(element, base.PglBaseObject):
-            element.screen_row = row
-            element.screen_column = column
-        if (
-            isinstance(element, core.Sprixel)
-            or type(element) is str
-            or hasattr(element, "render_to_buffer")
-        ):
+            element.attach(self)
+            element.store_screen_position(row, column)
+
+        if isinstance(element, core.Sprixel) or hasattr(element, "render_to_buffer"):
             try:
                 setattr(element, "__rendering_pass", rendering_pass)
             except AttributeError:
                 pass
             self._display_buffer[row][column] = element
-            if isinstance(element, base.PglBaseObject):
-                # Game.instance().session_log(f"Attaching to {element}")
-                element.attach(self)
-                element.store_screen_position(row, column)
+            # if isinstance(element, base.PglBaseObject):
+            #     # Game.instance().session_log(f"Attaching to {element}")
+            #     element.attach(self)
+            #     element.store_screen_position(row, column)
             self._is_dirty = True
             return
         else:
@@ -4790,7 +4784,7 @@ class Screen(base.PglBaseObject):
                     )
             print()
 
-    def be_notified(self, subject, attribute=None, value=None):
+    def handle_notification(self, subject, attribute=None, value=None):
         # We don't really care about the reason for the notification. We just want to
         # know that something changed.
         """

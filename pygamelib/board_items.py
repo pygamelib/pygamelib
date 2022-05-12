@@ -998,7 +998,7 @@ class BoardComplexItem(BoardItem):
             )
 
     def render_to_buffer(self, buffer, row, column, height, width):
-        """Render the complex board item into a display buffer (not a screen buffer).
+        """Render the complex board item from the display buffer to the frame buffer.
 
         This method is automatically called by :func:`pygamelib.engine.Screen.render`.
 
