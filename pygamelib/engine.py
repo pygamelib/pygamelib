@@ -4314,21 +4314,28 @@ class Screen(base.PglBaseObject):
                         )
                     col -= 1
                     continue
-                # If not, we render the cell now.
-                if hasattr(i, "render_to_buffer"):
-                    # If the item is capable of rendering itself in the buffer, we let
-                    # it do so.
-                    i.render_to_buffer(
-                        screen_buffer,
-                        row,
-                        col,
-                        s_height,
-                        s_width,
-                    )
-                elif hasattr(i, "__repr__"):
-                    # Else we use the __repr__ method to render the cell.
-                    # It is for the sprixels.
-                    screen_buffer[row][col] = i.__repr__()
+                i.render_to_buffer(
+                    screen_buffer,
+                    row,
+                    col,
+                    s_height,
+                    s_width,
+                )
+                # # If not, we render the cell now.
+                # if hasattr(i, "render_to_buffer"):
+                #     # If the item is capable of rendering itself in the buffer, we let
+                #     # it do so.
+                #     i.render_to_buffer(
+                #         screen_buffer,
+                #         row,
+                #         col,
+                #         s_height,
+                #         s_width,
+                #     )
+                # elif hasattr(i, "__repr__"):
+                #     # Else we use the __repr__ method to render the cell.
+                #     # It is for the sprixels.
+                #     screen_buffer[row][col] = i.__repr__()
                 col -= 1
             row -= 1
         # Now we render the later passes.
