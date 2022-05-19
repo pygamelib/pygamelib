@@ -724,10 +724,10 @@ class Board(base.PglBaseObject):
         # I dread the performance impact...
         # We render all the emitters attached to an item after the board has been drawn
         # So technically it should be the same as Screen.place(r,c,2)
-        finished_emitters = []
-        for emt in self._particle_emitters:
+        for _ in range(len(self._particle_emitters) - 1, -1, -1):
+            emt = self._particle_emitters.pop()
             if emt.finished():
-                finished_emitters.append(emt)
+                # self._particle_emitters.discard(emt)
                 continue
             emt.row += self.screen_row
             emt.column += self.screen_column
@@ -736,8 +736,7 @@ class Board(base.PglBaseObject):
             emt.render_to_buffer(
                 buffer, row + emt.row, column + emt.column, buffer_height, buffer_width
             )
-        for emt in finished_emitters:
-            self._particle_emitters.discard(emt)
+            self._particle_emitters.add(emt)
 
     def render_cell(self, row, column):
         """
@@ -1650,7 +1649,7 @@ class Board(base.PglBaseObject):
         return return_array
 
 
-class Game:
+class Game(base.PglBaseObject):
     """A class that serve as a game engine.
 
     This object is the central system that allow the management of a game. It holds
@@ -1708,7 +1707,8 @@ class Game:
         mode=constants.MODE_TBT,
         user_update=None,
         input_lag=0.01,
-        enable_physic=False,
+        user_update_paused=None,
+        # enable_physic=False,
     ):
         """
         :param name: The Game name.
@@ -1743,17 +1743,24 @@ class Game:
            game object, the user input (can be None) and the elapsed time since last
            frame.
         :type user_update: function
+        :param user_update_paused: A reference to the update function called when the
+           game is paused. It is called with the same 3 parameters than the regular
+           update function: the game object, the user input (can be None) and the
+           elapsed time since last frame. If not specified, the regular update function
+           is called but nothing is done regarding NPCs, projectiles, animations, etc.
+        :type user_update_paused: function
         :param input_lag: The amount of time the run() function is going to wait for a
            user input before returning None and calling the update function. Default is
            0.01.
         :type input_lag: float|int
         """
+        super().__init__()
         self.name = name
         self._boards = boards
         self._menu = menu
         self.current_level = current_level
         self.player = player
-        self.state = constants.RUNNING
+        self.__state = constants.RUNNING
         self.enable_partial_display = enable_partial_display
         self.partial_display_viewport = partial_display_viewport
         self._config = None
@@ -1764,6 +1771,7 @@ class Game:
         self.screen = Screen()
         self.mode = mode
         self.user_update = user_update
+        self.user_update_paused = None
         self.input_lag = input_lag
         self._logs = []
         self.DEBUG = False
@@ -1775,16 +1783,39 @@ class Game:
         #     self.gravity = base.Vector2D(9.81, 0)
         # else:
         #     self.gravity = None
-        # Placeholder: we want to be able to center the screen on any item/position.
-        # TODO: in a future version (post 1.2.0) a camera system will be added to build
-        # cinematic for example.
-        # self.center_board_on = None
+
         base.init()
         # In the case where user_update is defined, we cannot start the game on our own.
         # We need the user to start it first.
         if self.user_update is not None:
-            self.state = constants.PAUSED
+            self.__state = constants.PAUSED
+        if self.user_update_paused is not None:
+            self.user_update_paused = user_update_paused
         self.previous_time = time.time()
+        self.__execute_run = None
+
+    @property
+    def state(self):
+        """Get/set the state of the game.
+
+        :param value: The new state of the game (from the constants module).
+        :type value: int
+        :return: The state of the game.
+        :rtype: int
+        """
+        return self.__state
+
+    @state.setter
+    def state(self, value):
+        self.__state = value
+        if value == constants.PAUSED:
+            if self.user_update_paused is None:
+                self.__execute_run = self._run_while_paused
+            else:
+                self.__execute_run = self._run_without_board
+        elif value == constants.RUNNING:
+            self._set_run_function()
+        self.notify(self, "pygamelib.engine.Game.state", value)
 
     @classmethod
     def instance(cls, *args, **kwargs):
@@ -1847,33 +1878,70 @@ class Game:
         if self.state == constants.PAUSED:
             self.start()
         # Update the inkey timeout based on mode
-        timeout = self.input_lag
         # This cannot be automatically tested as it means the main loop requires an user
         # input.
         if self.mode == constants.MODE_TBT:  # pragma: no cover
-            timeout = None
+            self.input_lag = None
         self.previous_time = time.time()
         if self.player is None:
             self.player = constants.NO_PLAYER
+        # Now we check that we do have a current board. If not, it means that the user
+        # wants to use the game object without any board.
+        self._set_run_function()
+
         with self.terminal.cbreak(), self.terminal.hidden_cursor(), (
             self.terminal.fullscreen()
         ):
-            # This runs until the game stops
-            while self.state != constants.STOPPED:
-                # But we only update if the game is not paused
-                if self.state == constants.RUNNING:
-                    in_key = self.terminal.inkey(timeout=timeout)
-                    elapsed = time.time() - self.previous_time
-                    self.previous_time = time.time()
-                    if self.player != constants.NO_PLAYER:
-                        self.player.dtmove += elapsed
-                    print(self.terminal.home, end="")
-                    self.user_update(self, in_key, elapsed)
-                    print(self.terminal.clear_eos, end="")
-                    self.actuate_npcs(self.current_level, elapsed)
-                    self.actuate_projectiles(self.current_level, elapsed)
-                    self.animate_items(self.current_level, elapsed)
-                    # TODO: Take care of particles.
+            self.__execute_run()
+
+    # The goal of these _run_* functions is to avoid using if statements in the while
+    # loop. Each crumble of performance is worth a little bit of extra code.
+    def _run_with_board(self):
+        # This runs until the game stops
+        while self.state != constants.STOPPED:
+            # But we only update if the game is not paused
+            if self.state == constants.RUNNING:
+                in_key = self.terminal.inkey(timeout=self.input_lag)
+                elapsed = time.time() - self.previous_time
+                self.previous_time = time.time()
+                if self.player != constants.NO_PLAYER:
+                    self.player.dtmove += elapsed
+                print(self.terminal.home, end="")
+                self.user_update(self, in_key, elapsed)
+                print(self.terminal.clear_eos, end="")
+                self.actuate_npcs(self.current_level, elapsed)
+                self.actuate_projectiles(self.current_level, elapsed)
+                self.animate_items(self.current_level, elapsed)
+                # TODO: Take care of particles.
+
+    def _set_run_function(self):
+        if self.current_level is None or self.current_board() is None:
+            self.__execute_run = self._run_without_board
+        else:
+            self.__execute_run = self._run_with_board
+
+    def _run_without_board(self):
+        # This runs until the game stops
+        while self.state != constants.STOPPED:
+            # But we only update if the game is not paused
+            if self.state == constants.RUNNING:
+                in_key = self.terminal.inkey(timeout=self.input_lag)
+                elapsed = time.time() - self.previous_time
+                self.previous_time = time.time()
+                print(self.terminal.home, end="")
+                self.user_update(self, in_key, elapsed)
+                print(self.terminal.clear_eos, end="")
+                # TODO: Take care of particles.
+
+    def _run_while_paused(self, timeout):
+        # This runs until the game is unpaused
+        while self.state == constants.PAUSED:
+            in_key = self.terminal.inkey(timeout=timeout)
+            elapsed = time.time() - self.previous_time
+            self.previous_time = time.time()
+            print(self.terminal.home, end="")
+            self.user_update_paused(self, in_key, elapsed)
+            print(self.terminal.clear_eos, end="")
 
     def session_log(self, line: str) -> None:
         """Add a line to the session logs.
@@ -2779,7 +2847,9 @@ class Game:
                                 if not isinstance(umv, base.Vector2D):
                                     # Build a unit movement vector
                                     umv = base.Vector2D.from_direction(
-                                        proj.actuator.next_move(), 1
+                                        umv,
+                                        1
+                                        # proj.actuator.next_move(), 1
                                     )
                                 # Build a movement vector
                                 dm = base.Vector2D(
