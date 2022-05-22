@@ -2237,7 +2237,10 @@ class Font:
         :type font_name: str
         :param search_directories: A list of directories to search for the font. The
            items of the list are strings representing a relative or absolute path.
-        :type search_directories: tuple
+        :type search_directories: list
+
+        .. important:: The search directories **must** contain a "fonts" directory, that
+           itself contains the font at the correct format.
 
         .. Note::  Version 1.3.0 comes with a pygamelib specific font called 8bits. It
            also comes with a handfull of fonts imported from the figlet fonts.
