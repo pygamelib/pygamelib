@@ -1739,6 +1739,8 @@ class Character(Movable):
         self.hp = None
         if hp is not None:
             self.hp = hp
+        elif max_hp is not None:
+            self.hp = max_hp
         self.max_mp = None
         if max_mp is not None:
             self.max_mp = max_mp
@@ -1822,10 +1824,17 @@ class Character(Movable):
 class Player(Character):
     """
     A class that represent a player controlled by a human.
-    It accepts all the parameters from :class:`~pygamelib.board_items.Character` and is
-    a :class:`~pygamelib.board_items.Movable`.
 
-    This class sets a couple of variables to default values:
+    This can take all parameter from :class:`~pygamelib.board_items.Character`,
+    :class:`~pygamelib.board_items.Movable` and obviously
+    :class:`~pygamelib.board_items.BoardItem`.
+
+    It is a specific board item as the whole Game class assumes only one player. Aside
+    from the wrapper functions (like Game.move_player for example), there is no reel
+    limitations to use more than one player.
+
+    The player also has a couple of attributes that are added for your convenience. You
+    are free to use them or not. They are (name and default value):
 
      * max_hp: 100
      * hp: 100
@@ -1833,8 +1842,25 @@ class Player(Character):
      * attack_power: 10
      * movement_speed: 0.1 (one movement every 0.1 second). Only useful if the game mode
          is set to MODE_RT.
+     * inventory: A :class:`~pygamelib.engine.Inventory` object. If none is provided,
+          one is created automatically.
 
-    .. note:: If no inventory is passed as parameter a default one is created.
+    A player can be animated by providing a :class:`~pygamelib.gfx.core.Animation`
+    object to its `animation` attribute.
+
+    Like all other board items, you can specify a `sprixel` attribute that will be the
+    representation of the player on the board.
+
+    Example::
+
+        player = Player(
+            name="Player",
+            # A sprixel with "@" as the model, no background color, a cyan foreground
+            # color and we set the background to be transparent.
+            sprixel=core.Sprixel("@", None, core.Color(0, 255, 255), True),
+            max_hp=200,
+        )
+
     """
 
     def __init__(self, inventory=None, **kwargs):
