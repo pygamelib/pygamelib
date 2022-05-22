@@ -25,6 +25,7 @@ import json
 import re
 from pygamelib import assets
 import importlib_resources
+from pathlib import Path
 
 
 class Color(base.PglBaseObject):
@@ -2229,14 +2230,23 @@ class Font:
 
     """
 
-    def __init__(self, font_name: str = None) -> None:
+    def __init__(self, font_name: str = None, search_directories: list = None) -> None:
         """
 
         :param font_name: The name of the font to load upon object construction.
         :type font_name: str
+        :param search_directories: A list of directories to search for the font. The
+           items of the list are strings representing a relative or absolute path.
+        :type search_directories: tuple
 
-        .. Note::  There is only one font coming with the 1.3.0 release: 8bits. More
-           will be added later.
+        .. Note::  Version 1.3.0 comes with a pygamelib specific font called 8bits. It
+           also comes with a handfull of fonts imported from the figlet fonts.
+           Please go to `http://www.figlet.org/ <http://www.figlet.org/>`_ for more
+           information.
+
+           The conversion script will be made available in the Pygamelib Github
+           organization (`https://github.com/pygamelib <https://github.com/pygamelib>`_
+           ).
 
         Example::
 
@@ -2248,6 +2258,14 @@ class Font:
         self.__config = None
         self.__sprite_collection = None
         self.__name = None
+        self.__search_directories = set()
+        self.__search_directories.add(importlib_resources.files(assets))
+        if search_directories is not None:
+            for ds in search_directories:
+                if isinstance(ds, Path):
+                    self.__search_directories.add(ds)
+                else:
+                    self.__search_directories.add(Path(ds))
         if font_name is not None:
             self.load(font_name)
 
@@ -2273,13 +2291,19 @@ class Font:
             # At that point myfont and myfont2 are exactly the same (and there is no
             # good justification to instantiate or load the font twice).
         """
-        # TODO: rework load to use the array of directories.
-        glyphs_path = importlib_resources.files(assets).joinpath(
-            "fonts", font_name, "glyphs.spr"
-        )
-        config_path = importlib_resources.files(assets).joinpath(
-            "fonts", font_name, "config.json"
-        )
+        # # TODO: rework load to use the array of directories. DONE
+        # glyphs_path = importlib_resources.files(assets).joinpath(
+        #     "fonts", font_name, "glyphs.spr"
+        # )
+        # config_path = importlib_resources.files(assets).joinpath(
+        #     "fonts", font_name, "config.json"
+        # )
+        glyphs_path = config_path = None
+        for dir in self.__search_directories:
+            glyphs_path = dir.joinpath("fonts", font_name, "glyphs.spr")
+            config_path = dir.joinpath("fonts", font_name, "config.json")
+            if glyphs_path.exists() and config_path.exists():
+                break
         # This will throw a FileNotFoundError if the font is not present.
         self.__sprite_collection = SpriteCollection.load_json_file(glyphs_path)
         with open(config_path) as config_file:
