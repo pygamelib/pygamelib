@@ -473,6 +473,33 @@ class Text(PglBaseObject):
     #     print(f"{key} changed with value={value}")
     #     super(Text, self).__setattr__(key, value)
 
+    def print_formatted(self):
+        """Print the text with the current font activated.
+
+        If the font is not set, it is strictly equivalent to print().
+        """
+        if self.__font is None:
+            print(self)
+        else:
+            glyph = self.__font.glyph
+            colors = {}
+            if self.fg_color is not None:
+                colors["fg_color"] = self.fg_color
+            if self.bg_color is not None:
+                colors["bg_color"] = self.bg_color
+            # First, we get the glyphs.
+            # We the need to print them line by line.
+            for line in self.text.splitlines():
+                glyphs = []
+                for char in line:
+                    glyphs.append(glyph(char, **colors))
+                for ri in range(0, self.__font.height()):
+                    for g in glyphs:
+                        for ci in range(0, g.width):
+                            print(g.sprixel(ri, ci), end="")
+                    print()
+                print()
+
     @property
     def length(self):
         """Return the true length of the text.
