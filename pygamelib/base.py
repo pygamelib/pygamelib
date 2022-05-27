@@ -497,8 +497,12 @@ class Text(PglBaseObject):
                     for g in glyphs:
                         for ci in range(0, g.width):
                             print(g.sprixel(ri, ci), end="")
+                        for _ in range(self.__font.horizontal_spacing()):
+                            print(" ", end="")
                     print()
-                print()
+                # print()
+                for _ in range(self.__font.vertical_spacing()):
+                    print()
 
     @property
     def length(self):
