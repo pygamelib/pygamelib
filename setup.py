@@ -45,7 +45,6 @@ setuptools.setup(
     ],
     project_urls={
         "Documentation": "https://pygamelib.readthedocs.io/en/latest/index.html",  # noqa: E501
-        "Guides & Tutorials": "https://astro.hyrul.es/guides/pygamelib/",
         "Source": "https://github.com/arnauddupuis/pygamelib",
         "Tracker": "https://github.com/arnauddupuis/pygamelib/issues",
         "Wiki": "https://github.com/arnauddupuis/pygamelib/wiki",
