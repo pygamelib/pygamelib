@@ -2320,6 +2320,7 @@ class Font:
                     self.__config["glyphs_map"][glyph]
                 ]
 
+    @property
     def height(self) -> int:
         """
         Returns the height of the font as specified in the font config file.
@@ -2328,10 +2329,47 @@ class Font:
 
         Example::
 
-            screen.place(text, last_row + myfont.height(), first_text_column)
+            screen.place(text, last_row + myfont.height, first_text_column)
         """
         return self.__config["height"]
 
+    @property
+    def scalable(self) -> bool:
+        """
+        Returns the scalability of the font as specified in the font config file.
+
+        :rtype: bool
+        """
+        return self.__config["scalable"]
+
+    @property
+    def monospace(self) -> bool:
+        """
+        Returns if the font is monospace as specified in the font config file.
+
+        :rtype: bool
+        """
+        return self.__config["monospace"]
+
+    @property
+    def colorable(self) -> bool:
+        """
+        Returns the "colorability" of the font as specified in the font config file.
+
+        :rtype: bool
+        """
+        return self.__config["colorable"]
+
+    @property
+    def glyphs_map(self) -> dict:
+        """
+        Returns the glyph map of the font as specified in the font config file.
+
+        :rtype: dict
+        """
+        return self.__config["glyphs_map"]
+
+    @property
     def horizontal_spacing(self) -> int:
         """
         Returns the horizontal spacing recommended by the font (as specified in the font
@@ -2350,6 +2388,7 @@ class Font:
         """
         return self.__config["horizontal_spacing"]
 
+    @property
     def vertical_spacing(self) -> int:
         """
         Returns the vertical spacing recommended by the font (as specified in the font
@@ -2367,6 +2406,7 @@ class Font:
         """
         return self.__config["vertical_spacing"]
 
+    @property
     def name(self) -> str:
         """
         Return the name of the font. The name is the string that was used to load the
