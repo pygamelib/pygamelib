@@ -19,14 +19,22 @@ Font
    
       ~Font.__init__
       ~Font.glyph
-      ~Font.height
-      ~Font.horizontal_spacing
       ~Font.load
-      ~Font.name
-      ~Font.vertical_spacing
    
    
 
-   
+      
+   .. rubric:: Attributes
+
+   .. autosummary::
+
+      ~Font.colorable
+      ~Font.glyphs_map
+      ~Font.height
+      ~Font.horizontal_spacing
+      ~Font.monospace
+      ~Font.name
+      ~Font.scalable
+      ~Font.vertical_spacing
    
    
