@@ -493,15 +493,15 @@ class Text(PglBaseObject):
                 glyphs = []
                 for char in line:
                     glyphs.append(glyph(char, **colors))
-                for ri in range(0, self.__font.height()):
+                for ri in range(0, self.__font.height):
                     for g in glyphs:
                         for ci in range(0, g.width):
                             print(g.sprixel(ri, ci), end="")
-                        for _ in range(self.__font.horizontal_spacing()):
+                        for _ in range(self.__font.horizontal_spacing):
                             print(" ", end="")
                     print()
                 # print()
-                for _ in range(self.__font.vertical_spacing()):
+                for _ in range(self.__font.vertical_spacing):
                     print()
 
     @property
@@ -532,7 +532,7 @@ class Text(PglBaseObject):
                 length = 0
                 for char in line:
                     font_glyph = glyph(char)
-                    length += font_glyph.size[0] + self.__font.horizontal_spacing()
+                    length += font_glyph.size[0] + self.__font.horizontal_spacing
                 if length > max_length:
                     max_length = length
             return max_length
@@ -587,15 +587,16 @@ class Text(PglBaseObject):
                     idx += 1
                 row_idx += 1
         else:
-            row_incr = self.__font.height() + self.__font.vertical_spacing()
-            font_horizontal_spacing = self.__font.horizontal_spacing()
+            row_incr = self.__font.height + self.__font.vertical_spacing
+            font_horizontal_spacing = self.__font.horizontal_spacing
             # Squash the dot notation
             glyph = self.__font.glyph
             colors = {}
-            if self.fg_color is not None:
-                colors["fg_color"] = self.fg_color
-            if self.bg_color is not None:
-                colors["bg_color"] = self.bg_color
+            if self.__font.colorable:
+                if self.fg_color is not None:
+                    colors["fg_color"] = self.fg_color
+                if self.bg_color is not None:
+                    colors["bg_color"] = self.bg_color
             # t = Console.instance()
             # bgcc = t.on_color_rgb(self.bg_color.r, self.bg_color.g, self.bg_color.b)
             # filler = f"{bgcc} \x1b[0m"
