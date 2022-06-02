@@ -1789,7 +1789,7 @@ class Game(base.PglBaseObject):
         # We need the user to start it first.
         if self.user_update is not None:
             self.__state = constants.PAUSED
-        if self.user_update_paused is not None:
+        if user_update_paused is not None:
             self.user_update_paused = user_update_paused
         self.previous_time = time.time()
         self.__execute_run = None
