@@ -172,6 +172,7 @@ class TestBase(unittest.TestCase):
         with self.assertRaises(pgl_base.PglInvalidTypeException):
             pgl_base.Text("breaking", None, "pink")
         text.text = pgl_base.Text("Another test")
+        self.assertIsNone(text.print_formatted())
         self.assertEqual(text.text, "Another test")
         text.text = 12
         self.assertEqual(text.text, "Another test")
@@ -189,6 +190,7 @@ class TestBase(unittest.TestCase):
         self.assertIsNone(text.fg_color)
 
         text = pgl_base.Text("This is a test", font=core.Font("8bits"))
+        self.assertIsNone(text.print_formatted())
         self.assertIsNone(text.handle_notification(None))
         self.assertIsInstance(text, pgl_base.Text)
         with self.assertRaises(pgl_base.PglInvalidTypeException):
@@ -201,6 +203,7 @@ class TestBase(unittest.TestCase):
             "",
             font=core.Font("8bits"),
         )
+        self.assertIsNone(text.print_formatted())
         text2 = pgl_base.Text.load(text.serialize())
         self.assertEqual(text.text, text2.text)
         self.assertEqual(text.bg_color, text2.bg_color)
