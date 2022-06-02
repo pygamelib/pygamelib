@@ -1,5 +1,6 @@
 from pygamelib.gfx import core
 import unittest
+import pathlib
 
 # Test cases for all classes in pygamelib.gfx.core except for Animation.
 
@@ -7,16 +8,27 @@ import unittest
 class TestBase(unittest.TestCase):
     def test_font_create(self):
         font = core.Font("8bits")
-        self.assertEqual(font.name(), "8bits")
+        self.assertEqual(font.name, "8bits")
         with self.assertRaises(FileNotFoundError):
             core.Font("42")
+        font = core.Font("8bits", ["."])
+        self.assertEqual(font.name, "8bits")
+        font = core.Font("8bits", [pathlib.Path(".")])
+        self.assertEqual(font.name, "8bits")
+        self.assertFalse(font.scalable)
+        self.assertTrue(font.monospace)
+        self.assertTrue(font.colorable)
+        self.assertEqual(font.height, 4)
+        self.assertEqual(font.horizontal_spacing, 1)
+        self.assertEqual(font.vertical_spacing, 1)
+        self.assertTrue(len(font.glyphs_map) > 0)
 
     def test_accessors(self):
         font = core.Font("8bits")
-        self.assertEqual(font.name(), "8bits")
-        self.assertEqual(font.height(), 4)
-        self.assertEqual(font.horizontal_spacing(), 1)
-        self.assertEqual(font.vertical_spacing(), 1)
+        self.assertEqual(font.name, "8bits")
+        self.assertEqual(font.height, 4)
+        self.assertEqual(font.horizontal_spacing, 1)
+        self.assertEqual(font.vertical_spacing, 1)
 
     def test_glyph(self):
         font = core.Font("8bits")
