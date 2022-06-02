@@ -327,7 +327,7 @@ class Text(PglBaseObject):
         else:
             ret_data["fg_color"] = None
         if self.__font is not None:
-            ret_data["font_name"] = self.__font.name()
+            ret_data["font_name"] = self.__font.name
         else:
             ret_data["font_name"] = None
         if self.style is not None:
