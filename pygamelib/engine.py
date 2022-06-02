@@ -42,7 +42,7 @@ class Board(base.PglBaseObject):
     """A class that represent a game board.
 
     The board object is a 2D matrix of board items. This means that you can visualize it
-    as a chessboard for example. All board items are positionned on this chessboard-like
+    as a chessboard for example. All board items are positioned on this chessboard-like
     object and can be moved around.
 
     The Board object is the base object to build a level. Once created to your liking
@@ -50,7 +50,7 @@ class Board(base.PglBaseObject):
     :class:`~pygamelib.board_items.BoardItem` to create your own board items, specific
     to your game.
 
-    If you want a detailled introduction to the Board object, go the the pygamelib wiki
+    If you want a detailed introduction to the Board object, go the the pygamelib wiki
     and read the "`Getting started: the Board
     <https://github.com/arnauddupuis/pygamelib/wiki/Getting-started-Board>`_" article.
 
@@ -61,8 +61,8 @@ class Board(base.PglBaseObject):
        the board itself needs to hold the information about were to draw and on what to
        focus on. The existing code will still work as the :class:`Game` object takes
        care of forwarding the information to the Board. However, it is now possible to
-       exploit the :class:`~pygamelib.board_items.Camera` object to create cutscenes and
-       more interesting movements.
+       exploit the :class:`~pygamelib.board_items.Camera` object to create cut scenes
+       and more interesting movements.
 
     .. Important:: Partial display related parameters are information used by the
        :func:`~pygamelib.engine.Board.display_around()` method and the :class:`Screen`
@@ -656,7 +656,7 @@ class Board(base.PglBaseObject):
         vp_width = 0
         if self.enable_partial_display:
             # We still need to clamp the viewport if we want to avoid
-            # crashes in case the progammer poorly calculated the viewport.
+            # crashes in case the programmer poorly calculated the viewport.
             vp_height = self.partial_display_viewport[0]
             vp_width = self.partial_display_viewport[1]
             if self.size[0] < (2 * vp_width):
@@ -714,9 +714,9 @@ class Board(base.PglBaseObject):
                 except IndexError:
                     break
 
-                for tmpiidx in range(1, incr):
+                for tmpidx in range(1, incr):
                     try:
-                        buffer[row + br][column + cidx + tmpiidx] = ""
+                        buffer[row + br][column + cidx + tmpidx] = ""
                     except IndexError:
                         break
                 bc += 1
@@ -1809,10 +1809,9 @@ class Game(base.PglBaseObject):
     def state(self, value):
         self.__state = value
         if value == constants.PAUSED:
+            self.__execute_run = self._run_while_paused
             if self.user_update_paused is None:
-                self.__execute_run = self._run_while_paused
-            else:
-                self.__execute_run = self._run_without_board
+                self.user_update_paused = self._fake_update_paused
         elif value == constants.RUNNING:
             self._set_run_function()
         self.notify(self, "pygamelib.engine.Game.state", value)
@@ -1850,10 +1849,26 @@ class Game(base.PglBaseObject):
          5. It calls the user_update function with 3 parameters: the game object, the
             key hit by the user (it can be None) and the elapsed time between to calls.
          6. Clears the end of the screen.
-         7. Actuates NPCs.
-         8. Actuates projectiles.
-         9. Animates items.
-         10. Actuates particles (WIP).
+         7. Actuates NPCs (If there is at least one Board manage by Game).
+         8. Actuates projectiles (If there is at least one Board manage by Game).
+         9. Animates items (If there is at least one Board manage by Game).
+
+        On the subject of particle emitters, the :class:`Board` object automatically
+        update the ones that are attached to BoardItems. For all other particle emitters
+        you need to call the update method of the emitters yourself (for now).
+
+        In version 1.2.X, there was a bug when the game was paused. In that case nothing
+        was happening anymore. The user update function was not called and events were
+        not processed. On top of that it was impossible to use run() without associating
+        a board object with a level.
+        Starting with version 1.3.0, it is now possible to use run() without associating
+        a board object with a level. On top of that, there's a new parameter to the
+        constructor (user_update_paused) that allows you to specify a function that will
+        be called when the game is paused. This function will be called with the same
+        3 parameters than the regular update function: the game object, the user input
+        (can be None) and the elapsed time since last frame. If not specified, the
+        regular update function is called but nothing is done regarding NPCs,
+        projectiles, animations, etc.
 
         :raises: PglInvalidTypeException, PglInvalidTypeException
 
@@ -1912,7 +1927,6 @@ class Game(base.PglBaseObject):
                 self.actuate_npcs(self.current_level, elapsed)
                 self.actuate_projectiles(self.current_level, elapsed)
                 self.animate_items(self.current_level, elapsed)
-                # TODO: Take care of particles.
 
     def _set_run_function(self):
         if self.current_level is None or self.current_board() is None:
@@ -1931,7 +1945,6 @@ class Game(base.PglBaseObject):
                 print(self.terminal.home, end="")
                 self.user_update(self, in_key, elapsed)
                 print(self.terminal.clear_eos, end="")
-                # TODO: Take care of particles.
 
     def _run_while_paused(self, timeout):
         # This runs until the game is unpaused
@@ -1942,6 +1955,9 @@ class Game(base.PglBaseObject):
             print(self.terminal.home, end="")
             self.user_update_paused(self, in_key, elapsed)
             print(self.terminal.clear_eos, end="")
+
+    def _fake_update_paused(self, in_key, elapsed):
+        pass
 
     def session_log(self, line: str) -> None:
         """Add a line to the session logs.
