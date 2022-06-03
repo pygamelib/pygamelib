@@ -1670,6 +1670,8 @@ class Game(base.PglBaseObject):
 
     .. important:: The Game object automatically assumes ownership over the Player.
 
+    .. role:: boldblue
+
     """
 
     # TODO: Documentation for a future release.
@@ -1861,18 +1863,16 @@ class Game(base.PglBaseObject):
         not processed. On top of that it was impossible to use run() without associating
         a board object with a level.
         Starting with version 1.3.0, it is now possible to use run() without associating
-        a board object with a level. On top of that, there's a new parameter to the
+        a board object with a level. There is also a new parameter to the
         constructor (user_update_paused) that allows you to specify a function that will
         be called when the game is paused. This function will be called with the same
         3 parameters than the regular update function: the game object, the user input
-        (can be None) and the elapsed time since last frame. If not specified, the
-        regular update function is called but nothing is done regarding NPCs,
-        projectiles, animations, etc.
+        (can be None) and the elapsed time since last frame.
 
         .. Important:: If you try to set the game state to PAUSED and the
            user_update_paused function is not defined, a notification will be issued
            and the game will continue to run. The notification message is
-           :blue_text:`pygamelib.engine.Game.run:PauseNotAvailable`
+           :boldblue:`pygamelib.engine.Game.run:PauseNotAvailable`
 
         :raises: PglInvalidTypeException, PglInvalidTypeException
 
