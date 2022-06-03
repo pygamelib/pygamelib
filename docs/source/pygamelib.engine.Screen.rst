@@ -20,7 +20,7 @@ Screen
       ~Screen.__init__
       ~Screen.clear
       ~Screen.clear_buffers
-      ~Screen.clear_screen_buffer
+      ~Screen.clear_frame_buffer
       ~Screen.delete
       ~Screen.display_at
       ~Screen.display_line

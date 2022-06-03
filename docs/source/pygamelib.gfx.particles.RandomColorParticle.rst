@@ -20,7 +20,7 @@ RandomColorParticle
       ~RandomColorParticle.__init__
       ~RandomColorParticle.apply_force
       ~RandomColorParticle.attach
-      ~RandomColorParticle.be_notified
+      ~RandomColorParticle.handle_notification
       ~RandomColorParticle.detach
       ~RandomColorParticle.finished
       ~RandomColorParticle.notify

@@ -40,6 +40,7 @@ Actionable
 
    .. autosummary::
    
+      ~Actionable.animation
       ~Actionable.column
       ~Actionable.height
       ~Actionable.inventory_space

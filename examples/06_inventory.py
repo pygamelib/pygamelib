@@ -32,7 +32,7 @@ class Notifier(base.PglBaseObject):
     # The only job of this class is to implement the observer pattern and print
     # something when an event occurs in the inventory.
     # We could do stuff like play a sound or display a message on the screen instead.
-    def be_notified(self, subject, attribute=None, value=None):
+    def handle_notification(self, subject, attribute=None, value=None):
         print(
             f"NOTIFICATION: subject={type(subject)} attribute={attribute} value={value}"
         )

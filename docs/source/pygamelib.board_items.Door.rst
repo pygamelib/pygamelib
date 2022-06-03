@@ -43,6 +43,7 @@ Door
 
    .. autosummary::
    
+      ~Door.animation
       ~Door.column
       ~Door.height
       ~Door.inventory_space

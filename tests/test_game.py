@@ -19,8 +19,24 @@ class TestBase(unittest.TestCase):
 
     def test_run(self):
         def user_update_placeholder(g, i, dt):
+            print("user_update_placeholder")
             self.assertGreater(dt, 0)
-            g.stop()
+            if hasattr(g, "test_counter"):
+                g.test_counter += 1
+            else:
+                g.test_counter = 1
+            print(f"test_counter={g.test_counter}")
+            if g.test_counter == 5:
+                g.pause()
+            elif g.test_counter > 10:
+                g.stop()
+
+        def user_update_paused_placeholder(g, i, dt):
+            print("user_update_paused_placeholder")
+            self.assertGreater(dt, 0)
+            if hasattr(g, "test_counter"):
+                g.test_counter += 1
+            g.state = constants.RUNNING
 
         g = engine.Game()
         with self.assertRaises(base.PglInvalidTypeException) as e:
@@ -30,14 +46,32 @@ class TestBase(unittest.TestCase):
         with self.assertRaises(base.PglInvalidTypeException) as e:
             g.run()
             self.assertTrue("callable" in e.message)
-        g = engine.Game(user_update=user_update_placeholder, mode=constants.MODE_RT)
-        g.pause()
+        g = engine.Game(
+            user_update=user_update_placeholder,
+            user_update_paused=user_update_paused_placeholder,
+            mode=constants.MODE_RT,
+        )
         self.assertIsNone(g.screen.display_line("testing the Game.run() mechanic."))
         g.run()
-        g = engine.Game(user_update=user_update_placeholder, mode=constants.MODE_RT)
+        g = engine.Game(
+            user_update=user_update_placeholder,
+            user_update_paused=user_update_paused_placeholder,
+            mode=constants.MODE_RT,
+        )
         g.player = board_items.Player()
+        g.add_board(1, engine.Board())
+        g.change_level(1)
         g.pause()
         g.run()
+        self.assertTrue(g.player.dtmove > 0)
+        # Now test the pause/resume mechanism without explicitly setting an update while
+        # paused callback.
+        g = engine.Game(
+            user_update=user_update_placeholder,
+            mode=constants.MODE_RT,
+        )
+        g.run()
+        self.assertEqual(g.state, constants.STOPPED)
 
     def test_menu(self):
         game = engine.Game()

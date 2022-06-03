@@ -154,7 +154,8 @@ class BoardItem(base.PglBaseObject):
             particle_emitter, "pygamelib.gfx.particles.ParticleEmitter"
         ):
             self.particle_emitter = particle_emitter
-        self.animation = None
+        self.__animation = None
+        self.animation = animation
         self.parent = None
         if parent is not None:
             self.parent = parent
@@ -168,6 +169,8 @@ class BoardItem(base.PglBaseObject):
             self.sprixel.is_bg_transparent = True
         self.value = value
         self._inventory_space = inventory_space
+        self.__heading = base.Vector2D(0, 0)
+        self.__centroidcc = base.Vector2D(0, 0)
         # Init the pickable, overlappable and restorable states
         self.__is_pickable = pickable
         self.__is_overlappable = overlappable
@@ -264,6 +267,47 @@ class BoardItem(base.PglBaseObject):
         return itm
 
     @property
+    def heading(self):
+        """Return the heading of the item.
+
+        This is a read only property that is updated by :py:meth:`store_position()`.
+
+        The property represent the orientation and movement of the item in the board. It
+        gives the difference between the item's centroid current and previous position.
+        Thus, giving you both the direction and the distance of the movement. You can
+        get the angle from here.
+
+        One of the possible usage of that property is to set the sprite/sprixel/model of
+        a moving item.
+
+        :return: The heading of the item.
+        :rtype: :class:`~pygamelib.base.Vector2D`
+
+        Example::
+
+            if my_item.heading.column > 0:
+                my_item.sprixel.model = item_models["heading_right"]
+
+        .. warning:: Just after placing an item on the board, and before moving it, the
+           heading cannot be trusted! The heading represent the direction and
+           orientation of the **movement**, therefore, it is not reliable before the
+           item moved.
+        """
+        return self.__heading
+
+    @property
+    def animation(self):
+        """A property to get and set an :class:`~pygamelib.gfx.core.Animation` for
+        this item."""
+        return self.__animation
+
+    @animation.setter
+    def animation(self, animation: core.Animation):
+        if isinstance(animation, core.Animation):
+            animation.parent = self
+            self.__animation = animation
+
+    @property
     def model(self):
         return self.sprixel.model
 
@@ -323,7 +367,7 @@ class BoardItem(base.PglBaseObject):
             string += f"'model' = '{self.model}'"
         return string
 
-    def store_position(self, row, column, layer=0):
+    def store_position(self, row: int, column: int, layer: int = 0):
         """Store the BoardItem position for self access.
 
         The stored position is used for consistency and quick access to the self
@@ -342,6 +386,13 @@ class BoardItem(base.PglBaseObject):
             item.store_position(3,4)
         """
         self.pos = [row, column, layer]
+        if row is not None and column is not None:
+            pcr = self.__centroidcc.row
+            pcc = self.__centroidcc.column
+            self.__centroidcc.row = row + self.height / 2
+            self.__centroidcc.column = column + self.width / 2
+            self.__heading.row = self.__centroidcc.row - pcr
+            self.__heading.column = self.__centroidcc.column - pcc
         if self.particle_emitter is not None:
             self.particle_emitter.row = row
             self.particle_emitter.column = column
@@ -947,7 +998,7 @@ class BoardComplexItem(BoardItem):
             )
 
     def render_to_buffer(self, buffer, row, column, height, width):
-        """Render the complex board item into a display buffer (not a screen buffer).
+        """Render the complex board item from the display buffer to the frame buffer.
 
         This method is automatically called by :func:`pygamelib.engine.Screen.render`.
 
@@ -1688,6 +1739,8 @@ class Character(Movable):
         self.hp = None
         if hp is not None:
             self.hp = hp
+        elif max_hp is not None:
+            self.hp = max_hp
         self.max_mp = None
         if max_mp is not None:
             self.max_mp = max_mp
@@ -1771,10 +1824,17 @@ class Character(Movable):
 class Player(Character):
     """
     A class that represent a player controlled by a human.
-    It accepts all the parameters from :class:`~pygamelib.board_items.Character` and is
-    a :class:`~pygamelib.board_items.Movable`.
 
-    This class sets a couple of variables to default values:
+    This can take all parameter from :class:`~pygamelib.board_items.Character`,
+    :class:`~pygamelib.board_items.Movable` and obviously
+    :class:`~pygamelib.board_items.BoardItem`.
+
+    It is a specific board item as the whole Game class assumes only one player. Aside
+    from the wrapper functions (like Game.move_player for example), there is no reel
+    limitations to use more than one player.
+
+    The player also has a couple of attributes that are added for your convenience. You
+    are free to use them or not. They are (name and default value):
 
      * max_hp: 100
      * hp: 100
@@ -1782,8 +1842,25 @@ class Player(Character):
      * attack_power: 10
      * movement_speed: 0.1 (one movement every 0.1 second). Only useful if the game mode
          is set to MODE_RT.
+     * inventory: A :class:`~pygamelib.engine.Inventory` object. If none is provided,
+          one is created automatically.
 
-    .. note:: If no inventory is passed as parameter a default one is created.
+    A player can be animated by providing a :class:`~pygamelib.gfx.core.Animation`
+    object to its `animation` attribute.
+
+    Like all other board items, you can specify a `sprixel` attribute that will be the
+    representation of the player on the board.
+
+    Example::
+
+        player = Player(
+            name="Player",
+            # A sprixel with "@" as the model, no background color, a cyan foreground
+            # color and we set the background to be transparent.
+            sprixel=core.Sprixel("@", None, core.Color(0, 255, 255), True),
+            max_hp=200,
+        )
+
     """
 
     def __init__(self, inventory=None, **kwargs):
@@ -2258,7 +2335,9 @@ class Wall(Immovable):
     """
 
     def __init__(self, **kwargs):
-        if "sprixel" not in kwargs.keys():
+        if "sprixel" not in kwargs and "model" in kwargs:
+            kwargs["sprixel"] = core.Sprixel(kwargs["model"])
+        elif "sprixel" not in kwargs.keys():
             kwargs["sprixel"] = core.Sprixel("#")
         if "name" not in kwargs.keys():
             kwargs["name"] = "wall"
@@ -2398,7 +2477,9 @@ class GenericStructure(Immovable):
     """
 
     def __init__(self, value=0, **kwargs):
-        if "sprixel" not in kwargs.keys():
+        if "sprixel" not in kwargs and "model" in kwargs:
+            kwargs["sprixel"] = core.Sprixel(kwargs["model"])
+        elif "sprixel" not in kwargs.keys():
             kwargs["sprixel"] = core.Sprixel("#")
         if "name" not in kwargs.keys():
             kwargs["name"] = "structure"
@@ -2461,8 +2542,8 @@ class Treasure(Immovable):
     """
 
     def __init__(self, value=10, **kwargs):
-        if "sprixel" not in kwargs.keys():
-            if "model" in kwargs.keys():
+        if "sprixel" not in kwargs:
+            if "model" in kwargs:
                 kwargs["sprixel"] = core.Sprixel(kwargs["model"])
             else:
                 kwargs["sprixel"] = core.Sprixel("¤")
@@ -2597,21 +2678,23 @@ class Door(GenericStructure):
     """
 
     def __init__(self, **kwargs):
-        if "sprixel" not in kwargs.keys():
+        if "sprixel" not in kwargs and "model" in kwargs:
+            kwargs["sprixel"] = core.Sprixel(kwargs["model"])
+        elif "sprixel" not in kwargs:
             kwargs["sprixel"] = core.Sprixel("]")
         if "value" not in kwargs.keys():
             kwargs["value"] = 0
-        if "inventory_space" not in kwargs.keys():
+        if "inventory_space" not in kwargs:
             kwargs["inventory_space"] = 1
-        if "name" not in kwargs.keys():
+        if "name" not in kwargs:
             kwargs["name"] = "Door"
-        if "item_type" not in kwargs.keys():
+        if "item_type" not in kwargs:
             kwargs["item_type"] = "door"
-        if "pickable" not in kwargs.keys():
+        if "pickable" not in kwargs:
             kwargs["pickable"] = False
-        if "overlappable" not in kwargs.keys():
+        if "overlappable" not in kwargs:
             kwargs["overlappable"] = True
-        if "restorable" not in kwargs.keys():
+        if "restorable" not in kwargs:
             kwargs["restorable"] = True
         super().__init__(**kwargs)
 

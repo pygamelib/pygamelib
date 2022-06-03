@@ -45,6 +45,7 @@ Tile
 
    .. autosummary::
    
+      ~Tile.animation
       ~Tile.column
       ~Tile.height
       ~Tile.inventory_space

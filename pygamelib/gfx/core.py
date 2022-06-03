@@ -25,6 +25,7 @@ import json
 import re
 from pygamelib import assets
 import importlib_resources
+from pathlib import Path
 
 
 class Color(base.PglBaseObject):
@@ -33,6 +34,9 @@ class Color(base.PglBaseObject):
 
     A color represented by red, green and blue (RGB) components.
     Values are integer between 0 and 255 (both included).
+
+    .. role:: boldblue
+    .. role:: blue
 
     :param r: The red component of the color.
     :type r: int
@@ -66,7 +70,9 @@ class Color(base.PglBaseObject):
         The r property controls the intensity of the red color. You can set it to an
         integer between 0 and 255 (both included).
 
-        Setting this property triggers a call to :func:`notify`.
+        When this property is set, the observers are notified with the
+        :boldblue:`pygamelib.gfx.core.Color.r:changed` event. The :blue:`value` of the
+        event is the new value of the property.
 
         Example::
 
@@ -81,7 +87,7 @@ class Color(base.PglBaseObject):
     def r(self, val):
         if type(val) is int and val >= 0 and val <= 255:
             self.__r = val
-            self.notify("r", val)
+            self.notify("pygamelib.gfx.core.Color.r:changed", val)
         else:
             raise base.PglInvalidTypeException(
                 "The value for red needs to be an integer between 0 and 255."
@@ -93,7 +99,9 @@ class Color(base.PglBaseObject):
         The g property controls the intensity of the green color. You can set it to an
         integer between 0 and 255 (both included).
 
-        Setting this property triggers a call to :func:`notify`.
+        When this property is set, the observers are notified with the
+        :boldblue:`pygamelib.gfx.core.Color.g:changed` event. The :blue:`value` of the
+        event is the new value of the property.
 
         Example::
 
@@ -108,7 +116,7 @@ class Color(base.PglBaseObject):
     def g(self, val):
         if type(val) is int and val >= 0 and val <= 255:
             self.__g = val
-            self.notify("g", val)
+            self.notify("pygamelib.gfx.core.Color.g:changed", val)
         else:
             raise base.PglInvalidTypeException(
                 "The value for green needs to be an integer between 0 and 255."
@@ -120,7 +128,9 @@ class Color(base.PglBaseObject):
         The b property controls the intensity of the blue color. You can set it to an
         integer between 0 and 255 (both included).
 
-        Setting this property triggers a call to :func:`notify`.
+        When this property is set, the observers are notified with the
+        :boldblue:`pygamelib.gfx.core.Color.b:changed` event. The :blue:`value` of the
+        event is the new value of the property.
 
         Example::
 
@@ -135,7 +145,7 @@ class Color(base.PglBaseObject):
     def b(self, val):
         if type(val) is int and val >= 0 and val <= 255:
             self.__b = val
-            self.notify("b", val)
+            self.notify("pygamelib.gfx.core.Color.b:changed", val)
         else:
             raise base.PglInvalidTypeException(
                 "The value for blue needs to be an integer between 0 and 255."
@@ -205,6 +215,8 @@ class Color(base.PglBaseObject):
         :type other_color: :class:`~pygamelib.gfx.core.Color`
         :param fraction: The blending modulation factor between 0 and 1.
         :type fraction: float
+        :return: A new Color object that contains the blended color.
+        :rtype: :class:`~pygamelib.gfx.core.Color`
 
         Example::
 
@@ -291,7 +303,9 @@ class Color(base.PglBaseObject):
     def randomize(self):
         """Set a random value for each component
 
-        This method triggers a call to :func:`notify`.
+        When this method is called, the observers are notified with the
+        :boldblue:`pygamelib.gfx.core.Color.randomized` event. The :blue:`value` of the
+        event is the new color.
 
         :returns: None
         :rtype: NoneType
@@ -304,7 +318,7 @@ class Color(base.PglBaseObject):
         self.r = random.randrange(256)
         self.g = random.randrange(256)
         self.b = random.randrange(256)
-        self.notify()
+        self.notify("pygamelib.gfx.core.Color.randomized", self)
 
 
 class Sprixel(object):
@@ -315,6 +329,8 @@ class Sprixel(object):
     A Sprixel has a background color, a foreground color and a model.
     All regular BoardItems can now use a sprixel instead of a model (but simple model is
     still supported of course).
+
+    In the terminal, a sprixel is represented by a single character.
 
     If the background color and the is_bg_transparent are None, the sprixel will be
     automatically configured with transparent background.
@@ -420,6 +436,25 @@ class Sprixel(object):
             return [copy.deepcopy(self)] * other
         raise NotImplementedError
 
+    def render_to_buffer(self, buffer, row, column, buffer_height, buffer_width):
+        """Render the sprixel from the display buffer to the frame buffer.
+
+        This method is automatically called by :func:`pygamelib.engine.Screen.render`.
+
+        :param buffer: A screen buffer to render the item into.
+        :type buffer: numpy.array
+        :param row: The row to render in.
+        :type row: int
+        :param column: The column to render in.
+        :type column: int
+        :param height: The total height of the display buffer.
+        :type height: int
+        :param width: The total width of the display buffer.
+        :type width: int
+
+        """
+        buffer[row][column] = self.__repr__()
+
     @staticmethod
     def from_ansi(string, model="▄"):
         """Takes an ANSI string, parse it and return a Sprixel.
@@ -437,6 +472,8 @@ class Sprixel(object):
             )
 
         .. warning:: This has mainly be tested with ANSI string generated by climage.
+           If you find any issue, please
+           `report it <https://github.com/arnauddupuis/pygamelib/issues>`_
         """
         new_sprixel = Sprixel()
         if "[48;" in string and "[38;" in string and model in string:
@@ -532,7 +569,7 @@ class Sprixel(object):
 
             # Access the sprixel's color
             sprix.bg_color
-            # Set the sprixel's color to some blue
+            # Set the sprixel's background color to some blue
             sprix.bg_color = Color(0,128,255)
         """
         return self.__bg_color
@@ -560,7 +597,7 @@ class Sprixel(object):
 
             # Access the sprixel's color
             sprix.fg_color
-            # Set the sprixel's color to some green
+            # Set the sprixel's foreground color to some green
             sprix.fg_color = Color(0,255,128)
         """
         return self.__fg_color
@@ -1509,7 +1546,7 @@ class Sprite(object):
                     sprix.fg_color = sprix.fg_color.blend(color, ratio)
 
     def render_to_buffer(self, buffer, row, column, buffer_height, buffer_width):
-        """Render the sprite into a display buffer (not a screen buffer).
+        """Render the sprite from the display buffer to the frame buffer.
 
         This method is automatically called by :func:`pygamelib.engine.Screen.render`.
 
@@ -2193,14 +2230,26 @@ class Font:
 
     """
 
-    def __init__(self, font_name: str = None) -> None:
+    def __init__(self, font_name: str = None, search_directories: list = None) -> None:
         """
 
         :param font_name: The name of the font to load upon object construction.
         :type font_name: str
+        :param search_directories: A list of directories to search for the font. The
+           items of the list are strings representing a relative or absolute path.
+        :type search_directories: list
 
-        .. Note::  There is only one font coming with the 1.3.0 release: 8bits. More
-           will be added later.
+        .. important:: The search directories **must** contain a "fonts" directory, that
+           itself contains the font at the correct format.
+
+        .. Note::  Version 1.3.0 comes with a pygamelib specific font called 8bits. It
+           also comes with a handfull of fonts imported from the figlet fonts.
+           Please go to `http://www.figlet.org/ <http://www.figlet.org/>`_ for more
+           information.
+
+           The conversion script will be made available in the Pygamelib Github
+           organization (`https://github.com/pygamelib <https://github.com/pygamelib>`_
+           ).
 
         Example::
 
@@ -2212,6 +2261,14 @@ class Font:
         self.__config = None
         self.__sprite_collection = None
         self.__name = None
+        self.__search_directories = set()
+        self.__search_directories.add(importlib_resources.files(assets))
+        if search_directories is not None:
+            for ds in search_directories:
+                if isinstance(ds, Path):
+                    self.__search_directories.add(ds)
+                else:
+                    self.__search_directories.add(Path(ds))
         if font_name is not None:
             self.load(font_name)
 
@@ -2237,13 +2294,19 @@ class Font:
             # At that point myfont and myfont2 are exactly the same (and there is no
             # good justification to instantiate or load the font twice).
         """
-        # TODO: rework load to use the array of directories.
-        glyphs_path = importlib_resources.files(assets).joinpath(
-            "fonts", font_name, "glyphs.spr"
-        )
-        config_path = importlib_resources.files(assets).joinpath(
-            "fonts", font_name, "config.json"
-        )
+        # # TODO: rework load to use the array of directories. DONE
+        # glyphs_path = importlib_resources.files(assets).joinpath(
+        #     "fonts", font_name, "glyphs.spr"
+        # )
+        # config_path = importlib_resources.files(assets).joinpath(
+        #     "fonts", font_name, "config.json"
+        # )
+        glyphs_path = config_path = None
+        for dir in self.__search_directories:
+            glyphs_path = dir.joinpath("fonts", font_name, "glyphs.spr")
+            config_path = dir.joinpath("fonts", font_name, "config.json")
+            if glyphs_path.exists() and config_path.exists():
+                break
         # This will throw a FileNotFoundError if the font is not present.
         self.__sprite_collection = SpriteCollection.load_json_file(glyphs_path)
         with open(config_path) as config_file:
@@ -2257,6 +2320,7 @@ class Font:
                     self.__config["glyphs_map"][glyph]
                 ]
 
+    @property
     def height(self) -> int:
         """
         Returns the height of the font as specified in the font config file.
@@ -2265,10 +2329,47 @@ class Font:
 
         Example::
 
-            screen.place(text, last_row + myfont.height(), first_text_column)
+            screen.place(text, last_row + myfont.height, first_text_column)
         """
         return self.__config["height"]
 
+    @property
+    def scalable(self) -> bool:
+        """
+        Returns the scalability of the font as specified in the font config file.
+
+        :rtype: bool
+        """
+        return self.__config["scalable"]
+
+    @property
+    def monospace(self) -> bool:
+        """
+        Returns if the font is monospace as specified in the font config file.
+
+        :rtype: bool
+        """
+        return self.__config["monospace"]
+
+    @property
+    def colorable(self) -> bool:
+        """
+        Returns the "colorability" of the font as specified in the font config file.
+
+        :rtype: bool
+        """
+        return self.__config["colorable"]
+
+    @property
+    def glyphs_map(self) -> dict:
+        """
+        Returns the glyph map of the font as specified in the font config file.
+
+        :rtype: dict
+        """
+        return self.__config["glyphs_map"]
+
+    @property
     def horizontal_spacing(self) -> int:
         """
         Returns the horizontal spacing recommended by the font (as specified in the font
@@ -2287,6 +2388,7 @@ class Font:
         """
         return self.__config["horizontal_spacing"]
 
+    @property
     def vertical_spacing(self) -> int:
         """
         Returns the vertical spacing recommended by the font (as specified in the font
@@ -2304,6 +2406,7 @@ class Font:
         """
         return self.__config["vertical_spacing"]
 
+    @property
     def name(self) -> str:
         """
         Return the name of the font. The name is the string that was used to load the

@@ -42,6 +42,7 @@ ComplexTreasure
 
    .. autosummary::
    
+      ~ComplexTreasure.animation
       ~ComplexTreasure.column
       ~ComplexTreasure.height
       ~ComplexTreasure.inventory_space

@@ -20,7 +20,7 @@ CircleEmitter
       ~CircleEmitter.__init__
       ~CircleEmitter.apply_force
       ~CircleEmitter.attach
-      ~CircleEmitter.be_notified
+      ~CircleEmitter.handle_notification
       ~CircleEmitter.detach
       ~CircleEmitter.emit
       ~CircleEmitter.finished

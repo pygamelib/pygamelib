@@ -19,6 +19,7 @@ The Board class is the base class for all levels.
    pygamelib.engine.Game
    pygamelib.engine.Inventory
    pygamelib.engine.Screen
+
 """
 from pygamelib import board_items, base, constants, actuators
 from pygamelib.assets import graphics
@@ -41,7 +42,7 @@ class Board(base.PglBaseObject):
     """A class that represent a game board.
 
     The board object is a 2D matrix of board items. This means that you can visualize it
-    as a chessboard for example. All board items are positionned on this chessboard-like
+    as a chessboard for example. All board items are positioned on this chessboard-like
     object and can be moved around.
 
     The Board object is the base object to build a level. Once created to your liking
@@ -49,7 +50,7 @@ class Board(base.PglBaseObject):
     :class:`~pygamelib.board_items.BoardItem` to create your own board items, specific
     to your game.
 
-    If you want a detailled introduction to the Board object, go the the pygamelib wiki
+    If you want a detailed introduction to the Board object, go the the pygamelib wiki
     and read the "`Getting started: the Board
     <https://github.com/arnauddupuis/pygamelib/wiki/Getting-started-Board>`_" article.
 
@@ -60,13 +61,13 @@ class Board(base.PglBaseObject):
        the board itself needs to hold the information about were to draw and on what to
        focus on. The existing code will still work as the :class:`Game` object takes
        care of forwarding the information to the Board. However, it is now possible to
-       exploit the :class:`~pygamelib.board_items.Camera` object to create cutscenes and
-       more interesting movements.
+       exploit the :class:`~pygamelib.board_items.Camera` object to create cut scenes
+       and more interesting movements.
 
     .. Important:: Partial display related parameters are information used by the
        :func:`~pygamelib.engine.Board.display_around()` method and the :class:`Screen`
        object to either display directly the board (display_around) or render the Board
-       in the screen buffer. **You have to make sure that the focus element's position
+       in the frame buffer. **You have to make sure that the focus element's position
        is updated**. If you use the player, you have nothing to do but the Camera object
        needs to be manually updated for example.
 
@@ -629,11 +630,11 @@ class Board(base.PglBaseObject):
     def render_to_buffer(
         self, buffer, row, column, buffer_height, buffer_width
     ) -> None:
-        """Render the board into a display buffer (not a screen buffer).
+        """Render the board into from the display buffer to the frame buffer.
 
         This method is automatically called by :func:`pygamelib.engine.Screen.render`.
 
-        :param buffer: A screen buffer to render the item into.
+        :param buffer: A frame buffer to render the item into.
         :type buffer: numpy.array
         :param row: The row to render in.
         :type row: int
@@ -655,7 +656,7 @@ class Board(base.PglBaseObject):
         vp_width = 0
         if self.enable_partial_display:
             # We still need to clamp the viewport if we want to avoid
-            # crashes in case the progammer poorly calculated the viewport.
+            # crashes in case the programmer poorly calculated the viewport.
             vp_height = self.partial_display_viewport[0]
             vp_width = self.partial_display_viewport[1]
             if self.size[0] < (2 * vp_width):
@@ -713,9 +714,9 @@ class Board(base.PglBaseObject):
                 except IndexError:
                     break
 
-                for tmpiidx in range(1, incr):
+                for tmpidx in range(1, incr):
                     try:
-                        buffer[row + br][column + cidx + tmpiidx] = ""
+                        buffer[row + br][column + cidx + tmpidx] = ""
                     except IndexError:
                         break
                 bc += 1
@@ -723,10 +724,10 @@ class Board(base.PglBaseObject):
         # I dread the performance impact...
         # We render all the emitters attached to an item after the board has been drawn
         # So technically it should be the same as Screen.place(r,c,2)
-        finished_emitters = []
-        for emt in self._particle_emitters:
+        for _ in range(len(self._particle_emitters) - 1, -1, -1):
+            emt = self._particle_emitters.pop()
             if emt.finished():
-                finished_emitters.append(emt)
+                # self._particle_emitters.discard(emt)
                 continue
             emt.row += self.screen_row
             emt.column += self.screen_column
@@ -735,8 +736,7 @@ class Board(base.PglBaseObject):
             emt.render_to_buffer(
                 buffer, row + emt.row, column + emt.column, buffer_height, buffer_width
             )
-        for emt in finished_emitters:
-            self._particle_emitters.discard(emt)
+            self._particle_emitters.add(emt)
 
     def render_cell(self, row, column):
         """
@@ -1649,7 +1649,7 @@ class Board(base.PglBaseObject):
         return return_array
 
 
-class Game:
+class Game(base.PglBaseObject):
     """A class that serve as a game engine.
 
     This object is the central system that allow the management of a game. It holds
@@ -1669,6 +1669,8 @@ class Game:
         properly render the colors on Windows.
 
     .. important:: The Game object automatically assumes ownership over the Player.
+
+    .. role:: boldblue
 
     """
 
@@ -1707,7 +1709,8 @@ class Game:
         mode=constants.MODE_TBT,
         user_update=None,
         input_lag=0.01,
-        enable_physic=False,
+        user_update_paused=None,
+        # enable_physic=False,
     ):
         """
         :param name: The Game name.
@@ -1742,17 +1745,24 @@ class Game:
            game object, the user input (can be None) and the elapsed time since last
            frame.
         :type user_update: function
+        :param user_update_paused: A reference to the update function called when the
+           game is paused. It is called with the same 3 parameters than the regular
+           update function: the game object, the user input (can be None) and the
+           elapsed time since last frame. If not specified, the regular update function
+           is called but nothing is done regarding NPCs, projectiles, animations, etc.
+        :type user_update_paused: function
         :param input_lag: The amount of time the run() function is going to wait for a
            user input before returning None and calling the update function. Default is
            0.01.
         :type input_lag: float|int
         """
+        super().__init__()
         self.name = name
         self._boards = boards
         self._menu = menu
         self.current_level = current_level
         self.player = player
-        self.state = constants.RUNNING
+        self.__state = constants.RUNNING
         self.enable_partial_display = enable_partial_display
         self.partial_display_viewport = partial_display_viewport
         self._config = None
@@ -1763,6 +1773,7 @@ class Game:
         self.screen = Screen()
         self.mode = mode
         self.user_update = user_update
+        self.user_update_paused = None
         self.input_lag = input_lag
         self._logs = []
         self.DEBUG = False
@@ -1774,16 +1785,37 @@ class Game:
         #     self.gravity = base.Vector2D(9.81, 0)
         # else:
         #     self.gravity = None
-        # Placeholder: we want to be able to center the screen on any item/position.
-        # TODO: in a future version (post 1.2.0) a camera system will be added to build
-        # cinematic for example.
-        # self.center_board_on = None
+
         base.init()
         # In the case where user_update is defined, we cannot start the game on our own.
         # We need the user to start it first.
         if self.user_update is not None:
-            self.state = constants.PAUSED
+            self.__state = constants.PAUSED
+        if user_update_paused is not None:
+            self.user_update_paused = user_update_paused
         self.previous_time = time.time()
+        self.__execute_run = None
+
+    @property
+    def state(self):
+        """Get/set the state of the game.
+
+        :param value: The new state of the game (from the constants module).
+        :type value: int
+        :return: The state of the game.
+        :rtype: int
+        """
+        return self.__state
+
+    @state.setter
+    def state(self, value):
+        self.__state = value
+        if value == constants.PAUSED:
+            if self.user_update_paused is None:
+                self.user_update_paused = self._fake_update_paused
+        elif value == constants.RUNNING:
+            self._set_run_function()
+        self.notify(self, "pygamelib.engine.Game.state", value)
 
     @classmethod
     def instance(cls, *args, **kwargs):
@@ -1818,10 +1850,29 @@ class Game:
          5. It calls the user_update function with 3 parameters: the game object, the
             key hit by the user (it can be None) and the elapsed time between to calls.
          6. Clears the end of the screen.
-         7. Actuates NPCs.
-         8. Actuates projectiles.
-         9. Animates items.
-         10. Actuates particles (WIP).
+         7. Actuates NPCs (If there is at least one Board manage by Game).
+         8. Actuates projectiles (If there is at least one Board manage by Game).
+         9. Animates items (If there is at least one Board manage by Game).
+
+        On the subject of particle emitters, the :class:`Board` object automatically
+        update the ones that are attached to BoardItems. For all other particle emitters
+        you need to call the update method of the emitters yourself (for now).
+
+        In version 1.2.X, there was a bug when the game was paused. In that case nothing
+        was happening anymore. The user update function was not called and events were
+        not processed. On top of that it was impossible to use run() without associating
+        a board object with a level.
+        Starting with version 1.3.0, it is now possible to use run() without associating
+        a board object with a level. There is also a new parameter to the
+        constructor (user_update_paused) that allows you to specify a function that will
+        be called when the game is paused. This function will be called with the same
+        3 parameters than the regular update function: the game object, the user input
+        (can be None) and the elapsed time since last frame.
+
+        .. Important:: If you try to set the game state to PAUSED and the
+           user_update_paused function is not defined, a notification will be issued
+           and the game will continue to run. The notification message is
+           :boldblue:`pygamelib.engine.Game.run:PauseNotAvailable`
 
         :raises: PglInvalidTypeException, PglInvalidTypeException
 
@@ -1846,33 +1897,70 @@ class Game:
         if self.state == constants.PAUSED:
             self.start()
         # Update the inkey timeout based on mode
-        timeout = self.input_lag
         # This cannot be automatically tested as it means the main loop requires an user
         # input.
         if self.mode == constants.MODE_TBT:  # pragma: no cover
-            timeout = None
+            self.input_lag = None
         self.previous_time = time.time()
         if self.player is None:
             self.player = constants.NO_PLAYER
+        # Now we check that we do have a current board. If not, it means that the user
+        # wants to use the game object without any board.
+        self._set_run_function()
+
         with self.terminal.cbreak(), self.terminal.hidden_cursor(), (
             self.terminal.fullscreen()
         ):
-            # This runs until the game stops
-            while self.state != constants.STOPPED:
-                # But we only update if the game is not paused
-                if self.state == constants.RUNNING:
-                    in_key = self.terminal.inkey(timeout=timeout)
-                    elapsed = time.time() - self.previous_time
-                    self.previous_time = time.time()
-                    if self.player != constants.NO_PLAYER:
-                        self.player.dtmove += elapsed
-                    print(self.terminal.home, end="")
-                    self.user_update(self, in_key, elapsed)
-                    print(self.terminal.clear_eos, end="")
-                    self.actuate_npcs(self.current_level, elapsed)
-                    self.actuate_projectiles(self.current_level, elapsed)
-                    self.animate_items(self.current_level, elapsed)
-                    # TODO: Take care of particles.
+            self.__execute_run()
+
+    # The goal of these _run_* functions is to avoid using if statements in the while
+    # loop. Each crumble of performance is worth a little bit of extra code.
+    def _run_with_board(self):
+        # This runs until the game stops
+        while self.state != constants.STOPPED:
+            # But we only update if the game is not paused
+            in_key = self.terminal.inkey(timeout=self.input_lag)
+            elapsed = time.time() - self.previous_time
+            self.previous_time = time.time()
+            if self.state == constants.RUNNING:
+                if self.player != constants.NO_PLAYER:
+                    self.player.dtmove += elapsed
+                print(self.terminal.home, end="")
+                self.user_update(self, in_key, elapsed)
+                print(self.terminal.clear_eos, end="")
+                self.actuate_npcs(self.current_level, elapsed)
+                self.actuate_projectiles(self.current_level, elapsed)
+                self.animate_items(self.current_level, elapsed)
+            elif self.state == constants.PAUSED:
+                self.user_update_paused(self, in_key, elapsed)
+
+    def _set_run_function(self):
+        if self.current_level is None or self.current_board() is None:
+            self.__execute_run = self._run_without_board
+        else:
+            self.__execute_run = self._run_with_board
+
+    def _run_without_board(self):
+        # This runs until the game stops
+        while self.state != constants.STOPPED:
+            in_key = self.terminal.inkey(timeout=self.input_lag)
+            elapsed = time.time() - self.previous_time
+            self.previous_time = time.time()
+            # But we only update if the game is not paused
+            if self.state == constants.RUNNING:
+                print(self.terminal.home, end="")
+                self.user_update(self, in_key, elapsed)
+                print(self.terminal.clear_eos, end="")
+            elif self.state == constants.PAUSED:
+                self.user_update_paused(self, in_key, elapsed)
+
+    def _fake_update_paused(self, game, in_key, elapsed):
+        self.notify(
+            self,
+            "pygamelib.engine.Game.run:PauseNotAvailable",
+            "pygamelib.engine.Game.run(): user_update_paused is not defined.",
+        )
+        self.start()
 
     def session_log(self, line: str) -> None:
         """Add a line to the session logs.
@@ -2028,6 +2116,7 @@ class Game:
            This function will be removed in version 1.4.0
 
         This method return a dictionnary with 3 entries :
+
             * shortcut
             * message
             * data
@@ -2777,7 +2866,9 @@ class Game:
                                 if not isinstance(umv, base.Vector2D):
                                     # Build a unit movement vector
                                     umv = base.Vector2D.from_direction(
-                                        proj.actuator.next_move(), 1
+                                        umv,
+                                        1
+                                        # proj.actuator.next_move(), 1
                                     )
                                 # Build a movement vector
                                 dm = base.Vector2D(
@@ -3277,7 +3368,7 @@ class Game:
             # size is deprecated in favor of inventory_space.
             # This is kept for backward compatibility and silent migration.
             if "size" in obj_keys:
-                local_object._inventory_space = ref["size"]
+                local_object._inventory_space = ref["size"]  # pragma: no cover
             if "inventory_space" in obj_keys:
                 local_object._inventory_space = ref["inventory_space"]
         elif "GenericStructure" in ref["object"]:
@@ -3287,7 +3378,7 @@ class Game:
             # size is deprecated in favor of inventory_space.
             # This is kept for backward compatibility and silent migration.
             if "size" in obj_keys:
-                local_object._inventory_space = ref["size"]
+                local_object._inventory_space = ref["size"]  # pragma: no cover
             if "inventory_space" in obj_keys:
                 local_object._inventory_space = ref["inventory_space"]
             if "pickable" in obj_keys:
@@ -3301,7 +3392,7 @@ class Game:
             # size is deprecated in favor of inventory_space.
             # This is kept for backward compatibility and silent migration.
             if "size" in obj_keys:
-                local_object._inventory_space = ref["size"]
+                local_object._inventory_space = ref["size"]  # pragma: no cover
             if "inventory_space" in obj_keys:
                 local_object._inventory_space = ref["inventory_space"]
             if "pickable" in obj_keys:
@@ -3317,7 +3408,7 @@ class Game:
             # size is deprecated in favor of inventory_space.
             # This is kept for backward compatibility and silent migration.
             if "size" in obj_keys:
-                local_object._inventory_space = ref["size"]
+                local_object._inventory_space = ref["size"]  # pragma: no cover
             if "inventory_space" in obj_keys:
                 local_object._inventory_space = ref["inventory_space"]
             if "pickable" in obj_keys:
@@ -3331,7 +3422,7 @@ class Game:
             # size is deprecated in favor of inventory_space.
             # This is kept for backward compatibility and silent migration.
             if "size" in obj_keys:
-                local_object._inventory_space = ref["size"]
+                local_object._inventory_space = ref["size"]  # pragma: no cover
             if "inventory_space" in obj_keys:
                 local_object._inventory_space = ref["inventory_space"]
             if "hp" in obj_keys:
@@ -3422,6 +3513,9 @@ class Inventory(base.PglBaseObject):
         The constructor takes two parameters: the maximum size of the inventory. And the
         Inventory owner/parent.
 
+        .. role:: boldblue
+        .. role:: blue
+
         Each :class:`~pygamelib.board_items.BoardItem` that is going to be put in the
         inventory has a size (default is 1), the total addition of all these size cannot
         exceed max_size.
@@ -3502,6 +3596,20 @@ class Inventory(base.PglBaseObject):
         :rtype: int|None
         :raise: :class:`~pygamelib.base.PglInventoryException`,
            :class:`~pygamelib.base.PglInvalidTypeException`
+
+        When an item is successfully added, the observers are notified of the change
+        with the :boldblue:`pygamelib.engine.Inventory.add_item` event. The item that
+        was added is passed as the :blue:`value` of the event.
+
+        When something goes wrong exceptions are raised. The following exceptions can be
+        raised (:class:`~pygamelib.base.PglInventoryException`):
+
+        * not_pickable: The item you try to add is not pickable.
+        * not_enough_space: There is not enough space left in the inventory.
+        * constraint_violation: A constraint is violated.
+
+        A :class:`~pygamelib.base.PglInvalidTypeException` is raised when the item you
+        try to add is not a :class:`~pygamelib.board_items.BoardItem`.
 
         Example::
 
@@ -3715,7 +3823,9 @@ class Inventory(base.PglBaseObject):
         :param name: the name of the items you want to delete.
         :type name: str
 
-        .. note:: The observers for this object will be notified of all removed items.
+        When an item is successfully removed, the observers are notified of the change
+        with the :boldblue:`pygamelib.engine.Inventory.delete_item` event. The item that
+        was deleted is passed as the :blue:`value` of the event.
 
         Example::
 
@@ -3740,7 +3850,9 @@ class Inventory(base.PglBaseObject):
         :param name: the name of the items you want to delete.
         :type name: str
 
-        .. note:: The observers for this object will be notified of all removed items.
+        The observers are notified of all each deletion
+        with the :boldblue:`pygamelib.engine.Inventory.delete_item` event. The item
+        that was deleted is passed as the :blue:`value` of the event.
 
         Example::
 
@@ -3752,7 +3864,7 @@ class Inventory(base.PglBaseObject):
         for i in range(len(self.__items) - 1, -1, -1):
             if self.__items[i].name == name:
                 self.notify(
-                    self, "pygamelib.engine.Inventory.delete_items", self.__items[i]
+                    self, "pygamelib.engine.Inventory.delete_item", self.__items[i]
                 )
                 del self.__items[i]
 
@@ -3780,6 +3892,10 @@ class Inventory(base.PglBaseObject):
         :param max_number: the maximum number of items that match the item_* parameters
            that can be in the inventory.
         :type max_number: int
+
+        The observers are notified of the addition of the constraint with the
+        :boldblue:`pygamelib.engine.Inventory.add_constraint` event. The constraint that
+        was added is passed as the :blue:`value` of the event as a dictionnary.
 
         .. versionadded:: 1.3.0
 
@@ -3816,6 +3932,10 @@ class Inventory(base.PglBaseObject):
         :param constraint_name: the name of the constraint.
         :type constraint_name: str
 
+        The observers are notified of the removal of the constraint with the
+        :boldblue:`pygamelib.engine.Inventory.remove_constraint` event. The constraint
+        that was removed is passed as the :blue:`value` of the event as a dictionnary.
+
         .. versionadded:: 1.3.0
 
         """
@@ -3829,6 +3949,11 @@ class Inventory(base.PglBaseObject):
 
     def clear_constraints(self):
         """Remove all constraints from the inventory.
+
+
+        The observers are notified with the
+        :boldblue:`pygamelib.engine.Inventory.clear_constraints` event. The
+        :blue:`value` is set to None for this event.
 
         .. versionadded:: 1.3.0
 
@@ -3870,6 +3995,8 @@ class Screen(base.PglBaseObject):
     The screen object is pretty straightforward: it is an object that allow manipulation
     of the screen.
 
+    .. role:: boldgreen
+
     .. WARNING:: Starting with version 1.3.0 the terminal parameter has been removed.
        The Screen object now takes advantage of base.Console.instance() to get a
        reference to a blessed.Terminal object.
@@ -3883,15 +4010,16 @@ class Screen(base.PglBaseObject):
 
     This change introduce two ways of displaying things on the screen:
 
-       * The **Screen Buffer** stack.
-       * The **Direct Display** stack.
+       * The **Improved Screen Management** stack (referred to as :boldgreen:`ISM` later
+         in the doc).
+       * The **Legacy Direct Display** stack.
 
-    It is safer to consider them mutually incompatible. In reality the **Screen Buffer**
-    will always use the whole display but you can use the methods from the **Direct
-    Display** stack to write over the buffer. It is really **NOT** advised.
+    It is safer to consider them mutually incompatible. In reality the **Improved Screen
+    Management** will always use the whole display but you can use the methods from the
+    **Direct Display** stack to write over the buffer. It is really **NOT** advised.
 
-    We introduced the **Screen Buffer** stack because the direct display is messy and
-    does not allow us to do what we want in term of positioning, UI, etc.
+    We introduced the **Improved Screen Management** stack because the direct display is
+    messy and does not allow us to do what we want in term of positioning, UI, etc.
 
     A typical usage consist of:
 
@@ -3900,7 +4028,7 @@ class Screen(base.PglBaseObject):
 
     That's it! The screen maintain its own state and knows when to re-render the display
     buffer. You don't need to manually call :func:`render()`. This helps with
-    performances as the screen buffer is only rendered when needed.
+    performances as the frame buffer is only rendered when needed.
 
     Example::
 
@@ -3911,7 +4039,8 @@ class Screen(base.PglBaseObject):
         screen.update()
         # Direct Display style
         screen.display_at('This is centered', screen.vcenter, screen.hcenter)
-        # The rest of this example uses the Screen Buffer.
+        # The rest of this example uses the Screen Buffer (because placing a Board
+        # anywhere on the Screen is not supported by the Direct Display stack).
         # delete the previous message and place a Board at the center of the screen
         screen.delete(screen.vcenter, screen.hcenter)
         screen.place(
@@ -3921,15 +4050,15 @@ class Screen(base.PglBaseObject):
         )
         screen.update()
 
-    **Precisions about the Screen Buffer stack:**
+    **Precisions about the Improved Screen Management stack:**
 
-    You don't need to know how the screen buffer works to use it. However, if you are
+    You don't need to know how the frame buffer works to use it. However, if you are
     interested in more details, here they are.
 
-    The Screen Buffer stacks uses a double numpy buffer to represent the screen. One
-    buffer is used to place elements as objects (that's the buffer managed by
-    :func:`place()` or :func:`delete()`). It is never directly printed to the screen. It
-    is here to simplify screen maintenance. This buffer is called the **display
+    The Improved Screen Management stacks uses a double numpy buffer to represent the
+    screen. One buffer is used to place elements as objects (that's the buffer managed
+    by :func:`place()` or :func:`delete()`). It is never directly printed to the screen.
+    It is here to simplify screen maintenance. This buffer is called the **display
     buffer**. It is practical to use to place, move and delete elements on the screen
     space. But as said before it cannot be directly printed to the screen. It needs to
     be rendered first.
@@ -3940,7 +4069,7 @@ class Screen(base.PglBaseObject):
     overwrite all the sprite with spaces to erase and replace and/or move it. And that's
     very slow.
 
-    With the **Screen Buffer System** you :func:`place()` the sprite and then just
+    With the **Improved Screen Management** you :func:`place()` the sprite and then just
     :func:`delete()` it. And since it is only one object reference it is a very fast
     operation (we only place or delete one cell of the buffer).
 
@@ -3954,7 +4083,7 @@ class Screen(base.PglBaseObject):
     the top left corner. This allows for cleaning junk characters at no additional cost.
 
     **TL;DR:** The **display buffer** hold the objects placed on the screen while the
-    **screen buffer** hold the rendered representation of the display buffer.
+    **frame buffer** hold the rendered representation of the display buffer.
 
     The Screen object also inherits from the :class:`~pygamelib.base.PglBaseObject` and
     if the object that is :func:`place()`-ed is an instance of
@@ -3971,7 +4100,7 @@ class Screen(base.PglBaseObject):
     If these are not good enough for you, the Direct Display stack is for you. You just
     need to deal with more stuff with less helper methods.
 
-    The screen buffer system has been tested on the following terminals:
+    The frame buffer system has been tested on the following terminals:
 
     * xterm-256color
     * Konsole
@@ -4031,13 +4160,14 @@ class Screen(base.PglBaseObject):
                 for j in range(0, self.__height, 1)
             ]
         )
-        self._screen_buffer = np.array(
+        self._frame_buffer = np.array(
             [
                 [core.Sprixel(" ") for i in range(0, self.__width, 1)]
                 for j in range(0, self.__height, 1)
             ]
         )
         self._is_dirty = False
+        self.__scene_graph = []
 
     def clear(self):
         """
@@ -4047,7 +4177,7 @@ class Screen(base.PglBaseObject):
         sys.stdout.flush()
 
     def clear_buffers(self):
-        """This methods clear the Screen's buffers (both display and screen buffer).
+        """This methods clear the Screen's buffers (both display and frame buffer).
 
         Make sure that you really want to clear the buffers before doing so, because
         this is a slow operation.
@@ -4057,11 +4187,11 @@ class Screen(base.PglBaseObject):
 
         .. versionadded:: 1.3.0
 
-        .. image:: https://img.shields.io/badge/rendering%20stack-Screen%20Buffer-green
+        .. image:: https://img.shields.io/badge/rendering%20stack-ISM-green
 
-        .. NOTE:: This method is part of the **Screen Buffer** rendering stack and is
-           incompatible with the methods identified as being part of the **Direct
-           Display** stack.
+        .. NOTE:: This method is part of the **Improved Screen Management** rendering
+           stack and is incompatible with the methods identified as being part of the
+           **Legacy Direct Display** stack.
 
         """
         self._display_buffer = np.array(
@@ -4070,7 +4200,7 @@ class Screen(base.PglBaseObject):
                 for j in range(0, self.__height, 1)
             ]
         )
-        self._screen_buffer = np.array(
+        self._frame_buffer = np.array(
             [
                 [core.Sprixel(" ") for i in range(0, self.__width, 1)]
                 for j in range(0, self.__height, 1)
@@ -4078,9 +4208,9 @@ class Screen(base.PglBaseObject):
         )
         self._is_dirty = False
 
-    def clear_screen_buffer(self):
+    def clear_frame_buffer(self):
         """
-        This methods clear the screen buffer (but not the display buffer). This means
+        This methods clear the frame buffer (but not the display buffer). This means
         that the next time :func:`update()` is called, rendering will be triggered.
 
         Make sure that you really want to clear the buffers before doing so, because
@@ -4092,13 +4222,13 @@ class Screen(base.PglBaseObject):
 
         .. versionadded:: 1.3.0
 
-        .. image:: https://img.shields.io/badge/rendering%20stack-Screen%20Buffer-green
+        .. image:: https://img.shields.io/badge/rendering%20stack-ISM-green
 
-        .. NOTE:: This method is part of the **Screen Buffer** rendering stack and is
-           incompatible with the methods identified as being part of the **Direct
-           Display** stack.
+        .. NOTE:: This method is part of the **Improved Screen Management** rendering
+           stack and is incompatible with the methods identified as being part of the
+           **Legacy Direct Display** stack.
         """
-        self._screen_buffer = np.array(
+        self._frame_buffer = np.array(
             [
                 [core.Sprixel(" ") for i in range(0, self.__width, 1)]
                 for j in range(0, self.__height, 1)
@@ -4109,16 +4239,14 @@ class Screen(base.PglBaseObject):
     @property
     def width(self):
         """
-        This method wraps Terminal.width and return the width of the terminal window in
-        number of characters.
+        This property returns the width of the terminal window in number of characters.
         """
         return self.__width
 
     @property
     def height(self):
         """
-        This method wraps Terminal.height and return the height of the terminal window
-        in number of characters.
+        This property returns the height of the terminal window in number of characters.
         """
         return self.__height
 
@@ -4126,17 +4254,17 @@ class Screen(base.PglBaseObject):
     def need_rendering(self):
         """
         This property return True if the display buffer has been updated since the last
-        rendering cycle and the screen needs to re-render the screen buffer.
+        rendering cycle and the screen needs to re-render the frame buffer.
 
         It returns False otherwise.
 
         .. versionadded:: 1.3.0
 
-        .. image:: https://img.shields.io/badge/rendering%20stack-Screen%20Buffer-green
+        .. image:: https://img.shields.io/badge/rendering%20stack-ISM-green
 
-        .. NOTE:: This method is part of the **Screen Buffer** rendering stack and is
-           incompatible with the methods identified as being part of the **Direct
-           Display** stack.
+        .. NOTE:: This method is part of the **Improved Screen Management** rendering
+           stack and is incompatible with the methods identified as being part of the
+           **Legacy Direct Display** stack.
 
         """
         return self._is_dirty
@@ -4144,7 +4272,7 @@ class Screen(base.PglBaseObject):
     @property
     def buffer(self):
         """
-        The buffer property return a numpy.array as a writable screen buffer.
+        The buffer property return a numpy.array as a writable frame buffer.
 
         The buffer is a 2D plane (like a screen) and anything can render in it. However,
         it is recommended to place objects through Screen.place() and update the screen
@@ -4152,22 +4280,22 @@ class Screen(base.PglBaseObject):
         display).
 
         .. WARNING:: Everything that is stored in the buffer *must* be printable. Each
-           cell of the screen buffer represent a single character on screen, so you need
+           cell of the frame buffer represent a single character on screen, so you need
            to take care of that when you write into that buffer or you will corrupt the
            display. If :attr:`need_rendering` returns True, you need to manually call
-           :func:`render()` before writing anything into the screen buffer. Or else it
+           :func:`render()` before writing anything into the frame buffer. Or else it
            will be squashed in the next rendering cycle.
 
         .. versionadded:: 1.3.0
 
-        .. image:: https://img.shields.io/badge/rendering%20stack-Screen%20Buffer-green
+        .. image:: https://img.shields.io/badge/rendering%20stack-ISM-green
 
-        .. NOTE:: This method is part of the **Screen Buffer** rendering stack and is
-           incompatible with the methods identified as being part of the **Direct
-           Display** stack.
+        .. NOTE:: This method is part of the **Improved Screen Management** rendering
+           stack and is incompatible with the methods identified as being part of the
+           **Legacy Direct Display** stack.
 
         """
-        return self._screen_buffer
+        return self._frame_buffer
 
     @property
     def vcenter(self):
@@ -4191,7 +4319,7 @@ class Screen(base.PglBaseObject):
 
     def update(self):
         """
-        Update the screen. Update means write the screen buffer on screen.
+        Update the screen. Update means write the frame buffer on screen.
 
         Example::
 
@@ -4202,17 +4330,17 @@ class Screen(base.PglBaseObject):
 
         .. versionadded:: 1.3.0
 
-        .. image:: https://img.shields.io/badge/rendering%20stack-Screen%20Buffer-green
+        .. image:: https://img.shields.io/badge/rendering%20stack-ISM-green
 
-        .. NOTE:: This method is part of the **Screen Buffer** rendering stack and is
-           incompatible with the methods identified as being part of the **Direct
-           Display** stack.
+        .. NOTE:: This method is part of the **Improved Screen Management** rendering
+           stack and is incompatible with the methods identified as being part of the
+           **Legacy Direct Display** stack.
 
         """
         if self._is_dirty:
             self.render()
         print(self.terminal.home, end="")
-        screen_buffer = self._screen_buffer
+        screen_buffer = self._frame_buffer
         for row in range(0, screen_buffer.shape[0] - 1):
             print("".join(map(str, screen_buffer[row])), flush=False)
         print(
@@ -4222,7 +4350,7 @@ class Screen(base.PglBaseObject):
         )
 
     def render(self):
-        """Render the display buffer into the screen buffer.
+        """Render the display buffer into the frame buffer.
 
         Example::
 
@@ -4231,61 +4359,79 @@ class Screen(base.PglBaseObject):
 
         .. versionadded:: 1.3.0
 
-        .. image:: https://img.shields.io/badge/rendering%20stack-Screen%20Buffer-green
+        .. image:: https://img.shields.io/badge/rendering%20stack-ISM-green
 
-        .. NOTE:: This method is part of the **Screen Buffer** rendering stack and is
-           incompatible with the methods identified as being part of the **Direct
-           Display** stack.
+        .. NOTE:: This method is part of the **Improved Screen Management** rendering
+           stack and is incompatible with the methods identified as being part of the
+           **Legacy Direct Display** stack.
 
         """
-        # TODO: There's only 2 pass rendering but we should be able to render any number
-        # of passes.
         if self._is_dirty is False:
             return
-        second_pass = []
         # All these variables are here for performances.
         # https://wiki.python.org/moin/PythonSpeed/PerformanceTips (old but I do get
         # better performances with that trick)
         row = self._display_buffer.shape[0] - 1
-        screen_buffer = self._screen_buffer
+        screen_buffer = self._frame_buffer
         display_buffer = self._display_buffer
         s_width = display_buffer.shape[1]
         s_height = display_buffer.shape[0]
+        later_passes = []
         while row >= 0:
             col = display_buffer.shape[1] - 1
             while col >= 0:
                 i = display_buffer[row][col]
+                # Test if the cell should be rendered on a later pass.
                 if (
                     hasattr(i, "__rendering_pass")
-                    and getattr(i, "__rendering_pass") == 2
+                    and getattr(i, "__rendering_pass") > 1
+                    and hasattr(i, "render_to_buffer")
                 ):
-                    # print(f"Deferred rendering for: {i}")
-                    second_pass.append({"item": i, "row": row, "column": col})
+                    if getattr(i, "__rendering_pass") < len(later_passes):
+                        later_passes[getattr(i, "__rendering_pass")].append(
+                            {"item": i, "row": row, "column": col}
+                        )
+                    else:
+                        later_passes.extend(
+                            []
+                            for _ in range(
+                                getattr(i, "__rendering_pass") - len(later_passes)
+                            )
+                        )
+                        later_passes[getattr(i, "__rendering_pass") - 1].append(
+                            {"item": i, "row": row, "column": col}
+                        )
                     col -= 1
                     continue
-                if hasattr(i, "render_to_buffer"):
-                    # If the item is capable of rendering itself in the buffer, we let
-                    # it do so.
-                    i.render_to_buffer(
-                        screen_buffer,
-                        row,
-                        col,
-                        s_height,
-                        s_width,
-                    )
-                elif type(i) is str and len(i) > 1:
-                    idx = 0
-                    for char in i:
-                        if col + idx >= s_width:
-                            break
-                        screen_buffer[row][col + idx] = char
-                        idx += 1
-                elif hasattr(i, "__repr__"):
-                    screen_buffer[row][col] = i.__repr__()
+                i.render_to_buffer(
+                    screen_buffer,
+                    row,
+                    col,
+                    s_height,
+                    s_width,
+                )
+                # # If not, we render the cell now.
+                # if hasattr(i, "render_to_buffer"):
+                #     # If the item is capable of rendering itself in the buffer, we let
+                #     # it do so.
+                #     i.render_to_buffer(
+                #         screen_buffer,
+                #         row,
+                #         col,
+                #         s_height,
+                #         s_width,
+                #     )
+                # elif hasattr(i, "__repr__"):
+                #     # Else we use the __repr__ method to render the cell.
+                #     # It is for the sprixels.
+                #     screen_buffer[row][col] = i.__repr__()
                 col -= 1
             row -= 1
-        for i in second_pass:
-            if hasattr(i["item"], "render_to_buffer"):
+        # Now we render the later passes.
+        for items in later_passes:
+            for i in items:
+                # Since we already cheched if the item is capable of rendering itself,
+                # we can safely assume it has a render_to_buffer method.
                 i["item"].render_to_buffer(
                     screen_buffer, i["row"], i["column"], s_height, s_width
                 )
@@ -4297,7 +4443,7 @@ class Screen(base.PglBaseObject):
 
         Force the immediate rendering of the display buffer.
 
-        If you just want to mark the screen buffer for rendering before the next update
+        If you just want to mark the frame buffer for rendering before the next update
         use :func:`trigger_rendering` instead.
 
         Example::
@@ -4306,11 +4452,11 @@ class Screen(base.PglBaseObject):
 
         .. versionadded:: 1.3.0
 
-        .. image:: https://img.shields.io/badge/rendering%20stack-Screen%20Buffer-green
+        .. image:: https://img.shields.io/badge/rendering%20stack-ISM-green
 
-        .. NOTE:: This method is part of the **Screen Buffer** rendering stack and is
-           incompatible with the methods identified as being part of the **Direct
-           Display** stack.
+        .. NOTE:: This method is part of the **Improved Screen Management** rendering
+           stack and is incompatible with the methods identified as being part of the
+           **Legacy Direct Display** stack.
 
         """
         self._is_dirty = True
@@ -4327,11 +4473,11 @@ class Screen(base.PglBaseObject):
 
         .. versionadded:: 1.3.0
 
-        .. image:: https://img.shields.io/badge/rendering%20stack-Screen%20Buffer-green
+        .. image:: https://img.shields.io/badge/rendering%20stack-ISM-green
 
-        .. NOTE:: This method is part of the **Screen Buffer** rendering stack and is
-           incompatible with the methods identified as being part of the **Direct
-           Display** stack.
+        .. NOTE:: This method is part of the **Improved Screen Management** rendering
+           stack and is incompatible with the methods identified as being part of the
+           **Legacy Direct Display** stack.
 
         """
         self._is_dirty = True
@@ -4339,7 +4485,7 @@ class Screen(base.PglBaseObject):
 
     def trigger_rendering(self):
         """
-        Trigger the screen buffer for rendering at the next update.
+        Trigger the frame buffer for rendering at the next update.
 
         Example::
 
@@ -4347,11 +4493,11 @@ class Screen(base.PglBaseObject):
 
         .. versionadded:: 1.3.0
 
-        .. image:: https://img.shields.io/badge/rendering%20stack-Screen%20Buffer-green
+        .. image:: https://img.shields.io/badge/rendering%20stack-ISM-green
 
-        .. NOTE:: This method is part of the **Screen Buffer** rendering stack and is
-           incompatible with the methods identified as being part of the **Direct
-           Display** stack.
+        .. NOTE:: This method is part of the **Improved Screen Management** rendering
+           stack and is incompatible with the methods identified as being part of the
+           **Direct Display** stack.
 
         """
         self._is_dirty = True
@@ -4360,7 +4506,7 @@ class Screen(base.PglBaseObject):
         """Place an element on the screen.
 
         This method places an element in the screen display buffer. The element is then
-        going to be rendered in the screen buffer before being printed on screen.
+        going to be rendered in the frame buffer before being printed on screen.
 
         The following elements can be placed on screen:
 
@@ -4392,10 +4538,13 @@ class Screen(base.PglBaseObject):
         :type row: int
         :param column: The column to render to.
         :type column: int
-        :param rendering_pass: When to render the element (first or second pass).
+        :param rendering_pass: When to render the element. You can have any number of
+           rendering passes but you have to be careful of performances. Higher passses
+           render on top of lower passes. You can see the render passes as plane to
+           write on. The default pass is 1.
         :type rendering_pass: int
 
-        .. Warning:: to be rendered on the second pass an element *needs* to implement
+        .. Warning:: to be rendered on the second+ pass an element *needs* to implement
            render_to_buffer(...). This excludes all standard types (but not
            :class:`~pygamelib.base.Text`). Regular Python strings and object that can be
            print() can still be used in the first pass.
@@ -4406,18 +4555,18 @@ class Screen(base.PglBaseObject):
 
         .. versionadded:: 1.3.0
 
-        .. image:: https://img.shields.io/badge/rendering%20stack-Screen%20Buffer-green
+        .. image:: https://img.shields.io/badge/rendering%20stack-ISM-green
 
-        .. NOTE:: This method is part of the **Screen Buffer** rendering stack and is
-           incompatible with the methods identified as being part of the **Direct
-           Display** stack.
+        .. NOTE:: This method is part of the **Improved Screen Management** rendering
+           stack and is incompatible with the methods identified as being part of the
+           **Legacy Direct Display** stack.
 
         """
         if element is None or row is None or column is None:
             raise base.PglInvalidTypeException(
                 "Screen.place(item, row, column) none of the parameters can be None."
             )
-        if pgl_isinstance(element, "pygamelib.gfx.ui.Dialog"):
+        if pgl_isinstance(element, "pygamelib.gfx.ui.Dialog") and rendering_pass < 2:
             rendering_pass = 2
         if row >= self.height:
             raise base.PglException(
@@ -4431,23 +4580,24 @@ class Screen(base.PglBaseObject):
                 f"Screen.place(item, row, column) : column={column} is out of screen "
                 f"width (i.e {self.width})",
             )
+        if type(element) is str:
+            # If it's a string we convert it to a Text object.
+            element = base.Text(element)
+
         if isinstance(element, base.PglBaseObject):
-            element.screen_row = row
-            element.screen_column = column
-        if (
-            isinstance(element, core.Sprixel)
-            or type(element) is str
-            or hasattr(element, "render_to_buffer")
-        ):
+            element.attach(self)
+            element.store_screen_position(row, column)
+
+        if isinstance(element, core.Sprixel) or hasattr(element, "render_to_buffer"):
             try:
                 setattr(element, "__rendering_pass", rendering_pass)
             except AttributeError:
                 pass
             self._display_buffer[row][column] = element
-            if isinstance(element, base.PglBaseObject):
-                # Game.instance().session_log(f"Attaching to {element}")
-                element.attach(self)
-                element.store_screen_position(row, column)
+            # if isinstance(element, base.PglBaseObject):
+            #     # Game.instance().session_log(f"Attaching to {element}")
+            #     element.attach(self)
+            #     element.store_screen_position(row, column)
             self._is_dirty = True
             return
         else:
@@ -4479,11 +4629,11 @@ class Screen(base.PglBaseObject):
 
         .. versionadded:: 1.3.0
 
-        .. image:: https://img.shields.io/badge/rendering%20stack-Screen%20Buffer-green
+        .. image:: https://img.shields.io/badge/rendering%20stack-ISM-green
 
-        .. NOTE:: This method is part of the **Screen Buffer** rendering stack and is
-           incompatible with the methods identified as being part of the **Direct
-           Display** stack.
+        .. NOTE:: This method is part of the **Improved Screen Management** rendering
+           stack and is incompatible with the methods identified as being part of the
+           **Legacy Direct Display** stack.
 
         """
         if row is not None and column is not None:
@@ -4511,11 +4661,11 @@ class Screen(base.PglBaseObject):
 
         .. versionadded:: 1.3.0
 
-        .. image:: https://img.shields.io/badge/rendering%20stack-Screen%20Buffer-green
+        .. image:: https://img.shields.io/badge/rendering%20stack-ISM-green
 
-        .. NOTE:: This method is part of the **Screen Buffer** rendering stack and is
-           incompatible with the methods identified as being part of the **Direct
-           Display** stack.
+        .. NOTE:: This method is part of the **Improved Screen Management** rendering
+           stack and is incompatible with the methods identified as being part of the
+           **Legacy Direct Display** stack.
 
         """
         if type(row) is int and type(column) is int:
@@ -4556,9 +4706,9 @@ class Screen(base.PglBaseObject):
 
         .. image:: https://img.shields.io/badge/rendering%20stack-Direct%20Display-blue
 
-        .. NOTE:: This method is part of the **Direct Display** rendering stack and is
-           incompatible with the methods identified as being part of the **Screen
-           Buffer** stack.
+        .. NOTE:: This method is part of the **Legacy Direct Display** rendering stack
+           and is incompatible with the methods identified as being part of the
+           **Improved Screen Management** stack.
 
         """
         # Funny how the documentation is waaayyy bigger than the code ;)
@@ -4620,9 +4770,9 @@ class Screen(base.PglBaseObject):
 
         .. image:: https://img.shields.io/badge/rendering%20stack-Direct%20Display-blue
 
-        .. NOTE:: This method is part of the **Direct Display** rendering stack and is
-           incompatible with the methods identified as being part of the **Screen
-           Buffer** stack.
+        .. NOTE:: This method is part of the **Legacy Direct Display** rendering stack
+           and is incompatible with the methods identified as being part of the
+           **Improved Screen Management** stack.
 
         """
         eol = ""
@@ -4669,9 +4819,9 @@ class Screen(base.PglBaseObject):
 
         .. image:: https://img.shields.io/badge/rendering%20stack-Direct%20Display-blue
 
-        .. NOTE:: This method is part of the **Direct Display** rendering stack and is
-           incompatible with the methods identified as being part of the **Screen
-           Buffer** stack.
+        .. NOTE:: This method is part of the **Legacy Direct Display** rendering stack
+           and is incompatible with the methods identified as being part of the
+           **Improved Screen Management** stack.
 
         """
         for r in range(0, sprite.size[1]):
@@ -4712,9 +4862,9 @@ class Screen(base.PglBaseObject):
 
         .. image:: https://img.shields.io/badge/rendering%20stack-Direct%20Display-blue
 
-        .. NOTE:: This method is part of the **Direct Display** rendering stack and is
-           incompatible with the methods identified as being part of the **Screen
-           Buffer** stack.
+        .. NOTE:: This method is part of the **Legacy Direct Display** rendering stack
+           and is incompatible with the methods identified as being part of the
+           **Improved Screen Management** stack.
 
         """
         for r in range(0, sprite.size[1]):
@@ -4730,7 +4880,7 @@ class Screen(base.PglBaseObject):
                     )
             print()
 
-    def be_notified(self, subject, attribute=None, value=None):
+    def handle_notification(self, subject, attribute=None, value=None):
         # We don't really care about the reason for the notification. We just want to
         # know that something changed.
         """

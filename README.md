@@ -76,7 +76,6 @@ It will pull all dependencies
 ### Python
 
 The pygamelib only supports Python 3.6+. It will **not** run with Python 2.
-Python 3.10 or later is not yet supported, due to a dependency on numpy 1.20.3.
 We use [pipenv](https://github.com/pypa/pipenv) to manage dependencies.
 
 Run Pipenv to install the requirements:

@@ -41,8 +41,10 @@ NPC
 
    .. autosummary::
    
+      ~NPC.animation
       ~NPC.column
       ~NPC.dtmove
+      ~NPC.heading
       ~NPC.height
       ~NPC.model
       ~NPC.row

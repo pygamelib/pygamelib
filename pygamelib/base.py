@@ -16,6 +16,7 @@ exceptions.
    pygamelib.base.PglException
    pygamelib.base.PglInvalidLevelException
    pygamelib.base.PglInvalidTypeException
+   pygamelib.base.PglInventoryException
    pygamelib.base.PglObjectIsNotMovableException
    pygamelib.base.PglOutOfBoardBoundException
    pygamelib.base.Vector2D
@@ -46,9 +47,9 @@ class PglBaseObject(object):
 
     The base logic of the pattern is already implemented and probably does not require
     re-implementation on the child object.
-    However, the :func:`~pygamelib.base.PglBaseObject.be_notified()` method needs to be
-    implemented in each client. The actual processing of the notification is indeed
-    specific to each object.
+    However, the :func:`~pygamelib.base.PglBaseObject.handle_notification()` method
+    needs to be implemented in each client. The actual processing of the notification is
+    indeed specific to each object.
 
     Storing the screen position is particularly useful for
     :class:`~pygamelib.board_items.BoardItem` subclasses as they only know their
@@ -67,7 +68,9 @@ class PglBaseObject(object):
         super().__init__()
         self._observers = []
         self.screen_row = -1
+        """The absolute row (or y) coordinate on the screen."""
         self.screen_column = -1
+        """The absolute column (or x) coordinate on the screen."""
         # self._last_updated = time.time()
 
     # def __setattr__(self, name: str, value: Any) -> None:
@@ -123,7 +126,7 @@ class PglBaseObject(object):
         if modifier in self._observers:
             cache = self._observers.pop(self._observers.index(modifier))
         for observer in self._observers:
-            observer.be_notified(self, attribute, value)
+            observer.handle_notification(self, attribute, value)
         # Restore the cached object
         if cache is not None:
             self._observers.append(cache)
@@ -181,21 +184,22 @@ class PglBaseObject(object):
         except ValueError:
             return False
 
-    def be_notified(self, subject, attribute=None, value=None):
+    def handle_notification(self, subject, attribute=None, value=None):
         """
         A virtual method that needs to be implemented by the observer.
         By default it does nothing but each observer needs to implement it if something
         needs to be done when notified.
 
         This method always receive the notifying object as first parameter. The 2 other
-        paramters are optional and can be None.
+        parameters are optional and can be None.
 
         You can use the attribute and value as you see fit. You are free to consider
         attribute as an event and value as the event's value.
 
         :param subject: The object that has changed.
         :type subject: :class:`~pygamelib.base.PglBaseObject`
-        :param attribute: The attribute that has changed. This can be None.
+        :param attribute: The attribute that has changed, it is usually a "FQDN style"
+           string. This can be None.
         :type attribute: str
         :param value: The new value of the attribute. This can be None.
         :type value: Any
@@ -220,7 +224,7 @@ class Console:
 
         Example::
 
-        term = Console.instance()
+           term = Console.instance()
 
         """
         if cls.__instance is None:
@@ -323,7 +327,7 @@ class Text(PglBaseObject):
         else:
             ret_data["fg_color"] = None
         if self.__font is not None:
-            ret_data["font_name"] = self.__font.name()
+            ret_data["font_name"] = self.__font.name
         else:
             ret_data["font_name"] = None
         if self.style is not None:
@@ -365,7 +369,7 @@ class Text(PglBaseObject):
         )
         return obj
 
-    def be_notified(self, target, attribute=None, value=None):
+    def handle_notification(self, target, attribute=None, value=None):
         self.__build_color_cache()
 
     @property
@@ -384,7 +388,14 @@ class Text(PglBaseObject):
     @property
     def bg_color(self):
         """The bg_color attribute sets the background color. It needs to be a
-        :class:`~pyagemlib.gfx.core.Color`."""
+        :class:`~pyagemlib.gfx.core.Color`.
+
+        .. role:: boldblue
+
+        When the background color is changed, the observers are notified of the change
+        with the :boldblue:`pygamelib.base.Text.bg_color:changed` event. The new color
+        is passed as the `value` parameter.
+        """
         return self.__bg_color
 
     @bg_color.setter
@@ -407,8 +418,16 @@ class Text(PglBaseObject):
 
     @property
     def fg_color(self):
-        """The bg_color attribute sets the foreground color. It needs to be a
-        :class:`~pyagemlib.gfx.core.Color`."""
+        """
+        The fg_color attribute sets the foreground color. It needs to be a
+        :class:`~pyagemlib.gfx.core.Color`.
+
+        .. role:: boldblue
+
+        When the foreground color is changed, the observers are notified of the change
+        with the :boldblue:`pygamelib.base.Text.fg_color:changed` event. The new color
+        is passed as the `value` parameter.
+        """
         return self.__fg_color
 
     @fg_color.setter
@@ -454,6 +473,37 @@ class Text(PglBaseObject):
     #     print(f"{key} changed with value={value}")
     #     super(Text, self).__setattr__(key, value)
 
+    def print_formatted(self):
+        """Print the text with the current font activated.
+
+        If the font is not set, it is strictly equivalent to print().
+        """
+        if self.__font is None:
+            print(self)
+        else:
+            glyph = self.__font.glyph
+            colors = {}
+            if self.fg_color is not None:
+                colors["fg_color"] = self.fg_color
+            if self.bg_color is not None:
+                colors["bg_color"] = self.bg_color
+            # First, we get the glyphs.
+            # We the need to print them line by line.
+            for line in self.text.splitlines():
+                glyphs = []
+                for char in line:
+                    glyphs.append(glyph(char, **colors))
+                for ri in range(0, self.__font.height):
+                    for g in glyphs:
+                        for ci in range(0, g.width):
+                            print(g.sprixel(ri, ci), end="")
+                        for _ in range(self.__font.horizontal_spacing):
+                            print(" ", end="")
+                    print()
+                # print()
+                for _ in range(self.__font.vertical_spacing):
+                    print()
+
     @property
     def length(self):
         """Return the true length of the text.
@@ -482,7 +532,7 @@ class Text(PglBaseObject):
                 length = 0
                 for char in line:
                     font_glyph = glyph(char)
-                    length += font_glyph.size[0] + self.__font.horizontal_spacing()
+                    length += font_glyph.size[0] + self.__font.horizontal_spacing
                 if length > max_length:
                     max_length = length
             return max_length
@@ -493,7 +543,7 @@ class Text(PglBaseObject):
     # The apparent reason is that the BG color is not reset by simply the background to
     # None
     def render_to_buffer(self, buffer, row, column, buffer_height, buffer_width):
-        """Render the Text object into a display buffer (not a screen buffer).
+        """Render the Text object from the display buffer to the frame buffer.
 
         This method is automatically called by :func:`pygamelib.engine.Screen.render`.
 
@@ -537,15 +587,16 @@ class Text(PglBaseObject):
                     idx += 1
                 row_idx += 1
         else:
-            row_incr = self.__font.height() + self.__font.vertical_spacing()
-            font_horizontal_spacing = self.__font.horizontal_spacing()
+            row_incr = self.__font.height + self.__font.vertical_spacing
+            font_horizontal_spacing = self.__font.horizontal_spacing
             # Squash the dot notation
             glyph = self.__font.glyph
             colors = {}
-            if self.fg_color is not None:
-                colors["fg_color"] = self.fg_color
-            if self.bg_color is not None:
-                colors["bg_color"] = self.bg_color
+            if self.__font.colorable:
+                if self.fg_color is not None:
+                    colors["fg_color"] = self.fg_color
+                if self.bg_color is not None:
+                    colors["bg_color"] = self.bg_color
             # t = Console.instance()
             # bgcc = t.on_color_rgb(self.bg_color.r, self.bg_color.g, self.bg_color.b)
             # filler = f"{bgcc} \x1b[0m"
@@ -1127,7 +1178,7 @@ class Vector2D(object):
                 print('We are not moving... at all...')
         """
         return round(
-            math.sqrt(self.row ** 2 + self.column ** 2), self.rounding_precision
+            math.sqrt(self.row**2 + self.column**2), self.rounding_precision
         )
 
     def unit(self):

@@ -41,8 +41,10 @@ Movable
 
    .. autosummary::
    
+      ~Movable.animation
       ~Movable.column
       ~Movable.dtmove
+      ~Movable.heading
       ~Movable.height
       ~Movable.model
       ~Movable.row

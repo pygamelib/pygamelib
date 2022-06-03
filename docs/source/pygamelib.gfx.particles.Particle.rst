@@ -20,7 +20,7 @@ Particle
       ~Particle.__init__
       ~Particle.apply_force
       ~Particle.attach
-      ~Particle.be_notified
+      ~Particle.handle_notification
       ~Particle.detach
       ~Particle.finished
       ~Particle.notify

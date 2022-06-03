@@ -14,10 +14,14 @@ class BenchmarkTimer:
                 "stop": 0,
                 "label": f"Phase #{phase}",
                 "frames": 0,
+                "input_lag": 0.05,
             }
 
     def stop_timer(self, phase: int) -> None:
         self.phases[phase]["stop"] = time.perf_counter()
+
+    def set_input_lag(self, phase: int, input_lag: float) -> None:
+        self.phases[phase]["input_lag"] = input_lag
 
     def set_label(self, phase: int, label: str) -> None:
         if phase in self.phases.keys():

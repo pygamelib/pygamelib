@@ -115,7 +115,7 @@ def init_firework(screen: engine.Screen):
     clear_screen(screen, core.Color(47, 4, 122))
     screen.place(bench_state.night_bg, 0, 0, 1)
     bench_state.frwk_create = time.process_time()
-    bench_state.frwk_delta = random.uniform(0.05, 0.3)
+    bench_state.frwk_delta = random.uniform(0.05, 0.1)
 
 
 def next_phase(label: str) -> None:
@@ -137,7 +137,8 @@ def benchmark_intro_update(g: engine.Game, key, dt):
     screen = g.screen
     ph = bench_timer.phases[bench_state.current_state]
     val = round(
-        ph["frames"] / (time.perf_counter() - ph["start"] - g.input_lag * ph["frames"])
+        ph["frames"]
+        / (time.perf_counter() - ph["start"] - ph["input_lag"] * ph["frames"])
     )
     screen.place(
         base.Text(
@@ -276,7 +277,8 @@ def update_low_emitter(g: engine.Game, key, dt):
     screen = g.screen
     ph = bench_timer.phases[bench_state.current_state]
     fps = round(
-        ph["frames"] / (time.perf_counter() - ph["start"] - g.input_lag * ph["frames"])
+        ph["frames"]
+        / (time.perf_counter() - ph["start"] - ph["input_lag"] * ph["frames"])
     )
     screen.place(
         base.Text(
@@ -345,7 +347,8 @@ def update_mid_emitter(g: engine.Game, key, dt):
     screen = g.screen
     ph = bench_timer.phases[bench_state.current_state]
     val = round(
-        ph["frames"] / (time.perf_counter() - ph["start"] - g.input_lag * ph["frames"])
+        ph["frames"]
+        / (time.perf_counter() - ph["start"] - ph["input_lag"] * ph["frames"])
     )
     screen.place(
         base.Text(
@@ -414,7 +417,8 @@ def update_high_emitter(g: engine.Game, key, dt):
     screen = g.screen
     ph = bench_timer.phases[bench_state.current_state]
     val = round(
-        ph["frames"] / (time.perf_counter() - ph["start"] - g.input_lag * ph["frames"])
+        ph["frames"]
+        / (time.perf_counter() - ph["start"] - ph["input_lag"] * ph["frames"])
     )
     screen.place(
         base.Text(
@@ -442,9 +446,11 @@ def update_high_emitter(g: engine.Game, key, dt):
         if bench_state.particle_emitters[i].finished():
             del bench_state.particle_emitters[i]
     if len(bench_state.particle_emitters) == 0:
+        clear_screen(screen)
+        init_firework(screen)
         bench_timer.stop_timer(bench_state.current_state)
         bench_state.next_state()
-        clear_screen(screen)
+
         bench_timer.start_timer(bench_state.current_state)
         bench_timer.set_label(
             bench_state.current_state,
@@ -452,7 +458,11 @@ def update_high_emitter(g: engine.Game, key, dt):
             "emitter + RandomColor particle with large sprite in the background + "
             "gravity]",
         )
-        init_firework(screen)
+
+        engine.Game.instance().input_lag = 0.02
+        bench_timer.set_input_lag(
+            bench_state.current_state, engine.Game.instance().input_lag
+        )
         g.user_update = firework_update
 
     bench_timer.count_frame(bench_state.current_state)
@@ -465,7 +475,8 @@ def firework_update(g: engine.Game, key, dt):
     ph = bench_timer.phases[bench_state.current_state]
     sprix = screen.get(0, 0).sprixel(0, 0)
     fps = round(
-        ph["frames"] / (time.perf_counter() - ph["start"] - g.input_lag * ph["frames"])
+        ph["frames"]
+        / (time.perf_counter() - ph["start"] - ph["input_lag"] * ph["frames"])
     )
     text = base.Text(
         f"Phase: {bench_state.current_state} FPS: {fps} ",
@@ -511,7 +522,7 @@ def firework_update(g: engine.Game, key, dt):
         screen.place(cur_emt, row, col, 2)
         bench_state.particle_emitters.append(cur_emt)
         bench_state.frwk_create = time.process_time()
-        bench_state.frwk_delta = random.uniform(0.1, 1.0)
+        bench_state.frwk_delta = random.uniform(0.1, 0.3)
         bench_state.frwk_remaining -= 1
 
     for emt in bench_state.particle_emitters:
@@ -537,6 +548,10 @@ def firework_update(g: engine.Game, key, dt):
         bench_timer.set_label(
             bench_state.current_state,
             "Altar with fire torch (CircleEmitter + ColorPartitionParticle)",
+        )
+        engine.Game.instance().input_lag = 0.08
+        bench_timer.set_input_lag(
+            bench_state.current_state, engine.Game.instance().input_lag
         )
         g.user_update = temple_scene_update
         # g.stop()
@@ -587,7 +602,8 @@ def temple_scene_update(g: engine.Game, key, dt):
     screen = g.screen
     ph = bench_timer.phases[bench_state.current_state]
     fps = round(
-        ph["frames"] / (time.perf_counter() - ph["start"] - g.input_lag * ph["frames"])
+        ph["frames"]
+        / (time.perf_counter() - ph["start"] - ph["input_lag"] * ph["frames"])
     )
     text = base.Text(
         f"Phase: {bench_state.current_state} FPS: {fps} ",
@@ -642,7 +658,7 @@ if __name__ == "__main__":
         ),
         user_update=benchmark_intro_update,
         mode=constants.MODE_RT,
-        input_lag=0.1,
+        input_lag=0.05,
     )
     if g.screen.width >= 159 and g.screen.height >= 65:
         g.DEBUG = True
@@ -664,18 +680,19 @@ if __name__ == "__main__":
         )
         total_time = 0
         total_frames = 0
-        for pk in bench_timer.phases.keys():
+        for pk in bench_timer.phases:
             ph = bench_timer.phases[pk]
             val = round(
-                ph["frames"] / (ph["stop"] - ph["start"] - g.input_lag * ph["frames"])
+                ph["frames"]
+                / (ph["stop"] - ph["start"] - ph["input_lag"] * ph["frames"])
             )
             print(
                 f"{base.Text(ph['label'],core.Color(0,255,0))}: {ph['frames']} frames "
-                f"in {round(ph['stop']-ph['start']-g.input_lag*ph['frames'],2)} sec. or"
-                f" {val} FPS"
+                f"in {round(ph['stop']-ph['start']-ph['input_lag']*ph['frames'],2)}"
+                f" sec. or {val} FPS"
             )
             total_frames += ph["frames"]
-            total_time += ph["stop"] - ph["start"] - g.input_lag * ph["frames"]
+            total_time += ph["stop"] - ph["start"] - ph["input_lag"] * ph["frames"]
         print(
             base.Text(
                 f"\nAverage FPS: {round(total_frames/total_time)}",

@@ -45,6 +45,7 @@ ComplexDoor
 
    .. autosummary::
    
+      ~ComplexDoor.animation
       ~ComplexDoor.column
       ~ComplexDoor.height
       ~ComplexDoor.inventory_space

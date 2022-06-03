@@ -1,0 +1,34 @@
+.boldred {
+    color: red;
+    font-weight: bold;
+}
+
+.boldgreen {
+    color: green;
+    font-weight: bold;
+}
+
+.boldblue {
+    color: blue;
+    font-weight: bold;
+}
+
+.red {
+    color: red;
+}
+
+.green {
+    color: green;
+}
+
+.blue {
+    color: blue;
+}
+
+.deprecated {
+    color: orangered;
+}
+
+.added {
+    color: green;
+}

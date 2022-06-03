@@ -40,6 +40,7 @@ Wall
 
    .. autosummary::
    
+      ~Wall.animation
       ~Wall.column
       ~Wall.height
       ~Wall.inventory_space

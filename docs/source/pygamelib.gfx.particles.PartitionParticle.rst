@@ -20,7 +20,7 @@ PartitionParticle
       ~PartitionParticle.__init__
       ~PartitionParticle.apply_force
       ~PartitionParticle.attach
-      ~PartitionParticle.be_notified
+      ~PartitionParticle.handle_notification
       ~PartitionParticle.detach
       ~PartitionParticle.finished
       ~PartitionParticle.notify

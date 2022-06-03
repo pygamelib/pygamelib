@@ -1,5 +1,5 @@
-pygamelib.base.Text
-===================
+Text
+====
 
 .. currentmodule:: pygamelib.base
 
@@ -19,7 +19,7 @@ pygamelib.base.Text
    
       ~Text.__init__
       ~Text.attach
-      ~Text.be_notified
+      ~Text.handle_notification
       ~Text.black
       ~Text.black_bright
       ~Text.black_dim

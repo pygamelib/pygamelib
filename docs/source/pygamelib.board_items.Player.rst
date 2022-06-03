@@ -41,8 +41,10 @@ Player
 
    .. autosummary::
    
+      ~Player.animation
       ~Player.column
       ~Player.dtmove
+      ~Player.heading
       ~Player.height
       ~Player.model
       ~Player.row

@@ -42,7 +42,9 @@ BoardComplexItem
 
    .. autosummary::
    
+      ~BoardComplexItem.animation
       ~BoardComplexItem.column
+      ~BoardComplexItem.heading
       ~BoardComplexItem.height
       ~BoardComplexItem.model
       ~BoardComplexItem.row

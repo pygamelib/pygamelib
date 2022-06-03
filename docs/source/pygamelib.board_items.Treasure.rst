@@ -40,6 +40,7 @@ Treasure
 
    .. autosummary::
    
+      ~Treasure.animation
       ~Treasure.column
       ~Treasure.height
       ~Treasure.inventory_space

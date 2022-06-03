@@ -19,11 +19,17 @@ PglBaseObject
    
       ~PglBaseObject.__init__
       ~PglBaseObject.attach
-      ~PglBaseObject.be_notified
+      ~PglBaseObject.handle_notification
       ~PglBaseObject.detach
       ~PglBaseObject.notify
+      ~PglBaseObject.store_screen_position
    
+   .. rubric:: Attributes
+
+   .. autosummary::
    
+      ~PglBaseObject.screen_column
+      ~PglBaseObject.screen_row
 
    
    

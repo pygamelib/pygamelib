@@ -43,6 +43,7 @@ Camera
    
       ~Camera.column
       ~Camera.dtmove
+      ~Camera.heading
       ~Camera.height
       ~Camera.model
       ~Camera.row
