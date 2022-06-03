@@ -1809,7 +1809,6 @@ class Game(base.PglBaseObject):
     def state(self, value):
         self.__state = value
         if value == constants.PAUSED:
-            self.__execute_run = self._run_while_paused
             if self.user_update_paused is None:
                 self.user_update_paused = self._fake_update_paused
         elif value == constants.RUNNING:
@@ -1870,6 +1869,11 @@ class Game(base.PglBaseObject):
         regular update function is called but nothing is done regarding NPCs,
         projectiles, animations, etc.
 
+        .. Important:: If you try to set the game state to PAUSED and the
+           user_update_paused function is not defined, a notification will be issued
+           and the game will continue to run. The notification message is
+           :blue_text:`pygamelib.engine.Game.run:PauseNotAvailable`
+
         :raises: PglInvalidTypeException, PglInvalidTypeException
 
         Example::
@@ -1915,10 +1919,10 @@ class Game(base.PglBaseObject):
         # This runs until the game stops
         while self.state != constants.STOPPED:
             # But we only update if the game is not paused
+            in_key = self.terminal.inkey(timeout=self.input_lag)
+            elapsed = time.time() - self.previous_time
+            self.previous_time = time.time()
             if self.state == constants.RUNNING:
-                in_key = self.terminal.inkey(timeout=self.input_lag)
-                elapsed = time.time() - self.previous_time
-                self.previous_time = time.time()
                 if self.player != constants.NO_PLAYER:
                     self.player.dtmove += elapsed
                 print(self.terminal.home, end="")
@@ -1927,6 +1931,8 @@ class Game(base.PglBaseObject):
                 self.actuate_npcs(self.current_level, elapsed)
                 self.actuate_projectiles(self.current_level, elapsed)
                 self.animate_items(self.current_level, elapsed)
+            elif self.state == constants.PAUSED:
+                self.user_update_paused(self, in_key, elapsed)
 
     def _set_run_function(self):
         if self.current_level is None or self.current_board() is None:
@@ -1937,27 +1943,24 @@ class Game(base.PglBaseObject):
     def _run_without_board(self):
         # This runs until the game stops
         while self.state != constants.STOPPED:
+            in_key = self.terminal.inkey(timeout=self.input_lag)
+            elapsed = time.time() - self.previous_time
+            self.previous_time = time.time()
             # But we only update if the game is not paused
             if self.state == constants.RUNNING:
-                in_key = self.terminal.inkey(timeout=self.input_lag)
-                elapsed = time.time() - self.previous_time
-                self.previous_time = time.time()
                 print(self.terminal.home, end="")
                 self.user_update(self, in_key, elapsed)
                 print(self.terminal.clear_eos, end="")
+            elif self.state == constants.PAUSED:
+                self.user_update_paused(self, in_key, elapsed)
 
-    def _run_while_paused(self, timeout):
-        # This runs until the game is unpaused
-        while self.state == constants.PAUSED:
-            in_key = self.terminal.inkey(timeout=timeout)
-            elapsed = time.time() - self.previous_time
-            self.previous_time = time.time()
-            print(self.terminal.home, end="")
-            self.user_update_paused(self, in_key, elapsed)
-            print(self.terminal.clear_eos, end="")
-
-    def _fake_update_paused(self, in_key, elapsed):
-        pass
+    def _fake_update_paused(self, game, in_key, elapsed):
+        self.notify(
+            self,
+            "pygamelib.engine.Game.run:PauseNotAvailable",
+            "pygamelib.engine.Game.run(): user_update_paused is not defined.",
+        )
+        self.start()
 
     def session_log(self, line: str) -> None:
         """Add a line to the session logs.
@@ -3365,7 +3368,7 @@ class Game(base.PglBaseObject):
             # size is deprecated in favor of inventory_space.
             # This is kept for backward compatibility and silent migration.
             if "size" in obj_keys:
-                local_object._inventory_space = ref["size"]
+                local_object._inventory_space = ref["size"]  # pragma: no cover
             if "inventory_space" in obj_keys:
                 local_object._inventory_space = ref["inventory_space"]
         elif "GenericStructure" in ref["object"]:
@@ -3375,7 +3378,7 @@ class Game(base.PglBaseObject):
             # size is deprecated in favor of inventory_space.
             # This is kept for backward compatibility and silent migration.
             if "size" in obj_keys:
-                local_object._inventory_space = ref["size"]
+                local_object._inventory_space = ref["size"]  # pragma: no cover
             if "inventory_space" in obj_keys:
                 local_object._inventory_space = ref["inventory_space"]
             if "pickable" in obj_keys:
@@ -3389,7 +3392,7 @@ class Game(base.PglBaseObject):
             # size is deprecated in favor of inventory_space.
             # This is kept for backward compatibility and silent migration.
             if "size" in obj_keys:
-                local_object._inventory_space = ref["size"]
+                local_object._inventory_space = ref["size"]  # pragma: no cover
             if "inventory_space" in obj_keys:
                 local_object._inventory_space = ref["inventory_space"]
             if "pickable" in obj_keys:
@@ -3405,7 +3408,7 @@ class Game(base.PglBaseObject):
             # size is deprecated in favor of inventory_space.
             # This is kept for backward compatibility and silent migration.
             if "size" in obj_keys:
-                local_object._inventory_space = ref["size"]
+                local_object._inventory_space = ref["size"]  # pragma: no cover
             if "inventory_space" in obj_keys:
                 local_object._inventory_space = ref["inventory_space"]
             if "pickable" in obj_keys:
@@ -3419,7 +3422,7 @@ class Game(base.PglBaseObject):
             # size is deprecated in favor of inventory_space.
             # This is kept for backward compatibility and silent migration.
             if "size" in obj_keys:
-                local_object._inventory_space = ref["size"]
+                local_object._inventory_space = ref["size"]  # pragma: no cover
             if "inventory_space" in obj_keys:
                 local_object._inventory_space = ref["inventory_space"]
             if "hp" in obj_keys:
