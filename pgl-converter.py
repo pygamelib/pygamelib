@@ -10,21 +10,6 @@ file = None
 tmp_file = None
 width = 48
 
-# TODO: use argparse to add more command line flexibility:
-#         - --width=<width:int>
-#         - --collection=<existing spr file:path> -> add the transformed sprite to a
-#                                                    given collection. If non existing
-#                                                    it's created
-#         - --out=<path to a dir or file> -> if a dir write the file here, if a file
-#                                            overwrite it.
-#         - --no-code to not show the code example
-#         - --show to show the generated sprite
-#         - --silent to run the script with no output at all (imply --no-code)
-#         - --unicode=<bool> to enable/disable unicode (passed down to climage)
-#         - --color=<true|256|16|8> for the color precision (passed down to climage)
-#         - --board / --no-board to generate a Board out of the sprite (default: false)
-#         - --sprite / --no-sprite to generate or not a sprite out of the image
-#                                  (default: true)
 parser = argparse.ArgumentParser(
     description="A tool to convert an image to a pygamelib usable Sprite and/or Board."
 )

@@ -39,7 +39,7 @@ def draw_box(game, row, column, height, width, title=""):
         )
 
 
-print("pygamelib Screen Buffer benchmark\n")
+print("pygamelib Improved Screen Management benchmark\n")
 print("Loading game engine...", end="", flush=True)
 g_start = time.process_time()
 g = engine.Game(user_update=upd, mode=constants.MODE_TBT)
@@ -263,8 +263,8 @@ with g.terminal.cbreak(), g.terminal.hidden_cursor(), g.terminal.fullscreen():
         if frame_count == int(max_frames / 2):
             stop = time.process_time()
             results.append(
-                f"Benchmark (Screen Buffer - phase 1):\n\tdt={dt}\n\tframes rendered="
-                f"{frame_count} in "
+                f"Benchmark (Improved Screen Management - phase 1):\n\tdt={dt}\n\t"
+                f"frames rendered={frame_count} in "
                 f"{round(stop - start, 5)} sec. or {round((stop-start)/frame_count, 5)}"
                 f" sec. per frame\n\tActual rendering time per frame: "
                 f"{round(((stop-start)/frame_count)*1000, 2)} "
@@ -301,8 +301,8 @@ with g.terminal.cbreak(), g.terminal.hidden_cursor(), g.terminal.fullscreen():
         frame_count += 1
     stop = time.process_time()
     results.append(
-        f"Benchmark (Screen Buffer - phase 2):\n\tdt={dt}\n\tframes rendered="
-        f"{frame_count-int(max_frames/2)}"
+        f"Benchmark (Improved Screen Management - phase 2):\n\tdt={dt}\n\tframes "
+        f"rendered={frame_count-int(max_frames/2)}"
         f" in {round(stop - phase2,5)} sec. or "
         f"{round((stop-phase2)/(frame_count-int(max_frames/2)),5)}"
         f" sec. per frame\n\t"
@@ -311,8 +311,8 @@ with g.terminal.cbreak(), g.terminal.hidden_cursor(), g.terminal.fullscreen():
         f"msec.\n\tFPS: {round(1/((stop-phase2)/(frame_count-int(max_frames/2))))}"
     )
     results.append(
-        f"Benchmark (Screen Buffer - overall):\n\tdt={dt}\n\tframes rendered="
-        f"{frame_count}"
+        f"Benchmark (Improved Screen Management - overall):\n\tdt={dt}\n\tframes "
+        f"rendered={frame_count}"
         f" in {round(stop - start,5)} sec. or {round((stop-start)/frame_count,5)} sec. "
         "per frame\n\t"
         f"Actual rendering time per frame: "
@@ -320,6 +320,6 @@ with g.terminal.cbreak(), g.terminal.hidden_cursor(), g.terminal.fullscreen():
         f"msec.\n\tFPS: {round(1/((stop-start)/frame_count))}"
     )
 
-print("\n=========== Screen Buffer Benchmark results ===========")
+print("\n=========== Improved Screen Management Benchmark results ===========")
 for r in results:
     print(r)
