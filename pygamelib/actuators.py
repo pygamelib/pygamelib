@@ -118,7 +118,7 @@ class Behavioral(Actuator):
 
     def __init__(self, parent):
         """
-        The constructor simply construct an Actuator. It takes on positional paraneter:
+        The constructor simply construct an Actuator. It takes on positional parameter:
         the parent object.
         """
         super().__init__(parent)
@@ -295,8 +295,8 @@ class PatrolActuator(PathActuator):
     The patrol actuator is a subclass of
     :class:`~pygamelib.actuators.PathActuator`.  The move inside the function
     next_move depends on path and index and the mode. Once it reaches the end
-    of the move list it will start cycling back to the beggining of the list.
-    Once it reaches the beggining it will start moving forwards
+    of the move list it will start cycling back to the beginning of the list.
+    Once it reaches the beginning it will start moving forwards
     If the state is not running it returns None otherwise it increments the
     index & then, further compares the index with length of the path.
     If they both are same then, index is set to value zero and the move is
@@ -459,7 +459,7 @@ class PathFinder(Behavioral):
 
     The constructor takes the following parameters:
 
-    :param game: A reference to the instanciated game engine.
+    :param game: A reference to the instantiated game engine.
     :type game: pygamelib.engine.Game
     :param actuated_object: The object to actuate. Deprecated in favor of parent.
         Only kept for backward compatibility.
@@ -694,7 +694,7 @@ class PathFinder(Behavioral):
          - Look at the current waypoint, if the actuated object is not at \
             that position return a direction from the \
             :mod:`~pygamelib.constants` module. The direction is calculated \
-            from the difference betwen actuated object's position and \
+            from the difference between actuated object's position and \
             waypoint's position.
          - If the actuated object is at the waypoint position, then call \
             next_waypoint(), set the destination and return a direction. \
