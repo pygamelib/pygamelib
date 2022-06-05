@@ -1233,6 +1233,36 @@ class Vector2D(object):
         elif direction == constants.DLDOWN:
             return cls(+step, -step)
 
+    def serialize(self):
+        """Returns a dictionary with the attributes of the vector.
+
+        :returns: A dictionary with the attributes of the vector.
+        :rtype: dict
+
+        Example::
+
+            gravity = Vector2D(9.81, 0)
+            gravity_dict = gravity.serialize()
+            print(gravity_dict)
+        """
+        return {"row": self.row, "column": self.column}
+
+    @classmethod
+    def load(cls, data):
+        """Loads a vector from a dictionary.
+
+        :param data: A dictionary with the attributes of the vector.
+        :type data: dict
+        :returns: A vector.
+        :rtype: :class:`~pygamelib.base.Vector2D`
+
+        Example::
+
+            gravity_dict = {"row": 9.81, "column": 0}
+            gravity = Vector2D.load(gravity_dict)
+        """
+        return cls(data["row"], data["column"])
+
 
 class Math(object):
     """The math class regroup math functions required for game development.
