@@ -1589,7 +1589,7 @@ class EmitterProperties:
            particle).
         :type radius: float
         :param particle: The particle that the emitter will emit. This can be a class
-           reference or a fully instanciated particle. Emitters will copy it in the
+           reference or a fully instantiated particle. Emitters will copy it in the
            particle pool.
         :type particle: :class:`Particle`
 
@@ -1611,6 +1611,90 @@ class EmitterProperties:
         if particle is None:
             particle = Particle
         self.particle = particle
+
+    def serialize(self):
+        """Serialize an EmitterProperties into a dictionary.
+
+        :returns: The class as a  dictionary
+        :rtype: dict
+
+        Example::
+
+            json.dump( emitter_properties.serialize() )
+        """
+        ret_dict = {
+            "row": self.row,
+            "column": self.column,
+            "variance": self.variance,
+            "emit_number": self.emit_number,
+            "emit_rate": self.emit_rate,
+            "lifespan": self.lifespan,
+            # It is probably not a good idea to serialize parent. It is a reference
+            # to the parent board item, and we won't be able to correctly restore it.
+            # It is better to let the board item that serialize the particle emitter to
+            # take care of it.
+            "parent": None,
+            "particle_velocity": self.particle_velocity.serialize()
+            if self.particle_velocity
+            else None,
+            "particle_acceleration": self.particle_acceleration.serialize()
+            if self.particle_acceleration
+            else None,
+            "particle_lifespan": self.particle_lifespan,
+            "radius": self.radius,
+            "particle": self.particle,
+        }
+        if callable(self.particle):
+            ret_dict["particle_type"] = str(self.particle).split("'")[1]
+            ret_dict["particle"] = str(self.particle).split("'")[1]
+        else:
+            ret_dict["particle"] = self.particle.serialize()
+            ret_dict["particle_type"] = str(self.particle).split("'")[1]
+
+        return ret_dict
+
+    @classmethod
+    def load(cls, data):
+        """Load an EmitterProperties from a dictionary.
+
+        :param data: The dictionary to load from.
+        :type data: dict
+        :returns: The EmitterProperties object
+        :rtype: :class:`EmitterProperties`
+
+        Example::
+
+            emitter_properties = EmitterProperties.load(
+                                    json.load( open("emitter_properties.json") )
+                                )
+        """
+        props = cls(
+            row=data["row"],
+            column=data["column"],
+            variance=data["variance"],
+            emit_number=data["emit_number"],
+            emit_rate=data["emit_rate"],
+            lifespan=data["lifespan"],
+            parent=None,
+            particle_velocity=base.Vector2D.load(data["particle_velocity"])
+            if data["particle_velocity"]
+            else None,
+            particle_acceleration=base.Vector2D.load(data["particle_acceleration"])
+            if data["particle_acceleration"]
+            else None,
+            particle_lifespan=data["particle_lifespan"],
+            radius=data["radius"],
+            particle=None,
+        )
+        if data["particle"] is not None:
+            import pygamelib  # noqa: F401
+
+            pt = eval(data["particle_type"])
+            if data["particle"].startswith("pygamelib"):
+                props.particle = pt
+            else:
+                props.particle = pt.load(data["particle"])
+        return props
 
 
 class ParticlePool:
