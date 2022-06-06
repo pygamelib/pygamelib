@@ -23,10 +23,12 @@ PartitionParticle
       ~PartitionParticle.handle_notification
       ~PartitionParticle.detach
       ~PartitionParticle.finished
+      ~PartitionParticle.load
       ~PartitionParticle.notify
       ~PartitionParticle.render
       ~PartitionParticle.reset
       ~PartitionParticle.reset_lifespan
+      ~PartitionParticle.serialize
       ~PartitionParticle.store_screen_position
       ~PartitionParticle.terminate
       ~PartitionParticle.update

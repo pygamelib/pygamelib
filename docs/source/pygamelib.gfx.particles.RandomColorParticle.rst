@@ -23,10 +23,12 @@ RandomColorParticle
       ~RandomColorParticle.handle_notification
       ~RandomColorParticle.detach
       ~RandomColorParticle.finished
+      ~RandomColorParticle.load
       ~RandomColorParticle.notify
       ~RandomColorParticle.render
       ~RandomColorParticle.reset
       ~RandomColorParticle.reset_lifespan
+      ~RandomColorParticle.serialize
       ~RandomColorParticle.store_screen_position
       ~RandomColorParticle.terminate
       ~RandomColorParticle.update

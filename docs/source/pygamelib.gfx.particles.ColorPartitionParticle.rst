@@ -23,10 +23,12 @@ ColorPartitionParticle
       ~ColorPartitionParticle.handle_notification
       ~ColorPartitionParticle.detach
       ~ColorPartitionParticle.finished
+      ~ColorPartitionParticle.load
       ~ColorPartitionParticle.notify
       ~ColorPartitionParticle.render
       ~ColorPartitionParticle.reset
       ~ColorPartitionParticle.reset_lifespan
+      ~ColorPartitionParticle.serialize
       ~ColorPartitionParticle.store_screen_position
       ~ColorPartitionParticle.terminate
       ~ColorPartitionParticle.update

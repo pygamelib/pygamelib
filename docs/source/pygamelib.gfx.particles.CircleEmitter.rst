@@ -24,9 +24,11 @@ CircleEmitter
       ~CircleEmitter.detach
       ~CircleEmitter.emit
       ~CircleEmitter.finished
+      ~CircleEmitter.load
       ~CircleEmitter.notify
       ~CircleEmitter.render_to_buffer
       ~CircleEmitter.resize_pool
+      ~CircleEmitter.serialize
       ~CircleEmitter.store_screen_position
       ~CircleEmitter.toggle_active
       ~CircleEmitter.update

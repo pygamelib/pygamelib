@@ -23,10 +23,12 @@ RandomColorPartitionParticle
       ~RandomColorPartitionParticle.handle_notification
       ~RandomColorPartitionParticle.detach
       ~RandomColorPartitionParticle.finished
+      ~RandomColorPartitionParticle.load
       ~RandomColorPartitionParticle.notify
       ~RandomColorPartitionParticle.render
       ~RandomColorPartitionParticle.reset
       ~RandomColorPartitionParticle.reset_lifespan
+      ~RandomColorPartitionParticle.serialize
       ~RandomColorPartitionParticle.store_screen_position
       ~RandomColorPartitionParticle.terminate
       ~RandomColorPartitionParticle.update

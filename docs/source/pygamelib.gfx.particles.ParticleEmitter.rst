@@ -24,9 +24,11 @@ ParticleEmitter
       ~ParticleEmitter.detach
       ~ParticleEmitter.emit
       ~ParticleEmitter.finished
+      ~ParticleEmitter.load
       ~ParticleEmitter.notify
       ~ParticleEmitter.render_to_buffer
       ~ParticleEmitter.resize_pool
+      ~ParticleEmitter.serialize
       ~ParticleEmitter.store_screen_position
       ~ParticleEmitter.toggle_active
       ~ParticleEmitter.update
