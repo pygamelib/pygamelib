@@ -1991,6 +1991,32 @@ class ParticleEmitter(base.PglBaseObject):
 
         self.__last_emit = time.time()
         self.__active = True
+        self.__emitter_properties = emitter_properties
+
+    def serialize(self):
+        """
+        Serialize the particle emitter.
+
+        :return: A dictionary containing all the emitter's properties.
+        :rtype: dict
+        """
+        return {
+            "emitter_type": str(type(self)).split("'")[1],
+            "emitter_properties": self.__emitter_properties.serialize(),
+        }
+
+    @classmethod
+    def load(cls, data):
+        """
+        Load a particle emitter from serialized data.
+
+        :param data: The serialized data.
+        :type data: dict
+        :return: The loaded particle emitter.
+        :rtype: :class:`ParticleEmitter`
+        """
+        emitter_properties = EmitterProperties.load(data["emitter_properties"])
+        return cls(emitter_properties)
 
     @property
     def particle_pool(self):
