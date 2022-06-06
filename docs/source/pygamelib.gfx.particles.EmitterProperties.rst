@@ -18,6 +18,8 @@ EmitterProperties
    .. autosummary::
    
       ~EmitterProperties.__init__
+      ~EmitterProperties.load
+      ~EmitterProperties.serialize
    
    
 

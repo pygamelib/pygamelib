@@ -1,4 +1,5 @@
 from copy import deepcopy, copy
+
 from pygamelib.gfx import core
 
 # import pygamelib.board_items as board_items
@@ -132,6 +133,47 @@ class Particle(base.PglBaseObject):
         if sprixel is None:
             self.sprixel = core.Sprixel(graphics.GeometricShapes.BULLET)
         self.__last_update = time.time()
+
+    def serialize(self):
+        """Serialize a Particle into a dictionary.
+
+        :returns: The class as a  dictionary
+        :rtype: dict
+
+        Example::
+
+            json.dump( particle.serialize() )
+        """
+        ret_dict = {
+            "row": self.row,
+            "column": self.column,
+            "velocity": self.velocity.serialize(),
+            "lifespan": self.lifespan,
+            "sprixel": self.sprixel.serialize(),
+        }
+
+        return ret_dict
+
+    @classmethod
+    def load(cls, data):
+        """Load a Particle from a dictionary.
+
+        :param data: The dictionary to load from
+        :type data: dict
+        :returns: The loaded Particle
+        :rtype: :class:`~pygamelib.gfx.particles.Particle`
+
+        Example::
+
+            particle = Particle.load( json.load( open("particle.json") ) )
+        """
+        return cls(
+            row=data["row"],
+            column=data["column"],
+            velocity=base.Vector2D.load(data["velocity"]),
+            lifespan=data["lifespan"],
+            sprixel=ParticleSprixel.load(data["sprixel"]),
+        )
 
     def reset(
         self,
@@ -276,8 +318,8 @@ class Particle(base.PglBaseObject):
         It mainly adds the acceleration to the velocity vector and update the position
         accordingly.
 
-        After calling update() the acceleration is "consummed" in the velocity and
-        therefor resetted.
+        After calling update() the acceleration is "consumed" in the velocity and
+        therefor reset.
 
         The update() method takes no parameters and returns nothing.
 
@@ -915,6 +957,46 @@ class PartitionParticle(Particle):
                     + gb.UPPER_HALF_BLOCK: gb.QUADRANT_UPPER_LEFT_AND_UPPER_RIGHT_AND_LOWER_RIGHT,  # noqa: E501
                 }
 
+    def serialize(self):
+        """Serialize a PartitionParticle into a dictionary.
+
+        :returns: The class as a  dictionary
+        :rtype: dict
+
+        Example::
+
+            json.dump( particle.serialize() )
+        """
+        ret_dict = super().serialize()
+        ret_dict["partition"] = self.partition
+        ret_dict["partition_blending_table"] = self.partition_blending_table
+
+        return ret_dict
+
+    @classmethod
+    def load(cls, data):
+        """Load a PartitionParticle from a dictionary.
+
+        :param data: The dictionary to load from
+        :type data: dict
+        :returns: The loaded PartitionParticle
+        :rtype: :class:`~pygamelib.gfx.particles.PartitionParticle`
+
+        Example::
+
+            particle = PartitionParticle.load( json.load( open("particle.json") ) )
+        """
+        p = cls(
+            row=data["row"],
+            column=data["column"],
+            velocity=base.Vector2D.load(data["velocity"]),
+            lifespan=data["lifespan"],
+            partition=data["partition"],
+            partition_blending_table=data["partition_blending_table"],
+        )
+        p.sprixel = core.Sprixel.load(data["sprixel"])
+        return p
+
     def update(self):
         """
         This method first calls the Particle.update() method, then calculates the
@@ -1058,6 +1140,43 @@ class RandomColorParticle(Particle):
         else:
             self.sprixel.fg_color = color
 
+    def serialize(self):
+        """Serialize a RandomColorParticle into a dictionary.
+
+        :returns: The class as a  dictionary
+        :rtype: dict
+
+        Example::
+
+            json.dump( particle.serialize() )
+        """
+        ret_dict = super().serialize()
+        ret_dict["color"] = self.sprixel.fg_color.serialize()
+
+        return ret_dict
+
+    @classmethod
+    def load(cls, data):
+        """Load a PartitionParticle from a dictionary.
+
+        :param data: The dictionary to load from
+        :type data: dict
+        :returns: The loaded PartitionParticle
+        :rtype: :class:`~pygamelib.gfx.particles.PartitionParticle`
+
+        Example::
+
+            particle = RandomColorParticle.load( json.load( open("particle.json") ) )
+        """
+        return cls(
+            row=data["row"],
+            column=data["column"],
+            velocity=base.Vector2D.load(data["velocity"]),
+            lifespan=data["lifespan"],
+            sprixel=ParticleSprixel.load(data["sprixel"]),
+            color=core.Color.load(data["color"]),
+        )
+
 
 class RandomColorPartitionParticle(PartitionParticle):
     """
@@ -1122,6 +1241,40 @@ class RandomColorPartitionParticle(PartitionParticle):
             )
         else:
             self.sprixel.fg_color = color
+
+    def serialize(self):
+        """Serialize a RandomColorPartitionParticle into a dictionary.
+
+        :returns: The class as a  dictionary
+        :rtype: dict
+
+        Example::
+
+            json.dump( particle.serialize() )
+        """
+        ret_dict = super().serialize()
+        ret_dict["color"] = self.sprixel.fg_color.serialize()
+
+        return ret_dict
+
+    @classmethod
+    def load(cls, data):
+        """Load a RandomColorPartitionParticle from a dictionary.
+
+        :param data: The dictionary to load from
+        :type data: dict
+        :returns: The loaded RandomColorPartitionParticle
+        :rtype: :class:`~pygamelib.gfx.particles.RandomColorPartitionParticle`
+
+        Example::
+
+            particle = RandomColorPartitionParticle.load(
+                            json.load( open("particle.json") )
+                        )
+        """
+        p = super().load(data)
+        p.sprixel.fg_color = core.Color.load(data["color"])
+        return p
 
 
 class ColorParticle(Particle):
@@ -1199,6 +1352,41 @@ class ColorParticle(Particle):
                 self.stop_color, coeff
             )
         self.sprixel.fg_color = ColorParticle.__color_cache[coeff]
+
+    def serialize(self):
+        """Serialize a ColorParticle into a dictionary.
+
+        :returns: The class as a  dictionary
+        :rtype: dict
+
+        Example::
+
+            json.dump( particle.serialize() )
+        """
+        ret_dict = super().serialize()
+        ret_dict["start_color"] = self.start_color.serialize()
+        ret_dict["stop_color"] = self.stop_color.serialize()
+
+        return ret_dict
+
+    @classmethod
+    def load(cls, data):
+        """Load a ColorParticle from a dictionary.
+
+        :param data: The dictionary to load from
+        :type data: dict
+        :returns: The loaded ColorParticle
+        :rtype: :class:`~pygamelib.gfx.particles.ColorParticle`
+
+        Example::
+
+            particle = ColorParticle.load( json.load( open("particle.json") ) )
+        """
+        p = super().load(data)
+        p.start_color = core.Color.load(data["start_color"])
+        p.stop_color = core.Color.load(data["stop_color"])
+        p.sprixel.fg_color = deepcopy(p.start_color)
+        return p
 
 
 class ColorPartitionParticle(PartitionParticle):
@@ -1290,6 +1478,41 @@ class ColorPartitionParticle(PartitionParticle):
             )
         self.sprixel.fg_color = ColorPartitionParticle.__color_cache[coeff]
 
+    def serialize(self):
+        """Serialize a ColorPartitionParticle into a dictionary.
+
+        :returns: The class as a  dictionary
+        :rtype: dict
+
+        Example::
+
+            json.dump( particle.serialize() )
+        """
+        ret_dict = super().serialize()
+        ret_dict["start_color"] = self.start_color.serialize()
+        ret_dict["stop_color"] = self.stop_color.serialize()
+
+        return ret_dict
+
+    @classmethod
+    def load(cls, data):
+        """Load a ColorPartitionParticle from a dictionary.
+
+        :param data: The dictionary to load from
+        :type data: dict
+        :returns: The loaded ColorPartitionParticle
+        :rtype: :class:`~pygamelib.gfx.particles.ColorPartitionParticle`
+
+        Example::
+
+            particle = ColorPartitionParticle.load( json.load( open("particle.json") ) )
+        """
+        p = super().load(data)
+        p.start_color = core.Color.load(data["start_color"])
+        p.stop_color = core.Color.load(data["stop_color"])
+        p.sprixel.fg_color = deepcopy(p.start_color)
+        return p
+
 
 # Emitters
 
@@ -1366,7 +1589,7 @@ class EmitterProperties:
            particle).
         :type radius: float
         :param particle: The particle that the emitter will emit. This can be a class
-           reference or a fully instanciated particle. Emitters will copy it in the
+           reference or a fully instantiated particle. Emitters will copy it in the
            particle pool.
         :type particle: :class:`Particle`
 
@@ -1388,6 +1611,92 @@ class EmitterProperties:
         if particle is None:
             particle = Particle
         self.particle = particle
+
+    def serialize(self):
+        """Serialize an EmitterProperties into a dictionary.
+
+        :returns: The class as a  dictionary
+        :rtype: dict
+
+        Example::
+
+            json.dump( emitter_properties.serialize() )
+        """
+        ret_dict = {
+            "row": self.row,
+            "column": self.column,
+            "variance": self.variance,
+            "emit_number": self.emit_number,
+            "emit_rate": self.emit_rate,
+            "lifespan": self.lifespan,
+            # It is probably not a good idea to serialize parent. It is a reference
+            # to the parent board item, and we won't be able to correctly restore it.
+            # It is better to let the board item that serialize the particle emitter to
+            # take care of it.
+            "parent": None,
+            "particle_velocity": self.particle_velocity.serialize()
+            if self.particle_velocity
+            else None,
+            "particle_acceleration": self.particle_acceleration.serialize()
+            if self.particle_acceleration
+            else None,
+            "particle_lifespan": self.particle_lifespan,
+            "radius": self.radius,
+            "particle": self.particle,
+        }
+        if callable(self.particle):
+            ret_dict["particle_type"] = str(self.particle).split("'")[1]
+            ret_dict["particle"] = str(self.particle).split("'")[1]
+        else:
+            ret_dict["particle"] = self.particle.serialize()
+            ret_dict["particle_type"] = str(type(self.particle)).split("'")[1]
+
+        return ret_dict
+
+    @classmethod
+    def load(cls, data):
+        """Load an EmitterProperties from a dictionary.
+
+        :param data: The dictionary to load from.
+        :type data: dict
+        :returns: The EmitterProperties object
+        :rtype: :class:`EmitterProperties`
+
+        Example::
+
+            emitter_properties = EmitterProperties.load(
+                                    json.load( open("emitter_properties.json") )
+                                )
+        """
+        props = cls(
+            row=data["row"],
+            column=data["column"],
+            variance=data["variance"],
+            emit_number=data["emit_number"],
+            emit_rate=data["emit_rate"],
+            lifespan=data["lifespan"],
+            parent=None,
+            particle_velocity=base.Vector2D.load(data["particle_velocity"])
+            if data["particle_velocity"]
+            else None,
+            particle_acceleration=base.Vector2D.load(data["particle_acceleration"])
+            if data["particle_acceleration"]
+            else None,
+            particle_lifespan=data["particle_lifespan"],
+            radius=data["radius"],
+            particle=None,
+        )
+        if data["particle"] is not None:
+            import pygamelib  # noqa: F401
+
+            pt = eval(data["particle_type"])
+            if type(data["particle"]) is str and data["particle"].startswith(
+                "pygamelib"
+            ):
+                props.particle = pt
+            else:
+                props.particle = pt.load(data["particle"])
+        return props
 
 
 class ParticlePool:
@@ -1684,6 +1993,32 @@ class ParticleEmitter(base.PglBaseObject):
 
         self.__last_emit = time.time()
         self.__active = True
+        self.__emitter_properties = emitter_properties
+
+    def serialize(self):
+        """
+        Serialize the particle emitter.
+
+        :return: A dictionary containing all the emitter's properties.
+        :rtype: dict
+        """
+        return {
+            "emitter_type": str(type(self)).split("'")[1],
+            "emitter_properties": self.__emitter_properties.serialize(),
+        }
+
+    @classmethod
+    def load(cls, data):
+        """
+        Load a particle emitter from serialized data.
+
+        :param data: The serialized data.
+        :type data: dict
+        :return: The loaded particle emitter.
+        :rtype: :class:`ParticleEmitter`
+        """
+        emitter_properties = EmitterProperties.load(data["emitter_properties"])
+        return cls(emitter_properties)
 
     @property
     def particle_pool(self):

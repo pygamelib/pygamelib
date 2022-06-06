@@ -103,6 +103,8 @@ class TestBoard(unittest.TestCase):
         self.assertEqual(bi.particle_emitter.column, bi.column)
         bi.store_position(3, 3)
         self.assertEqual(bi.heading, base.Vector2D(1, 0))
+        bi2 = board_items.BoardItem.load(bi.serialize())
+        self.assertEqual(bi.serialize(), bi2.serialize())
 
     def test_boarditemvoid(self):
         bi = board_items.BoardItemVoid()

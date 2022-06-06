@@ -23,10 +23,12 @@ ColorParticle
       ~ColorParticle.handle_notification
       ~ColorParticle.detach
       ~ColorParticle.finished
+      ~ColorParticle.load
       ~ColorParticle.notify
       ~ColorParticle.render
       ~ColorParticle.reset
       ~ColorParticle.reset_lifespan
+      ~ColorParticle.serialize
       ~ColorParticle.store_screen_position
       ~ColorParticle.terminate
       ~ColorParticle.update

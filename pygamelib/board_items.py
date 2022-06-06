@@ -207,6 +207,10 @@ class BoardItem(base.PglBaseObject):
         ret_data["pickable"] = self.pickable()
         ret_data["can_move"] = self.can_move()
         ret_data["inventory_space"] = self.inventory_space
+        if self.particle_emitter is not None:
+            ret_data["particle_emitter"] = self.particle_emitter.serialize()
+        else:
+            ret_data["particle_emitter"] = None
         keys = [
             "value",
             "name",
@@ -264,6 +268,11 @@ class BoardItem(base.PglBaseObject):
             value=data["value"],
             inventory_space=data["inventory_space"],
         )
+        if "particle_emitter" in data.keys() and data["particle_emitter"] is not None:
+            import pygamelib  # noqa: F401
+
+            pt = eval(data["particle_emitter"]["emitter_type"])
+            itm.particle_emitter = pt.load(data["particle_emitter"])
         return itm
 
     @property
