@@ -1649,7 +1649,7 @@ class EmitterProperties:
             ret_dict["particle"] = str(self.particle).split("'")[1]
         else:
             ret_dict["particle"] = self.particle.serialize()
-            ret_dict["particle_type"] = str(self.particle).split("'")[1]
+            ret_dict["particle_type"] = str(type(self.particle)).split("'")[1]
 
         return ret_dict
 
@@ -1690,7 +1690,9 @@ class EmitterProperties:
             import pygamelib  # noqa: F401
 
             pt = eval(data["particle_type"])
-            if data["particle"].startswith("pygamelib"):
+            if type(data["particle"]) is str and data["particle"].startswith(
+                "pygamelib"
+            ):
                 props.particle = pt
             else:
                 props.particle = pt.load(data["particle"])
