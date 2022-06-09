@@ -20,7 +20,7 @@ import collections
 from queue import PriorityQueue
 
 
-class Actuator:
+class Actuator(base.PglBaseObject):
     """
     Actuator is the base class for all Actuators. It is mainly a contract class with
     some utility methods.
@@ -40,6 +40,7 @@ class Actuator:
             actuator to be in a different state (PAUSED for example), you have to do it
             yourself.
         """
+        super().__init__()
         self.type = None
         self.state = constants.RUNNING
         self.parent = parent
@@ -151,6 +152,20 @@ class RandomActuator(Actuator):
             moveset = []
         super().__init__(parent)
         self.moveset = moveset
+        vector_moveset = []
+        for m in self.moveset:
+            if isinstance(m, base.Vector2D):
+                vector_moveset.append(m)
+            else:
+                # Here we consider that in moveset, there's either Vector2D or
+                # directions from the constants module. If it is not the case, result
+                # will be funky...
+                vector_moveset.append(base.Vector2D.from_direction(m, 1))
+        self.moveset = vector_moveset
+        self.__current_direction = random.choice(self.moveset)
+        self.__current_dir_move_left = random.randint(1, 10)
+        # We'll use that to check if the moving board item is stuck.
+        self.__projected_position_cache = None
 
     def next_move(self):
         """Return a randomly selected movement
@@ -166,7 +181,26 @@ class RandomActuator(Actuator):
             randomactuator.next_move()
         """
         if self.state == constants.RUNNING and self.moveset:
-            return random.choice(self.moveset)
+            ppav = None
+            if isinstance(self.parent, board_items.Movable):
+                ppav = self.parent.position_as_vector()
+            if (
+                self.__current_dir_move_left <= 0
+                or ppav != self.__projected_position_cache
+            ):
+                self.__current_direction = random.choice(self.moveset)
+                self.__current_dir_move_left = random.randint(1, 10)
+                self.notify(
+                    self, "RandomActuator changing direction", self.__current_direction
+                )
+                if ppav != self.__projected_position_cache:
+                    self.notify(self, "  It hit something")
+            self.__current_dir_move_left -= 1
+            if ppav is not None:
+                self.__projected_position_cache = ppav + self.__current_direction
+            return self.__current_direction
+
+            # return random.choice(self.moveset)
         else:
             return constants.NO_DIR
 
