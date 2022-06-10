@@ -152,20 +152,22 @@ class RandomActuator(Actuator):
             moveset = []
         super().__init__(parent)
         self.moveset = moveset
-        vector_moveset = []
-        for m in self.moveset:
-            if isinstance(m, base.Vector2D):
-                vector_moveset.append(m)
-            else:
-                # Here we consider that in moveset, there's either Vector2D or
-                # directions from the constants module. If it is not the case, result
-                # will be funky...
-                vector_moveset.append(base.Vector2D.from_direction(m, 1))
-        self.moveset = vector_moveset
-        self.__current_direction = random.choice(self.moveset)
-        self.__current_dir_move_left = random.randint(1, 10)
+        self._vector_moveset = []
+        self.__current_direction = None
+        self.__current_dir_move_left = None
         # We'll use that to check if the moving board item is stuck.
         self.__projected_position_cache = None
+        if len(self.moveset) > 0:
+            for m in self.moveset:
+                if isinstance(m, base.Vector2D):
+                    self._vector_moveset.append(m)
+                else:
+                    # Here we consider that in moveset, there's either Vector2D or
+                    # directions from the constants module. If it is not the case,
+                    # result will be funky...
+                    self._vector_moveset.append(base.Vector2D.from_direction(m, 1))
+            self.__current_direction = random.randrange(0, len(self.moveset))
+            self.__current_dir_move_left = random.randint(1, 10)
 
     def next_move(self):
         """Return a randomly selected movement
@@ -178,7 +180,7 @@ class RandomActuator(Actuator):
 
         Example::
 
-            randomactuator.next_move()
+            random_actuator.next_move()
         """
         if self.state == constants.RUNNING and self.moveset:
             ppav = None
@@ -188,17 +190,15 @@ class RandomActuator(Actuator):
                 self.__current_dir_move_left <= 0
                 or ppav != self.__projected_position_cache
             ):
-                self.__current_direction = random.choice(self.moveset)
+
+                self.__current_direction = random.randrange(0, len(self.moveset))
                 self.__current_dir_move_left = random.randint(1, 10)
-                self.notify(
-                    self, "RandomActuator changing direction", self.__current_direction
-                )
-                if ppav != self.__projected_position_cache:
-                    self.notify(self, "  It hit something")
             self.__current_dir_move_left -= 1
             if ppav is not None:
-                self.__projected_position_cache = ppav + self.__current_direction
-            return self.__current_direction
+                self.__projected_position_cache = (
+                    ppav + self._vector_moveset[self.__current_direction]
+                )
+            return self.moveset[self.__current_direction]
 
             # return random.choice(self.moveset)
         else:
@@ -269,7 +269,7 @@ class PathActuator(Actuator):
 
         Example::
 
-            pathactuator.next_move()
+            path_actuator.next_move()
         """
         if self.state == constants.RUNNING:
             move = self.path[self.index]
@@ -290,7 +290,7 @@ class PathActuator(Actuator):
 
         Example::
 
-            pathactuator.set_path([constants.UP,constants.DOWN,constants.LEFT,constants.RIGHT])
+            path_actuator.set_path([constants.UP,constants.DOWN,constants.LEFT,constants.RIGHT])
         """
         self.path = path
         self.index = 0
@@ -354,7 +354,7 @@ class PatrolActuator(PathActuator):
 
         Example::
 
-            patrolactuator.next_move()
+            patrol_actuator.next_move()
         """
         if self.state == constants.RUNNING:
             move = self.path[self.index]
