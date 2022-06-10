@@ -151,13 +151,37 @@ class RandomActuator(Actuator):
         if moveset is None:
             moveset = []
         super().__init__(parent)
-        self.moveset = moveset
+        self.__moveset = []
         self._vector_moveset = []
         self.__current_direction = None
         self.__current_dir_move_left = None
         # We'll use that to check if the moving board item is stuck.
         self.__projected_position_cache = None
+        self.moveset = moveset
+
+    @property
+    def moveset(self):
+        """
+        Return the moveset.
+
+        :return: The moveset.
+        :rtype: list
+        """
+        return self.__moveset
+
+    @moveset.setter
+    def moveset(self, moveset):
+        """
+        Set the moveset.
+
+        :param moveset: The moveset.
+        :type moveset: list
+        """
+        self.__moveset = moveset
+        self._vector_moveset = []
         if len(self.moveset) > 0:
+            # let's build a cache of directions to avoid creating vectors at each
+            # next_move() call.
             for m in self.moveset:
                 if isinstance(m, base.Vector2D):
                     self._vector_moveset.append(m)
