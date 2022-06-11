@@ -1,7 +1,4 @@
-from pygamelib import actuators
-from pygamelib import constants
-from pygamelib import board_items
-from pygamelib import engine
+from pygamelib import actuators, constants, board_items, engine, base
 import unittest
 
 # Test cases for all classes in pygamelib.gfx.particles.
@@ -40,6 +37,9 @@ class TestBase(unittest.TestCase):
         al = actuators.RandomActuator.load(data)
         self.assertEqual(al.moveset, [constants.UP])
         self.assertEqual(al.moveset, a.moveset)
+        # Test with a vector based move set
+        a = actuators.RandomActuator([base.Vector2D(1, 1)])
+        self.assertEqual(a.moveset, [base.Vector2D(1, 1)])
 
     def test_random_empty(self):
         a = actuators.RandomActuator()
