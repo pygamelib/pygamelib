@@ -2615,7 +2615,8 @@ class Game(base.PglBaseObject):
                                     constants.DOWN,
                                     constants.LEFT,
                                     constants.RIGHT,
-                                ]
+                                ],
+                                parent=npc,
                             )
                         if npc.step is None:
                             npc.step = 1
