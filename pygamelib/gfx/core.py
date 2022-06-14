@@ -2172,6 +2172,7 @@ class Animation(object):
                     # We have to think that someone could try to animate the player
                     # while not on the current board.
                     try:
+                        # I am not sure why this is here, it is not needed at all.
                         b.remove_item(self.parent)
                     except Exception:
                         return
