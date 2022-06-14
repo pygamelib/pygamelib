@@ -449,6 +449,21 @@ class TestBoard(unittest.TestCase):
         self.assertEqual(cam.column, 34)
         self.assertFalse(cam.has_inventory())
 
+    def test_bi_serialization(self):
+        b = board_items.BoardItem(
+            animation=gfx_core.Animation(
+                display_time=0.42, frames=["Q", "W", "E", "R", "T", "Y"]
+            )
+        )
+        self.assertEqual(b.animation.display_time, 0.42)
+        self.assertEqual(b.animation.frames, ["Q", "W", "E", "R", "T", "Y"])
+        data = b.serialize()
+        self.assertEqual(data["animation"]["display_time"], 0.42)
+        b2 = board_items.BoardItem.load(data)
+        self.assertEqual(b2.animation.display_time, 0.42)
+        self.assertEqual(b2.animation.frames, ["Q", "W", "E", "R", "T", "Y"])
+        self.assertEqual(b.serialize(), b2.serialize())
+
 
 if __name__ == "__main__":
     unittest.main()

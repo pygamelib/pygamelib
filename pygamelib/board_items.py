@@ -202,6 +202,8 @@ class BoardItem(base.PglBaseObject):
         ret_data["object"] = str(self.__class__)
         if self.sprixel is not None:
             ret_data["sprixel"] = self.sprixel.serialize()
+        if self.animation is not None:
+            ret_data["animation"] = self.animation.serialize()
         ret_data["restorable"] = self.restorable()
         ret_data["overlappable"] = self.overlappable()
         ret_data["pickable"] = self.pickable()
@@ -268,6 +270,8 @@ class BoardItem(base.PglBaseObject):
             value=data["value"],
             inventory_space=data["inventory_space"],
         )
+        if "animation" in data.keys() and data["animation"] is not None:
+            itm.animation = core.Animation.load(data["animation"])
         if "particle_emitter" in data.keys() and data["particle_emitter"] is not None:
             import pygamelib  # noqa: F401
 
