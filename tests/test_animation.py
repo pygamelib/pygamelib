@@ -274,6 +274,85 @@ class TestAnimation(unittest.TestCase):
         with self.assertRaises(pgl_base.PglInvalidTypeException):
             a.dtanimate = "1.0"
 
+    def test_serialization_with_string(self):
+        a = gfx_core.Animation(display_time=0.5)
+        a.add_frame("-o-")
+        a.add_frame("\\o-")
+        a.add_frame("\\o\\")
+        a.add_frame("|o|")
+        self.assertIsNotNone(a.serialize())
+        b = gfx_core.Animation.load(a.serialize())
+        self.assertEqual(b.display_time, 0.5)
+        self.assertEqual(len(b.frames), 4)
+        self.assertEqual(b.frames[0], "-o-")
+        self.assertEqual(a.serialize(), b.serialize())
+
+    def test_serialization_with_sprixel(self):
+        a = gfx_core.Animation(display_time=0.5)
+        a.add_frame(gfx_core.Sprixel("-o-"))
+        a.add_frame(gfx_core.Sprixel("\\o-"))
+        a.add_frame(gfx_core.Sprixel("\\o\\"))
+        a.add_frame(gfx_core.Sprixel("|o|"))
+        self.assertIsNotNone(a.serialize())
+        b = gfx_core.Animation.load(a.serialize())
+        self.assertEqual(b.display_time, 0.5)
+        self.assertEqual(len(b.frames), 4)
+        self.assertEqual(b.frames[0], gfx_core.Sprixel("-o-"))
+        self.assertEqual(a.serialize(), b.serialize())
+
+    def test_serialization_with_sprite(self):
+        spr = gfx_core.Sprite(
+            sprixels=[
+                [
+                    gfx_core.Sprixel.cyan_rect(),
+                    gfx_core.Sprixel.red_rect(),
+                    gfx_core.Sprixel.green_rect(),
+                ],
+                [
+                    gfx_core.Sprixel.yellow_rect(),
+                    gfx_core.Sprixel.blue_rect(),
+                    gfx_core.Sprixel.white_rect(),
+                ],
+            ]
+        )
+        blue_spr = gfx_core.Sprite(
+            sprixels=[
+                [
+                    gfx_core.Sprixel.blue_rect(),
+                    gfx_core.Sprixel.blue_rect(),
+                    gfx_core.Sprixel.blue_rect(),
+                ],
+                [
+                    gfx_core.Sprixel.blue_rect(),
+                    gfx_core.Sprixel.blue_rect(),
+                    gfx_core.Sprixel.blue_rect(),
+                ],
+            ]
+        )
+        red_spr = gfx_core.Sprite(
+            sprixels=[
+                [
+                    gfx_core.Sprixel.red_rect(),
+                    gfx_core.Sprixel.red_rect(),
+                    gfx_core.Sprixel.red_rect(),
+                ],
+                [
+                    gfx_core.Sprixel.red_rect(),
+                    gfx_core.Sprixel.red_rect(),
+                    gfx_core.Sprixel.red_rect(),
+                ],
+            ]
+        )
+        a = gfx_core.Animation(display_time=0.5)
+        a.add_frame(spr)
+        a.add_frame(red_spr)
+        a.add_frame(blue_spr)
+        self.assertIsNotNone(a.serialize())
+        b = gfx_core.Animation.load(a.serialize())
+        self.assertEqual(b.display_time, 0.5)
+        self.assertEqual(len(b.frames), 3)
+        self.assertEqual(a.serialize(), b.serialize())
+
 
 if __name__ == "__main__":
     unittest.main()

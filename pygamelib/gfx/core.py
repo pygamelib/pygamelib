@@ -1814,7 +1814,7 @@ class Animation(object):
 
         item = BoardItem(model=Sprite.ALIEN, name='Friendly Alien')
         # By default BoardItem does not have any animation, we have to
-        # explicitely create one
+        # explicitly create one
         item.animation = Animation(display_time=0.1, parent=item,
                                    refresh_screen=redraw_screen)
     """
@@ -1832,6 +1832,7 @@ class Animation(object):
         self.state = constants.RUNNING
         self.display_time = display_time
         self.auto_replay = auto_replay
+        self.parent = None
         if frames is None:
             frames = []
         elif isinstance(frames, SpriteCollection):
@@ -1856,8 +1857,70 @@ class Animation(object):
         self.refresh_screen = refresh_screen
         self.__dtanimate = 0.0
 
+    def serialize(self):
+        """
+        Serialize the Animation object.
+
+        The `refresh_screen` callback function is not serialized. Neither is the parent.
+
+        :return: A dictionary containing the Animation object's data.
+        :rtype: dict
+        """
+        ret_data = {}
+        ret_data["display_time"] = self.display_time
+        ret_data["auto_replay"] = self.auto_replay
+        if isinstance(self.frames[0], Sprite):
+            ret_data["frame_type"] = "sprite"
+        elif isinstance(self.frames[0], Sprixel):
+            ret_data["frame_type"] = "sprixel"
+        else:
+            ret_data["frame_type"] = "str"
+        ret_data["frames"] = []
+        for frame in self.frames:
+            if isinstance(frame, Sprite) or isinstance(frame, Sprixel):
+                ret_data["frames"].append(frame.serialize())
+            else:
+                ret_data["frames"].append(frame)
+        ret_data["_frame_index"] = self._frame_index
+        ret_data["_initial_index"] = self._initial_index
+        return ret_data
+
+    @classmethod
+    def load(cls, data):
+        """
+        Load a serialized Animation object.
+
+        :param data: The serialized Animation object.
+        :type data: dict
+        :return: The loaded Animation object.
+        :rtype: :class:`Animation`
+        """
+        # Start by constructing a default Animation object (because we have some
+        # specific cases to handle)
+        obj = cls()
+        # Unrelated note: all this function's code after this line has been written by
+        # Github's Copilot... This is really a time saver.
+        obj.display_time = data["display_time"]
+        obj.auto_replay = data["auto_replay"]
+        if data["frame_type"] == "sprite":
+            obj.frames = []
+            for frame in data["frames"]:
+                obj.frames.append(Sprite.load(frame))
+        elif data["frame_type"] == "sprixel":
+            obj.frames = []
+            for frame in data["frames"]:
+                obj.frames.append(Sprixel.load(frame))
+        else:
+            obj.frames = data["frames"]
+        obj._frame_index = data["_frame_index"]
+        obj._initial_index = data["_initial_index"]
+        return obj
+
     @property
     def dtanimate(self):
+        """
+        The time elapsed since the last frame was displayed.
+        """
         return self.__dtanimate
 
     @dtanimate.setter
@@ -1908,7 +1971,7 @@ class Animation(object):
         Raise an exception if frame is not a string.
 
         :param frame: The frame to add to the animation.
-        :type frame: str
+        :type frame: str|:class:`Sprite`|:class:`Sprixel`
         :raise: :class:`pygamelib.base.PglInvalidTypeException`
 
         Example::
@@ -2006,7 +2069,7 @@ class Animation(object):
         """Update the parent's model, sprixel or sprite with the next frame of the
         animation.
 
-        That method takes care of automatically replaying the animation if the
+        That method takes care of automatically resetting the animation if the
         last frame is reached if the state is constants.RUNNING.
 
         If the the state is PAUSED it still update the parent.model
@@ -2088,10 +2151,11 @@ class Animation(object):
         ctrl = 0
         while ctrl < len(self.frames):
             if self.dtanimate >= self.display_time:
-                # Dirty but that's a current limitation: to restore stuff on the board's
-                # overlapped matrix, we need to either move or replace an item after
-                # updating the sprite. This is only for sprites that have null items but
-                # we don't want to let any one slip.
+                # Dirty but that's a current limitation: to really update a complex item
+                # on the board, we need to either move or replace an item after
+                # updating the sprite. This is mostly for sprites that have null items
+                # but we don't want to let any one slip. An item on a Screen is not
+                # concerned by that.
                 # Also: this is convoluted...
                 if (
                     pgl_isinstance(

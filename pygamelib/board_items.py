@@ -104,7 +104,7 @@ class BoardItem(base.PglBaseObject):
        that the pickable, restorable, overlappable and can_move properties are
        configurable for all items independently of their type. This fixes an issue with
        restorable: only :class:`~Immovable` objects could be restorable. Now all items
-       can be any combination of these properties. As a developper you are now
+       can be any combination of these properties. As a developer you are now
        encouraged to use the corresponding functions to determine the abilities of an
        item.
 
@@ -202,6 +202,8 @@ class BoardItem(base.PglBaseObject):
         ret_data["object"] = str(self.__class__)
         if self.sprixel is not None:
             ret_data["sprixel"] = self.sprixel.serialize()
+        if self.animation is not None:
+            ret_data["animation"] = self.animation.serialize()
         ret_data["restorable"] = self.restorable()
         ret_data["overlappable"] = self.overlappable()
         ret_data["pickable"] = self.pickable()
@@ -268,6 +270,8 @@ class BoardItem(base.PglBaseObject):
             value=data["value"],
             inventory_space=data["inventory_space"],
         )
+        if "animation" in data.keys() and data["animation"] is not None:
+            itm.animation = core.Animation.load(data["animation"])
         if "particle_emitter" in data.keys() and data["particle_emitter"] is not None:
             import pygamelib  # noqa: F401
 
@@ -307,7 +311,11 @@ class BoardItem(base.PglBaseObject):
     @property
     def animation(self):
         """A property to get and set an :class:`~pygamelib.gfx.core.Animation` for
-        this item."""
+        this item.
+
+        .. Important:: When an animation is set, the item is setting the animation's
+           parent to itself.
+        """
         return self.__animation
 
     @animation.setter
@@ -380,7 +388,7 @@ class BoardItem(base.PglBaseObject):
         """Store the BoardItem position for self access.
 
         The stored position is used for consistency and quick access to the self
-        postion. It is a redundant information and might not be synchronized.
+        position. It is a redundant information and might not be synchronized.
 
         :param row: the row of the item in the :class:`~pygamelib.engine.Board`.
         :type row: int
@@ -525,7 +533,7 @@ class BoardItem(base.PglBaseObject):
            desirable for the pygamelib to assume that 2 items on different layers wont
            collide. For example, if a player is over a door, they are on different
            layers, but logically speaking they are colliding. The player is overlapping
-           the door. Therefor, it is the responsibility of the developper to check for
+           the door. Therefor, it is the responsibility of the developer to check for
            layers in collision, if it is important to the game logic.
 
         :param other: The item you want to check for collision.
@@ -751,7 +759,7 @@ class BoardItemVoid(BoardItem):
 class BoardItemComplexComponent(BoardItem):
     """The default component of a complex item.
 
-    It is literrally just a BoardItem but is subclassed for easier identification.
+    It is literally just a BoardItem but is subclassed for easier identification.
 
     It is however scanning its parent for the item's basic properties (overlappable,
     restorable, etc.)
@@ -944,8 +952,8 @@ class BoardComplexItem(BoardItem):
         """
         Update the complex item with the current sprite.
 
-        .. note:: This method use to need to be called everytime the sprite was changed.
-           Starting with version 1.3.0, it is no longer a requirement as
+        .. note:: This method use to need to be called every time the sprite was
+           changed. Starting with version 1.3.0, it is no longer a requirement as
            BoardComplexItem.sprite was turned into a property that takes care of calling
            update_sprite().
 
@@ -1176,7 +1184,7 @@ class Movable(BoardItem):
     def serialize(self) -> dict:
         """Serialize the Immovable object.
 
-        This returns a dictionnary that contains all the key/value pairs that makes up
+        This returns a dictionary that contains all the key/value pairs that makes up
         the object.
 
         """
@@ -1440,7 +1448,7 @@ class Projectile(Movable):
 
         Example::
 
-            fireball.add_directional_animation(constants.UP, updward_animation)
+            fireball.add_directional_animation(constants.UP, upward_animation)
         """
         if type(direction) is not int:
             raise base.PglInvalidTypeException(
@@ -1778,7 +1786,7 @@ class Character(Movable):
     def serialize(self) -> dict:
         """Serialize the Character object.
 
-        This returns a dictionnary that contains all the key/value pairs that makes up
+        This returns a dictionary that contains all the key/value pairs that makes up
         the object.
 
         """
@@ -2061,7 +2069,7 @@ class NPC(Character):
         """
         Serialize the NPC object.
 
-        This returns a dictionnary that contains all the key/value pairs that makes up
+        This returns a dictionary that contains all the key/value pairs that makes up
         the object.
         """
         ret_data = super().serialize()
@@ -2896,9 +2904,9 @@ class Camera(Movable):
     board if partial display is enabled.
 
     The Camera object inherits from Movable and can accept an actuator parameter.
-    However, it is up to the developper to activate the actuators mechanics as the
+    However, it is up to the developer to activate the actuators mechanics as the
     Camera object does not register as a NPC or a Player.
-    The support for actuators is mainly thought for pre-scripted cutscenes.
+    The support for actuators is mainly thought for pre-scripted cut-scenes.
 
     Example::
 
