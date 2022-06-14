@@ -1863,8 +1863,8 @@ class Animation(object):
 
         The `refresh_screen` callback function is not serialized. Neither is the parent.
 
-            :return: A dictionary containing the Animation object's data.
-            :rtype: dict
+        :return: A dictionary containing the Animation object's data.
+        :rtype: dict
         """
         ret_data = {}
         ret_data["display_time"] = self.display_time
@@ -1918,6 +1918,9 @@ class Animation(object):
 
     @property
     def dtanimate(self):
+        """
+        The time elapsed since the last frame was displayed.
+        """
         return self.__dtanimate
 
     @dtanimate.setter
@@ -1968,7 +1971,7 @@ class Animation(object):
         Raise an exception if frame is not a string.
 
         :param frame: The frame to add to the animation.
-        :type frame: str
+        :type frame: str|:class:`Sprite`|:class:`Sprixel`
         :raise: :class:`pygamelib.base.PglInvalidTypeException`
 
         Example::
@@ -2066,7 +2069,7 @@ class Animation(object):
         """Update the parent's model, sprixel or sprite with the next frame of the
         animation.
 
-        That method takes care of automatically replaying the animation if the
+        That method takes care of automatically resetting the animation if the
         last frame is reached if the state is constants.RUNNING.
 
         If the the state is PAUSED it still update the parent.model
@@ -2148,10 +2151,11 @@ class Animation(object):
         ctrl = 0
         while ctrl < len(self.frames):
             if self.dtanimate >= self.display_time:
-                # Dirty but that's a current limitation: to restore stuff on the board's
-                # overlapped matrix, we need to either move or replace an item after
-                # updating the sprite. This is only for sprites that have null items but
-                # we don't want to let any one slip.
+                # Dirty but that's a current limitation: to really update a complex item
+                # on the board, we need to either move or replace an item after
+                # updating the sprite. This is mostly for sprites that have null items
+                # but we don't want to let any one slip. An item on a Screen is not
+                # concerned by that.
                 # Also: this is convoluted...
                 if (
                     pgl_isinstance(
@@ -2172,7 +2176,6 @@ class Animation(object):
                     # We have to think that someone could try to animate the player
                     # while not on the current board.
                     try:
-                        # I am not sure why this is here, it is not needed at all.
                         b.remove_item(self.parent)
                     except Exception:
                         return
