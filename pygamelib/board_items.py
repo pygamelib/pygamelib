@@ -1149,6 +1149,9 @@ class Movable(BoardItem):
         if movement_speed is not None:
             self.movement_speed = movement_speed
 
+        self._movement_vector = base.Vector2D(self.step_vertical, self.step_horizontal)
+        self._accumulator = base.Vector2D(0.0, 0.0)
+
         # TODO: That's initial thought for physic i the pygamelib. For future reference.
         # if velocity is not None:
         #     self.velocity = velocity
