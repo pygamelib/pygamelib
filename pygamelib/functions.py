@@ -79,7 +79,7 @@ def render_string_to_buffer(string, buffer, row, column, buffer_height, buffer_w
 
     Example::
 
-        function.render_string_to_buffer('hello', buffer, 0, 0, 40, 120)
+        functions.render_string_to_buffer('hello', buffer, 0, 0, 40, 120)
     """
     # Slightly convoluted way of clamping the length of the string
     alloc_width = column + len(string)

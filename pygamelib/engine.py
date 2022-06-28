@@ -853,7 +853,8 @@ class Board(base.PglBaseObject):
         :raise PglOutOfBoardBoundException: if row, column or layer are
             out of bound.
         """
-
+        row = round(row)
+        column = round(column)
         if row < self.size[1] and column < self.size[0]:
             if layer >= len(self._matrix[row][column]):
                 layer = -1
@@ -867,7 +868,7 @@ class Board(base.PglBaseObject):
             raise base.PglOutOfBoardBoundException(
                 (
                     f"There is no item at coordinates [{row},{column},{layer}] "
-                    "because it's out of the board boundaries."
+                    f"because it's out of the board boundaries ({self.height},{self.width})."
                 )
             )
 
@@ -932,7 +933,7 @@ class Board(base.PglBaseObject):
                                     ]
                             if inner_pos_layer > max_layer:
                                 max_layer = inner_pos_layer
-                Game.instance().session_log(f"place_item: max_layer={max_layer}")
+                # Game.instance().session_log(f"place_item: max_layer={max_layer}")
                 # TODO: code écris tard, vérifier que ça marche et supprimer la partie
                 # vérification des layers dans _move_complex. Puis finisaliser cette
                 # fonction.
@@ -1071,85 +1072,74 @@ class Board(base.PglBaseObject):
             )
 
     def _move_complex(self, item, direction, step=1):
-        Game.instance().session_log(
-            base.Text("Starting to move complex", core.Color(0, 255, 0))
-        )
-        if isinstance(item, board_items.Movable) and item.can_move():
-            # If direction is not a vector, transform into one
-            if not isinstance(direction, base.Vector2D):
-                direction = base.Vector2D.from_direction(direction, step)
-            # Game.instance().log(f"_move_complex: direction={direction}")
-            projected_position = item.position_as_vector() + direction
-            if (
-                projected_position is not None
-                and projected_position.row >= 0
-                and projected_position.column >= 0
-                and (projected_position.row + item.height - 1) < self.size[1]
-                and (projected_position.column + item.width - 1) < self.size[0]
-            ):
-                can_draw = True
+        # Game.instance().session_log(
+        #     base.Text("Starting to move complex", core.Color(0, 255, 0))
+        # )
+        # Since the user is not supposed to call directly that method we assume that it
+        # is called by move(), therefor the item is a subclass of Movable.
+        # If direction is not a vector, transform into one
+        if not isinstance(direction, base.Vector2D):
+            direction = base.Vector2D.from_direction(direction, step)
+        # Game.instance().log(f"_move_complex: direction={direction}")
+        projected_position = item.position_as_vector() + direction
+        if (
+            projected_position is not None
+            and projected_position.row >= 0
+            and projected_position.column >= 0
+            and (projected_position.row + item.height - 1) < self.size[1]
+            and (projected_position.column + item.width - 1) < self.size[0]
+        ):
+            can_draw = True
 
-                item_row = item.row
-                item_column = item.column
-                self.remove_item(item)
-                for orow in range(0, item.size[1]):
-                    for ocol in range(0, item.size[0]):
-                        new_row = projected_position.row + orow
-                        new_column = projected_position.column + ocol
-                        dest_item = self.item(new_row, new_column)
-                        if isinstance(dest_item, board_items.Actionable):
-                            if (
-                                isinstance(item, board_items.Player)
-                                and (
-                                    (dest_item.perm == constants.PLAYER_AUTHORIZED)
-                                    or (
-                                        dest_item.perm
-                                        == constants.ALL_CHARACTERS_AUTHORIZED
-                                    )
-                                )
-                            ) or (
-                                isinstance(item, board_items.NPC)
-                                and (
-                                    (dest_item.perm == constants.NPC_AUTHORIZED)
-                                    or (
-                                        dest_item.perm
-                                        == constants.ALL_CHARACTERS_AUTHORIZED
-                                    )
-                                )
-                                or (dest_item.perm == constants.ALL_MOVABLE_AUTHORIZED)
-                            ):
-                                dest_item.activate()
-                        # Now taking care of pickable objects
-                        pickable_item = self.item(new_row, new_column)
+            item_row = item.row
+            item_column = item.column
+            self.remove_item(item)
+            for orow in range(0, item.size[1]):
+                for ocol in range(0, item.size[0]):
+                    new_row = projected_position.row + orow
+                    new_column = projected_position.column + ocol
+                    dest_item = self.item(new_row, new_column)
+                    if isinstance(dest_item, board_items.Actionable):
                         if (
-                            pickable_item.pickable()
-                            and isinstance(item, board_items.Movable)
-                            and item.has_inventory()
+                            isinstance(item, board_items.Player)
+                            and (
+                                (dest_item.perm == constants.PLAYER_AUTHORIZED)
+                                or (
+                                    dest_item.perm
+                                    == constants.ALL_CHARACTERS_AUTHORIZED
+                                )
+                            )
+                        ) or (
+                            isinstance(item, board_items.NPC)
+                            and (
+                                (dest_item.perm == constants.NPC_AUTHORIZED)
+                                or (
+                                    dest_item.perm
+                                    == constants.ALL_CHARACTERS_AUTHORIZED
+                                )
+                            )
+                            or (dest_item.perm == constants.ALL_MOVABLE_AUTHORIZED)
                         ):
-                            # Put the item in the inventory
-                            item.inventory.add_item(pickable_item)
-                            # And then clear the cell (this is usefull for the next one)
-                            self.remove_item(pickable_item)
-                        # Finally we check if the destination is overlappable
-                        if dest_item != item and not dest_item.overlappable():
-                            can_draw = False
-                            break
-                if can_draw:
-                    self.place_item(
-                        item, projected_position.row, projected_position.column
-                    )
-                else:
-                    self.place_item(item, item_row, item_column)
-        else:  # pragma: no cover
-            # This is actually test in tests/test_board.py in function test_move()
-            # I have no idea why it is not registering as a tested statement
-            raise base.PglObjectIsNotMovableException(
-                (
-                    f"Item '{item.name}' at position [{item.pos[0]}, "
-                    f"{item.pos[1]}] is not a subclass of Movable, "
-                    f"therefor it cannot be moved."
-                )
-            )
+                            dest_item.activate()
+                    # Now taking care of pickable objects
+                    pickable_item = self.item(new_row, new_column)
+                    if (
+                        pickable_item.pickable()
+                        and isinstance(item, board_items.Movable)
+                        and item.has_inventory()
+                    ):
+                        # Put the item in the inventory
+                        item.inventory.add_item(pickable_item)
+                        # And then clear the cell (this is usefull for the next one)
+                        self.remove_item(pickable_item)
+                    # Finally we check if the destination is overlappable
+                    if dest_item != item and not dest_item.overlappable():
+                        can_draw = False
+                        break
+            if can_draw:
+                self.place_item(item, projected_position.row, projected_position.column)
+            else:
+                self.place_item(item, item_row, item_column)
 
     def move(self, item, direction, step=1):
         """
@@ -1180,7 +1170,7 @@ class Board(base.PglBaseObject):
 
             board.move(player,constants.UP,1)
 
-        .. Important:: if the move is successfull, an empty BoardItemVoid
+        .. Important:: if the move is successful, an empty BoardItemVoid
             (see :class:`pygamelib.boards_item.BoardItemVoid`) will be put at the
             departure position (unless the movable item is over an overlappable
             item). If the movable item is over an overlappable item, the
@@ -1193,98 +1183,17 @@ class Board(base.PglBaseObject):
            in that case.
         """
         if (
-            item.parent is not None
-            and isinstance(item.parent, Game)
-            and item.parent.mode == constants.MODE_RT
+            self.parent is not None
+            and isinstance(self.parent, Game)
+            and self.parent.mode == constants.MODE_RT
+            and isinstance(item, board_items.Movable)
+            and item.can_move()
             and item.dtmove < item.movement_speed
         ):
             return
-        item.dtmove = 0.0
-        rounded_direction = None
-        if isinstance(direction, base.Vector2D):
-            # If direction is a vector, round the numbers to the next integer.
-            rounded_direction = base.Vector2D(
-                round(direction.row), round(direction.column)
-            )
-        else:
-            if type(direction) is int:
-                # Else, just use the direction
-                rounded_direction = direction
-                if type(step) is not int:
-                    raise base.PglInvalidTypeException(
-                        "Board.move(item, direction, step): step must be an int."
-                    )
-            else:
-                raise base.PglInvalidTypeException(
-                    "Board.move(item, direction, step): direction must be a Vector2D or"
-                    " a constant direction."
-                )
-        if isinstance(item, board_items.BoardComplexItem):
-            return self._move_complex(item, rounded_direction, step)
-        else:
-            return self._move_simple(item, rounded_direction, step)
-
-    def _move_simple(self, item, direction, step=1):
-        if isinstance(item, board_items.Movable) and item.can_move():
-            new_row = None
-            new_column = None
-            if not isinstance(direction, base.Vector2D):
-                direction = base.Vector2D.from_direction(direction, step)
-            new_row = item.pos[0] + direction.row
-            new_column = item.pos[1] + direction.column
-            # First of all we check if the new coordinates are within the board
-            if (
-                new_row is not None
-                and new_column is not None
-                and new_row >= 0
-                and new_column >= 0
-                and new_row < self.size[1]
-                and new_column < self.size[0]
-            ):
-                # Then, we check if the item is actionable and if so, if the item
-                # is allowed to activate it.
-                # (1.3.0+) item without a third parameter returns the item from the top
-                # layer
-                dest_item = self.item(new_row, new_column, item.pos[2])
-                if isinstance(dest_item, board_items.Actionable):
-                    if (
-                        isinstance(item, board_items.Player)
-                        and (
-                            (dest_item.perm == constants.PLAYER_AUTHORIZED)
-                            or (dest_item.perm == constants.ALL_CHARACTERS_AUTHORIZED)
-                        )
-                    ) or (
-                        isinstance(item, board_items.NPC)
-                        and (
-                            (dest_item.perm == constants.NPC_AUTHORIZED)
-                            or (dest_item.perm == constants.ALL_CHARACTERS_AUTHORIZED)
-                        )
-                    ):
-                        dest_item.activate()
-                # Now we check if the destination contains a pickable item.
-                # NOTE: I'm not sure why I decided that pickables were not overlappable.
-                #       So I removed that limitation.
-                # pickable_item = self.item(new_row, new_column)
-                if (
-                    dest_item.pickable()
-                    and isinstance(item, board_items.Movable)
-                    and item.has_inventory()
-                ):
-                    # Put the item in the inventory
-                    item.inventory.add_item(dest_item)
-                    # And then clear the cell (this is usefull for the next one)
-                    self.remove_item(dest_item)
-                    dest_item = self.item(dest_item.row, dest_item.column, item.pos[2])
-                # Finally we check if the destination is overlappable
-                if dest_item.overlappable():
-                    # And if it is, we check if the destination is restorable
-                    # Before 1.3.0 only Immovable objects were restorable. After, all
-                    # BoardItems can be restorable. So the check for Immovable have been
-                    # removed.
-                    self.clear_cell(item.pos[0], item.pos[1], item.pos[2])
-                    self.place_item(item, new_row, new_column, dest_item.pos[2])
-
-        else:
+        elif not isinstance(item, board_items.Movable):  # pragma: no cover
+            # This is actually test in tests/test_board.py in function test_move()
+            # I have no idea why it is not registering as a tested statement
             raise base.PglObjectIsNotMovableException(
                 (
                     f"Item '{item.name}' at position [{item.pos[0]}, "
@@ -1292,6 +1201,109 @@ class Board(base.PglBaseObject):
                     f"therefor it cannot be moved."
                 )
             )
+        item.dtmove = 0.0
+        rounded_direction = base.Vector2D()
+        # if isinstance(direction, base.Vector2D):
+        #     # If direction is a vector, round the numbers to the next integer.
+        #     rounded_direction = base.Vector2D(
+        #         round(direction.row), round(direction.column)
+        #     )
+        # elif type(direction) is int:
+        #     direction = base.Vector2D.from_direction(direction, step)
+        #     # Else, just use the direction
+        #     rounded_direction = direction
+        #     if type(step) is not int:
+        #         raise base.PglInvalidTypeException(
+        #             "Board.move(item, direction, step): step must be an int."
+        #         )
+        # else:
+        #     raise base.PglInvalidTypeException(
+        #         "Board.move(item, direction, step): direction must be a Vector2D or"
+        #         " a constant direction."
+        #     )
+        if type(direction) is int:
+            if type(step) is not int:
+                raise base.PglInvalidTypeException(
+                    "Board.move(item, direction, step): step must be an int."
+                )
+            direction = base.Vector2D.from_direction(direction, step)
+        if not isinstance(direction, base.Vector2D):
+            raise base.PglInvalidTypeException(
+                "Board.move(item, direction, step): direction must be a Vector2D or"
+                " a constant direction."
+            )
+        item._accumulator += direction
+        rounded_direction.row = round(item._accumulator.row - item._accumulator.row % 1)
+        item._accumulator.row -= rounded_direction.row
+        rounded_direction.column = round(
+            item._accumulator.column - item._accumulator.column % 1
+        )
+        item._accumulator.column -= rounded_direction.column
+        if isinstance(item, board_items.BoardComplexItem):
+            return self._move_complex(item, rounded_direction, step)
+        else:
+            return self._move_simple(item, rounded_direction, step)
+
+    def _move_simple(self, item, direction, step=1):
+        # Since the user is not supposed to call directly that method we assume that it
+        # is called by move(), therefor the item is a subclass of Movable.
+        new_row = None
+        new_column = None
+        if not isinstance(direction, base.Vector2D):
+            direction = base.Vector2D.from_direction(direction, step)
+        new_row = item.pos[0] + direction.row
+        new_column = item.pos[1] + direction.column
+        # First of all we check if the new coordinates are within the board
+        if (
+            new_row is not None
+            and new_column is not None
+            and new_row >= 0
+            and new_column >= 0
+            and new_row < self.size[1]
+            and new_column < self.size[0]
+        ):
+            # Then, we check if the item is actionable and if so, if the item
+            # is allowed to activate it.
+            # (1.3.0+) item without a third parameter returns the item from the top
+            # layer
+            dest_item = self.item(new_row, new_column, item.pos[2])
+            if isinstance(dest_item, board_items.Actionable):
+                if (
+                    isinstance(item, board_items.Player)
+                    and (
+                        (dest_item.perm == constants.PLAYER_AUTHORIZED)
+                        or (dest_item.perm == constants.ALL_CHARACTERS_AUTHORIZED)
+                    )
+                ) or (
+                    isinstance(item, board_items.NPC)
+                    and (
+                        (dest_item.perm == constants.NPC_AUTHORIZED)
+                        or (dest_item.perm == constants.ALL_CHARACTERS_AUTHORIZED)
+                    )
+                ):
+                    dest_item.activate()
+            # Now we check if the destination contains a pickable item.
+            # NOTE: I'm not sure why I decided that pickables were not overlappable.
+            #       So I removed that limitation.
+            # pickable_item = self.item(new_row, new_column)
+            if (
+                dest_item.pickable()
+                and isinstance(item, board_items.Movable)
+                and item.has_inventory()
+            ):
+                # Put the item in the inventory
+                item.inventory.add_item(dest_item)
+                # And then clear the cell (this is usefull for the next one)
+                self.remove_item(dest_item)
+                dest_item = self.item(dest_item.row, dest_item.column, item.pos[2])
+            # Finally we check if the destination is overlappable
+            if dest_item.overlappable():
+                # And if it is, we check if the destination is restorable
+                # Before 1.3.0 only Immovable objects were restorable. After, all
+                # BoardItems can be restorable. So the check for Immovable have been
+                # removed.
+                self.clear_cell(item.pos[0], item.pos[1], item.pos[2])
+                self.place_item(item, new_row, new_column, dest_item.pos[2])
 
     def _create_missing_layers(self, row, column, target_layer):
         # Create the layers that are missing between the current layer stack and
@@ -1776,7 +1788,7 @@ class Game(base.PglBaseObject):
         self.user_update_paused = None
         self.input_lag = input_lag
         self._logs = []
-        self.DEBUG = False
+        self.ENABLE_SESSION_LOGS = False
         # TODO : In future release I'll add physic
         # self.enable_physic = enable_physic
         # # If physic is enabled we turn the mode to realtime (we need time integration)
@@ -1973,13 +1985,13 @@ class Game(base.PglBaseObject):
         Example::
 
             game = Game.instance()
-            game.SESSION_LOGS = True
+            game.ENABLE_SESSION_LOGS = True
             game.session_log('Game engine initialized')
 
         .. note:: The session log system is nothing more than a list to do your "debug
            prints". If you want a real logging system, please use Python logging module.
         """
-        if self.DEBUG:
+        if self.ENABLE_SESSION_LOGS:
             self._logs.append(line)
 
     def session_logs(self) -> list:
@@ -1988,7 +2000,7 @@ class Game(base.PglBaseObject):
         Example::
 
             game = Game.instance()
-            game.SESSION_LOG = True
+            game.ENABLE_SESSION_LOGS = True
             for line in game.logs():
                 print(line)
 
@@ -2810,6 +2822,165 @@ class Game(base.PglBaseObject):
         self._boards[level_number]["npcs"].remove(npc)
         self.get_board(level_number).clear_cell(npc.pos[0], npc.pos[1])
 
+    # def actuate_projectiles(self, level_number, elapsed_time=0.0):
+    #     """Actuate all Projectiles on a given level
+
+    #     This method actuate all Projectiles on a board associated with a level.
+    #     This method differs from actuate_npcs() as some logic is involved with
+    #     projectiles that NPC do not have.
+    #     This method decrease the available range by projectile.step each time it's
+    #     called.
+    #     It also detects potential collisions.
+    #     If the available range falls to 0 or a collision is detected the projectile
+    #     hit_callback is called.
+
+    #     :param level_number: The number of the level to actuate Projectiles in.
+    #     :type level_number: int
+    #     :param elapsed_time: The amount of time that passed since last call. This
+    #         parameter is not mandatory.
+    #     :type elapsed_time: float
+
+    #     Example::
+
+    #         mygame.actuate_projectiles(1)
+
+    #     .. note:: This method only move Projectiles when their actuator state is
+    #         RUNNING. If it is PAUSED or STOPPED, the Projectile is not moved.
+
+    #     .. Important:: Please have a look at the
+    #         :meth:`pygamelib.board_items.Projectile.hit` method for more information on
+    #         the projectile hit mechanic.
+    #     """
+    #     if self.state == constants.RUNNING:
+    #         if type(level_number) is int:
+    #             if level_number in self._boards.keys():
+    #                 board = self._boards[level_number]["board"]
+    #                 # For each projectile we need to cover 3 cases:
+    #                 #  1 - projectile range > 0 but the projectile collide with
+    #                 #      something (a moving object that moves into the projectile)
+    #                 #      => it's a hit
+    #                 #  2 - Range still > 0, the projectile itself cannot move forward
+    #                 #      because its path is blocked.  => it is also a hit
+    #                 #  3 - Range falls to 0 without colliding with anything.
+    #                 #      => it is a miss but we still need to callback with an empty
+    #                 #      list or the AOE neighbors.
+    #                 for proj in self._boards[level_number]["projectiles"]:
+    #                     if proj.actuator.state == constants.RUNNING:
+    #                         # Account for movement speed
+    #                         proj.dtmove += elapsed_time
+    #                         if (
+    #                             self.mode == constants.MODE_RT
+    #                             and proj.dtmove < proj.movement_speed
+    #                         ):
+    #                             continue
+    #                         proj.dtmove = 0.0
+    #                         if proj.range > 0:
+    #                             umv = proj.actuator.next_move()
+    #                             if not isinstance(umv, base.Vector2D):
+    #                                 # Build a unit movement vector
+    #                                 umv = base.Vector2D.from_direction(
+    #                                     umv,
+    #                                     1
+    #                                     # proj.actuator.next_move(), 1
+    #                                 )
+    #                             # Build a movement vector
+    #                             dm = base.Vector2D(
+    #                                 umv.row * proj.step_vertical,
+    #                                 umv.column * proj.step_horizontal,
+    #                             )
+    #                             # Then get a projected position (the projected position)
+    #                             # is the position where the projectile should move if
+    #                             # nothing blocks its path. And that's where it will be
+    #                             # unless we detect a collision.
+    #                             pp = base.Vector2D(
+    #                                 proj.row + dm.row,
+    #                                 proj.column + dm.column,
+    #                             )
+    #                             v = proj.position_as_vector()
+    #                             if (
+    #                                 v.row >= 0
+    #                                 and v.row < board.height
+    #                                 and v.column >= 0
+    #                                 and v.column < board.width
+    #                             ):
+    #                                 item = board.item(v.row, v.column)
+    #                                 if (
+    #                                     item != proj
+    #                                     and not isinstance(
+    #                                         item, board_items.BoardItemVoid
+    #                                     )
+    #                                     and not item.overlappable()
+    #                                     and (proj.collides_with(item))
+    #                                 ):
+    #                                     if proj.is_aoe:
+    #                                         # AoE is easy, just return
+    #                                         # everything in range
+    #                                         proj.hit(
+    #                                             self.neighbors(proj.aoe_radius, proj)
+    #                                         )
+    #                                         return
+    #                                     else:
+    #                                         # Else just the item
+    #                                         proj.hit([item])
+    #                                         return
+    #                             init_position = proj.pos
+    #                             board.move(proj, dm)
+    #                             if proj.pos == init_position:
+    #                                 if proj.is_aoe:
+    #                                     proj.hit(self.neighbors(proj.aoe_radius, proj))
+    #                                 else:
+    #                                     proj.hit([board.item(pp.row, pp.column)])
+    #                             proj.range -= proj.step
+    #                         elif proj.range == 0:
+    #                             if proj.is_aoe:
+    #                                 proj.hit(self.neighbors(proj.aoe_radius, proj))
+    #                             else:
+    #                                 proj.hit([board.generate_void_cell()])
+    #                         else:
+    #                             self._boards[level_number]["projectiles"].remove(proj)
+    #                             board.clear_cell(proj.pos[0], proj.pos[1], proj.pos[2])
+    #                             # Since it's all in the same turn we don't need that
+    #                             # code here
+    #                             # if proj in self._boards[level_number][
+    #                             #     "board"
+    #                             # ]._movables and proj != self._boards[level_number][
+    #                             #     "board"
+    #                             # ].item(
+    #                             #     proj.pos[0], proj.pos[1], proj.pos[2]
+    #                             # ):
+    #                             #     self._boards[level_number][
+    #                             #         "board"
+    #                             #     ]._movables.discard(proj)
+    #                     elif proj.actuator.state == constants.STOPPED:
+    #                         self._boards[level_number]["projectiles"].remove(proj)
+    #                         board.clear_cell(proj.pos[0], proj.pos[1], proj.pos[2])
+    #                         # There is a possibility when a lot of projectiles are on
+    #                         # the board that some projectiles are missed in the cleaning
+    #                         # process when their actuator is set to stop. The reason is
+    #                         # that it needs one more turn to be cleared and during that
+    #                         # turn the cell might have been cleaned. In that case we
+    #                         # need to make sure no projectile remains in the movable
+    #                         # stack.
+    #                         if proj in self._boards[level_number][
+    #                             "board"
+    #                         ]._movables and proj != self._boards[level_number][
+    #                             "board"
+    #                         ].item(
+    #                             proj.pos[0], proj.pos[1], proj.pos[2]
+    #                         ):
+    #                             self._boards[level_number]["board"]._movables.discard(
+    #                                 proj
+    #                             )
+    #             else:
+    #                 raise base.PglInvalidLevelException(
+    #                     f"Impossible to actuate NPCs for this level (level number "
+    #                     f"{level_number} is not associated with any board)."
+    #                 )
+    #         else:
+    #             raise base.PglInvalidTypeException(
+    #                 "In actuate_npcs(level_number) the level_number must be an int."
+    #             )
+
     def actuate_projectiles(self, level_number, elapsed_time=0.0):
         """Actuate all Projectiles on a given level
 
@@ -2852,6 +3023,12 @@ class Game(base.PglBaseObject):
                     #  3 - Range falls to 0 without colliding with anything.
                     #      => it is a miss but we still need to callback with an empty
                     #      list or the AOE neighbors.
+
+                    # First, create 3 vectors that are going to be used to project,
+                    # check collisions and move the item.
+                    dm = base.Vector2D()
+                    pp = base.Vector2D()
+
                     for proj in self._boards[level_number]["projectiles"]:
                         if proj.actuator.state == constants.RUNNING:
                             # Account for movement speed
@@ -2861,7 +3038,7 @@ class Game(base.PglBaseObject):
                                 and proj.dtmove < proj.movement_speed
                             ):
                                 continue
-                            proj.dtmove = 0.0
+
                             if proj.range > 0:
                                 umv = proj.actuator.next_move()
                                 if not isinstance(umv, base.Vector2D):
@@ -2872,26 +3049,23 @@ class Game(base.PglBaseObject):
                                         # proj.actuator.next_move(), 1
                                     )
                                 # Build a movement vector
-                                dm = base.Vector2D(
-                                    umv.row * proj.step_vertical,
-                                    umv.column * proj.step_horizontal,
-                                )
+
+                                dm.row = umv.row * proj.step_vertical
+                                dm.column = umv.column * proj.step_horizontal
                                 # Then get a projected position (the projected position)
                                 # is the position where the projectile should move if
                                 # nothing blocks its path. And that's where it will be
                                 # unless we detect a collision.
-                                pp = base.Vector2D(
-                                    proj.row + dm.row,
-                                    proj.column + dm.column,
-                                )
-                                v = proj.position_as_vector()
+                                pp.row = proj.row + dm.row
+                                pp.column = proj.column + dm.column
+                                # v = proj.position_as_vector()
                                 if (
-                                    v.row >= 0
-                                    and v.row < board.height
-                                    and v.column >= 0
-                                    and v.column < board.width
+                                    pp.row >= 0
+                                    and round(pp.row) < board.height
+                                    and pp.column >= 0
+                                    and round(pp.column) < board.width
                                 ):
-                                    item = board.item(v.row, v.column)
+                                    item = board.item(pp.row, pp.column)
                                     if (
                                         item != proj
                                         and not isinstance(
@@ -2911,14 +3085,12 @@ class Game(base.PglBaseObject):
                                             # Else just the item
                                             proj.hit([item])
                                             return
-                                init_position = proj.pos
-                                board.move(proj, dm)
-                                if proj.pos == init_position:
-                                    if proj.is_aoe:
-                                        proj.hit(self.neighbors(proj.aoe_radius, proj))
                                     else:
-                                        proj.hit([board.item(pp.row, pp.column)])
-                                proj.range -= proj.step
+                                        board.move(proj, dm)
+                                        proj.dtmove = 0.0
+                                        proj.range -= proj.step
+                                else:
+                                    proj.range = 0
                             elif proj.range == 0:
                                 if proj.is_aoe:
                                     proj.hit(self.neighbors(proj.aoe_radius, proj))
