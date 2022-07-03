@@ -853,8 +853,6 @@ class Board(base.PglBaseObject):
         :raise PglOutOfBoardBoundException: if row, column or layer are
             out of bound.
         """
-        row = round(row)
-        column = round(column)
         if row < self.size[1] and column < self.size[0]:
             if layer >= len(self._matrix[row][column]):
                 layer = -1
@@ -868,7 +866,8 @@ class Board(base.PglBaseObject):
             raise base.PglOutOfBoardBoundException(
                 (
                     f"There is no item at coordinates [{row},{column},{layer}] "
-                    f"because it's out of the board boundaries ({self.height},{self.width})."
+                    f"because it's out of the board boundaries ({self.height},"
+                    f"{self.width})."
                 )
             )
 
@@ -2848,8 +2847,8 @@ class Game(base.PglBaseObject):
     #         RUNNING. If it is PAUSED or STOPPED, the Projectile is not moved.
 
     #     .. Important:: Please have a look at the
-    #         :meth:`pygamelib.board_items.Projectile.hit` method for more information on
-    #         the projectile hit mechanic.
+    #         :meth:`pygamelib.board_items.Projectile.hit` method for more information
+    #         on the projectile hit mechanic.
     #     """
     #     if self.state == constants.RUNNING:
     #         if type(level_number) is int:
@@ -2993,6 +2992,13 @@ class Game(base.PglBaseObject):
         If the available range falls to 0 or a collision is detected the projectile
         hit_callback is called.
 
+        This method respects the Projectile.collision_exclusions parameter and does not
+        register collisions with objects of a type present in that list.
+
+        .. Important:: In this method, projectiles do not collide with overlappable
+           items. If you want to detect collisions with overlappable objects, please
+           implement your own projectile actuation method.
+
         :param level_number: The number of the level to actuate Projectiles in.
         :type level_number: int
         :param elapsed_time: The amount of time that passed since last call. This
@@ -3058,21 +3064,24 @@ class Game(base.PglBaseObject):
                                 # unless we detect a collision.
                                 pp.row = proj.row + dm.row
                                 pp.column = proj.column + dm.column
+                                rppr = round(pp.row)
+                                rppc = round(pp.column)
                                 # v = proj.position_as_vector()
                                 if (
                                     pp.row >= 0
-                                    and round(pp.row) < board.height
+                                    and rppr < board.height
                                     and pp.column >= 0
-                                    and round(pp.column) < board.width
+                                    and rppc < board.width
                                 ):
-                                    item = board.item(pp.row, pp.column)
+                                    item = board.item(rppr, rppc)
                                     if (
                                         item != proj
                                         and not isinstance(
                                             item, board_items.BoardItemVoid
                                         )
+                                        and not type(item) in proj.collision_exclusions
                                         and not item.overlappable()
-                                        and (proj.collides_with(item))
+                                        and (proj.collides_with(item, dm))
                                     ):
                                         if proj.is_aoe:
                                             # AoE is easy, just return
