@@ -206,6 +206,10 @@ class TestBoard(unittest.TestCase):
         p.hit_model = "*"
         self.assertIsNone(p.hit([board_items.BoardItemVoid]))
 
+        p = board_items.Projectile()
+        p.direction = base.Vector2D(1, 0)
+        self.assertEqual(p.direction, p.actuator.direction)
+
         def _r():
             pass
 

@@ -1399,8 +1399,13 @@ class Projectile(Movable):
     def direction(self):
         """The direction of the projectile.
 
+        Updating this property also updates the UnidirectionalActuator's direction.
+
         :param value: some param
         :type value: int | :class:`~pygamelib.base.Vector2D`
+
+        .. warning:: If your projectile uses directional model and/or animation you
+           should use :py:meth:`set_direction` to set the projectile direction.
 
         Example::
 
@@ -1561,11 +1566,10 @@ class Projectile(Movable):
 
             fireball.set_direction(constants.UP)
         """
-        if type(direction) is not int:
+        if type(direction) is not int and not isinstance(direction, base.Vector2D):
             raise base.PglInvalidTypeException(
-                "Projectile.set_direction "
-                "requires an int from the constants module as"
-                "direction."
+                "Projectile.set_direction(direction): "
+                "requires an int from the constants module or a Vector2D as direction."
             )
         self.model = self.directional_model(direction)
         self.animation = self.directional_animation(direction)

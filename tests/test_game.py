@@ -398,7 +398,7 @@ class TestBase(unittest.TestCase):
 
     def test_logs(self):
         mygame = engine.Game.instance()
-        mygame.DEBUG = True
+        mygame.ENABLE_SESSION_LOGS = True
         self.assertEqual(mygame.session_logs(), list())
         mygame.session_log("test")
         self.assertEqual(mygame.session_logs()[0], "test")
