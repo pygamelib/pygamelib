@@ -1376,7 +1376,7 @@ class Projectile(Movable):
             movement_speed=movement_speed,
             **kwargs,
         )
-        self.direction = direction
+        self._direction = direction
         self.range = range
         self.movement_animation = movement_animation
         self._directional_animations = {}
@@ -1394,6 +1394,24 @@ class Projectile(Movable):
         self.is_aoe = is_aoe
         self.aoe_radius = aoe_radius
         self.parent = parent
+
+    @property
+    def direction(self):
+        """The direction of the projectile.
+
+        :param value: some param
+        :type value: int | :class:`~pygamelib.base.Vector2D`
+
+        Example::
+
+            bullet.direction = Vector2D(0, 1)
+        """
+        return self._direction
+
+    @direction.setter
+    def direction(self, value):
+        self._direction = value
+        self.actuator.direction = value
 
     def add_directional_animation(self, direction, animation):
         """Add an animation for a specific direction.
