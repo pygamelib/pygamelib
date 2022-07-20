@@ -1077,8 +1077,10 @@ class Board(base.PglBaseObject):
         # Since the user is not supposed to call directly that method we assume that it
         # is called by move(), therefor the item is a subclass of Movable.
         # If direction is not a vector, transform into one
-        if not isinstance(direction, base.Vector2D):
-            direction = base.Vector2D.from_direction(direction, step)
+        # move() now exclusively pass Vector2D objects to _move_* so we don't need that
+        # anymore
+        # if not isinstance(direction, base.Vector2D):
+        #     direction = base.Vector2D.from_direction(direction, step)
         # Game.instance().log(f"_move_complex: direction={direction}")
         projected_position = item.position_as_vector() + direction
         if (
@@ -1248,8 +1250,10 @@ class Board(base.PglBaseObject):
         # is called by move(), therefor the item is a subclass of Movable.
         new_row = None
         new_column = None
-        if not isinstance(direction, base.Vector2D):
-            direction = base.Vector2D.from_direction(direction, step)
+        # move() now exclusively pass Vector2D objects to _move_* so we don't need that
+        # anymore
+        # if not isinstance(direction, base.Vector2D):
+        #     direction = base.Vector2D.from_direction(direction, step)
         new_row = item.pos[0] + direction.row
         new_column = item.pos[1] + direction.column
         # First of all we check if the new coordinates are within the board

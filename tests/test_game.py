@@ -272,6 +272,33 @@ class TestBase(unittest.TestCase):
         g.actuate_projectiles(1)
         g.run()
 
+    def test_projectile_hit(self):
+        def _fake_hit(p, t, ex):
+            pass
+
+        def _upd(g, i, dt):
+            if g.run_counter < 10:
+                g.actuate_projectiles(1)
+                g.run_counter += 1
+            if g.run_counter >= 10:
+                g.stop()
+
+        b = engine.Board()
+        g = engine.Game.instance(user_update=_upd, player=constants.NO_PLAYER)
+        setattr(g, "run_counter", 0)
+        self.assertIsNone(g.add_board(1, b))
+        g.change_level(1)
+        p = board_items.Projectile(
+            hit_model="*",
+            hit_callback=_fake_hit,
+            callback_parameters=[g],
+            direction=constants.RIGHT,
+        )
+        self.assertIsNone(g.add_projectile(1, p, 1, 1))
+        self.assertIsNone(g.add_projectile(1, board_items.Projectile(), 1, 100))
+        for r in range(0, 5):
+            b.place_item(board_items.Wall(), r, 1)
+
     def test_tools_function(self):
         b = engine.Board()
         g = engine.Game()
