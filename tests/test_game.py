@@ -276,7 +276,19 @@ class TestBase(unittest.TestCase):
         def _fake_hit(p, t, ex):
             pass
 
-        def _upd(g, i, dt):
+        def _upd(g: engine.Game, i, dt):
+            self.assertIsNotNone(g.run_counter)
+            if g.run_counter <= 3:
+                p = board_items.Projectile(
+                    hit_model="*",
+                    hit_callback=_fake_hit,
+                    callback_parameters=[g],
+                    direction=constants.RIGHT,
+                    is_aoe=True,
+                    range=1,
+                    movement_speed=0.05,
+                )
+                self.assertIsNone(g.add_projectile(1, p, 1, 6))
             if g.run_counter < 10:
                 g.actuate_projectiles(1)
                 g.run_counter += 1
@@ -284,9 +296,11 @@ class TestBase(unittest.TestCase):
                 g.stop()
 
         b = engine.Board()
-        g = engine.Game.instance(user_update=_upd, player=constants.NO_PLAYER)
+        g = engine.Game(user_update=_upd, mode=constants.MODE_RT)
+        g.player = constants.NO_PLAYER
         setattr(g, "run_counter", 0)
         self.assertIsNone(g.add_board(1, b))
+        self.assertEqual(g.run_counter, 0)
         g.change_level(1)
         p = board_items.Projectile(
             hit_model="*",
@@ -295,9 +309,33 @@ class TestBase(unittest.TestCase):
             direction=constants.RIGHT,
         )
         self.assertIsNone(g.add_projectile(1, p, 1, 1))
+        p2 = board_items.Projectile(
+            hit_model="*",
+            hit_callback=_fake_hit,
+            callback_parameters=[g],
+            direction=constants.RIGHT,
+            is_aoe=True,
+        )
+        self.assertIsNone(g.add_projectile(1, p2, 2, 1))
         self.assertIsNone(g.add_projectile(1, board_items.Projectile(), 1, 100))
+        self.assertIsNone(
+            g.add_projectile(
+                1,
+                board_items.Projectile(
+                    hit_model="*",
+                    hit_callback=_fake_hit,
+                    callback_parameters=[g],
+                    direction=base.Vector2D(1, 1),
+                    range=1000,
+                    movement_speed=0.05,
+                ),
+                b.height - 1,
+                b.width - 1,
+            )
+        )
         for r in range(0, 5):
-            b.place_item(board_items.Wall(), r, 1)
+            b.place_item(board_items.Wall(), r, 2)
+        g.run()
 
     def test_tools_function(self):
         b = engine.Board()
