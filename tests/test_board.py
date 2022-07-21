@@ -330,6 +330,16 @@ class TestBoard(unittest.TestCase):
         self.assertIsNone(b.move(i, constants.DOWN, 1))
         self.assertIsNone(b.clear_cell(i.row, i.column))
 
+    def test_accumulative_move(self):
+        g = pgl_engine.Game.instance(mode=constants.MODE_RT, player=constants.NO_PLAYER)
+        g.add_board(1, pgl_engine.Board())
+        g.change_level(1)
+        npc = pgl_board_items.NPC(movement_speed=20)
+        g.current_board().place_item(npc, 0, 0)
+        g.current_board().move(npc, pgl_base.Vector2D(1, 0))
+        self.assertEqual(npc.row, 0)
+        self.assertEqual(npc.column, 0)
+
     def test_get_objects(self):
         b = pgl_engine.Board(
             name="test_board",

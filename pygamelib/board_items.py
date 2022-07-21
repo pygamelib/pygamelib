@@ -526,7 +526,7 @@ class BoardItem(base.PglBaseObject):
         """
         return self._size
 
-    def collides_with(self, other):
+    def collides_with(self, other, projection_offset: base.Vector2D = None):
         """Tells if this item collides with another item.
 
         .. Important:: collides_with() does not take the layer into account! It is not
@@ -538,6 +538,11 @@ class BoardItem(base.PglBaseObject):
 
         :param other: The item you want to check for collision.
         :type other: :class:`~pygamelib.board_items.BoardItem`
+        :param projection_offset: A vector to offset this board item's position (not the
+           position of the `other` item). Use this to detect a collision before moving
+           the board item. You can pass the movement vector before moving to check if
+           a collision will occur when moving.
+        :type projection_offset: :class:`~pygamelib.base.Vector2D`
         :rtype: bool
 
         Example::
@@ -545,10 +550,16 @@ class BoardItem(base.PglBaseObject):
             if projectile.collides_with(game.player):
                 game.player.hp -= 5
         """
+        offset_row = offset_col = 0
+        if isinstance(projection_offset, base.Vector2D):
+            offset_row = round(projection_offset.row)
+            offset_col = round(projection_offset.column)
         if isinstance(other, BoardItem):
             return base.Math.intersect(
-                self.pos[0],
-                self.pos[1],
+                # self.pos[0] + round(offset_row),
+                # self.pos[1] + round(offset_col),
+                self.pos[0] + offset_row,
+                self.pos[1] + offset_col,
                 self.size[0],
                 self.size[1],
                 other.pos[0],
@@ -1149,6 +1160,9 @@ class Movable(BoardItem):
         if movement_speed is not None:
             self.movement_speed = movement_speed
 
+        self._movement_vector = base.Vector2D(self.step_vertical, self.step_horizontal)
+        self._accumulator = base.Vector2D(0.0, 0.0)
+
         # TODO: That's initial thought for physic i the pygamelib. For future reference.
         # if velocity is not None:
         #     self.velocity = velocity
@@ -1303,6 +1317,11 @@ class Projectile(Movable):
     :type callback_parameters: list
     :param movement_speed: The movement speed of the projectile
     :type movement_speed: int|float
+    :param collision_exclusions: A list of **TYPES** of objects that should not collides
+       with that projectile. It is usually a good idea to put the projectile type in the
+       exclusion list. This prevent the projectile to collide with other instances of
+       itself. Adding the projectile's emitter is also a valid idea.
+    :type collision_exclusions: list
     :param parent: The parent object (usually a Board object or some sort of BoardItem).
 
     .. important:: The effects of a Projectile are determined by the callback. No
@@ -1314,6 +1333,8 @@ class Projectile(Movable):
                                 name="fireball",
                                 model=Utils.red_bright(black_circle),
                                 hit_model=graphics.Models.EXPLOSION,
+                                # won't collide with other projectiles.
+                                collision_exclusions = [Projectile],
                             )
         fireball.set_direction(constants.RIGHT)
         my_game.add_projectile(1, fireball,
@@ -1336,8 +1357,9 @@ class Projectile(Movable):
         is_aoe=False,
         aoe_radius=0,
         parent=None,
-        callback_parameters=[],
+        callback_parameters=None,
         movement_speed=0.15,
+        collision_exclusions=None,
         **kwargs,
     ):
         if range % step != 0:
@@ -1354,7 +1376,7 @@ class Projectile(Movable):
             movement_speed=movement_speed,
             **kwargs,
         )
-        self.direction = direction
+        self._direction = direction
         self.range = range
         self.movement_animation = movement_animation
         self._directional_animations = {}
@@ -1362,11 +1384,39 @@ class Projectile(Movable):
         self.hit_animation = hit_animation
         self.hit_model = hit_model
         self.hit_callback = hit_callback
+        if callback_parameters is None:
+            callback_parameters = []
         self.callback_parameters = callback_parameters
+        if collision_exclusions is None:
+            collision_exclusions = []
+        self.collision_exclusions = collision_exclusions
         self.actuator = actuators.UnidirectionalActuator(direction=direction)
         self.is_aoe = is_aoe
         self.aoe_radius = aoe_radius
         self.parent = parent
+
+    @property
+    def direction(self):
+        """The direction of the projectile.
+
+        Updating this property also updates the UnidirectionalActuator's direction.
+
+        :param value: some param
+        :type value: int | :class:`~pygamelib.base.Vector2D`
+
+        .. warning:: If your projectile uses directional model and/or animation you
+           should use :py:meth:`set_direction` to set the projectile direction.
+
+        Example::
+
+            bullet.direction = Vector2D(0, 1)
+        """
+        return self._direction
+
+    @direction.setter
+    def direction(self, value):
+        self._direction = value
+        self.actuator.direction = value
 
     def add_directional_animation(self, direction, animation):
         """Add an animation for a specific direction.
@@ -1516,11 +1566,10 @@ class Projectile(Movable):
 
             fireball.set_direction(constants.UP)
         """
-        if type(direction) is not int:
+        if type(direction) is not int and not isinstance(direction, base.Vector2D):
             raise base.PglInvalidTypeException(
-                "Projectile.set_direction "
-                "requires an int from the constants module as"
-                "direction."
+                "Projectile.set_direction(direction): "
+                "requires an int from the constants module or a Vector2D as direction."
             )
         self.model = self.directional_model(direction)
         self.animation = self.directional_animation(direction)

@@ -52,6 +52,7 @@ Projectile
    
       ~Projectile.animation
       ~Projectile.column
+      ~Projectile.direction
       ~Projectile.dtmove
       ~Projectile.heading
       ~Projectile.height
