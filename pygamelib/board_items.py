@@ -28,6 +28,7 @@ __docformat__ = "restructuredtext"
    pygamelib.board_items.GenericActionableStructure
    pygamelib.board_items.GenericStructureComplexComponent
    pygamelib.board_items.Tile
+   pygamelib.board_items.ActionableTile
    pygamelib.board_items.Camera
 """
 from pygamelib import engine
@@ -1707,8 +1708,13 @@ class Actionable(Immovable):
     This class derives :class:`~pygamelib.board_items.Immovable`. It adds the
     ability to an Immovable BoardItem to be triggered and execute some code.
 
+    If an actionable board item is activated by an item (this mechanism is taken care of
+    by the Board class), the function passed as the `action` parameter is called with
+    `action_parameters` as parameters. Subclass may implement a different mechanism for
+    activation so please read their documentations.
+
     :param action: the reference to a function (Attention: no parentheses at
-        the end of the function name).
+        the end of the function name). It needs to be callable.
     :type action: function
     :param action_parameters: the parameters to the action function.
     :type action_parameters: list
@@ -1726,12 +1732,15 @@ class Actionable(Immovable):
         GenericActionableStructure. Please refer to
         :class:`~pygamelib.board_items.GenericActionableStructure`
         for more details.
+
+    .. important:: There's a complete tutorial about Actionable items on the pygamelib
+       `wiki <https://github.com/arnauddupuis/pygamelib/wiki/Actionable-Items>`_
     """
 
     def __init__(self, action=None, action_parameters=None, perm=None, **kwargs):
         super().__init__(**kwargs)
         self.action = None
-        if action is not None:
+        if action is not None and callable(action):
             self.action = action
         self.action_parameters = []
         if action_parameters is not None:
@@ -1744,6 +1753,12 @@ class Actionable(Immovable):
         """
         This function is calling the action function with the
         action_parameters.
+
+        The `action` callback function should therefor have a signature like:
+
+            ``def my_callback_function(actionable, action_parameters)``
+
+        With `actionable` being the Actionable current reference to `self`.
 
         Usually it's automatically called by :meth:`~pygamelib.engine.Board.move`
         when a Player or NPC (see :mod:`~pygamelib.board_items`)
@@ -2517,8 +2532,7 @@ class GenericStructure(Immovable):
     and it can be made pickable, overlappable or restorable or any combination of these.
 
     If you need an action to be done when a Player and/or a NPC touch the structure
-    please have a look at
-    :class:`pygamelib.board_items.GenericActionableStructure`.
+    please have a look at :class:`pygamelib.board_items.GenericActionableStructure`.
 
     :param pickable: Define if the structure can be picked-up by a Player or NPC.
     :type pickable: bool
@@ -2531,6 +2545,9 @@ class GenericStructure(Immovable):
         of Space Invaders game were the protection block are overlappable but not
         restorable.
     :type restorable: bool
+    :param value: The value of the structure. It can be used for scoring, resource
+       spending, etc.
+    :type value: int|float
 
     On top of these, this object takes all parameters of
     :class:`~pygamelib.board_items.BoardItem` and
@@ -2570,6 +2587,9 @@ class GenericActionableStructure(GenericStructure, Actionable):
     Please see the documentation for
     :class:`~pygamelib.board_items.GenericStructure` and
     :class:`~pygamelib.board_items.Actionable` for more information.
+
+    .. important:: There's a complete tutorial about Actionable items on the pygamelib
+       `wiki <https://github.com/arnauddupuis/pygamelib/wiki/Actionable-Items>`_
     """
 
     def __init__(self, **kwargs):
@@ -2926,6 +2946,9 @@ class ActionableTile(Actionable, Tile):
     :class:`Actionable`.
     Actionable object have a callback system that is automatically called when the
     player collide with the object.
+
+    .. important:: There's a complete tutorial about Actionable items on the pygamelib
+       `wiki <https://github.com/arnauddupuis/pygamelib/wiki/Actionable-Items>`_
     """
 
     def __init__(self, **kwargs):
