@@ -992,7 +992,7 @@ class Board(base.PglBaseObject):
                 try:
                     self._matrix[row][column][layer] = item
                 except IndexError:  # pragma: no cover
-                    # This should literrally never happen: we created relevant layers
+                    # This should literally never happen: we created relevant layers
                     # before. But, better safe than sorry.
                     self._matrix[row][column].append(item)
                 # Take ownership of the item (if item doesn't have parent)
@@ -1102,21 +1102,24 @@ class Board(base.PglBaseObject):
                     dest_item = self.item(new_row, new_column)
                     if isinstance(dest_item, board_items.Actionable):
                         if (
-                            isinstance(item, board_items.Player)
-                            and (
-                                (dest_item.perm == constants.PLAYER_AUTHORIZED)
-                                or (
-                                    dest_item.perm
-                                    == constants.ALL_CHARACTERS_AUTHORIZED
+                            (
+                                isinstance(item, board_items.Player)
+                                and (
+                                    (dest_item.perm == constants.PLAYER_AUTHORIZED)
+                                    or (
+                                        dest_item.perm
+                                        == constants.ALL_CHARACTERS_AUTHORIZED
+                                    )
                                 )
                             )
-                        ) or (
-                            isinstance(item, board_items.NPC)
-                            and (
-                                (dest_item.perm == constants.NPC_AUTHORIZED)
-                                or (
-                                    dest_item.perm
-                                    == constants.ALL_CHARACTERS_AUTHORIZED
+                            or (
+                                isinstance(item, board_items.NPC)
+                                and (
+                                    (dest_item.perm == constants.NPC_AUTHORIZED)
+                                    or (
+                                        dest_item.perm
+                                        == constants.ALL_CHARACTERS_AUTHORIZED
+                                    )
                                 )
                             )
                             or (dest_item.perm == constants.ALL_MOVABLE_AUTHORIZED)
@@ -1272,17 +1275,21 @@ class Board(base.PglBaseObject):
             dest_item = self.item(new_row, new_column, item.pos[2])
             if isinstance(dest_item, board_items.Actionable):
                 if (
-                    isinstance(item, board_items.Player)
-                    and (
-                        (dest_item.perm == constants.PLAYER_AUTHORIZED)
-                        or (dest_item.perm == constants.ALL_CHARACTERS_AUTHORIZED)
+                    (
+                        isinstance(item, board_items.Player)
+                        and (
+                            (dest_item.perm == constants.PLAYER_AUTHORIZED)
+                            or (dest_item.perm == constants.ALL_CHARACTERS_AUTHORIZED)
+                        )
                     )
-                ) or (
-                    isinstance(item, board_items.NPC)
-                    and (
-                        (dest_item.perm == constants.NPC_AUTHORIZED)
-                        or (dest_item.perm == constants.ALL_CHARACTERS_AUTHORIZED)
+                    or (
+                        isinstance(item, board_items.NPC)
+                        and (
+                            (dest_item.perm == constants.NPC_AUTHORIZED)
+                            or (dest_item.perm == constants.ALL_CHARACTERS_AUTHORIZED)
+                        )
                     )
+                    or (dest_item.perm == constants.ALL_MOVABLE_AUTHORIZED)
                 ):
                     dest_item.activate()
             # Now we check if the destination contains a pickable item.
@@ -2689,6 +2696,7 @@ class Game(base.PglBaseObject):
         if self.state == constants.RUNNING:
             if type(level_number) is int:
                 if level_number in self._boards.keys():
+                    self.screen.trigger_rendering()
                     for npc in self._boards[level_number]["npcs"]:
                         if npc.actuator.state == constants.RUNNING:
                             # Account for movement speed
@@ -2864,6 +2872,7 @@ class Game(base.PglBaseObject):
         if self.state == constants.RUNNING:
             if type(level_number) is int:
                 if level_number in self._boards.keys():
+                    self.screen.trigger_rendering()
                     board = self._boards[level_number]["board"]
                     # For each projectile we need to cover 3 cases:
                     #  1 - projectile range > 0 but the projectile collide with
@@ -2987,8 +2996,8 @@ class Game(base.PglBaseObject):
                                 )
                 else:
                     raise base.PglInvalidLevelException(
-                        f"Impossible to actuate NPCs for this level (level number "
-                        f"{level_number} is not associated with any board)."
+                        f"Impossible to actuate Projectiles for this level (level "
+                        f"number {level_number} is not associated with any board)."
                     )
             else:
                 raise base.PglInvalidTypeException(
