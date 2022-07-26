@@ -1,4 +1,4 @@
-import examples_includes
+import examples_includes  # noqa: F401
 
 from pygamelib import engine, constants, board_items
 from pygamelib.gfx import core
