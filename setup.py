@@ -3,7 +3,7 @@ import pygamelib.constants as constants
 
 try:
     from pipenv.project import Project
-    from pipenv.utils import convert_deps_to_pip
+    from pipenv.utils.dependencies import convert_deps_to_pip
 except ImportError:
     print("Please install pipenv first. See: https://github.com/pypa/pipenv")
 
@@ -28,7 +28,7 @@ setuptools.setup(
     install_requires=INSTALL_PACKAGES,
     url="https://www.pygamelib.org",
     packages=setuptools.find_packages(),
-    scripts=["pgl-editor.py", "pgl-board-tester.py"],
+    scripts=["pgl-editor.py", "pgl-board-tester.py", "pgl-sprite-editor.py"],
     keywords=["game", "development", "beginner", "console", "terminal"],
     classifiers=[
         "Programming Language :: Python :: 3",
