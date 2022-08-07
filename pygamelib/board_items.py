@@ -853,9 +853,9 @@ class BoardComplexItem(BoardItem):
 
     :param sprite: A sprite representing the item.
     :type sprite: :class:`~pygamelib.gfx.core.Sprite`
-    :param size: The size of the item. It impact movement and collision detection
-        amongst other things. If it is left empty the Sprite size is used. If no sprite
-        is given to the constructor the default size is 2x2.
+    :param size: The size of the item as [WIDTH, HEIGHT]. It impact movement and
+       collision detection amongst other things. If it is left empty the Sprite size is
+       used. If no sprite is given to the constructor the default size is 2x2.
     :type size: array[int]
     :null_sprixel: The null_sprixel is a bit of a special parameter: during construction
         a null sprixel is replaced by a BoardItemVoid. This is a trick to show the
