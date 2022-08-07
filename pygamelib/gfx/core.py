@@ -1001,6 +1001,8 @@ class Sprite(object):
         self.parent = parent
         self.name = name
         self.default_sprixel = default_sprixel
+        self.row_offset = 0
+        self.column_offset = 0
         # Double linking here, GC will hate it...
         self._initial_text_object = None
         if self.name is None or type(self.name) is not str:
@@ -1577,12 +1579,14 @@ class Sprite(object):
         #     self.size = i.size
         #     # display_buffer[row][col] = i
 
+        ro = self.row_offset
+        co = self.column_offset
         # Attempt at optimization.
         null_sprixel = Sprixel()
         get_sprixel = self.sprixel
         for sr in range(row, min(self.size[1] + row, buffer_height)):
             for sc in range(column, min(self.size[0] + column, buffer_width)):
-                sprix = get_sprixel(sr - row, sc - column)
+                sprix = get_sprixel(sr - row + ro, sc - column + co)
                 # Need to check the empty/null sprixel in the sprite
                 # because for the sprite we just skip and leave the
                 # sprixel that is behind but when it comes to screen we
@@ -1594,7 +1598,7 @@ class Sprite(object):
                 # buffer[sr][sc] = sprix.__repr__()
                 buffer[sr][sc] = sprix
                 for c in range(sc + 1, sc + sprix.length):
-                    buffer[sr][c] = Sprixel()
+                    buffer[sr][c] = null_sprixel
 
 
 class SpriteCollection(UserDict):

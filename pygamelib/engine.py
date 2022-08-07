@@ -4501,7 +4501,7 @@ class Screen(base.PglBaseObject):
     def force_update(self):
         """
 
-        Same as :func:`force_render()` but also force the screen update.
+        Same as :func:`force_render()` but also force the immediate screen update.
 
         Example::
 
@@ -4860,9 +4860,10 @@ class Screen(base.PglBaseObject):
            **Improved Screen Management** stack.
 
         """
+        null_sprixel = core.Sprixel()
         for r in range(0, sprite.size[1]):
             for c in range(0, sprite.size[0]):
-                if sprite._sprixels[r][c] == core.Sprixel():
+                if sprite._sprixels[r][c] == null_sprixel:
                     self.display_at(filler, row + r, column + c, file=file, flush=flush)
                 else:
                     self.display_at(
@@ -4903,9 +4904,10 @@ class Screen(base.PglBaseObject):
            **Improved Screen Management** stack.
 
         """
+        null_sprixel = core.Sprixel()
         for r in range(0, sprite.size[1]):
             for c in range(0, sprite.size[0]):
-                if sprite._sprixels[r][c] == core.Sprixel():
+                if sprite._sprixels[r][c] == null_sprixel:
                     print(filler, end="")
                 else:
                     print(
