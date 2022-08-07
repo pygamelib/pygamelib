@@ -211,7 +211,8 @@ class RandomActuator(Actuator):
             if isinstance(self.parent, board_items.Movable):
                 ppav = self.parent.position_as_vector()
             if (
-                self.__current_dir_move_left <= 0
+                self.__current_dir_move_left is None
+                or self.__current_dir_move_left <= 0
                 or ppav != self.__projected_position_cache
             ):
 

@@ -1001,6 +1001,8 @@ class Sprite(object):
         self.parent = parent
         self.name = name
         self.default_sprixel = default_sprixel
+        self.row_offset = 0
+        self.column_offset = 0
         # Double linking here, GC will hate it...
         self._initial_text_object = None
         if self.name is None or type(self.name) is not str:
@@ -1594,7 +1596,7 @@ class Sprite(object):
                 # buffer[sr][sc] = sprix.__repr__()
                 buffer[sr][sc] = sprix
                 for c in range(sc + 1, sc + sprix.length):
-                    buffer[sr][c] = Sprixel()
+                    buffer[sr][c] = null_sprixel
 
 
 class SpriteCollection(UserDict):
