@@ -1579,12 +1579,14 @@ class Sprite(object):
         #     self.size = i.size
         #     # display_buffer[row][col] = i
 
+        ro = self.row_offset
+        co = self.column_offset
         # Attempt at optimization.
         null_sprixel = Sprixel()
         get_sprixel = self.sprixel
         for sr in range(row, min(self.size[1] + row, buffer_height)):
             for sc in range(column, min(self.size[0] + column, buffer_width)):
-                sprix = get_sprixel(sr - row, sc - column)
+                sprix = get_sprixel(sr - row + ro, sc - column + co)
                 # Need to check the empty/null sprixel in the sprite
                 # because for the sprite we just skip and leave the
                 # sprixel that is behind but when it comes to screen we
