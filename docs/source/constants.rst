@@ -32,12 +32,11 @@ Permissions:
 
 UI positions:
 
-* POS_TOP
-* POS_BOTTOM
 * ORIENTATION_HORIZONTAL
 * ORIENTATION_VERTICAL
-* SCREEN_H_CENTER : when placing elements with Screen.place() automatically calculate the horizontal center (use as the column parameter).
-* SCREEN_V_CENTER : when placing elements with Screen.place() automatically calculate the vertical center (use as the row parameter).
+* ALIGN_LEFT
+* ALIGN_RIGHT
+* ALIGN_CENTER
 
 Actions states (for Actuators for example):
 
@@ -48,6 +47,16 @@ Actions states (for Actuators for example):
 Accepted input (mainly used in pygamelib.gfx.ui for input dialogs):
 * INTEGER_FILTER
 * PRINTABLE_FILTER
+  
+Path Finding Algorithm Constants:
+
+* ALGO_BFS
+* ALGO_ASTAR
+
+Text styling constants:
+
+* BOLD
+* UNDERLINE
 
 Special constants:
 
