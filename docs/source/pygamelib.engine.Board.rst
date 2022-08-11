@@ -27,12 +27,17 @@ Board
       ~Board.get_movables
       ~Board.init_board
       ~Board.init_cell
+      ~Board.instantiate_item
       ~Board.item
+      ~Board.layers
+      ~Board.load
       ~Board.move
+      ~Board.neighbors
       ~Board.place_item
       ~Board.remove_item
       ~Board.render_cell
       ~Board.render_to_buffer
+      ~Board.serialize
    
    
 
