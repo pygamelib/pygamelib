@@ -18,7 +18,6 @@ from pygamelib.assets import graphics
 from pygamelib.functions import pgl_isinstance
 import random
 import time
-import copy
 from collections import UserDict
 from uuid import uuid4
 import json
@@ -206,6 +205,16 @@ class Color(base.PglBaseObject):
     def __repr__(self):
         return f"Color({self.r}, {self.g}, {self.b})"
 
+    def copy(self):
+        """Returns a (deep) copy of this color.
+
+        Example::
+
+            red = Color(255, 0, 0)
+            red2 = red.copy()
+        """
+        return Color(self.r, self.g, self.b)
+
     def blend(self, other_color, fraction=0.5):
         """
         Blend the color with another one. Fraction controls the amount of other_color
@@ -321,7 +330,7 @@ class Color(base.PglBaseObject):
         self.notify("pygamelib.gfx.core.Color.randomized", self)
 
 
-class Sprixel(object):
+class Sprixel(base.PglBaseObject):
 
     """
     A sprixel is the representation of 1 cell of the sprite or one cell on the Board.
@@ -433,8 +442,20 @@ class Sprixel(object):
 
     def __mul__(self, other):
         if isinstance(other, int):
-            return [copy.deepcopy(self)] * other
+            # return [copy.deepcopy(self)] * other
+            return [self.copy()] * other
         raise NotImplementedError
+
+    def copy(self):
+        """
+        Returns a (deep) copy of the sprixel.
+        """
+        return Sprixel(
+            self.model,
+            None if self.bg_color is None else self.bg_color.copy(),
+            None if self.fg_color is None else self.fg_color.copy(),
+            self.is_bg_transparent,
+        )
 
     def render_to_buffer(self, buffer, row, column, buffer_height, buffer_width):
         """Render the sprixel from the display buffer to the frame buffer.
@@ -877,7 +898,7 @@ class Sprixel(object):
         return cls("  ", Color(255, 255, 0))
 
 
-class Sprite(object):
+class Sprite(base.PglBaseObject):
     """
     The Sprite object represent a 2D "image" that can be used to represent any complex
     item.
@@ -991,7 +1012,7 @@ class Sprite(object):
     def __init__(
         self,
         sprixels=None,
-        default_sprixel=Sprixel(),
+        default_sprixel=None,
         parent=None,
         size=[2, 2],
         name=None,
@@ -1000,7 +1021,10 @@ class Sprite(object):
         self.size = size
         self.parent = parent
         self.name = name
-        self.default_sprixel = default_sprixel
+        if default_sprixel is None:
+            self.default_sprixel = Sprixel()
+        else:
+            self.default_sprixel = default_sprixel
         self.row_offset = 0
         self.column_offset = 0
         # Double linking here, GC will hate it...
@@ -1045,6 +1069,20 @@ class Sprite(object):
             [self.default_sprixel for i in range(0, self.size[0])]
             for j in range(0, self.size[1])
         ]
+
+    def copy(self):
+        """
+        Returns a (deep) copy of the sprite.
+        """
+        tmp_sprixels = []
+        for row in range(0, self.size[1]):
+            tmp = []
+            for column in range(0, self.size[0]):
+                tmp.append(self.sprixel(row, column).copy())
+            tmp_sprixels.append(tmp)
+        return Sprite(
+            tmp_sprixels, self.default_sprixel.copy(), self.parent, name=self.name
+        )
 
     def sprixel(self, row=0, column=None):
         """Return a sprixel at a specific position within the sprite.
@@ -1505,7 +1543,8 @@ class Sprite(object):
         )
         for row in range(0, self.size[1]):
             for col in range(0, self.size[0]):
-                new_sprix: Sprixel = copy.deepcopy(self._sprixels[row][col])
+                # new_sprix: Sprixel = copy.deepcopy(self._sprixels[row][col])
+                new_sprix: Sprixel = self._sprixels[row][col].copy()
                 if new_sprix.bg_color is not None:
                     new_sprix.bg_color = new_sprix.bg_color.blend(color, ratio)
                 if new_sprix.fg_color is not None:
@@ -1632,7 +1671,9 @@ class SpriteCollection(UserDict):
 
     """
 
-    def __init__(self, data=dict()):
+    def __init__(self, data=None):
+        if data is None:
+            data = dict()
         super().__init__(data)
 
     @classmethod
@@ -2492,6 +2533,7 @@ class Font:
     def __glyph_colors_to_string(
         glyph_name: str = None, fg_color: Color = None, bg_color: Color = None
     ) -> str:
+        # Serialize a glyph and its colors as a string.
         serstr = glyph_name
         for c in (fg_color, bg_color):
             if c is None:
@@ -2516,6 +2558,8 @@ class Font:
 
         :param glyph_name: The glyph name
         :type glyph_name: str
+        :returns: A glyphe as a :class:`Sprite`
+        :rtype: :class:`Sprite`
 
         Example::
 
@@ -2542,7 +2586,8 @@ class Font:
             if gcolstr in self.__glyphs_cache.keys():
                 return self.__glyphs_cache[gcolstr]
             else:
-                new_sprite = copy.deepcopy(self.__sprite_collection[glyph_name])
+                # new_sprite = copy.deepcopy(self.__sprite_collection[glyph_name])
+                new_sprite = self.__sprite_collection[glyph_name].copy()
                 sprite_sprixel = new_sprite.sprixel
                 cfg = self.__config
                 for r in range(new_sprite.height):
