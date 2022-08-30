@@ -804,7 +804,8 @@ class Board(base.PglBaseObject):
                     # to: if nothing is stacked under then we don't have any reason to
                     # build a new sprixel because we are not modifying it.
                     if sprix.bg_color is None or sprix.is_bg_transparent:
-                        sprix = copy.deepcopy(self._matrix[row][column][-1].sprixel)
+                        # sprix = copy.deepcopy(self._matrix[row][column][-1].sprixel)
+                        sprix = self._matrix[row][column][-1].sprixel.copy()
                         # And now we are going down to make sure that we have pseudo
                         # transparency.
                         idx -= 1
@@ -1923,7 +1924,7 @@ class Game(base.PglBaseObject):
         # input.
         if self.mode == constants.MODE_TBT:  # pragma: no cover
             self.input_lag = None
-        self.previous_time = time.time()
+        self.previous_time = time.perf_counter()
         if self.player is None:
             self.player = constants.NO_PLAYER
         # Now we check that we do have a current board. If not, it means that the user
@@ -1942,8 +1943,8 @@ class Game(base.PglBaseObject):
         while self.state != constants.STOPPED:
             # But we only update if the game is not paused
             in_key = self.terminal.inkey(timeout=self.input_lag)
-            elapsed = time.time() - self.previous_time
-            self.previous_time = time.time()
+            elapsed = time.perf_counter() - self.previous_time
+            self.previous_time = time.perf_counter()
             if self.state == constants.RUNNING:
                 if self.player != constants.NO_PLAYER:
                     self.player.dtmove += elapsed
@@ -1954,7 +1955,9 @@ class Game(base.PglBaseObject):
                 self.actuate_projectiles(self.current_level, elapsed)
                 self.animate_items(self.current_level, elapsed)
             elif self.state == constants.PAUSED:
+                print(self.terminal.home, end="")
                 self.user_update_paused(self, in_key, elapsed)
+                print(self.terminal.clear_eos, end="")
 
     def _set_run_function(self):
         if self.current_level is None or self.current_board() is None:
@@ -1966,15 +1969,17 @@ class Game(base.PglBaseObject):
         # This runs until the game stops
         while self.state != constants.STOPPED:
             in_key = self.terminal.inkey(timeout=self.input_lag)
-            elapsed = time.time() - self.previous_time
-            self.previous_time = time.time()
+            elapsed = time.perf_counter() - self.previous_time
+            self.previous_time = time.perf_counter()
             # But we only update if the game is not paused
             if self.state == constants.RUNNING:
                 print(self.terminal.home, end="")
                 self.user_update(self, in_key, elapsed)
                 print(self.terminal.clear_eos, end="")
             elif self.state == constants.PAUSED:
+                print(self.terminal.home, end="")
                 self.user_update_paused(self, in_key, elapsed)
+                print(self.terminal.clear_eos, end="")
 
     def _fake_update_paused(self, game, in_key, elapsed):
         self.notify(
@@ -3349,7 +3354,7 @@ class Game(base.PglBaseObject):
             mygame.start()
         """
         self.state = constants.RUNNING
-        self.previous_time = time.process_time()
+        self.previous_time = time.perf_counter()
 
     def pause(self):
         """Set the game engine state to PAUSE.
