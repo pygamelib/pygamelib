@@ -370,11 +370,23 @@ class Text(PglBaseObject):
         return obj
 
     def handle_notification(self, target, attribute=None, value=None):
-        self.__build_color_cache()
+        if (
+            attribute == "pygamelib.gfx.core.Color.r:changed"
+            or attribute == "pygamelib.gfx.core.Color.g:changed"
+            or attribute == "pygamelib.gfx.core.Color.b:changed"
+        ):
+            self.__build_color_cache()
 
     @property
     def text(self):
-        """The text attribute. It needs to be a str."""
+        """The text attribute. It needs to be a str.
+
+        .. role:: boldblue
+
+        When the text is changed, the observers are notified of the change
+        with the :boldblue:`pygamelib.base.Text.text:changed` event. The new text
+        is passed as the `value` parameter.
+        """
         return self.__text
 
     @text.setter
@@ -384,6 +396,7 @@ class Text(PglBaseObject):
         elif isinstance(value, Text):
             self.__text = value.text
         self.__length = self.__length = Console.instance().length(self.__text)
+        self.notify(self, "pygamelib.base.Text.text:changed", self.__text)
 
     @property
     def bg_color(self):
@@ -405,10 +418,12 @@ class Text(PglBaseObject):
                 self.__bg_color.detach(self)
             self.__bg_color = value
             self.__bg_color.attach(self)
+            self.notify(self, "pygamelib.base.Text.bg_color:changed", value)
         elif value is None:
             if self.__bg_color is not None:
                 self.__bg_color.detach(self)
             self.__bg_color = value
+            self.notify(self, "pygamelib.base.Text.bg_color:changed", value)
             self.__bgcc = Back.RESET
         else:
             raise PglInvalidTypeException(
@@ -591,7 +606,10 @@ class Text(PglBaseObject):
             font_horizontal_spacing = self.__font.horizontal_spacing
             # Squash the dot notation
             glyph = self.__font.glyph
-            colors = {}
+            colors = {
+                "fg_color": None,
+                "bg_color": None,
+            }
             if self.__font.colorable:
                 if self.fg_color is not None:
                     colors["fg_color"] = self.fg_color
@@ -610,7 +628,7 @@ class Text(PglBaseObject):
                     #     break
                     # if row + row_idx >= buffer_height:
                     #     break
-                    font_glyph = glyph(char, **colors)
+                    font_glyph = glyph(char, colors["fg_color"], colors["bg_color"])
                     font_glyph.render_to_buffer(
                         buffer, row + row_idx, column + idx, buffer_height, buffer_width
                     )
