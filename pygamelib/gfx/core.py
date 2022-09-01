@@ -558,6 +558,12 @@ class Sprixel(base.PglBaseObject):
         :param value: The new model
         :type value: str
 
+        .. role:: boldblue
+
+        When the model is changed, the observers are notified of the change
+        with the :boldblue:`pygamelib.gfx.core.Sprixel.model:changed` event. The new
+        model is passed as the `value` parameter.
+
         Example::
 
             # Get the sprixel's model
@@ -572,6 +578,7 @@ class Sprixel(base.PglBaseObject):
         if type(value) is str:
             self.__model = value
             self.__length = base.Console.instance().length(self.__model)
+            self.notify(self, "pygamelib.gfx.core.Sprixel.model:changed", self.__model)
         else:
             raise base.PglInvalidTypeException(
                 f"A Sprixel.model must be a string. {value} is not a string."
@@ -585,6 +592,12 @@ class Sprixel(base.PglBaseObject):
 
         :param value: The new color
         :type value: :class:`Color`
+
+        .. role:: boldblue
+
+        When the bg_color is changed, the observers are notified of the change
+        with the :boldblue:`pygamelib.gfx.core.Sprixel.bg_color:changed` event. The new
+        bg_color is passed as the `value` parameter.
 
         Example::
 
@@ -600,6 +613,7 @@ class Sprixel(base.PglBaseObject):
         if isinstance(value, Color) or value is None:
             self.__bg_color = value
             self.__build_color_cache()
+            self.notify(self, "pygamelib.gfx.core.Sprixel.bg_color:changed", value)
         else:
             raise base.PglInvalidTypeException(
                 "A Sprixel.bg_color must be a Color object."
@@ -613,6 +627,12 @@ class Sprixel(base.PglBaseObject):
 
         :param value: The new color
         :type value: :class:`Color`
+
+        .. role:: boldblue
+
+        When the fg_color is changed, the observers are notified of the change
+        with the :boldblue:`pygamelib.gfx.core.Sprixel.fg_color:changed` event. The new
+        fg_color is passed as the `value` parameter.
 
         Example::
 
@@ -628,6 +648,7 @@ class Sprixel(base.PglBaseObject):
         if isinstance(value, Color) or value is None:
             self.__fg_color = value
             self.__build_color_cache()
+            self.notify(self, "pygamelib.gfx.core.Sprixel.fg_color:changed", value)
         else:
             raise base.PglInvalidTypeException(
                 "A Sprixel.fg_color must be a Color object."
@@ -1130,15 +1151,27 @@ class Sprite(base.PglBaseObject):
                 )
             return self._sprixels[row][column]
 
-    def set_sprixel(self, row, column, val):
+    def set_sprixel(self, row, column, value):
         """
         Set a specific sprixel in the sprite to the given value.
-        :param name: some param
-        :type name: str
+
+        :param row: The row of the sprite (WARNING: internal sprite coordinates)
+        :type row: int
+        :param column: The column of the sprite (same warning)
+        :type column: int
+        :param value: The sprixel to set at [row, column]
+        :type value: :class:`Sprixel`
+
+        .. role:: boldblue
+
+        When a sprixel is changed, the observers are notified of the change
+        with the :boldblue:`pygamelib.gfx.core.Sprite.sprixel:changed` event. A
+        structure is passed as the `value` parameter. This structure has 3 members: row,
+        column and sprixel.
 
         Example::
 
-            method()
+            my_sprite.set_sprixel(1, 2, Sprixel("#",fg_color=green))
         """
         if type(row) is not int or type(column) is not int:
             raise base.PglInvalidTypeException(
@@ -1150,11 +1183,16 @@ class Sprite(base.PglBaseObject):
                 "out_of_sprite_boundaries",
                 f"Sprite.set_sprixel(): ({row},{column}) is out of bound.",
             )
-        if not isinstance(val, Sprixel):
+        if not isinstance(value, Sprixel):
             raise base.PglInvalidTypeException(
                 "Sprite.set_sprixel(row, column, val) val needs to be a Sprixel"
             )
-        self._sprixels[row][column] = val
+        self._sprixels[row][column] = value
+        self.notify(
+            self,
+            "pygamelib.gfx.core.Sprite.sprixel:changed",
+            {"row": row, "column": column, "sprixel": value},
+        )
 
     @classmethod
     def from_text(cls, text_object):
@@ -1373,6 +1411,12 @@ class Sprite(base.PglBaseObject):
         :param state: a boolean to enable or disable background transparency
         :type name: bool
 
+        .. role:: boldblue
+
+        When the transparency is changed, the observers are notified of the change
+        with the :boldblue:`pygamelib.gfx.core.Sprite.transparency:changed` event. The
+        new transparency state is passed as the `value` parameter.
+
         Example::
 
             player_sprite.set_transparency(True)
@@ -1387,6 +1431,7 @@ class Sprite(base.PglBaseObject):
         for line in self._sprixels:
             for s in line:
                 s.is_bg_transparent = state
+        self.notify(self, "pygamelib.gfx.core.Sprite.transparency:changed", state)
 
     def serialize(self):
         """Serialize a Sprite into a dictionary.
@@ -1567,6 +1612,12 @@ class Sprite(base.PglBaseObject):
         :type ratio: float
         :returns: None
 
+        .. role:: boldblue
+
+        When this method is called, the observers are notified of the change
+        with the :boldblue:`pygamelib.core.Sprite.color:modulated` event. No arguments
+        are passed along this event.
+
         Example::
 
             player_sprites = core.SpriteCollection.load_json_file("gfx/player.spr")
@@ -1585,6 +1636,7 @@ class Sprite(base.PglBaseObject):
                     sprix.bg_color = sprix.bg_color.blend(color, ratio)
                 if sprix.fg_color is not None:
                     sprix.fg_color = sprix.fg_color.blend(color, ratio)
+        self.notify(self, "pygamelib.core.Sprite.color:modulated")
 
     def render_to_buffer(self, buffer, row, column, buffer_height, buffer_width):
         """Render the sprite from the display buffer to the frame buffer.

@@ -19,6 +19,7 @@ Sprite
    
       ~Sprite.__init__
       ~Sprite.calculate_size
+      ~Sprite.copy
       ~Sprite.empty
       ~Sprite.flip_horizontally
       ~Sprite.flip_vertically

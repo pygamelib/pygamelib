@@ -21,6 +21,7 @@ Color
       ~Color.attach
       ~Color.handle_notification
       ~Color.blend
+      ~Color.copy
       ~Color.detach
       ~Color.from_ansi
       ~Color.load

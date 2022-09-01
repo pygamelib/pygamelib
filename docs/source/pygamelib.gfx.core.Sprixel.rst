@@ -22,6 +22,7 @@ Sprixel
       ~Sprixel.black_square
       ~Sprixel.blue_rect
       ~Sprixel.blue_square
+      ~Sprixel.copy
       ~Sprixel.cyan_rect
       ~Sprixel.cyan_square
       ~Sprixel.from_ansi
