@@ -449,6 +449,9 @@ class Sprixel(base.PglBaseObject):
     def copy(self):
         """
         Returns a (deep) copy of the sprixel.
+
+        .. versionadded:: 1.3.0
+
         """
         return Sprixel(
             self.model,
@@ -459,6 +462,8 @@ class Sprixel(base.PglBaseObject):
 
     def render_to_buffer(self, buffer, row, column, buffer_height, buffer_width):
         """Render the sprixel from the display buffer to the frame buffer.
+
+        .. versionadded:: 1.3.0
 
         This method is automatically called by :func:`pygamelib.engine.Screen.render`.
 
@@ -529,6 +534,8 @@ class Sprixel(base.PglBaseObject):
     def length(self):
         """Return the true length of the model.
 
+        .. versionadded:: 1.3.0
+
         With UTF8 and emojis the length of a string as returned by python's
         :func:`len()` function is often very wrong.
         For example, the len("\\x1b[48;2;139;22;19m\\x1b[38;2;160;26;23m▄\\x1b[0m")
@@ -551,9 +558,7 @@ class Sprixel(base.PglBaseObject):
 
     @property
     def model(self):
-        """
-
-        A property to get/set the model of the Sprixel.
+        """A property to get/set the model of the Sprixel.
 
         :param value: The new model
         :type value: str
@@ -586,9 +591,7 @@ class Sprixel(base.PglBaseObject):
 
     @property
     def bg_color(self):
-        """
-
-        A property to get/set the background color of the Sprixel.
+        """A property to get/set the background color of the Sprixel.
 
         :param value: The new color
         :type value: :class:`Color`
@@ -621,9 +624,7 @@ class Sprixel(base.PglBaseObject):
 
     @property
     def fg_color(self):
-        """
-
-        A property to get/set the foreground color of the Sprixel.
+        """A property to get/set the foreground color of the Sprixel.
 
         :param value: The new color
         :type value: :class:`Color`
@@ -657,6 +658,8 @@ class Sprixel(base.PglBaseObject):
     def serialize(self):
         """Serialize a Sprixel into a dictionary.
 
+        .. versionadded:: 1.3.0
+
         :returns: The class as a  dictionary
         :rtype: dict
 
@@ -675,6 +678,8 @@ class Sprixel(base.PglBaseObject):
     def load(cls, data):
         """
         Create a new Sprixel object based on serialized data.
+
+        .. versionadded:: 1.3.0
 
         :param data: Data loaded from JSON data (deserialized).
         :type data: dict
@@ -1094,6 +1099,9 @@ class Sprite(base.PglBaseObject):
     def copy(self):
         """
         Returns a (deep) copy of the sprite.
+
+        .. versionadded:: 1.3.0
+
         """
         tmp_sprixels = []
         for row in range(0, self.size[1]):
@@ -1408,6 +1416,8 @@ class Sprite(base.PglBaseObject):
     def set_transparency(self, state):
         """This method enable transparent background to all the sprite's sprixels.
 
+        .. versionadded:: 1.3.0
+
         :param state: a boolean to enable or disable background transparency
         :type name: bool
 
@@ -1436,6 +1446,8 @@ class Sprite(base.PglBaseObject):
     def serialize(self):
         """Serialize a Sprite into a dictionary.
 
+        .. versionadded:: 1.3.0
+
         :returns: The class as a  dictionary
         :rtype: dict
 
@@ -1463,6 +1475,8 @@ class Sprite(base.PglBaseObject):
         """
         Property that returns the width of the Sprite.
 
+        .. versionadded:: 1.3.0
+
         Contrary to Sprite.size[0], this property *always* calls Sprite.calculate_size()
         before returning the width.
         """
@@ -1474,6 +1488,8 @@ class Sprite(base.PglBaseObject):
         """
         Property that returns the height of the Sprite.
 
+        .. versionadded:: 1.3.0
+
         Contrary to Sprite.size[1], this property *always* calls Sprite.calculate_size()
         before returning the height.
         """
@@ -1484,6 +1500,8 @@ class Sprite(base.PglBaseObject):
     def load(cls, data):
         """
         Create a new Sprite object based on serialized data.
+
+        .. versionadded:: 1.3.0
 
         :param data: Data loaded from a JSON sprite file (deserialized).
         :type data: dict
@@ -1514,10 +1532,9 @@ class Sprite(base.PglBaseObject):
             )
 
     def scale(self, ratio=1.0):
-        """
-        .. versionadded:: 1.3.0
+        """Scale a sprite up and down using the nearest neighbor algorithm.
 
-        Scale a sprite up and down using the nearest neighbor algorithm.
+        .. versionadded:: 1.3.0
 
         :param ratio: The scaling ration.
         :type ratio: float
@@ -1557,6 +1574,8 @@ class Sprite(base.PglBaseObject):
 
     def tint(self, color: Color, ratio: float = 0.5):
         """Tint a copy of the sprite with the color.
+
+        .. versionadded:: 1.3.0
 
         This method creates a copy of the sprite and tint all its sprixels with the
         color at the specified ratio.
@@ -1600,6 +1619,8 @@ class Sprite(base.PglBaseObject):
     def modulate(self, color: Color, ratio: float = 0.5):
         """Modulate the sprite colors with the color in parameters.
 
+        .. versionadded:: 1.3.0
+
         This method tint all the sprixels of the sprite with the color at the specified
         ratio.
         **The original sprite IS modified**.
@@ -1640,6 +1661,8 @@ class Sprite(base.PglBaseObject):
 
     def render_to_buffer(self, buffer, row, column, buffer_height, buffer_width):
         """Render the sprite from the display buffer to the frame buffer.
+
+        .. versionadded:: 1.3.0
 
         This method is automatically called by :func:`pygamelib.engine.Screen.render`.
 
