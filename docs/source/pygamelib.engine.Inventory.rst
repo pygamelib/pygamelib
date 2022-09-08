@@ -27,10 +27,21 @@ Inventory
       ~Inventory.get_item
       ~Inventory.get_items
       ~Inventory.items_name
+      ~Inventory.load
       ~Inventory.remove_constraint
       ~Inventory.search
+      ~Inventory.serialize
       ~Inventory.size
       ~Inventory.value
+   
+
+
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~Inventory.items
+      ~Inventory.constraints
    
    
 
