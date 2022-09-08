@@ -888,6 +888,10 @@ class Board(base.PglBaseObject):
 
         If the item is not a subclass of BoardItem, a PglInvalidTypeException
 
+        The observers are notified of a successful placement with the
+        :boldblue:`pygamelib.engine.Board.place_item:item_placed` event. The item
+        that was deleted is passed as the :blue:`value` of the event.
+
         .. warning:: Nothing prevents you from placing an object on top of
             another. Be sure to check that. This method will check for items that
             are both overlappable **and** restorable to save them, but that's
@@ -950,6 +954,7 @@ class Board(base.PglBaseObject):
                             )
                             itm._auto_layer = auto_layer
                 item.store_position(row, column, max_layer)
+                self.notify(self, "pygamelib.engine.Board.place_item:item_placed", item)
                 if isinstance(item, board_items.Movable):
                     self._movables.add(item)
                 elif isinstance(item, board_items.Immovable):
@@ -1000,6 +1005,7 @@ class Board(base.PglBaseObject):
                 if item.parent is None:
                     item.parent = self
                 item.store_position(row, column, layer)
+                self.notify(self, "pygamelib.engine.Board.place_item:item_placed", item)
                 if isinstance(item, board_items.Movable):
                     if isinstance(item.parent, board_items.BoardComplexItem):
                         # This is actually tested in test_board.py in the test_item
@@ -1030,6 +1036,10 @@ class Board(base.PglBaseObject):
         If item is a derivative of BoardComplexItem, it is not as clear_cell() only
         clears a specific cell (that can be part of a complex item). This method
         actually remove the entire item and clears all its cells.
+
+        The observers are notified of a successful removal with the
+        :boldblue:`pygamelib.engine.Board.remove_item:item_removed` event. The item
+        that was deleted is passed as the :blue:`value` of the event.
 
         :param item: The item to remove.
         :type item: :class:`~pygamelib.board_items.BoardItem`
@@ -1063,6 +1073,7 @@ class Board(base.PglBaseObject):
                         self.clear_cell(r, c, item.layer)
             else:
                 self.clear_cell(item.row, item.column, item.layer)
+            self.notify(self, "pygamelib.engine.Board.remove_item:item_removed", item)
             return True
         else:
             raise base.PglException(
@@ -1694,6 +1705,7 @@ class Game(base.PglBaseObject):
     .. important:: The Game object automatically assumes ownership over the Player.
 
     .. role:: boldblue
+    .. role:: blue
 
     """
 
@@ -1827,6 +1839,10 @@ class Game(base.PglBaseObject):
         :type value: int
         :return: The state of the game.
         :rtype: int
+
+        The observers are notified of a change of state with the
+        :boldblue:`pygamelib.engine.Game.state` event. The new state is passed as the
+        :blue:`value` of the event.
         """
         return self.__state
 
@@ -2676,6 +2692,10 @@ class Game(base.PglBaseObject):
         it means moving the NPCs but as the Actuators become more capable this method
         will evolve to allow more choice (like attack use objects, etc.)
 
+        When all NPCs have been successfully actuated, the observers are notified of the
+        change with the :boldblue:`pygamelib.engine.Game.actuate_npcs:npcs_actuated`
+        event. Their is :blue:`value` passed for that event.
+
         :param level_number: The number of the level to actuate NPCs in.
         :type level_number: int
         :param elapsed_time: The amount of time that passed since last call. This
@@ -2727,6 +2747,9 @@ class Game(base.PglBaseObject):
                                 ),
                             )
                             # npc.dtmove = 0.0
+                    self.notify(
+                        self, "pygamelib.engine.Game.actuate_npcs:npcs_actuated"
+                    )
                 else:
                     raise base.PglInvalidLevelException(
                         f"Impossible to actuate NPCs for this level (level number "
@@ -2862,6 +2885,11 @@ class Game(base.PglBaseObject):
         :param elapsed_time: The amount of time that passed since last call. This
             parameter is not mandatory.
         :type elapsed_time: float
+
+        When all Projectiles have been successfully actuated, the observers are notified
+        of the change with the
+        :boldblue:`pygamelib.engine.Game.actuate_projectiles:projectiles_actuated`
+        event. Their is :blue:`value` passed for that event.
 
         Example::
 
@@ -2999,6 +3027,11 @@ class Game(base.PglBaseObject):
                                 self._boards[level_number]["board"]._movables.discard(
                                     proj
                                 )
+                    self.notify(
+                        self,
+                        "pygamelib.engine.Game.actuate_projectiles:"
+                        "projectiles_actuated",
+                    )
                 else:
                     raise base.PglInvalidLevelException(
                         f"Impossible to actuate Projectiles for this level (level "
@@ -3012,6 +3045,11 @@ class Game(base.PglBaseObject):
     def animate_items(self, level_number, elapsed_time=0.0):
         """That method goes through all the BoardItems of a given map and call
         Animation.next_frame().
+
+        When all items have been successfully animated, the observers are notified of
+        the change with the
+        :boldblue:`pygamelib.engine.Game.animate_items:items_animated`
+        event. Their is :blue:`value` passed for that event.
 
         :param level_number: The number of the level to animate items in.
         :type level_number: int
@@ -3044,6 +3082,9 @@ class Game(base.PglBaseObject):
                                 continue
                             item.animation.dtanimate = 0.0
                             item.animation.next_frame()
+                    self.notify(
+                        self, "pygamelib.engine.Game.animate_items:items_animated"
+                    )
                 else:
                     raise base.PglInvalidLevelException(
                         "Impossible to animate items for this level (level number "
@@ -3652,6 +3693,9 @@ class Inventory(base.PglBaseObject):
         A :class:`~pygamelib.base.PglInvalidTypeException` is raised when the item you
         try to add is not a :class:`~pygamelib.board_items.BoardItem`.
 
+        .. role:: boldblue
+
+
         Example::
 
             item = Treasure(model=graphics.Models.MONEY_BAG,size=2,name='Money bag')
@@ -3665,9 +3709,10 @@ class Inventory(base.PglBaseObject):
                 elif e.error == 'not_pickable':
                     print(e.message)
 
-        .. warning:: if you try to add more than one item with the same name (or if the
-            name is empty), this function will automatically change the name of the item
-            by adding a UUID to it.
+        .. info:: In versions prior to 1.3.0, the inventory object was changing the
+           name of the item if another item with the same name was already in the
+           inventory. This is (fortunately) not the case anymore. The Inventory class
+           does NOT modify the items that are stored into it anymore.
 
         """
         if isinstance(item, board_items.BoardItem):
@@ -3742,6 +3787,12 @@ class Inventory(base.PglBaseObject):
 
     def empty(self):
         """Empty the inventory.
+
+        .. role:: boldblue
+
+        The observers are notified that the Inventory has been emptied with the
+        :boldblue:`pygamelib.engine.Inventory.empty` event. Nothing is passed as the
+        value.
 
         Example::
 
@@ -3891,7 +3942,7 @@ class Inventory(base.PglBaseObject):
         :param name: the name of the items you want to delete.
         :type name: str
 
-        The observers are notified of all each deletion
+        The observers are notified of each deletion
         with the :boldblue:`pygamelib.engine.Inventory.delete_item` event. The item
         that was deleted is passed as the :blue:`value` of the event.
 
@@ -4012,6 +4063,8 @@ class Inventory(base.PglBaseObject):
         :returns: The serialized data.
         :rtype: dict
 
+        .. versionadded:: 1.3.0
+
         Example::
 
             json.dump(my_inventory.serialize(), out_file)
@@ -4022,7 +4075,20 @@ class Inventory(base.PglBaseObject):
         return ret_data
 
     @classmethod
-    def load(cls, data):
+    def load(cls, data: dict):
+        """Load serialized data into a new Inventory object.
+
+        :param data: The serialized data
+        :type data: dict
+        :return: A new Inventory object.
+        :rtype: :class:`Inventory`
+
+        .. versionadded:: 1.3.0
+
+        Example::
+
+            my_player.inventory = Inventory.load(data)
+        """
         inv = cls(max_size=data["max_size"])
         for di in data["items"]:
             item = Board.instantiate_item(di)
@@ -4120,7 +4186,7 @@ class Screen(base.PglBaseObject):
 
     When :func:`render()` is called it goes through the display buffer and render
     each elements transforming it into a printable sequence that is stored in the
-    display buffer. The rendering is done from the bottom right corner of the screen to
+    frame buffer. The rendering is done from the bottom right corner of the screen to
     the top left corner. This allows for cleaning junk characters at no additional cost.
 
     **TL;DR:** The **display buffer** hold the objects placed on the screen while the
