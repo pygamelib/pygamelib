@@ -54,6 +54,9 @@ class Board(base.PglBaseObject):
     and read the "`Getting started: the Board
     <https://github.com/arnauddupuis/pygamelib/wiki/Getting-started-Board>`_" article.
 
+    .. role:: boldblue
+    .. role:: blue
+
 
     .. Note:: In version 1.3.0 a new screen rendering stack was introduced. With this
        came the need for some object to hold more information about their state. This is
@@ -648,7 +651,7 @@ class Board(base.PglBaseObject):
         """
         row_start = 0
         row_end = self.size[1]
-        bc_start = 0
+        column_start = 0
         column_end = self.size[0]
         pos_row = 0
         pos_col = 0
@@ -659,10 +662,12 @@ class Board(base.PglBaseObject):
             # crashes in case the programmer poorly calculated the viewport.
             vp_height = self.partial_display_viewport[0]
             vp_width = self.partial_display_viewport[1]
+
             if self.size[0] < (2 * vp_width):
                 vp_width = int(self.size[0] / 2)
-            if self.height < (2 * vp_height):
+            if self.size[1] < (2 * vp_height):
                 vp_height = int(self.size[1] / 2)
+
             pos_row = self.partial_display_focus.row
             pos_col = self.partial_display_focus.column
             if isinstance(self.partial_display_focus, board_items.BoardComplexItem):
@@ -687,23 +692,24 @@ class Board(base.PglBaseObject):
 
             # compute start and stop coordinates before actually display the
             # board.
-            bc_start = pos_col - vp_width
+            column_start = pos_col - vp_width
             column_end = pos_col + vp_width
-            if bc_start < 0:
-                bc_start = 0
-            elif bc_start > self.size[0] - (vp_width * 2):
-                bc_start = self.size[0] - (vp_width * 2)
+            if column_start < 0:
+                column_start = 0
+            elif column_start > self.size[0] - (vp_width * 2):
+                column_start = self.size[0] - (vp_width * 2)
             if column_end > self.size[0]:
                 column_end = self.size[0]
-                bc_start = self.size[0] - vp_width * 2
+                column_start = self.size[0] - vp_width * 2
             elif column_end < (vp_width * 2):
                 column_end = vp_width * 2
+
         # Trying to remove as many dot notation as possible for performances
         render_cell = self.render_cell
         # TODO: bind the rendering area to buffer_height and buffer_width.
         for br in range(row_start, row_end):
             cidx = 0
-            bc = bc_start
+            bc = column_start
             while bc < column_end:
                 cell = render_cell(br, bc)
                 # encoded_cell = cell.__repr__()
@@ -727,14 +733,19 @@ class Board(base.PglBaseObject):
         for _ in range(len(self._particle_emitters) - 1, -1, -1):
             emt = self._particle_emitters.pop()
             if emt.finished():
-                # self._particle_emitters.discard(emt)
                 continue
-            emt.row += self.screen_row
-            emt.column += self.screen_column
+            # emt.row += self.screen_row
+            # emt.column += self.screen_column
+            emt.row += row
+            emt.column += column
             emt.emit()
             emt.update()
             emt.render_to_buffer(
-                buffer, row + emt.row, column + emt.column, buffer_height, buffer_width
+                buffer,
+                emt.row,
+                emt.column,
+                buffer_height,
+                buffer_width,
             )
             self._particle_emitters.add(emt)
 
@@ -790,6 +801,14 @@ class Board(base.PglBaseObject):
             ):
                 item = self._matrix[row][column][-1]
                 sprix = self._matrix[row][column][-1].sprixel
+                # TEST for fixing wandering emitters...
+                if (
+                    hasattr(item, "particle_emitter")
+                    and item.particle_emitter is not None
+                ):
+                    item.particle_emitter.row = row
+                    item.particle_emitter.column = column
+                # END TEST
                 layers_len = len(self._matrix[row][column])
                 if layers_len > 1:
                     idx = layers_len - 1
@@ -800,6 +819,14 @@ class Board(base.PglBaseObject):
                         idx -= 1
                         item = self._matrix[row][column][idx]
                     sprix = self._matrix[row][column][idx].sprixel
+                    # TEST for fixing wandering emitters...
+                    if (
+                        hasattr(item, "particle_emitter")
+                        and item.particle_emitter is not None
+                    ):
+                        item.particle_emitter.row = row
+                        item.particle_emitter.column = column
+                    # END TEST
                     # We only make the copy here because most of the time we don't need
                     # to: if nothing is stacked under then we don't have any reason to
                     # build a new sprixel because we are not modifying it.
@@ -1741,6 +1768,7 @@ class Game(base.PglBaseObject):
         current_level=None,
         enable_partial_display=False,
         partial_display_viewport=None,
+        partial_display_focus=None,
         mode=constants.MODE_TBT,
         user_update=None,
         input_lag=0.01,
@@ -1750,11 +1778,11 @@ class Game(base.PglBaseObject):
         """
         :param name: The Game name.
         :type name: str
-        :param boards: A dictionnary of boards with the level number as key and a board
+        :param boards: A dictionary of boards with the level number as key and a board
             reference as value.
         :type boards: dict
-        :param menu: A dictionnary of menus with a category (str) as key and another
-            dictionnary (key: a shortcut, value: a description) as value.
+        :param menu: A dictionary of menus with a category (str) as key and another
+            dictionary (key: a shortcut, value: a description) as value.
         :type menu: dict
         :param current_level: The current level.
         :type current_level: int
@@ -1765,6 +1793,9 @@ class Game(base.PglBaseObject):
             **radius** of the partial display in number of row and column. Please see
             :func:`~pygamelib.engine.Board.display_around()`.
         :type partial_display_viewport: list
+        :param partial_display_focus: The object that is going to be the center of the
+           view when the board is displayed.
+        :type partial_display_focus: :class:`~pygamelib.board_items.BoardItem`
         :param mode: The mode parameter configures the way the run() method is going to
            behave. The default value is constants.MODE_TBT. TBT is short for "Turn By
            Turn". In that mode, the Game object wait for an user input before looping.
@@ -1800,6 +1831,7 @@ class Game(base.PglBaseObject):
         self.__state = constants.RUNNING
         self.enable_partial_display = enable_partial_display
         self.partial_display_viewport = partial_display_viewport
+        self.partial_display_focus = partial_display_focus
         self._config = None
         self._configuration = None
         self._configuration_internals = None
@@ -1964,9 +1996,9 @@ class Game(base.PglBaseObject):
             if self.state == constants.RUNNING:
                 if self.player != constants.NO_PLAYER:
                     self.player.dtmove += elapsed
-                print(self.terminal.home, end="")
+                # print(self.terminal.home, end="")
                 self.user_update(self, in_key, elapsed)
-                print(self.terminal.clear_eos, end="")
+                # print(self.terminal.clear_eos, end="")
                 self.actuate_npcs(self.current_level, elapsed)
                 self.actuate_projectiles(self.current_level, elapsed)
                 self.animate_items(self.current_level, elapsed)
@@ -2384,6 +2416,10 @@ class Game(base.PglBaseObject):
         This method associate a Board (:class:`pygamelib.engine.Board`) to a level
         number.
 
+        If the partial display is enabled at Game level (i.e: partial_display_viewport
+        is not None and enable_partial_display is True), this method propagate the
+        settings to the board automatically. Same for partial_display_focus.
+
         Example::
 
             game.add_board(1,myboard)
@@ -2398,6 +2434,15 @@ class Game(base.PglBaseObject):
         """
         if type(level_number) is int:
             if isinstance(board, Board):
+                # Propagate partial display settings.
+                if (
+                    self.enable_partial_display
+                    and self.partial_display_viewport is not None
+                ):
+                    board.partial_display_viewport = self.partial_display_viewport
+                    board.enable_partial_display = self.enable_partial_display
+                    if self.partial_display_focus is not None:
+                        board.partial_display_focus = self.partial_display_focus
                 # Add the board to our list
                 self._boards[level_number] = {
                     "board": board,
@@ -3709,7 +3754,7 @@ class Inventory(base.PglBaseObject):
                 elif e.error == 'not_pickable':
                     print(e.message)
 
-        .. info:: In versions prior to 1.3.0, the inventory object was changing the
+        .. Note:: In versions prior to 1.3.0, the inventory object was changing the
            name of the item if another item with the same name was already in the
            inventory. This is (fortunately) not the case anymore. The Inventory class
            does NOT modify the items that are stored into it anymore.
@@ -4274,6 +4319,8 @@ class Screen(base.PglBaseObject):
             ]
         )
         self._is_dirty = False
+        self._run_threaded_loop = False
+        self._rendering_thread = None
         self.__scene_graph = []
 
     def clear(self):
@@ -4455,6 +4502,7 @@ class Screen(base.PglBaseObject):
             end="",
             flush=True,
         )
+        print(self.terminal.clear_eos, end="")
 
     def render(self):
         """Render the display buffer into the frame buffer.
