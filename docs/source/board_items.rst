@@ -6,6 +6,7 @@ board_items
 .. toctree::
 
     pygamelib.board_items.Actionable.rst
+    pygamelib.board_items.ActionableTile.rst
     pygamelib.board_items.BoardComplexItem.rst
     pygamelib.board_items.BoardItemComplexComponent.rst
     pygamelib.board_items.BoardItem.rst
