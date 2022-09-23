@@ -61,6 +61,8 @@ if g.screen.height < 65:
         )
     )
     exit()
+# Once we know that the terminal is big enough we lock the screen resolution.
+g.screen = engine.Screen(155, 65)
 g.player = board_items.Player(sprixel=core.Sprixel("@@", None, core.Color(0, 255, 255)))
 print("Loading resources: ", end="", flush=True)
 load_start = time.process_time()
