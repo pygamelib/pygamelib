@@ -147,6 +147,8 @@ class EditorVariables:
         self.copy_paste_sprite_idx = -1
         self.copy_paste_board_id = -1
         self.modified = False
+        self.config_dir = Path.home().joinpath(Path(".pygamelib", "editor"))
+        self.config_file = self.config_dir.joinpath("sprite_editor.json")
 
 
 ev = EditorVariables()
@@ -171,8 +173,8 @@ def flood_fill(
         return
     # if isinstance(board.item(r, c), board_items.BoardItemVoid):
     if board.item(r, c).sprixel == replace:
-        board.place_item(board_items.Door(sprixel=copy.deepcopy(sprixel)), r, c)
-        sprite.set_sprixel(r, c, copy.deepcopy(sprixel))
+        board.place_item(board_items.Door(sprixel=sprixel.copy()), r, c)
+        sprite.set_sprixel(r, c, sprixel.copy())
     flood_fill(board, sprite, r + 1, c, replace, sprixel)
     flood_fill(board, sprite, r - 1, c, replace, sprixel)
     flood_fill(board, sprite, r, c + 1, replace, sprixel)
@@ -846,21 +848,23 @@ def paste_clipboard(g: engine.Game):
             _current_sprite.set_sprixel(sr + r - start_row, sc + c - start_col, sprix)
 
 
-def open_file():
+def open_file(file=None):
     g = engine.Game.instance()
     screen = g.screen
-    width = int(screen.width / 3)
-    default = Path(ev.filename)
-    fid = ui.FileDialog(
-        default.parent,
-        width,
-        10,
-        "Open a sprite collection",
-        filter="*.spr",
-        config=ev.ui_config_popup,
-    )
-    screen.place(fid, screen.vcenter - 5, screen.hcenter - int(width / 2))
-    file = fid.show()
+    ev.menu.close()
+    if file is None:
+        width = int(screen.width / 3)
+        default = Path(ev.filename)
+        fid = ui.FileDialog(
+            default.parent,
+            width,
+            10,
+            "Open a sprite collection",
+            filter="*.spr",
+            config=ev.ui_config_popup,
+        )
+        screen.place(fid, screen.vcenter - 5, screen.hcenter - int(width / 2))
+        file = fid.show()
     # g.log(f"Got file={file} from FileDialog")
     # screen.delete(screen.vcenter - 5, screen.hcenter - int(width / 2))
     if file is not None and not file.is_dir():
@@ -871,6 +875,16 @@ def open_file():
         g.delete_all_levels()
         if len(ev.collection) > 0:
             load_sprite_to_board(g, 0)
+        ma = ui.MenuAction(
+            ev.filename, open_file, parameter=file, config=ev.menu.config
+        )
+        if ev.menu.entries[0].entries[1].entries[0].title.text == "No recent file":
+            ev.menu.entries[0].entries[1].entries[0] = ma
+        elif ev.filename not in [
+            entry.title.text for entry in ev.menu.entries[0].entries[1].entries
+        ]:
+            ev.menu.entries[0].entries[1].add_entry(ma)
+    screen.force_update()
 
 
 def save_workspace_as() -> None:
@@ -1119,6 +1133,8 @@ def update_screen(g: engine.Game, inkey, dt: float):
         redraw_ui = False
     elif inkey == "N":
         edit_new_sprite()
+    elif inkey == "U":
+        edit_new_brush()
     elif inkey.name == "KEY_TAB":
         ev.boxes_idx += 1
         ev.menu.close()
@@ -1189,7 +1205,7 @@ def update_screen(g: engine.Game, inkey, dt: float):
                 _current_sprite.set_sprixel(pos[0], pos[1], core.Sprixel())
             elif len(ev.brushes) > 0:
                 g.current_board().place_item(
-                    board_items.Door(sprixel=copy.deepcopy(ev.brushes[ev.brushes_idx])),
+                    board_items.Door(sprixel=ev.brushes[ev.brushes_idx].copy()),
                     pos[0],
                     pos[1],
                     0,
@@ -1207,7 +1223,7 @@ def update_screen(g: engine.Game, inkey, dt: float):
                 _current_sprite.set_sprixel(pos[0], pos[1], core.Sprixel())
             elif len(ev.brushes) > 0:
                 g.current_board().place_item(
-                    board_items.Door(sprixel=copy.deepcopy(ev.brushes[ev.brushes_idx])),
+                    board_items.Door(sprixel=ev.brushes[ev.brushes_idx].copy()),
                     pos[0],
                     pos[1],
                 )
@@ -1224,7 +1240,7 @@ def update_screen(g: engine.Game, inkey, dt: float):
                 _current_sprite.set_sprixel(pos[0], pos[1], core.Sprixel())
             elif len(ev.brushes) > 0:
                 g.current_board().place_item(
-                    board_items.Door(sprixel=copy.deepcopy(ev.brushes[ev.brushes_idx])),
+                    board_items.Door(sprixel=ev.brushes[ev.brushes_idx].copy()),
                     pos[0],
                     pos[1],
                 )
@@ -1241,7 +1257,7 @@ def update_screen(g: engine.Game, inkey, dt: float):
                 _current_sprite.set_sprixel(pos[0], pos[1], core.Sprixel())
             elif len(ev.brushes) > 0:
                 g.current_board().place_item(
-                    board_items.Door(sprixel=copy.deepcopy(ev.brushes[ev.brushes_idx])),
+                    board_items.Door(sprixel=ev.brushes[ev.brushes_idx].copy()),
                     pos[0],
                     pos[1],
                 )
@@ -1461,7 +1477,7 @@ def update_screen(g: engine.Game, inkey, dt: float):
         ):
             spr_c_idx = ev.sprite_list_idx % len(ev.sprite_list)
             initial_sprite = ev.collection[ev.sprite_list[spr_c_idx]]
-            new_sprite = copy.deepcopy(initial_sprite)
+            new_sprite = initial_sprite.copy()
             new_sprite.name += " copy"
             for sr in range(initial_sprite.height):
                 for sc in range(initial_sprite.width):
@@ -1676,6 +1692,14 @@ if __name__ == "__main__":
         input_lag=0.0001,
     )
     g.DEBUG = True
+    if ev.config_file.exists():
+        g.load_config(ev.config_file, "editor_config")
+        for spr_data in g.config("editor_config")["brushes"]:
+            ev.brushes.append(core.Sprixel.load(spr_data))
+    else:
+        g.create_config("editor_config")
+        g.config("editor_config")["brushes"] = []
+        g.config("editor_config")["recent_files"] = []
     if g.screen.width < 102 or g.screen.height < 42:
         print(
             base.Text(
@@ -1729,6 +1753,7 @@ if __name__ == "__main__":
             "File",
             [
                 ui.MenuAction("Open", open_file),
+                ui.Menu("Open recent >", [ui.MenuAction("No recent file", None)]),
                 ui.MenuAction("Save", save_workspace),
                 ui.MenuAction("Save As...", save_workspace_as),
                 ui.MenuAction("Quit", g.stop),
@@ -1755,7 +1780,32 @@ if __name__ == "__main__":
             ],
         )
     )
-
+    if (
+        "recent_files" in g.config("editor_config")
+        and len(g.config("editor_config")["recent_files"]) > 0
+    ):
+        for file_str in g.config("editor_config")["recent_files"]:
+            file = Path(file_str)
+            ma = ui.MenuAction(
+                file_str, open_file, parameter=file, config=ev.menu.config
+            )
+            if ev.menu.entries[0].entries[1].entries[0].title.text == "No recent file":
+                ev.menu.entries[0].entries[1].entries[0] = ma
+            elif file_str not in [
+                entry.title.text for entry in ev.menu.entries[0].entries[1].entries
+            ]:
+                ev.menu.entries[0].entries[1].add_entry(ma)
+        file = Path(ev.filename).resolve()
+        if str(file) not in [
+            entry.title.text for entry in ev.menu.entries[0].entries[1].entries
+        ]:
+            ma = ui.MenuAction(
+                str(file), open_file, parameter=file, config=ev.menu.config
+            )
+            if ev.menu.entries[0].entries[1].entries[0].title.text == "No recent file":
+                ev.menu.entries[0].entries[1].entries[0] = ma
+            else:
+                ev.menu.entries[0].entries[1].add_entry(ma)
     # Default empty board.
     g.add_board(
         1,
@@ -1777,5 +1827,18 @@ if __name__ == "__main__":
     #     f"{ev.frames} ev.frames in {round(time.time()-ev.start,2)} secondes or "
     #     f"{round(ev.frames/(time.time()-ev.start))} FPS"
     # )
+
+    # Save config file
+    g.config("editor_config")["brushes"] = [spr.serialize() for spr in ev.brushes]
+    g.config("editor_config")["recent_files"] = []
+    for entry in ev.menu.entries[0].entries[1].entries:
+        if entry.title.text == "No recent file":
+            break
+        else:
+            g.config("editor_config")["recent_files"].append(entry.title.text)
+    if not ev.config_dir.exists():
+        ev.config_dir.mkdir(parents=True, exist_ok=True)
+    g.save_config("editor_config", ev.config_file)
+    # Display session logs if any
     for log in g.session_logs():
         print(log)
