@@ -1987,7 +1987,7 @@ class ParticleEmitter(base.PglBaseObject):
             self.particle._initial_lifespan = self.particle_lifespan
 
         self.__particle_pool = ParticlePool(
-            size=self.emit_number * self.particle_lifespan,
+            size=max(self.emit_number * self.particle_lifespan, self.emit_number * 2),
             emitter_properties=emitter_properties,
         )
 
