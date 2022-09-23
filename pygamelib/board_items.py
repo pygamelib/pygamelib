@@ -150,11 +150,12 @@ class BoardItem(base.PglBaseObject):
             self.pos = pos
         # DEPRECATED
         # self.model = "*"
-        self.particle_emitter = None
+        self._particle_emitter = None
         if particle_emitter is not None and pgl_isinstance(
             particle_emitter, "pygamelib.gfx.particles.ParticleEmitter"
         ):
-            self.particle_emitter = particle_emitter
+            self._particle_emitter = particle_emitter
+            setattr(self._particle_emitter, "_board_item", self)
         self.__animation = None
         self.animation = animation
         self.parent = None
@@ -279,6 +280,15 @@ class BoardItem(base.PglBaseObject):
             pt = eval(data["particle_emitter"]["emitter_type"])
             itm.particle_emitter = pt.load(data["particle_emitter"])
         return itm
+
+    @property
+    def particle_emitter(self):
+        return self._particle_emitter
+
+    @particle_emitter.setter
+    def particle_emitter(self, value):
+        self._particle_emitter = value
+        setattr(self._particle_emitter, "_board_item", self)
 
     @property
     def heading(self):
@@ -613,10 +623,6 @@ class BoardItem(base.PglBaseObject):
         :type height: int
         :param width: The total width of the display buffer.
         :type width: int
-
-        Example::
-
-            method()
         """
         buffer[row][column] = self.sprixel.__repr__()
         incr = self.sprixel.length
