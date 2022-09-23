@@ -3086,6 +3086,7 @@ class MenuAction(object):
         self,
         title: base.Text = None,
         action=None,
+        parameter=None,
         padding: int = 1,
         config: UiConfig = None,
     ) -> None:
@@ -3095,8 +3096,11 @@ class MenuAction(object):
         :param title: The title of the action (i.e: its label)
         :type title: str | :class:`~pygamelib.base.Text`
         :param action: A reference to a callable function that is going to be executed
-           when the action is activated.
+           when the action is activated. If set to None, nothing will happen when the
+           action is activated.
         :type action: callable
+        :param parameter: A parameter that is passed to the callback action if not None.
+        :type parameter: Any
         :param padding: The horizontal padding, i.e the number of space characters added
            to the left and right of the action.
         :type padding: int
@@ -3126,6 +3130,7 @@ class MenuAction(object):
         self.__title = None
         self.__padding = padding
         self._parent = None
+        self.__parameter = parameter
         # TODO: Check types.
         self.__padding_cache = base.Text(" " * self.__padding)
         if isinstance(title, base.Text):
@@ -3139,10 +3144,10 @@ class MenuAction(object):
         self.__action = None
         if callable(action):
             self.__action = action
-        else:
-            raise base.PglInvalidTypeException(
-                "MenuAction(): action needs to be a callable function reference."
-            )
+        # else:
+        #     raise base.PglInvalidTypeException(
+        #         "MenuAction(): action needs to be a callable function reference."
+        #     )
 
     @property
     def title(self) -> base.Text:
@@ -3246,7 +3251,11 @@ class MenuAction(object):
 
             file_save_action.activate()
         """
-        return self.__action()
+        if callable(self.__action):
+            if self.__parameter is not None:
+                return self.__action(self.__parameter)
+            else:
+                return self.__action()
 
     @property
     def padding(self):
@@ -3745,6 +3754,8 @@ class Menu(object):
                 elif inkey.name == "KEY_RIGHT":
                     if isinstance(self.current_entry(), Menu):
                         self.current_entry().activate()
+            elif not self.__expanded:
+                break
             inkey = term.inkey(timeout=0.05)
         self.__expanded = False
         screen.force_update()
@@ -3768,6 +3779,9 @@ class Menu(object):
             file_menu.collapse()
         """
         self.__expanded = False
+        for e in self.__entries:
+            if isinstance(e, Menu):
+                e.collapse()
 
 
 class MenuBar(object):
@@ -4150,7 +4164,9 @@ class MenuBar(object):
 
         Please call that method when the menu bar loses focus.
         """
-        self.entries[self.__current_index % len(self.entries)].selected = False
+        for e in self.entries:
+            e.selected = False
+            e.collapse()
         self.current_index = -1
 
     # def activate(self):
