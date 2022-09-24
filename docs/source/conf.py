@@ -28,8 +28,8 @@ copyright = "2019-2022, Arnaud Dupuis"
 author = "Arnaud Dupuis"
 
 # The short X.Y version
-#version = ""
-ver = CST.PYGAMELIB_VERSION.split('.')
+# version = ""
+ver = CST.PYGAMELIB_VERSION.split(".")
 version = f"{ver[0]}.{ver[1]}"
 # The full version, including alpha/beta/rc tags
 release = CST.PYGAMELIB_VERSION
