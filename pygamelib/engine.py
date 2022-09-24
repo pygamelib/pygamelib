@@ -4493,16 +4493,17 @@ class Screen(base.PglBaseObject):
         """
         if self._is_dirty:
             self.render()
-        print(self.terminal.home, end="")
+        print(self.terminal.home, end="", flush=False)
         screen_buffer = self._frame_buffer
         for row in range(0, screen_buffer.shape[0] - 1):
             print("".join(map(str, screen_buffer[row])), flush=False)
         print(
             "".join(map(str, screen_buffer[screen_buffer.shape[0] - 1])),
+            self.terminal.clear_eos,
             end="",
             flush=True,
         )
-        print(self.terminal.clear_eos, end="")
+        # print(self.terminal.clear_eos, end="")
 
     def render(self):
         """Render the display buffer into the frame buffer.
