@@ -3142,12 +3142,12 @@ class MenuAction(object):
                 "MenuAction(): title needs to be a pygamelib.base.Text object."
             )
         self.__action = None
-        if callable(action):
+        if callable(action) or action is None:
             self.__action = action
-        # else:
-        #     raise base.PglInvalidTypeException(
-        #         "MenuAction(): action needs to be a callable function reference."
-        #     )
+        else:
+            raise base.PglInvalidTypeException(
+                "MenuAction(): action needs to be a callable function reference."
+            )
 
     @property
     def title(self) -> base.Text:
@@ -4166,7 +4166,8 @@ class MenuBar(object):
         """
         for e in self.entries:
             e.selected = False
-            e.collapse()
+            if isinstance(e, Menu):
+                e.collapse()
         self.current_index = -1
 
     # def activate(self):
