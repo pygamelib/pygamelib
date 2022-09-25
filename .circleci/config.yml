@@ -10,6 +10,7 @@ jobs:
       - checkout
       - run: sudo chown -R circleci:circleci /usr/local/bin
       - run: sudo chown -R circleci:circleci /usr/local/lib/python3.9/site-packages
+      - run: sudo apt -y install curl
       - restore_cache:
           key: python39-{{ .Branch }}-{{ checksum "Pipfile.lock" }}
       - run:
