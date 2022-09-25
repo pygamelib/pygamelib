@@ -10,7 +10,7 @@ jobs:
       - checkout
       - run: sudo chown -R circleci:circleci /usr/local/bin
       - run: sudo chown -R circleci:circleci /usr/local/lib/python3.9/site-packages
-      - run: sudo apt -y install curl
+      - run: sudo apt -y install curl bash
       - restore_cache:
           key: python39-{{ .Branch }}-{{ checksum "Pipfile.lock" }}
       - run:
@@ -39,7 +39,7 @@ jobs:
             pipenv run coverage run --source=./pygamelib -m unittest discover -s tests
             pipenv run coverage report
             pipenv run coverage html
-            sh <(curl -s https://codecov.io/bash)
+            bash <(curl -s https://codecov.io/bash)
           when: always
       - store_test_results:
           path: reports
