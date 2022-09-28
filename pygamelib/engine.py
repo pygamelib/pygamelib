@@ -736,8 +736,8 @@ class Board(base.PglBaseObject):
                 continue
             # emt.row += self.screen_row
             # emt.column += self.screen_column
-            emt.row += row
-            emt.column += column
+            emt.row += row - row_start
+            emt.column += column - column_start
             emt.emit()
             emt.update()
             emt.render_to_buffer(
@@ -4499,11 +4499,10 @@ class Screen(base.PglBaseObject):
             print("".join(map(str, screen_buffer[row])), flush=False)
         print(
             "".join(map(str, screen_buffer[screen_buffer.shape[0] - 1])),
-            self.terminal.clear_eos,
             end="",
-            flush=True,
+            flush=False,
         )
-        # print(self.terminal.clear_eos, end="")
+        print(self.terminal.clear_eos, end="", flush=True)
 
     def render(self):
         """Render the display buffer into the frame buffer.
