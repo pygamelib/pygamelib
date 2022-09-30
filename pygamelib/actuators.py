@@ -341,7 +341,7 @@ class PathActuator(Actuator):
 
         Example::
 
-            method()
+            path_actuator = PathActuator.load(actuator_data)
         """
         act = cls(path=data["path"])
         if "state" in data.keys():
@@ -429,7 +429,7 @@ class PatrolActuator(PathActuator):
 
         Example::
 
-            method()
+            patrol_actuator = PatrolActuator.load(actuator_data)
         """
         act = cls(path=data["path"])
         if "state" in data.keys():
@@ -498,7 +498,7 @@ class UnidirectionalActuator(Actuator):
 
         Example::
 
-            method()
+            unidir_actuator = UnidirectionalActuator.load(actuator_data)
         """
         act = cls(direction=data["direction"])
         if "state" in data.keys():
@@ -966,7 +966,7 @@ class PathFinder(Behavioral):
 
         Example::
 
-            method()
+            path_finder.remove_waypoint(2,5)
         """
         if type(row) is not int:
             raise base.PglInvalidTypeException('"row" is not an integer. It must be.')
@@ -1011,7 +1011,7 @@ class PathFinder(Behavioral):
 
         Example::
 
-            method()
+            path_finder = PathFinder.load(actuator_data)
         """
         act = cls(
             circle_waypoints=data["circle_waypoints"],
