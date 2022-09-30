@@ -87,7 +87,7 @@ class Board(base.PglBaseObject):
     def __init__(
         self,
         name: str = "Board",
-        size: list = [10, 10],
+        size: list = None,
         ui_borders: str = None,
         ui_border_bottom: str = "-",
         ui_border_top: str = "-",
@@ -95,8 +95,8 @@ class Board(base.PglBaseObject):
         ui_border_right: str = "|",
         ui_board_void_cell=" ",
         ui_board_void_cell_sprixel: core.Sprixel = None,
-        player_starting_position=[0, 0, 0],
-        DISPLAY_SIZE_WARNINGS=True,
+        player_starting_position: list = None,
+        DISPLAY_SIZE_WARNINGS=False,
         parent=None,
         partial_display_viewport=None,
         partial_display_focus=None,
@@ -147,7 +147,11 @@ class Board(base.PglBaseObject):
         """
         super().__init__()
         self.name = name
+        if size is None:
+            size = [10, 10]
         self.size = size
+        if player_starting_position is None:
+            player_starting_position = [0, 0, 0]
         self.player_starting_position = player_starting_position
         self.ui_border_left = ui_border_left
         self.ui_border_right = ui_border_right
@@ -160,17 +164,18 @@ class Board(base.PglBaseObject):
         self.partial_display_viewport = partial_display_viewport
         self.partial_display_focus = partial_display_focus
         self.enable_partial_display = enable_partial_display
-        self._matrix = np.array([])
+        self._matrix = None
+        # self._matrix = np.array([])
 
         # if ui_borders is set then set all borders to that value
         if ui_borders is not None:
-            for item in [
+            for border in [
                 "ui_border_bottom",
                 "ui_border_top",
                 "ui_border_left",
                 "ui_border_right",
             ]:
-                setattr(self, item, ui_borders)
+                setattr(self, border, ui_borders)
         # Now checking for board's data sanity
         try:
             self.check_sanity()
