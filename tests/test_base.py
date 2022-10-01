@@ -203,6 +203,9 @@ class TestBase(unittest.TestCase):
             "",
             font=core.Font("8bits"),
         )
+        text.fg_color = core.Color(0, 255, 0)
+        text.fg_color.r = 125
+        self.assertEqual(text.fg_color.r, 125)
         self.assertIsNone(text.print_formatted())
         text2 = pgl_base.Text.load(text.serialize())
         self.assertEqual(text.text, text2.text)

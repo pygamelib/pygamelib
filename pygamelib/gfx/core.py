@@ -86,7 +86,7 @@ class Color(base.PglBaseObject):
     def r(self, val):
         if type(val) is int and val >= 0 and val <= 255:
             self.__r = val
-            self.notify("pygamelib.gfx.core.Color.r:changed", val)
+            self.notify(self, "pygamelib.gfx.core.Color.r:changed", val)
         else:
             raise base.PglInvalidTypeException(
                 "The value for red needs to be an integer between 0 and 255."
@@ -115,7 +115,7 @@ class Color(base.PglBaseObject):
     def g(self, val):
         if type(val) is int and val >= 0 and val <= 255:
             self.__g = val
-            self.notify("pygamelib.gfx.core.Color.g:changed", val)
+            self.notify(self, "pygamelib.gfx.core.Color.g:changed", val)
         else:
             raise base.PglInvalidTypeException(
                 "The value for green needs to be an integer between 0 and 255."
@@ -144,7 +144,7 @@ class Color(base.PglBaseObject):
     def b(self, val):
         if type(val) is int and val >= 0 and val <= 255:
             self.__b = val
-            self.notify("pygamelib.gfx.core.Color.b:changed", val)
+            self.notify(self, "pygamelib.gfx.core.Color.b:changed", val)
         else:
             raise base.PglInvalidTypeException(
                 "The value for blue needs to be an integer between 0 and 255."
@@ -327,7 +327,7 @@ class Color(base.PglBaseObject):
         self.r = random.randrange(256)
         self.g = random.randrange(256)
         self.b = random.randrange(256)
-        self.notify("pygamelib.gfx.core.Color.randomized", self)
+        self.notify(self, "pygamelib.gfx.core.Color.randomized", self)
 
 
 class Sprixel(base.PglBaseObject):
