@@ -2450,7 +2450,10 @@ class GridSelector(object):
                     buffer_width,
                 )
                 self._config.border_fg_color = border_fg_color
-            for xtr in range(1, self.__cache[i].length):
+            # This cannot be covered yet because no character with a length > 1 is built
+            # into the cache. This needs to be removed when support for characters with
+            # length > 1.
+            for xtr in range(1, self.__cache[i].length):  # pragma: no cover
                 buffer[row + row_offset][column + col_offset + xtr] = ""
                 col_offset += 1
             col_offset += self.__cache[i].length + 1
