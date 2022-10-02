@@ -70,15 +70,43 @@ class PglBaseObject(object):
         """
         super().__init__()
         self._observers = []
-        self.screen_row = -1
+        self._screen_row = -1
         """The absolute row (or y) coordinate on the screen."""
-        self.screen_column = -1
+        self._screen_column = -1
         """The absolute column (or x) coordinate on the screen."""
         # self._last_updated = time.time()
 
-    # def __setattr__(self, name: str, value: Any) -> None:
-    #     super().__setattr__("_last_updated", time.time())
-    #     return super().__setattr__(name, value)
+    @property
+    def screen_row(self) -> int:
+        """
+        A property to get/set the screen row.
+
+        :param value: the screen row
+        :type value: int
+        :rtype: int
+        """
+        return self._screen_row
+
+    @screen_row.setter
+    def screen_row(self, value: int) -> None:
+        if type(value) is int:
+            self._screen_row = value
+
+    @property
+    def screen_column(self) -> int:
+        """
+        A property to get/set the screen column.
+
+        :param value: the screen column
+        :type value: int
+        :rtype: int
+        """
+        return self._screen_column
+
+    @screen_column.setter
+    def screen_column(self, value: int) -> None:
+        if type(value) is int:
+            self._screen_column = value
 
     def store_screen_position(self, row: int, column: int) -> bool:
         """Store the screen position of the object.
