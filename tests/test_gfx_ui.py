@@ -334,7 +334,11 @@ class TestBase(unittest.TestCase):
         self.assertEqual(gd.grid_selector.current_page, 0)
         with self.assertRaises(pgl_base.PglInvalidTypeException):
             ui.GridSelectorDialog(
-                ["a", "b", pgl_base.Text("c"), "##"], 10, 20, "test", config=conf
+                ["a", "b", pgl_base.Text("c"), "##"],
+                10,
+                20,
+                "test",
+                config=conf,
             )
 
         self.assertEqual(gd.title, "test")

@@ -128,7 +128,10 @@ class TestBase(unittest.TestCase):
         # Test display_board but with partial display on.
         g.enable_partial_display = True
         g.partial_display_viewport = [2, 2]
+        g.partial_display_focus = board_items.Camera()
         self.assertIsNone(g.display_board())
+        g.add_board(1, b)
+        self.assertTrue(b.enable_partial_display)
         # Reset
         g = engine.Game()
         with self.assertRaises(base.PglInvalidTypeException):
