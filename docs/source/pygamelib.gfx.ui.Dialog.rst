@@ -20,10 +20,15 @@ Dialog
       ~Dialog.__init__
       ~Dialog.show
    
+   
 
+   
+   
    .. rubric:: Attributes
 
    .. autosummary::
    
       ~Dialog.config
       ~Dialog.user_input
+   
+   

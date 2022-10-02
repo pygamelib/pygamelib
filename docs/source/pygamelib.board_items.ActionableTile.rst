@@ -61,10 +61,10 @@ ActionableTile
       ~ActionableTile.model
       ~ActionableTile.particle_emitter
       ~ActionableTile.row
+      ~ActionableTile.screen_column
+      ~ActionableTile.screen_row
       ~ActionableTile.size
       ~ActionableTile.sprite
       ~ActionableTile.width
-      ~ActionableTile.screen_row
-      ~ActionableTile.screen_column
    
    

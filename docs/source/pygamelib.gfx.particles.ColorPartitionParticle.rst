@@ -20,9 +20,9 @@ ColorPartitionParticle
       ~ColorPartitionParticle.__init__
       ~ColorPartitionParticle.apply_force
       ~ColorPartitionParticle.attach
-      ~ColorPartitionParticle.handle_notification
       ~ColorPartitionParticle.detach
       ~ColorPartitionParticle.finished
+      ~ColorPartitionParticle.handle_notification
       ~ColorPartitionParticle.load
       ~ColorPartitionParticle.notify
       ~ColorPartitionParticle.render
@@ -43,6 +43,8 @@ ColorPartitionParticle
    
       ~ColorPartitionParticle.column
       ~ColorPartitionParticle.row
+      ~ColorPartitionParticle.screen_column
+      ~ColorPartitionParticle.screen_row
       ~ColorPartitionParticle.x
       ~ColorPartitionParticle.y
    

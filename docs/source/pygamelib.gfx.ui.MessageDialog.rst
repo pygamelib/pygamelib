@@ -18,9 +18,9 @@ MessageDialog
    .. autosummary::
    
       ~MessageDialog.__init__
-      ~MessageDialog.show
       ~MessageDialog.add_line
       ~MessageDialog.render_to_buffer
+      ~MessageDialog.show
    
    
 
@@ -31,6 +31,8 @@ MessageDialog
    .. autosummary::
    
       ~MessageDialog.config
+      ~MessageDialog.height
+      ~MessageDialog.title
       ~MessageDialog.user_input
    
    

@@ -23,11 +23,12 @@ Font
    
    
 
-      
+   
+   
    .. rubric:: Attributes
 
    .. autosummary::
-
+   
       ~Font.colorable
       ~Font.glyphs_map
       ~Font.height

@@ -31,6 +31,7 @@ LineInputDialog
    
       ~LineInputDialog.config
       ~LineInputDialog.label
+      ~LineInputDialog.title
       ~LineInputDialog.user_input
    
    

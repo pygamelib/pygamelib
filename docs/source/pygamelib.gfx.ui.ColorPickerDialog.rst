@@ -32,6 +32,7 @@ ColorPickerDialog
    .. autosummary::
    
       ~ColorPickerDialog.config
+      ~ColorPickerDialog.title
       ~ColorPickerDialog.user_input
    
    

@@ -20,9 +20,9 @@ RandomColorParticle
       ~RandomColorParticle.__init__
       ~RandomColorParticle.apply_force
       ~RandomColorParticle.attach
-      ~RandomColorParticle.handle_notification
       ~RandomColorParticle.detach
       ~RandomColorParticle.finished
+      ~RandomColorParticle.handle_notification
       ~RandomColorParticle.load
       ~RandomColorParticle.notify
       ~RandomColorParticle.render
@@ -43,6 +43,8 @@ RandomColorParticle
    
       ~RandomColorParticle.column
       ~RandomColorParticle.row
+      ~RandomColorParticle.screen_column
+      ~RandomColorParticle.screen_row
       ~RandomColorParticle.x
       ~RandomColorParticle.y
    

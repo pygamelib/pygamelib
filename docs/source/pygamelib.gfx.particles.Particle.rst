@@ -20,9 +20,9 @@ Particle
       ~Particle.__init__
       ~Particle.apply_force
       ~Particle.attach
-      ~Particle.handle_notification
       ~Particle.detach
       ~Particle.finished
+      ~Particle.handle_notification
       ~Particle.load
       ~Particle.notify
       ~Particle.render
@@ -43,6 +43,8 @@ Particle
    
       ~Particle.column
       ~Particle.row
+      ~Particle.screen_column
+      ~Particle.screen_row
       ~Particle.x
       ~Particle.y
    

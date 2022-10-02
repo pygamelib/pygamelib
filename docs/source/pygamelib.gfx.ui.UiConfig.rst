@@ -4,6 +4,10 @@ UiConfig
 .. currentmodule:: pygamelib.gfx.ui
 
 .. autoclass:: UiConfig
+   :members:
+   :inherited-members:
+   :undoc-members:
+   :show-inheritance:
 
    
    .. automethod:: __init__

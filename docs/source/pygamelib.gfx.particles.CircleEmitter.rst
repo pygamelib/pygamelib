@@ -20,10 +20,10 @@ CircleEmitter
       ~CircleEmitter.__init__
       ~CircleEmitter.apply_force
       ~CircleEmitter.attach
-      ~CircleEmitter.handle_notification
       ~CircleEmitter.detach
       ~CircleEmitter.emit
       ~CircleEmitter.finished
+      ~CircleEmitter.handle_notification
       ~CircleEmitter.load
       ~CircleEmitter.notify
       ~CircleEmitter.render_to_buffer
@@ -45,6 +45,8 @@ CircleEmitter
       ~CircleEmitter.column
       ~CircleEmitter.particle_pool
       ~CircleEmitter.row
+      ~CircleEmitter.screen_column
+      ~CircleEmitter.screen_row
       ~CircleEmitter.x
       ~CircleEmitter.y
    

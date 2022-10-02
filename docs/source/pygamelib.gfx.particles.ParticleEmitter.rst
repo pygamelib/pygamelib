@@ -20,10 +20,10 @@ ParticleEmitter
       ~ParticleEmitter.__init__
       ~ParticleEmitter.apply_force
       ~ParticleEmitter.attach
-      ~ParticleEmitter.handle_notification
       ~ParticleEmitter.detach
       ~ParticleEmitter.emit
       ~ParticleEmitter.finished
+      ~ParticleEmitter.handle_notification
       ~ParticleEmitter.load
       ~ParticleEmitter.notify
       ~ParticleEmitter.render_to_buffer
@@ -45,6 +45,8 @@ ParticleEmitter
       ~ParticleEmitter.column
       ~ParticleEmitter.particle_pool
       ~ParticleEmitter.row
+      ~ParticleEmitter.screen_column
+      ~ParticleEmitter.screen_row
       ~ParticleEmitter.x
       ~ParticleEmitter.y
    

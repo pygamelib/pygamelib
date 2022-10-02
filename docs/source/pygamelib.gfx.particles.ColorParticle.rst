@@ -20,9 +20,9 @@ ColorParticle
       ~ColorParticle.__init__
       ~ColorParticle.apply_force
       ~ColorParticle.attach
-      ~ColorParticle.handle_notification
       ~ColorParticle.detach
       ~ColorParticle.finished
+      ~ColorParticle.handle_notification
       ~ColorParticle.load
       ~ColorParticle.notify
       ~ColorParticle.render
@@ -43,6 +43,8 @@ ColorParticle
    
       ~ColorParticle.column
       ~ColorParticle.row
+      ~ColorParticle.screen_column
+      ~ColorParticle.screen_row
       ~ColorParticle.x
       ~ColorParticle.y
    

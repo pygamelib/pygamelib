@@ -19,10 +19,14 @@ PglBaseObject
    
       ~PglBaseObject.__init__
       ~PglBaseObject.attach
-      ~PglBaseObject.handle_notification
       ~PglBaseObject.detach
+      ~PglBaseObject.handle_notification
       ~PglBaseObject.notify
       ~PglBaseObject.store_screen_position
+   
+   
+
+   
    
    .. rubric:: Attributes
 
@@ -30,7 +34,5 @@ PglBaseObject
    
       ~PglBaseObject.screen_column
       ~PglBaseObject.screen_row
-
-   
    
    

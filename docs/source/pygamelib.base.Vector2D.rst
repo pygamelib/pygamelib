@@ -20,6 +20,8 @@ Vector2D
       ~Vector2D.__init__
       ~Vector2D.from_direction
       ~Vector2D.length
+      ~Vector2D.load
+      ~Vector2D.serialize
       ~Vector2D.unit
    
    
@@ -34,5 +36,6 @@ Vector2D
       ~Vector2D.row
       ~Vector2D.x
       ~Vector2D.y
+      ~Vector2D.rounding_precision
    
    

@@ -18,21 +18,26 @@ Sprite
    .. autosummary::
    
       ~Sprite.__init__
+      ~Sprite.attach
       ~Sprite.calculate_size
       ~Sprite.copy
+      ~Sprite.detach
       ~Sprite.empty
       ~Sprite.flip_horizontally
       ~Sprite.flip_vertically
       ~Sprite.from_text
+      ~Sprite.handle_notification
       ~Sprite.load
       ~Sprite.load_from_ansi_file
       ~Sprite.modulate
+      ~Sprite.notify
       ~Sprite.render_to_buffer
       ~Sprite.scale
       ~Sprite.serialize
       ~Sprite.set_sprixel
       ~Sprite.set_transparency
       ~Sprite.sprixel
+      ~Sprite.store_screen_position
       ~Sprite.tint
    
    
@@ -44,6 +49,8 @@ Sprite
    .. autosummary::
    
       ~Sprite.height
+      ~Sprite.screen_column
+      ~Sprite.screen_row
       ~Sprite.width
    
    
