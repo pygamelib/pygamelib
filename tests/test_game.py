@@ -489,6 +489,27 @@ class TestBase(unittest.TestCase):
         with self.assertRaises(base.PglInvalidTypeException):
             g.insert_board(1, "engine.Board()")
 
+    def test_animation_management(self):
+        col = core.SpriteCollection()
+        col.add(core.Sprite(name="s1"))
+        col.add(core.Sprite(name="s2"))
+        i = board_items.ComplexNPC(sprite=col["s1"])
+        a = core.Animation(frames=col, parent=i)
+        i.animation = a
+        b = engine.Board(size=[10, 10])
+        b.place_item(i, 0, 0)
+        g = engine.Game(mode=constants.MODE_RT)
+        g.add_board(1, b)
+        g.state = constants.RUNNING
+        g.animate_items(1, 0.01)
+        self.assertEqual(i.sprite, col["s1"])
+        g.animate_items(1, 3.0)
+        self.assertEqual(i.sprite, col["s2"])
+        with self.assertRaises(base.PglInvalidTypeException):
+            g.animate_items("level one")
+        with self.assertRaises(base.PglInvalidLevelException):
+            g.animate_items(5)
+
 
 if __name__ == "__main__":
     unittest.main()
