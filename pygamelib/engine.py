@@ -4251,11 +4251,39 @@ class Screen(base.PglBaseObject):
     In terms of performances, depending on your terminal emulator and CPU you will most
     certainly achieve over 30 FPS. Here are a couple of benchmark results:
 
-     * On an Intel Core i7 @ 4.20 GHz: 45 to 65 FPS.
-     * On an AMD Ryzen 9 5950X @ 4.80 GHz: 60 to 80 FPS.
+     * On an Intel Core i7 @ 4.20 GHz: 50 to 70 FPS.
+     * On an AMD Ryzen 9 5950X @ 4.80 GHz: 60 to 100 FPS.
 
-    If these are not good enough for you, the Direct Display stack is for you. You just
-    need to deal with more stuff with less helper methods.
+    The new **Improved Screen Management** is faster than the legacy stack in most of
+    the cases. The only case when the legacy Direct Display stack might be faster is
+    in the case of a game or application with only simple ASCII characters and not a lot
+    of things to display.
+
+    Here are some compiled benchmark results of both of systems over 150 runs:
+
+    +------------------------+----------------------------+-----------------------+
+    |      Benchmark         | Improved Screen Management | Legacy Direct Display |
+    +========================+============================+=======================+
+    | Sprite (place, render  |    10.0 msec. or 71 FPS    | 380.0 msec. or 3 FPS  |
+    | and update screen),    |                            |                       |
+    | Sprite size: 155x29    |                            |                       |
+    +------------------------+----------------------------+-----------------------+
+    | Sprite 200 updates     |   620.0 msec. or 76 FPS    | 9830.0 msec. or 20 FPS|
+    +------------------------+----------------------------+-----------------------+
+    | Phase 1 - 500 frames.  |   11.02 msec. per frame    | 12.65 msec. per frame |
+    | Single board avg load  |   or 91 FPS                | or 79 FPS             |
+    +------------------------+----------------------------+-----------------------+
+    | Phase 2 - 500 frames.  |   18.18 msec. per frame    | 28.34 msec. per frame |
+    | Dual board high load   |   or 55 FPS                | or 35 FPS             |
+    +------------------------+----------------------------+-----------------------+
+    | Overall - 1000 frames. |   14.60 msec. per frame    | 20.49 msec. per frame |
+    |                        |   or 68 FPS                | or 49 FPS             |
+    +------------------------+----------------------------+-----------------------+
+
+    You can use the 2 benchmark scripts to compare on your system:
+
+     * benchmark-screen-buffer.py
+     * benchmark-screen-direct-display.py
 
     The frame buffer system has been tested on the following terminals:
 

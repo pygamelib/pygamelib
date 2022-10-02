@@ -3,13 +3,13 @@ __docformat__ = "restructuredtext"
 .. autosummary::
    :toctree: .
 
-    Actuator
-    Behavioral
-    RandomActuator
-    PathActuator
-    PatrolActuator
-    UnidirectionalActuator
-    PathFinder
+    pygamelib.actuators.Actuator
+    pygamelib.actuators.Behavioral
+    pygamelib.actuators.RandomActuator
+    pygamelib.actuators.PathActuator
+    pygamelib.actuators.PatrolActuator
+    pygamelib.actuators.UnidirectionalActuator
+    pygamelib.actuators.PathFinder
 
 """
 from pygamelib import board_items
