@@ -510,6 +510,12 @@ class TestBase(unittest.TestCase):
         with self.assertRaises(base.PglInvalidLevelException):
             g.animate_items(5)
 
+    def test_base_object(self):
+        obj = base.PglBaseObject()
+        obj.store_screen_position(2, 4)
+        self.assertEqual(obj.screen_row, 2)
+        self.assertEqual(obj.screen_column, 4)
+
 
 if __name__ == "__main__":
     unittest.main()
