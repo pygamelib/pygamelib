@@ -2,8 +2,8 @@
 Credits
 =======
 
-Development Leads
------------------
+Development Lead
+----------------
 
 * Arnaud Dupuis (`@arnauddupuis`_)
 
@@ -26,15 +26,15 @@ Contributors
 * Javier Hernán Caballero García (`@caballerojavier13`_)
 * Olle Lögdahl (`@ollelogdahl`_)
 * MaryEtta Morris (`@morrme`_)
-* Peter Szabo (`@szabopeter`)
-* Frans Ramirez (`@Frans06`)
-* Krunal Rank (`@KRHero03`)
-* Juan Picca (`@jumapico`)
-*  (`@`)
-*  (`@`)
-*  (`@`)
-*  (`@`)
-*  (`@`)
+* Peter Szabo (`@szabopeter`_)
+* Frans Ramirez (`@Frans06`_)
+* Krunal Rank (`@KRHero03`_)
+* Juan Picca (`@jumapico`_)
+* Harshini (`@harshiniwho`_)
+* Tammysalmon (`@tammysalmon`_)
+* JayC (`@jayc13`_)
+* Rikil Gajarla (`@RikilG`_)
+* Melsaa (`@melsaa`_)
 
 .. _`@arnauddupuis`: https://github.com/arnauddupuis
 .. _`@kaozdl`: https://github.com/kaozdl
@@ -53,9 +53,7 @@ Contributors
 .. _`@caballerojavier13`: https://github.com/caballerojavier13
 .. _`@ollelogdahl`: https://github.com/ollelogdahl
 .. _`@morrme`: https://github.com/morrme
-
 .. _`@harshiniwho`: https://github.com/harshiniwho
-.. _`@tamsalmon`: https://github.com/tamsalmon
 .. _`@tammysalmon`: https://github.com/tammysalmon
 .. _`@jayc13`: https://github.com/jayc13
 .. _`@RikilG`: https://github.com/RikilG
