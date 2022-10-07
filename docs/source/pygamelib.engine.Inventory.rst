@@ -21,6 +21,7 @@ Inventory
       ~Inventory.add_constraint
       ~Inventory.add_item
       ~Inventory.attach
+      ~Inventory.available_space
       ~Inventory.clear_constraints
       ~Inventory.delete_item
       ~Inventory.delete_items

@@ -296,7 +296,7 @@ class Text(PglBaseObject):
         :type style: str
         :param font: The font in which the text is going to be displayed (only works
            when using Screen.place() and Screen.update())
-        :type font: `~pygamelib.gfx.core.Font`
+        :type font: :class:`~pygamelib.gfx.core.Font`
         """
         super().__init__()
         self.__text = ""

@@ -3835,6 +3835,22 @@ class Inventory(base.PglBaseObject):
                 val += i.inventory_space
         return val
 
+    def available_space(self) -> int:
+        """Return the available space in the inventory.
+
+        That is to say, Inventory.max_size - Inventory.size().
+
+        The returned number is comprised between 0 and Inventory.max_size.
+
+        :return: The size as an int.
+        :rtype: int
+
+        Example::
+
+            method()
+        """
+        return max(0, self.max_size - self.size())
+
     def empty(self):
         """Empty the inventory.
 
