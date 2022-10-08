@@ -26,6 +26,7 @@ Color
       ~Color.handle_notification
       ~Color.load
       ~Color.notify
+      ~Color.random
       ~Color.randomize
       ~Color.serialize
       ~Color.store_screen_position

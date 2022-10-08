@@ -205,6 +205,20 @@ class Color(base.PglBaseObject):
     def __repr__(self):
         return f"Color({self.r}, {self.g}, {self.b})"
 
+    @classmethod
+    def random(cls):
+        """Create and return a new random color.
+
+        :rtype: :class:`Color`
+
+        Example::
+
+            my_color = Color.random()
+        """
+        return cls(
+            random.randint(0, 255), random.randint(0, 255), random.randint(0, 255)
+        )
+
     def copy(self):
         """Returns a (deep) copy of this color.
 
@@ -310,7 +324,7 @@ class Color(base.PglBaseObject):
         return cls(data["red"], data["green"], data["blue"])
 
     def randomize(self):
-        """Set a random value for each component
+        """Set a random value for each of the components of an existing color.
 
         When this method is called, the observers are notified with the
         :boldblue:`pygamelib.gfx.core.Color.randomized` event. The :blue:`value` of the
