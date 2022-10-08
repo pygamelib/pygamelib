@@ -473,16 +473,16 @@ class Board(base.PglBaseObject):
         """Display only a part of the board.
 
         This method behaves like display() but only display a part of the board around
-        an object (usually the player).
+        an item (usually the player).
         Example::
 
             # This will display only a total of 30 cells vertically and
             # 60 cells horizontally.
             board.display_around(player, 15, 30)
 
-        :param object: an item to center the view on (it has to be a subclass
+        :param item: an item to center the view on (it has to be a subclass
             of BoardItem)
-        :type object: :class:`~pygamelib.board_items.BoardItem`
+        :type item: :class:`~pygamelib.board_items.BoardItem`
         :param row_radius: The radius of display in number of rows showed. Remember that
             it is a radius not a diameter...
         :type row_radius: int
