@@ -54,6 +54,7 @@ This release is massive. Please read the documentation for specific changes to c
  * Fixed a bug with `restorable` items: now all board items can be set to be restorable.
  * Fixed a bug in pgl-editor when editing large boards that require partial display. The viewport was not correctly restored.
  * Fixed issues with the library's inheritance graph.
+ * Fixed a bug in ``pygamelib.engine.Game`` where the partial display settings (when set at in the Game instance), were not correctly passed down to the Board.
  * Fixed the sphinx dependencies (for building the doc).
  * Fixed the mess in the sphinx files to generate the documentation.
  * Fixed an issue with linting dependencies.
