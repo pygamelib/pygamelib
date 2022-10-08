@@ -2428,6 +2428,10 @@ class GridSelector(object):
         :type width: int
 
         """
+        # TODO: The following line is a hack, I do not yet know why the first cell
+        #       is not cleared when re-rendered (the coordinates calculation is probably
+        #       wrong somewhere).
+        buffer[row][column] = " "
         self.__max_width = functions.clamp(self.__max_width, 0, buffer_width - 2)
         self.__max_height = functions.clamp(self.__max_height, 0, buffer_height - 2)
         crow = 1
