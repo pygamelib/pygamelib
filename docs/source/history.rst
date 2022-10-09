@@ -11,6 +11,9 @@ This release is massive. Please read the documentation for specific changes to c
 ⬆️ Main updates
 ^^^^^^^^^^^^^^^
 
+**Important one:** the whole pygamelib has been migrated to its own Github organization: https://github.com/pygamelib please update your links! The library's repository is now available at https://github.com/pygamelib/pygamelib.
+
+ * **New feature:** A lot of new tools have been developed for the library and are all available on the organization's Github: https://github.com/pygamelib.
  * **New feature:** The ``pygamelib.engine.Screen`` class now has a new **Improved Screen Management** double buffered system. This set of methods allow for a simplified management of the console screen. It is also faster than the *Legacy Direct Display* system. Please read the documentation (https://pygamelib.readthedocs.io/en/latest/pygamelib.engine.Screen.html) and the wiki on the Github repository for more about the differences. You will probably want to switch to the new stack as soon as possible. Both systems are clearly identified in the documentation by visible tags. Most of the new features of this release are **NOT** compatible with the *Legacy Direct Display* system. It still received updates and new features but will probably be deprecated in future updates.
  * **New feature:** Introducing the ``pygamelib.gfx.ui`` module! The beginning of a module for all your game/application user interface needs. The module is in alpha for the moment, feel free to voice your feedback. This module is only compatible with the **Improved Screen Management**.
  * **New feature:** A new tool has been added to the library: pgl-sprite-editor. An editor to create or edit sprites and sprite based animations.
