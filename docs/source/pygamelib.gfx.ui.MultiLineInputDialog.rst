@@ -31,6 +31,7 @@ MultiLineInputDialog
    
       ~MultiLineInputDialog.config
       ~MultiLineInputDialog.fields
+      ~MultiLineInputDialog.title
       ~MultiLineInputDialog.user_input
    
    

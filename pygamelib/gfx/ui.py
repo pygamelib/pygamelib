@@ -2428,6 +2428,10 @@ class GridSelector(object):
         :type width: int
 
         """
+        # TODO: The following line is a hack, I do not yet know why the first cell
+        #       is not cleared when re-rendered (the coordinates calculation is probably
+        #       wrong somewhere).
+        buffer[row][column] = " "
         self.__max_width = functions.clamp(self.__max_width, 0, buffer_width - 2)
         self.__max_height = functions.clamp(self.__max_height, 0, buffer_height - 2)
         crow = 1
@@ -2450,7 +2454,10 @@ class GridSelector(object):
                     buffer_width,
                 )
                 self._config.border_fg_color = border_fg_color
-            for xtr in range(1, self.__cache[i].length):
+            # This cannot be covered yet because no character with a length > 1 is built
+            # into the cache. This needs to be removed when support for characters with
+            # length > 1.
+            for xtr in range(1, self.__cache[i].length):  # pragma: no cover
                 buffer[row + row_offset][column + col_offset + xtr] = ""
                 col_offset += 1
             col_offset += self.__cache[i].length + 1
@@ -3086,6 +3093,7 @@ class MenuAction(object):
         self,
         title: base.Text = None,
         action=None,
+        parameter=None,
         padding: int = 1,
         config: UiConfig = None,
     ) -> None:
@@ -3095,8 +3103,11 @@ class MenuAction(object):
         :param title: The title of the action (i.e: its label)
         :type title: str | :class:`~pygamelib.base.Text`
         :param action: A reference to a callable function that is going to be executed
-           when the action is activated.
+           when the action is activated. If set to None, nothing will happen when the
+           action is activated.
         :type action: callable
+        :param parameter: A parameter that is passed to the callback action if not None.
+        :type parameter: Any
         :param padding: The horizontal padding, i.e the number of space characters added
            to the left and right of the action.
         :type padding: int
@@ -3126,6 +3137,7 @@ class MenuAction(object):
         self.__title = None
         self.__padding = padding
         self._parent = None
+        self.__parameter = parameter
         # TODO: Check types.
         self.__padding_cache = base.Text(" " * self.__padding)
         if isinstance(title, base.Text):
@@ -3137,7 +3149,7 @@ class MenuAction(object):
                 "MenuAction(): title needs to be a pygamelib.base.Text object."
             )
         self.__action = None
-        if callable(action):
+        if callable(action) or action is None:
             self.__action = action
         else:
             raise base.PglInvalidTypeException(
@@ -3246,7 +3258,11 @@ class MenuAction(object):
 
             file_save_action.activate()
         """
-        return self.__action()
+        if callable(self.__action):
+            if self.__parameter is not None:
+                return self.__action(self.__parameter)
+            else:
+                return self.__action()
 
     @property
     def padding(self):
@@ -3745,6 +3761,8 @@ class Menu(object):
                 elif inkey.name == "KEY_RIGHT":
                     if isinstance(self.current_entry(), Menu):
                         self.current_entry().activate()
+            elif not self.__expanded:
+                break
             inkey = term.inkey(timeout=0.05)
         self.__expanded = False
         screen.force_update()
@@ -3768,6 +3786,9 @@ class Menu(object):
             file_menu.collapse()
         """
         self.__expanded = False
+        for e in self.__entries:
+            if isinstance(e, Menu):
+                e.collapse()
 
 
 class MenuBar(object):
@@ -4150,7 +4171,10 @@ class MenuBar(object):
 
         Please call that method when the menu bar loses focus.
         """
-        self.entries[self.__current_index % len(self.entries)].selected = False
+        for e in self.entries:
+            e.selected = False
+            if isinstance(e, Menu):
+                e.collapse()
         self.current_index = -1
 
     # def activate(self):

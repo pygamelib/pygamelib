@@ -17,6 +17,8 @@ class TestBase(unittest.TestCase):
         with self.assertRaises(gfx_core.base.PglInvalidTypeException):
             gfx_core.Color(0, 0, False)
         self.assertEqual(color.__repr__(), "Color(0, 0, 0)")
+        random_color = gfx_core.Color.random()
+        self.assertIsInstance(random_color, gfx_core.Color)
 
     def test_color_cmp(self):
         c1 = gfx_core.Color()

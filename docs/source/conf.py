@@ -24,11 +24,13 @@ import pygamelib.constants as CST  # noqa: F402, F541, E402
 # -- Project information -----------------------------------------------------
 
 project = "pygamelib"
-copyright = "2019-2021, Arnaud Dupuis"
+copyright = "2019-2022, Arnaud Dupuis"
 author = "Arnaud Dupuis"
 
 # The short X.Y version
-version = ""
+# version = ""
+ver = CST.PYGAMELIB_VERSION.split(".")
+version = f"{ver[0]}.{ver[1]}"
 # The full version, including alpha/beta/rc tags
 release = CST.PYGAMELIB_VERSION
 
@@ -50,7 +52,8 @@ extensions = [
 ]
 
 # Add any paths that contain templates here, relative to this directory.
-templates_path = ["ntemplates"]
+# templates_path = ["ntemplates"]
+templates_path = ["_templates"]
 
 # The suffix(es) of source filenames.
 # You can specify multiple suffix as a list of string:
@@ -66,12 +69,13 @@ master_doc = "index"
 #
 # This is also used if you do content translation via gettext catalogs.
 # Usually you set "language" from the command line for these cases.
-language = None
+language = "en"
 
 # List of patterns, relative to source directory, that match files and
 # directories to ignore when looking for source files.
 # This pattern also affects html_static_path and html_extra_path .
-exclude_patterns = []
+exclude_patterns = ["_build", "_templates"]
+# exclude_patterns = []
 
 # The name of the Pygments (syntax highlighting) style to use.
 pygments_style = "sphinx"

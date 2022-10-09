@@ -64,6 +64,10 @@ Text
       ~Text.bg_color
       ~Text.fg_color
       ~Text.length
+      ~Text.screen_column
+      ~Text.screen_row
       ~Text.text
+      ~Text.style
+      ~Text.parent
    
    

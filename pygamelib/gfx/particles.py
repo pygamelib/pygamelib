@@ -68,7 +68,7 @@ class Particle(base.PglBaseObject):
 
     The Particle class is the base class that is inherited from by all other particles.
     It is mostly a "data class" in the sense that it is a class used for calculations
-    but is not able to render on screen by itsefl. All operations are pure data
+    but is not able to render on screen by itself. All operations are pure data
     operations until the emitter draw the particles.
 
     Altought the Particle class can be used on its own, it is most likely to be used as
@@ -1987,7 +1987,7 @@ class ParticleEmitter(base.PglBaseObject):
             self.particle._initial_lifespan = self.particle_lifespan
 
         self.__particle_pool = ParticlePool(
-            size=self.emit_number * self.particle_lifespan,
+            size=max(self.emit_number * self.particle_lifespan, self.emit_number * 2),
             emitter_properties=emitter_properties,
         )
 

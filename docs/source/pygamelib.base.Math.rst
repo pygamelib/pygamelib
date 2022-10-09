@@ -20,6 +20,7 @@ Math
       ~Math.__init__
       ~Math.distance
       ~Math.intersect
+      ~Math.lerp
    
    
 

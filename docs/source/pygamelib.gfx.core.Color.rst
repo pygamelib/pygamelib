@@ -19,14 +19,17 @@ Color
    
       ~Color.__init__
       ~Color.attach
-      ~Color.handle_notification
       ~Color.blend
+      ~Color.copy
       ~Color.detach
       ~Color.from_ansi
+      ~Color.handle_notification
       ~Color.load
       ~Color.notify
+      ~Color.random
       ~Color.randomize
       ~Color.serialize
+      ~Color.store_screen_position
    
    
 
@@ -39,5 +42,7 @@ Color
       ~Color.b
       ~Color.g
       ~Color.r
+      ~Color.screen_column
+      ~Color.screen_row
    
    

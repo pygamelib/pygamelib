@@ -166,6 +166,14 @@ class TestBase(unittest.TestCase):
         with self.assertRaises(Exception):
             engine.Inventory.load(data)
 
+    def test_space_and_size(self):
+        inv = engine.Inventory(max_size=20)
+        self.assertEqual(inv.size(), 0)
+        self.assertEqual(inv.available_space(), 20)
+        inv.add_item(Treasure(inventory_space=9, name="test", value=10))
+        self.assertEqual(inv.size(), 9)
+        self.assertEqual(inv.available_space(), 11)
+
 
 if __name__ == "__main__":
     unittest.main()

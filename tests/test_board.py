@@ -186,6 +186,7 @@ class TestBoard(unittest.TestCase):
             5,
         )
         self.assertEqual(len(self.board._particle_emitters), 1)
+        self.assertIsInstance(self.board.render_cell(5, 5), gfx_core.Sprixel)
         self.board.clear_cell(5, 5)
         self.assertEqual(len(self.board._particle_emitters), 0)
         i = pgl_board_items.NPC(sprixel=sprix)
@@ -444,6 +445,22 @@ class TestBoard(unittest.TestCase):
         b.place_item(Bork(), 6, 6)
         with self.assertRaises(SyntaxError):
             pgl_engine.Board.load(b.serialize())
+
+    def test_render_cell(self):
+        board = pgl_engine.Board(
+            name="test_board", size=[20, 30], player_starting_position=[5, 5]
+        )
+        board.place_item(pgl_board_items.Tile(), 5, 5)
+        board.place_item(
+            pgl_board_items.Door(
+                sprixel=gfx_core.Sprixel(bg_color=gfx_core.Color(15, 15, 15)),
+                particle_emitter=particles.ParticleEmitter(),
+            ),
+            5,
+            5,
+            3,
+        )
+        self.assertIsInstance(board.render_cell(5, 5), gfx_core.Sprixel)
 
 
 if __name__ == "__main__":

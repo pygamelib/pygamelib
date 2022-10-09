@@ -86,7 +86,7 @@ class Color(base.PglBaseObject):
     def r(self, val):
         if type(val) is int and val >= 0 and val <= 255:
             self.__r = val
-            self.notify("pygamelib.gfx.core.Color.r:changed", val)
+            self.notify(self, "pygamelib.gfx.core.Color.r:changed", val)
         else:
             raise base.PglInvalidTypeException(
                 "The value for red needs to be an integer between 0 and 255."
@@ -115,7 +115,7 @@ class Color(base.PglBaseObject):
     def g(self, val):
         if type(val) is int and val >= 0 and val <= 255:
             self.__g = val
-            self.notify("pygamelib.gfx.core.Color.g:changed", val)
+            self.notify(self, "pygamelib.gfx.core.Color.g:changed", val)
         else:
             raise base.PglInvalidTypeException(
                 "The value for green needs to be an integer between 0 and 255."
@@ -144,7 +144,7 @@ class Color(base.PglBaseObject):
     def b(self, val):
         if type(val) is int and val >= 0 and val <= 255:
             self.__b = val
-            self.notify("pygamelib.gfx.core.Color.b:changed", val)
+            self.notify(self, "pygamelib.gfx.core.Color.b:changed", val)
         else:
             raise base.PglInvalidTypeException(
                 "The value for blue needs to be an integer between 0 and 255."
@@ -204,6 +204,20 @@ class Color(base.PglBaseObject):
 
     def __repr__(self):
         return f"Color({self.r}, {self.g}, {self.b})"
+
+    @classmethod
+    def random(cls):
+        """Create and return a new random color.
+
+        :rtype: :class:`Color`
+
+        Example::
+
+            my_color = Color.random()
+        """
+        return cls(
+            random.randint(0, 255), random.randint(0, 255), random.randint(0, 255)
+        )
 
     def copy(self):
         """Returns a (deep) copy of this color.
@@ -310,7 +324,7 @@ class Color(base.PglBaseObject):
         return cls(data["red"], data["green"], data["blue"])
 
     def randomize(self):
-        """Set a random value for each component
+        """Set a random value for each of the components of an existing color.
 
         When this method is called, the observers are notified with the
         :boldblue:`pygamelib.gfx.core.Color.randomized` event. The :blue:`value` of the
@@ -327,7 +341,7 @@ class Color(base.PglBaseObject):
         self.r = random.randrange(256)
         self.g = random.randrange(256)
         self.b = random.randrange(256)
-        self.notify("pygamelib.gfx.core.Color.randomized", self)
+        self.notify(self, "pygamelib.gfx.core.Color.randomized", self)
 
 
 class Sprixel(base.PglBaseObject):
@@ -449,6 +463,9 @@ class Sprixel(base.PglBaseObject):
     def copy(self):
         """
         Returns a (deep) copy of the sprixel.
+
+        .. versionadded:: 1.3.0
+
         """
         return Sprixel(
             self.model,
@@ -459,6 +476,8 @@ class Sprixel(base.PglBaseObject):
 
     def render_to_buffer(self, buffer, row, column, buffer_height, buffer_width):
         """Render the sprixel from the display buffer to the frame buffer.
+
+        .. versionadded:: 1.3.0
 
         This method is automatically called by :func:`pygamelib.engine.Screen.render`.
 
@@ -529,6 +548,8 @@ class Sprixel(base.PglBaseObject):
     def length(self):
         """Return the true length of the model.
 
+        .. versionadded:: 1.3.0
+
         With UTF8 and emojis the length of a string as returned by python's
         :func:`len()` function is often very wrong.
         For example, the len("\\x1b[48;2;139;22;19m\\x1b[38;2;160;26;23m▄\\x1b[0m")
@@ -551,12 +572,16 @@ class Sprixel(base.PglBaseObject):
 
     @property
     def model(self):
-        """
-
-        A property to get/set the model of the Sprixel.
+        """A property to get/set the model of the Sprixel.
 
         :param value: The new model
         :type value: str
+
+        .. role:: boldblue
+
+        When the model is changed, the observers are notified of the change
+        with the :boldblue:`pygamelib.gfx.core.Sprixel.model:changed` event. The new
+        model is passed as the `value` parameter.
 
         Example::
 
@@ -572,6 +597,7 @@ class Sprixel(base.PglBaseObject):
         if type(value) is str:
             self.__model = value
             self.__length = base.Console.instance().length(self.__model)
+            self.notify(self, "pygamelib.gfx.core.Sprixel.model:changed", self.__model)
         else:
             raise base.PglInvalidTypeException(
                 f"A Sprixel.model must be a string. {value} is not a string."
@@ -579,12 +605,16 @@ class Sprixel(base.PglBaseObject):
 
     @property
     def bg_color(self):
-        """
-
-        A property to get/set the background color of the Sprixel.
+        """A property to get/set the background color of the Sprixel.
 
         :param value: The new color
         :type value: :class:`Color`
+
+        .. role:: boldblue
+
+        When the bg_color is changed, the observers are notified of the change
+        with the :boldblue:`pygamelib.gfx.core.Sprixel.bg_color:changed` event. The new
+        bg_color is passed as the `value` parameter.
 
         Example::
 
@@ -600,6 +630,7 @@ class Sprixel(base.PglBaseObject):
         if isinstance(value, Color) or value is None:
             self.__bg_color = value
             self.__build_color_cache()
+            self.notify(self, "pygamelib.gfx.core.Sprixel.bg_color:changed", value)
         else:
             raise base.PglInvalidTypeException(
                 "A Sprixel.bg_color must be a Color object."
@@ -607,12 +638,16 @@ class Sprixel(base.PglBaseObject):
 
     @property
     def fg_color(self):
-        """
-
-        A property to get/set the foreground color of the Sprixel.
+        """A property to get/set the foreground color of the Sprixel.
 
         :param value: The new color
         :type value: :class:`Color`
+
+        .. role:: boldblue
+
+        When the fg_color is changed, the observers are notified of the change
+        with the :boldblue:`pygamelib.gfx.core.Sprixel.fg_color:changed` event. The new
+        fg_color is passed as the `value` parameter.
 
         Example::
 
@@ -628,6 +663,7 @@ class Sprixel(base.PglBaseObject):
         if isinstance(value, Color) or value is None:
             self.__fg_color = value
             self.__build_color_cache()
+            self.notify(self, "pygamelib.gfx.core.Sprixel.fg_color:changed", value)
         else:
             raise base.PglInvalidTypeException(
                 "A Sprixel.fg_color must be a Color object."
@@ -635,6 +671,8 @@ class Sprixel(base.PglBaseObject):
 
     def serialize(self):
         """Serialize a Sprixel into a dictionary.
+
+        .. versionadded:: 1.3.0
 
         :returns: The class as a  dictionary
         :rtype: dict
@@ -654,6 +692,8 @@ class Sprixel(base.PglBaseObject):
     def load(cls, data):
         """
         Create a new Sprixel object based on serialized data.
+
+        .. versionadded:: 1.3.0
 
         :param data: Data loaded from JSON data (deserialized).
         :type data: dict
@@ -1073,6 +1113,9 @@ class Sprite(base.PglBaseObject):
     def copy(self):
         """
         Returns a (deep) copy of the sprite.
+
+        .. versionadded:: 1.3.0
+
         """
         tmp_sprixels = []
         for row in range(0, self.size[1]):
@@ -1130,15 +1173,27 @@ class Sprite(base.PglBaseObject):
                 )
             return self._sprixels[row][column]
 
-    def set_sprixel(self, row, column, val):
+    def set_sprixel(self, row, column, value):
         """
         Set a specific sprixel in the sprite to the given value.
-        :param name: some param
-        :type name: str
+
+        :param row: The row of the sprite (WARNING: internal sprite coordinates)
+        :type row: int
+        :param column: The column of the sprite (same warning)
+        :type column: int
+        :param value: The sprixel to set at [row, column]
+        :type value: :class:`Sprixel`
+
+        .. role:: boldblue
+
+        When a sprixel is changed, the observers are notified of the change
+        with the :boldblue:`pygamelib.gfx.core.Sprite.sprixel:changed` event. A
+        structure is passed as the `value` parameter. This structure has 3 members: row,
+        column and sprixel.
 
         Example::
 
-            method()
+            my_sprite.set_sprixel(1, 2, Sprixel("#",fg_color=green))
         """
         if type(row) is not int or type(column) is not int:
             raise base.PglInvalidTypeException(
@@ -1150,11 +1205,16 @@ class Sprite(base.PglBaseObject):
                 "out_of_sprite_boundaries",
                 f"Sprite.set_sprixel(): ({row},{column}) is out of bound.",
             )
-        if not isinstance(val, Sprixel):
+        if not isinstance(value, Sprixel):
             raise base.PglInvalidTypeException(
                 "Sprite.set_sprixel(row, column, val) val needs to be a Sprixel"
             )
-        self._sprixels[row][column] = val
+        self._sprixels[row][column] = value
+        self.notify(
+            self,
+            "pygamelib.gfx.core.Sprite.sprixel:changed",
+            {"row": row, "column": column, "sprixel": value},
+        )
 
     @classmethod
     def from_text(cls, text_object):
@@ -1370,8 +1430,16 @@ class Sprite(base.PglBaseObject):
     def set_transparency(self, state):
         """This method enable transparent background to all the sprite's sprixels.
 
+        .. versionadded:: 1.3.0
+
         :param state: a boolean to enable or disable background transparency
         :type name: bool
+
+        .. role:: boldblue
+
+        When the transparency is changed, the observers are notified of the change
+        with the :boldblue:`pygamelib.gfx.core.Sprite.transparency:changed` event. The
+        new transparency state is passed as the `value` parameter.
 
         Example::
 
@@ -1387,9 +1455,12 @@ class Sprite(base.PglBaseObject):
         for line in self._sprixels:
             for s in line:
                 s.is_bg_transparent = state
+        self.notify(self, "pygamelib.gfx.core.Sprite.transparency:changed", state)
 
     def serialize(self):
         """Serialize a Sprite into a dictionary.
+
+        .. versionadded:: 1.3.0
 
         :returns: The class as a  dictionary
         :rtype: dict
@@ -1418,6 +1489,8 @@ class Sprite(base.PglBaseObject):
         """
         Property that returns the width of the Sprite.
 
+        .. versionadded:: 1.3.0
+
         Contrary to Sprite.size[0], this property *always* calls Sprite.calculate_size()
         before returning the width.
         """
@@ -1429,6 +1502,8 @@ class Sprite(base.PglBaseObject):
         """
         Property that returns the height of the Sprite.
 
+        .. versionadded:: 1.3.0
+
         Contrary to Sprite.size[1], this property *always* calls Sprite.calculate_size()
         before returning the height.
         """
@@ -1439,6 +1514,8 @@ class Sprite(base.PglBaseObject):
     def load(cls, data):
         """
         Create a new Sprite object based on serialized data.
+
+        .. versionadded:: 1.3.0
 
         :param data: Data loaded from a JSON sprite file (deserialized).
         :type data: dict
@@ -1469,10 +1546,9 @@ class Sprite(base.PglBaseObject):
             )
 
     def scale(self, ratio=1.0):
-        """
-        .. versionadded:: 1.3.0
+        """Scale a sprite up and down using the nearest neighbor algorithm.
 
-        Scale a sprite up and down using the nearest neighbor algorithm.
+        .. versionadded:: 1.3.0
 
         :param ratio: The scaling ration.
         :type ratio: float
@@ -1512,6 +1588,8 @@ class Sprite(base.PglBaseObject):
 
     def tint(self, color: Color, ratio: float = 0.5):
         """Tint a copy of the sprite with the color.
+
+        .. versionadded:: 1.3.0
 
         This method creates a copy of the sprite and tint all its sprixels with the
         color at the specified ratio.
@@ -1555,6 +1633,8 @@ class Sprite(base.PglBaseObject):
     def modulate(self, color: Color, ratio: float = 0.5):
         """Modulate the sprite colors with the color in parameters.
 
+        .. versionadded:: 1.3.0
+
         This method tint all the sprixels of the sprite with the color at the specified
         ratio.
         **The original sprite IS modified**.
@@ -1566,6 +1646,12 @@ class Sprite(base.PglBaseObject):
         :param ratio: The modulation ratio between 0.0 and 1.0 (default: 0.5)
         :type ratio: float
         :returns: None
+
+        .. role:: boldblue
+
+        When this method is called, the observers are notified of the change
+        with the :boldblue:`pygamelib.core.Sprite.color:modulated` event. No arguments
+        are passed along this event.
 
         Example::
 
@@ -1585,9 +1671,12 @@ class Sprite(base.PglBaseObject):
                     sprix.bg_color = sprix.bg_color.blend(color, ratio)
                 if sprix.fg_color is not None:
                     sprix.fg_color = sprix.fg_color.blend(color, ratio)
+        self.notify(self, "pygamelib.core.Sprite.color:modulated")
 
     def render_to_buffer(self, buffer, row, column, buffer_height, buffer_width):
         """Render the sprite from the display buffer to the frame buffer.
+
+        .. versionadded:: 1.3.0
 
         This method is automatically called by :func:`pygamelib.engine.Screen.render`.
 

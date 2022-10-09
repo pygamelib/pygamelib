@@ -3,10 +3,10 @@ __docformat__ = "restructuredtext"
 .. autosummary::
    :toctree: .
 
-    Models
-    Blocks
-    BoxDrawings
-    GeometricShapes
+    pygamelib.assets.graphics.Models
+    pygamelib.assets.graphics.Blocks
+    pygamelib.assets.graphics.BoxDrawings
+    pygamelib.assets.graphics.GeometricShapes
 """
 
 from colorama import Fore, Back, Style, init  # noqa: F401

@@ -20,9 +20,9 @@ PartitionParticle
       ~PartitionParticle.__init__
       ~PartitionParticle.apply_force
       ~PartitionParticle.attach
-      ~PartitionParticle.handle_notification
       ~PartitionParticle.detach
       ~PartitionParticle.finished
+      ~PartitionParticle.handle_notification
       ~PartitionParticle.load
       ~PartitionParticle.notify
       ~PartitionParticle.render
@@ -43,6 +43,8 @@ PartitionParticle
    
       ~PartitionParticle.column
       ~PartitionParticle.row
+      ~PartitionParticle.screen_column
+      ~PartitionParticle.screen_row
       ~PartitionParticle.x
       ~PartitionParticle.y
    

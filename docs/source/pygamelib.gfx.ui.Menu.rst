@@ -20,7 +20,9 @@ Menu
       ~Menu.__init__
       ~Menu.activate
       ~Menu.add_entry
+      ~Menu.collapse
       ~Menu.current_entry
+      ~Menu.expand
       ~Menu.menu_width
       ~Menu.render_to_buffer
       ~Menu.select_next

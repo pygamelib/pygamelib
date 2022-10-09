@@ -128,7 +128,10 @@ class TestBase(unittest.TestCase):
         # Test display_board but with partial display on.
         g.enable_partial_display = True
         g.partial_display_viewport = [2, 2]
+        g.partial_display_focus = board_items.Camera()
         self.assertIsNone(g.display_board())
+        g.add_board(1, b)
+        self.assertTrue(b.enable_partial_display)
         # Reset
         g = engine.Game()
         with self.assertRaises(base.PglInvalidTypeException):
@@ -485,6 +488,33 @@ class TestBase(unittest.TestCase):
             g.insert_board("1", engine.Board())
         with self.assertRaises(base.PglInvalidTypeException):
             g.insert_board(1, "engine.Board()")
+
+    def test_animation_management(self):
+        col = core.SpriteCollection()
+        col.add(core.Sprite(name="s1"))
+        col.add(core.Sprite(name="s2"))
+        i = board_items.ComplexNPC(sprite=col["s1"])
+        a = core.Animation(frames=col, parent=i)
+        i.animation = a
+        b = engine.Board(size=[10, 10])
+        b.place_item(i, 0, 0)
+        g = engine.Game(mode=constants.MODE_RT)
+        g.add_board(1, b)
+        g.state = constants.RUNNING
+        g.animate_items(1, 0.01)
+        self.assertEqual(i.sprite, col["s1"])
+        g.animate_items(1, 3.0)
+        self.assertEqual(i.sprite, col["s2"])
+        with self.assertRaises(base.PglInvalidTypeException):
+            g.animate_items("level one")
+        with self.assertRaises(base.PglInvalidLevelException):
+            g.animate_items(5)
+
+    def test_base_object(self):
+        obj = base.PglBaseObject()
+        obj.store_screen_position(2, 4)
+        self.assertEqual(obj.screen_row, 2)
+        self.assertEqual(obj.screen_column, 4)
 
 
 if __name__ == "__main__":
