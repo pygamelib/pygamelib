@@ -52,7 +52,7 @@ class Board(base.PglBaseObject):
 
     If you want a detailed introduction to the Board object, go the the pygamelib wiki
     and read the "`Getting started: the Board
-    <https://github.com/arnauddupuis/pygamelib/wiki/Getting-started-Board>`_" article.
+    <https://github.com/pygamelib/pygamelib/wiki/Getting-started-Board>`_" article.
 
     .. role:: boldblue
     .. role:: blue
@@ -79,7 +79,7 @@ class Board(base.PglBaseObject):
        managed to expand and shrink on demand (or on a need basis). You can use the
        layer system to add some depth to your game but you should be warned that you may
        experience some issues. If it is the case please report them on the
-       `Github issues page <https://github.com/arnauddupuis/pygamelib/issues>`_.
+       `Github issues page <https://github.com/pygamelib/pygamelib/issues>`_.
        For existing code, the entire Board object behaves exactly like in version 1.2.x.
 
     """

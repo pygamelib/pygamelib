@@ -9,7 +9,7 @@
 [![codecov](https://codecov.io/gh/arnauddupuis/pygamelib/branch/master/graph/badge.svg)](https://codecov.io/gh/arnauddupuis/pygamelib)
 
 <p align="center">
-  <img src="https://raw.githubusercontent.com/arnauddupuis/pygamelib/master/images/pygamelib-logo.png">
+  <img src="https://raw.githubusercontent.com/pygamelib/pygamelib/master/images/pygamelib-logo.png">
 </p>
 
 # pygamelib
@@ -17,7 +17,7 @@ A (not so) small library for terminal based game development.
 
 ## Preemptive warning
 
-Version updates always bare the possibility of bringing some breaking changes together with new features and improvements. We try to limit these but when they do occur they are documented [on the wiki](/wiki#migration-notes).
+Version updates always bare the possibility of bringing some breaking changes together with new features and improvements. We try to limit these but when they do occur they are documented [on the wiki]([/wiki#migration-notes](https://github.com/pygamelib/pygamelib/wiki#migration-notes)).
 
 ## Introduction
 

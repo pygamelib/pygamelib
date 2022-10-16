@@ -1740,7 +1740,7 @@ class Actionable(Immovable):
         for more details.
 
     .. important:: There's a complete tutorial about Actionable items on the pygamelib
-       `wiki <https://github.com/arnauddupuis/pygamelib/wiki/Actionable-Items>`_
+       `wiki <https://github.com/pygamelib/pygamelib/wiki/Actionable-Items>`_
     """
 
     def __init__(self, action=None, action_parameters=None, perm=None, **kwargs):
@@ -2595,7 +2595,7 @@ class GenericActionableStructure(GenericStructure, Actionable):
     :class:`~pygamelib.board_items.Actionable` for more information.
 
     .. important:: There's a complete tutorial about Actionable items on the pygamelib
-       `wiki <https://github.com/arnauddupuis/pygamelib/wiki/Actionable-Items>`_
+       `wiki <https://github.com/pygamelib/pygamelib/wiki/Actionable-Items>`_
     """
 
     def __init__(self, **kwargs):
@@ -2954,7 +2954,7 @@ class ActionableTile(Actionable, Tile):
     player collide with the object.
 
     .. important:: There's a complete tutorial about Actionable items on the pygamelib
-       `wiki <https://github.com/arnauddupuis/pygamelib/wiki/Actionable-Items>`_
+       `wiki <https://github.com/pygamelib/pygamelib/wiki/Actionable-Items>`_
     """
 
     def __init__(self, **kwargs):

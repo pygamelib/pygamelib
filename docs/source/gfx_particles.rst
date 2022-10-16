@@ -27,7 +27,7 @@ Here is a video example:
     <iframe width="560" height="315" src="https://www.youtube.com/embed/KnBOzVpapNY" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
 
 This is the benchmark of the particle system, the code is available on 
-`Ghithub <https://github.com/arnauddupuis/pygamelib/tree/master/examples/benchmark-particle-system>`_.
+`Ghithub <https://github.com/pygamelib/pygamelib/tree/master/examples/benchmark-particle-system>`_.
 
 .. important:: Like the UI module, the particles system works exclusively with the
    screen buffer system (place, delete, render, update, etc.).
