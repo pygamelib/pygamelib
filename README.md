@@ -39,6 +39,7 @@ Have a look at the [examples/](examples/suparex/) directory to see how most of t
 If you want a quick peak at the new features in the most recent version, have a look at this:
 
 [![Watch the video](https://img.youtube.com/vi/AyzSMH5msU4/default.jpg)](https://youtu.be/AyzSMH5msU4)
+
 ## Strong points
 
 Hopefully you'll find the pygamelib to have a lot of strong points:
