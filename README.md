@@ -17,7 +17,7 @@ A (not so) small library for terminal based game development.
 
 ## Preemptive warning
 
-Version updates always bare the possibility of bringing some breaking changes together with new features and improvements. We try to limit these but when they do occur they are documented [on the wiki]([/wiki#migration-notes](https://github.com/pygamelib/pygamelib/wiki#migration-notes)).
+Version updates always bare the possibility of bringing some breaking changes together with new features and improvements. We try to limit these but when they do occur they are documented [on the wiki](https://github.com/pygamelib/pygamelib/wiki#migration-notes).
 
 ## Introduction
 
