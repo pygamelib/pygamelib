@@ -61,7 +61,7 @@ if __name__ == "__main__":
     )
     # Then we create 2 basic boards. Please have a look at the wiki for a complete
     # tutorial on Boards:
-    # https://github.com/arnauddupuis/pygamelib/wiki/Getting-started-Board
+    # https://github.com/pygamelib/pygamelib/wiki/Getting-started-Board
     # And the documentation for the Board class:
     # https://pygamelib.readthedocs.io/en/latest/pygamelib.engine.Board.html
     board1 = engine.Board(

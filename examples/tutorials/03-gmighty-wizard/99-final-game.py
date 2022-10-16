@@ -201,6 +201,7 @@ def whale_behavior():
     # their type.
     # This matches both "left_whale" and "right_whale"
     for item in g.current_board().get_movables(type="whale"):
+        item.sprixel.bg_color = core.Color(124, 183, 255)
         if item.type == "right_whale" or item.type == "left_whale":
             whales.append(item)
     if len(whales) > 0:
@@ -223,7 +224,8 @@ def whale_behavior():
                                 1,
                                 board_items.NPC(
                                     sprixel=core.Sprixel(
-                                        graphics.Models.OCTOPUS, core.Color(0, 0, 255)
+                                        graphics.Models.OCTOPUS,
+                                        core.Color(124, 183, 255),
                                     ),
                                     name="Swimming Octopus (Left)",
                                     item_type="swimming_octopus",
@@ -238,7 +240,8 @@ def whale_behavior():
                                 1,
                                 board_items.NPC(
                                     sprixel=core.Sprixel(
-                                        graphics.Models.OCTOPUS, core.Color(0, 0, 255)
+                                        graphics.Models.OCTOPUS,
+                                        core.Color(124, 183, 255),
                                     ),
                                     name="Swimming Octopus (Right)",
                                     item_type="swimming_octopus",
@@ -512,11 +515,15 @@ g.actuate_npcs(1)
 # Now let's place the 2 river tiles (we use the Door object as a shortcut to get a
 # overlapable, restorable item)
 g.current_board().place_item(
-    board_items.Door(sprixel=core.Sprixel.blue_square()), 0, 26
+    board_items.Door(sprixel=core.Sprixel("  ", core.Color(124, 183, 255))), 0, 26
 )
 g.current_board().place_item(
-    board_items.Door(sprixel=core.Sprixel.blue_square()), 11, 0
+    board_items.Door(sprixel=core.Sprixel("  ", core.Color(124, 183, 255))), 11, 0
 )
+
+for item in g.current_board().get_movables(type="whale"):
+    if item.type == "right_whale" or item.type == "left_whale":
+        item.sprixel.bg_color = core.Color(124, 183, 255)
 
 # Now we need to take care of the explosions. Hide them and set the callback functions.
 for item in g.current_board().get_immovables():
