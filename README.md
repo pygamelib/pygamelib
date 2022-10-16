@@ -17,7 +17,7 @@ A (not so) small library for terminal based game development.
 
 ## Preemptive warning
 
-Between version 1.1.1 and 1.2.0 the library was renamed from hac-game-lib to pygamelib and reworked to its core. So even though all the objects remains API compatible across versions, there is a bit of renaming to do in the imports.
+Version updates always bare the possibility of bringing some breaking changes together with new features and improvements. We try to limit these but when they do occur they are documented [on the wiki](/wiki#migration-notes).
 
 ## Introduction
 
@@ -30,27 +30,15 @@ However, it can now be used by aspiring game developers for an introduction to 2
 
 There is a [Youtube channel](https://www.youtube.com/channel/UCT_SxIlKaD6MM7JlQKelpgw) that (will) contains tutorials.
 
-![suparex.py screenshot](https://raw.githubusercontent.com/arnauddupuis/pygamelib/master/images/Screenshot_Suparex.png "suparex.py")
+Here is a quick view of what can currently be achieved with that library:
 
-Here is a quick view of what can currently be achieved with that library (base_game haven't been updated for a long time):
+<iframe width="560" height="315" src="https://www.youtube.com/embed/9l18dhJ-kJE" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
 
-![base_game.py animation](https://raw.githubusercontent.com/arnauddupuis/pygamelib/master/images/base_game.gif "base_game.py")
+Have a look at the [examples/](examples/suparex/) directory to see how most of these games have been done!
 
-The base game makes use of:
-* The main "game engine" (pygamelib.engine.Game)
-* Many different types of structures (from pygamelib.board_items): Wall (well the walls...), Treasure (gems and money bag), GenericStructure (trees) and GenericActionnableStructure (hearts and portals)
-* Game()'s menu capabilities.
-* Player and NPC (from pygamelib.board_items)
-* Inventory (from pygamelib.engine.Inventory)
-* Player and Inventory stats
-* RandomActuator (NPCs in level 2) and PathActuator (NPCs in level 1) (from pygamelib.actuators.SimpleActuators)
+If you want a quick peak at the new features in the most recent version, have a look at this:
 
-For more up to date examples, have a look at:
- * [examples/suparex/](examples/suparex/) a platform game with procedural level generation
- * [examples/tutorials/03-game-design/](examples/tutorials/03-game-design/) for a more "dungeon-y" turn by turn experience.
-
-Here is a poorly done gif of Suparex:
-![Suparex animation](https://raw.githubusercontent.com/arnauddupuis/pygamelib/master/images/suparex-720.gif "suparex.py")
+<iframe width="560" height="315" src="https://www.youtube.com/embed/AyzSMH5msU4" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
 
 ## Strong points
 
