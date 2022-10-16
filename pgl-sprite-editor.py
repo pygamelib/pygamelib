@@ -1674,7 +1674,7 @@ if __name__ == "__main__":
         base.Text(
             "The sprite editor is under heavy development and is not production ready."
             "If you find bugs or have feature requests please go to "
-            "https://github.com/arnauddupuis/pygamelib/issues",
+            "https://github.com/pygamelib/pygamelib/issues",
             core.Color(0, 150, 255),
             style=constants.BOLD,
         )

@@ -37,25 +37,22 @@ More advanced game will use the :ref:`gfx_ui-module` module to create terminal u
 
 Here is an example of what the current version allow to build:
 
-.. image:: https://raw.githubusercontent.com/arnauddupuis/pygamelib/master/images/suparex-720.gif
+.. raw:: html
 
-The `suparex <https://github.com/arnauddupuis/pygamelib/tree/master/examples/suparex>`_ game makes use of:
-    * The main game engine (pygamelib.engine.Game)
-    * Procedurally generated boards (pygamelib.engine.Board).
-    * Many different types of structures (from pygamelib.board_items), like:
+    <iframe width="560" height="315" src="https://www.youtube.com/embed/9l18dhJ-kJE" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
 
-        * Wall (well the walls...),
-        * GenericActionnableStructure (hearts and portals).
-    * Game()'s menu capabilities.
-    * Projectiles (the tree shooter, bolts and bombs)
-    * Player and NPC (from pygamelib.board_items)
-    * Player stats
+And a quick peak at the new features in the most recent version:
+
+.. raw:: html
+
+    <iframe width="560" height="315" src="https://www.youtube.com/embed/AyzSMH5msU4" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+
 
 Tutorials
 ^^^^^^^^^
 
 Most tutorials to teach you how to use the library to build games are (or will be) on the 
-`wiki <https://github.com/arnauddupuis/pygamelib/wiki>`_.
+`wiki <https://github.com/pygamelib/pygamelib/wiki>`_.
 
 Tutorials that teach you how to expand the library are (or will be) centralized here.
 

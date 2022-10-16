@@ -7,7 +7,7 @@ First off, thank you for considering contributing to the pygamelib. We all reall
 
 Before we start, here are some valuable resources:
 - [Read The Docs](https://pygamelib.readthedocs.io/en/latest/index.html)  
-- [Github](https://github.com/arnauddupuis/pygamelib)
+- [Github](https://github.com/pygamelib/pygamelib)
 
 These guidelines are heavily insprired by https://github.com/nayafia/contributing-template/blob/master/CONTRIBUTING-template.md thanks a lot to them.
 
@@ -25,7 +25,7 @@ We are always happy to receive contrbutions. There is a lot of area to contribut
 # Ground Rules
 ### Code of conduct and guidelines
 
-First of all, we expect everyone (contributors and maintainers alike) to respect the [Code of conduct](https://github.com/arnauddupuis/pygamelib/blob/master/CODE_OF_CONDUCT.md).
+First of all, we expect everyone (contributors and maintainers alike) to respect the [Code of conduct](https://github.com/pygamelib/pygamelib/blob/master/CODE_OF_CONDUCT.md).
 It is not a recomandation, it is mandatory.
 
 For all contributions, please respect the following guidelines:
@@ -35,7 +35,7 @@ For all contributions, please respect the following guidelines:
 * Do not add unnecessary dependencies.
 * Remember: the pygamelib is supposed to require only python3, colorama and a terminal to run. Anything more needs to be discussed. Any dependency to a specific platform or OS will be refused.
 * Be aware that the pull request review process is not immediate, and is generally proportional to the size of the pull request.
-* Please, check the [pull request checklist](https://github.com/arnauddupuis/pygamelib/blob/master/PULL_REQUEST_REVIEW_CHECKLIST.md) before submitting your PR.
+* Please, check the [pull request checklist](https://github.com/pygamelib/pygamelib/blob/master/PULL_REQUEST_REVIEW_CHECKLIST.md) before submitting your PR.
 
 # Your First Contribution
 
@@ -63,7 +63,7 @@ Here is a good tutorial on rebasing: https://benmarshall.me/git-rebase/.
 The general process to submit a contribution is as follow:
 1. Create your own fork of the code
 2. Do the changes in your fork
-3. Make sure you went through the [pull request checklist](https://github.com/arnauddupuis/pygamelib/blob/master/PULL_REQUEST_REVIEW_CHECKLIST.md)
+3. Make sure you went through the [pull request checklist](https://github.com/pygamelib/pygamelib/blob/master/PULL_REQUEST_REVIEW_CHECKLIST.md)
 4. Submit a pull request that respects the PR template.
 
 # How to add issues

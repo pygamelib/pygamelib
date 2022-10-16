@@ -45,11 +45,11 @@ setuptools.setup(
     ],
     project_urls={
         "Documentation": "https://pygamelib.readthedocs.io/en/latest/index.html",  # noqa: E501
-        "Source": "https://github.com/arnauddupuis/pygamelib",
-        "Tracker": "https://github.com/arnauddupuis/pygamelib/issues",
-        "Wiki": "https://github.com/arnauddupuis/pygamelib/wiki",
+        "Source": "https://github.com/pygamelib/pygamelib",
+        "Tracker": "https://github.com/pygamelib/pygamelib/issues",
+        "Wiki": "https://github.com/pygamelib/pygamelib/wiki",
         "Tech blog": "https://8bitscoding.io/",
-        "Release Notes": "https://8bitscoding.io/2020/08/30/pygamelib-v1-2-0-release-notes/",  # noqa: E501
+        # "Release Notes": "https://8bitscoding.io/2020/08/30/pygamelib-v1-2-0-release-notes/",  # noqa: E501
     },
     python_requires=">=3.6",
 )

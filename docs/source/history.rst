@@ -83,7 +83,7 @@ Emergency release: fix a regression introduced by v1.2.2.
 ------------------
 
  * Renamed the entire library from hac-game-lib to pygamelib.
- * ***Breaking change:*** The library has been heavily refactored and this creates some issues. Please have a look at `the migration notes <https://github.com/arnauddupuis/pygamelib/wiki/Migrating-from-hac%E2%80%90game%E2%80%90lib-1.1.x-to-pygamelib-1.2.0>`_
+ * ***Breaking change:*** The library has been heavily refactored and this creates some issues. Please have a look at `the migration notes <https://github.com/pygamelib/pygamelib/wiki/Migrating-from-hac%E2%80%90game%E2%80%90lib-1.1.x-to-pygamelib-1.2.0>`_
  * **New feature:** Items that can be represented on more than one cell. We call them complex items. There's a lot of new complex items: ComplexPlayer and ComplexNPC of course, but also ComplexWall, ComplexDoor, ComplexTreasure and the general purpose Tile object.
  * **New feature:** Going, with complex item we now have a proper sprite system with the gfx.core.Sprite class.
  * **New feature:** In addition to the regular model we now have a new concept: the Sprixel. A Sprite is made of many Sprixels.
