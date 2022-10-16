@@ -32,14 +32,13 @@ There is a [Youtube channel](https://www.youtube.com/channel/UCT_SxIlKaD6MM7JlQK
 
 Here is a quick view of what can currently be achieved with that library:
 
-<iframe width="560" height="315" src="https://www.youtube.com/embed/9l18dhJ-kJE" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+[![Watch the video](https://img.youtube.com/vi/9l18dhJ-kJE/default.jpg)](https://youtu.be/9l18dhJ-kJE)
 
 Have a look at the [examples/](examples/suparex/) directory to see how most of these games have been done!
 
 If you want a quick peak at the new features in the most recent version, have a look at this:
 
-<iframe width="560" height="315" src="https://www.youtube.com/embed/AyzSMH5msU4" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
-
+[![Watch the video](https://img.youtube.com/vi/AyzSMH5msU4/default.jpg)](https://youtu.be/AyzSMH5msU4)
 ## Strong points
 
 Hopefully you'll find the pygamelib to have a lot of strong points:
