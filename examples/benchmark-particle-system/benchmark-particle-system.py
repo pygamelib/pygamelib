@@ -20,6 +20,7 @@ class State:
     black = core.Color(0, 0, 0)
     cyan = core.Color(0, 255, 255)
     dark_blue = core.Color(7, 2, 40)
+    purpleish = core.Color(47, 4, 122)
     gravity = base.Vector2D(0.2, 0.0)
     wind_up = base.Vector2D(-0.2, 0.0)
     firework_colors = [
@@ -77,6 +78,11 @@ def init_intro_screen(g: engine.Game):
         screen.height
         if screen.height <= bench_state.night_bg.height
         else bench_state.night_bg.height
+    )
+    bench_state.frwk_spr_stop_col = (
+        screen.width
+        if screen.width <= bench_state.night_bg.width
+        else bench_state.night_bg.width
     )
     bench_state.frwk_spr_start_col = bench_state.night_bg.width - screen.width
     for r in range(0, bench_state.frwk_spr_stop_row):
@@ -298,10 +304,12 @@ def update_low_emitter(g: engine.Game, key, dt):
         0,
     )
     process_basic_keystroke(g, key)
+
     for emt in bench_state.particle_emitters:
         if not emt.finished():
             emt.emit()
             emt.update()
+
     for i in range(len(bench_state.particle_emitters) - 1, -1, -1):
         if bench_state.particle_emitters[i].finished():
             del bench_state.particle_emitters[i]
@@ -530,10 +538,15 @@ def firework_update(g: engine.Game, key, dt):
             emt.emit()
             emt.apply_force(bench_state.gravity)
             emt.update()
-
+    filler = core.Sprixel(" ", bench_state.purpleish)
     for i in range(len(bench_state.particle_emitters) - 1, -1, -1):
         if bench_state.particle_emitters[i].finished():
             screen.delete(
+                bench_state.particle_emitters[i].row,
+                bench_state.particle_emitters[i].column,
+            )
+            screen.place(
+                filler,
                 bench_state.particle_emitters[i].row,
                 bench_state.particle_emitters[i].column,
             )
@@ -661,6 +674,9 @@ if __name__ == "__main__":
         input_lag=0.05,
     )
     if g.screen.width >= 159 and g.screen.height >= 65:
+        # if the termninal is at the right dimensions, we lock the screen size to ensure
+        # consistent results across terminal and hardware.
+        g.screen = engine.Screen(159, 65)
         g.DEBUG = True
         b = engine.Board(
             size=[1, 1],
