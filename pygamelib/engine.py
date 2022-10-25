@@ -1769,7 +1769,6 @@ class Game(base.PglBaseObject):
         name="Game",
         player=None,
         boards={},
-        menu={},
         current_level=None,
         enable_partial_display=False,
         partial_display_viewport=None,
@@ -1830,7 +1829,6 @@ class Game(base.PglBaseObject):
         super().__init__()
         self.name = name
         self._boards = boards
-        self._menu = menu
         self.current_level = current_level
         self.player = player
         self.__state = constants.RUNNING
@@ -2089,182 +2087,6 @@ class Game(base.PglBaseObject):
            prints". If you want a real logging system, please use Python logging module.
         """
         self._logs = list()
-
-    def add_menu_entry(self, category, shortcut, message, data=None):
-        """Add a new entry to the menu.
-
-        .. deprecated:: 1.3.0
-           This function will be removed in version 1.4.0
-
-        Add another shortcut and message to the specified category.
-
-        Categories help organize the different sections of a menu or dialogues.
-
-        :param category: The category to which the entry should be added.
-        :type category: str
-        :param shortcut: A shortcut (usually one key) to display.
-        :type shortcut: str
-        :param message: a message that explains what the shortcut does.
-        :type message: str
-        :param data: a data that you can get from the menu object.
-        :type message: various
-
-        The shortcut and data is optional.
-
-        Example::
-
-            game.add_menu_entry('main_menu','d','Go right',constants.RIGHT)
-            game.add_menu_entry('main_menu',None,'-----------------')
-            game.add_menu_entry('main_menu','v','Change game speed')
-
-        """
-        if category in self._menu.keys():
-            self._menu[category].append(
-                {"shortcut": shortcut, "message": message, "data": data}
-            )
-        else:
-            self._menu[category] = [
-                {"shortcut": shortcut, "message": message, "data": data}
-            ]
-
-    def delete_menu_category(self, category=None):
-        """Delete an entire category from the menu.
-
-        .. deprecated:: 1.3.0
-           This function will be removed in version 1.4.0
-
-        That function removes the entire list of messages that are attached to the
-        category.
-
-        :param category: The category to delete.
-        :type category: str
-        :raise PglInvalidTypeException: If the category is not a string
-
-        .. important:: If the entry have no shortcut it's advised not to try to update
-            unless you have only one NoneType as a shortcut.
-
-        Example::
-
-            game.add_menu_entry('main_menu','d','Go right')
-            game.update_menu_entry('main_menu','d','Go LEFT',constants.LEFT)
-
-        """
-        if type(category) is str and category in self._menu:
-            del self._menu[category]
-        else:
-            raise base.PglInvalidTypeException(
-                "in Game.delete_menu_entry(): category cannot be anything else but a"
-                "string."
-            )
-
-    def update_menu_entry(self, category, shortcut, message, data=None):
-        """Update an entry of the menu.
-
-        .. deprecated:: 1.3.0
-           This function will be removed in version 1.4.0
-
-        Update the message associated to a category and a shortcut.
-
-        :param category: The category in which the entry is located.
-        :type category: str
-        :param shortcut: The shortcut of the entry you want to update.
-        :type shortcut: str
-        :param message: a message that explains what the shortcut does.
-        :type message: str
-        :param data: a data that you can get from the menu object.
-        :type message: various
-
-        .. important:: If the entry have no shortcut it's advised not to try to update
-            unless you have only one NoneType as a shortcut.
-
-        Example::
-
-            game.add_menu_entry('main_menu','d','Go right')
-            game.update_menu_entry('main_menu','d','Go LEFT',constants.LEFT)
-
-        """
-        for e in self._menu[category]:
-            if e["shortcut"] == shortcut:
-                e["message"] = message
-                if data is not None:
-                    e["data"] = data
-
-    def get_menu_entry(self, category, shortcut):
-        """Get an entry of the menu.
-
-        .. deprecated:: 1.3.0
-           This function will be removed in version 1.4.0
-
-        This method return a dictionnary with 3 entries :
-
-            * shortcut
-            * message
-            * data
-
-        :param category: The category in which the entry is located.
-        :type category: str
-        :param shortcut: The shortcut of the entry you want to get.
-        :type shortcut: str
-        :return: The menu entry or None if none was found
-        :rtype: dict
-
-        Example::
-
-            ent = game.get_menu_entry('main_menu','d')
-            game.move_player(int(ent['data']),1)
-
-        """
-        if category in self._menu:
-            for e in self._menu[category]:
-                if e["shortcut"] == shortcut:
-                    return e
-        return None
-
-    def display_menu(
-        self, category, orientation=constants.ORIENTATION_VERTICAL, paginate=10
-    ):
-        """Display the menu.
-
-        .. deprecated:: 1.3.0
-           This function will be removed in version 1.4.0
-
-        This method display the whole menu for a given category.
-
-        :param category: The category to display. **Mandatory** parameter.
-        :type category: str
-        :param orientation: The shortcut of the entry you want to get.
-        :type orientation: :class:`pygamelib.constants`
-        :param paginate: pagination parameter (how many items to display before
-                        changing line or page).
-        :type paginate: int
-
-        Example::
-
-            game.display_menu('main_menu')
-            game.display_menu('main_menu', constants.ORIENTATION_HORIZONTAL, 5)
-
-        """
-        line_end = "\n"
-        if orientation == constants.ORIENTATION_HORIZONTAL:
-            line_end = " | "
-        if category not in self._menu:
-            raise base.PglException(
-                "invalid_menu_category",
-                f"The '{category}' category is not registered in the menu. Did you add"
-                f"a menu entry in that category with Game.add_menu_entry('{category}',"
-                f"'some shortcut','some message') ? If yes, then you should check "
-                f"for typos.",
-            )
-        pagination_counter = 1
-        for k in self._menu[category]:
-            if k["shortcut"] is None:
-                print(k["message"], end=line_end)
-            else:
-                print(f"{k['shortcut']} - {k['message']}", end=line_end)
-                pagination_counter += 1
-                if pagination_counter > paginate:
-                    print("")
-                    pagination_counter = 1
 
     def clear_screen(self):
         """

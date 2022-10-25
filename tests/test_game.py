@@ -73,30 +73,6 @@ class TestBase(unittest.TestCase):
         g.run()
         self.assertEqual(g.state, constants.STOPPED)
 
-    def test_menu(self):
-        game = engine.Game()
-        self.assertIsNone(
-            game.add_menu_entry("main_menu", "d", "Go right", constants.RIGHT)
-        )
-        self.assertIsNone(game.add_menu_entry("main_menu", None, "-----------------"))
-        self.assertIsNone(game.add_menu_entry("main_menu", "v", "Change game speed"))
-        self.assertIsNone(game.add_menu_entry("destroy", None, "-----------------"))
-        self.assertIsNone(game.delete_menu_category("destroy"))
-        with self.assertRaises(base.PglInvalidTypeException):
-            game.delete_menu_category(12)
-        self.assertIsNone(
-            game.update_menu_entry("main_menu", "d", "Go LEFT", constants.LEFT)
-        )
-        self.assertIsNone(game.get_menu_entry("main_menu_bork", "d"))
-        self.assertEqual(game.get_menu_entry("main_menu", "d")["data"], constants.LEFT)
-        self.assertIsNone(
-            game.display_menu("main_menu", constants.ORIENTATION_HORIZONTAL, 1)
-        )
-        with self.assertRaises(base.PglException) as e:
-            game.display_menu("main_menu_bork")
-        self.assertEqual(e.exception.error, "invalid_menu_category")
-        self.assertIsNone(game.clear_screen())
-
     def test_config(self):
         g = engine.Game()
         self.assertIsNone(g.create_config("high_scores"))
