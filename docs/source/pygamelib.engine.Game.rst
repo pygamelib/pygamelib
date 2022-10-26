@@ -21,7 +21,6 @@ Game
       ~Game.actuate_npcs
       ~Game.actuate_projectiles
       ~Game.add_board
-      ~Game.add_menu_entry
       ~Game.add_npc
       ~Game.add_projectile
       ~Game.animate_items
@@ -34,14 +33,11 @@ Game
       ~Game.current_board
       ~Game.delete_all_levels
       ~Game.delete_level
-      ~Game.delete_menu_category
       ~Game.detach
       ~Game.display_board
-      ~Game.display_menu
       ~Game.display_player_stats
       ~Game.get_board
       ~Game.get_key
-      ~Game.get_menu_entry
       ~Game.handle_notification
       ~Game.insert_board
       ~Game.instance
@@ -60,7 +56,6 @@ Game
       ~Game.start
       ~Game.stop
       ~Game.store_screen_position
-      ~Game.update_menu_entry
    
    
 
