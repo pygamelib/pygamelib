@@ -21,7 +21,7 @@ class TestBase(unittest.TestCase):
         with self.assertRaises(NotImplementedError):
             a.serialize()
         with self.assertRaises(NotImplementedError):
-            a.load()
+            a.load({})
 
     def test_behavioral(self):
         a = actuators.Behavioral(None)
