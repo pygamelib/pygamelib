@@ -102,6 +102,8 @@ class TestBase(unittest.TestCase):
         al = actuators.UnidirectionalActuator.load(data)
         self.assertEqual(al.direction, constants.RIGHT)
         self.assertEqual(a.state, al.state)
+        a.pause()
+        self.assertEqual(constants.NO_DIR, a.next_move())
 
     def test_pathfinder_bfs(self):
         npc = board_items.NPC()
