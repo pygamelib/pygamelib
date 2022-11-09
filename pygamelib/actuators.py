@@ -563,14 +563,14 @@ class PathFinder(Behavioral):
         parent: Optional[board_items.BoardItem] = None,
         algorithm=constants.ALGO_BFS,
     ):
-        self.parent = None
+        effective_parent = parent
         if actuated_object is not None and parent is None:
             self.actuated_object = actuated_object
-            self.parent = actuated_object
+            effective_parent = actuated_object
         elif parent is not None:
             self.actuated_object = parent
-            self.parent = parent
-        super().__init__(self.parent)
+            effective_parent = parent
+        super().__init__(effective_parent)
         self.destination: Tuple[Optional[int], Optional[int]] = (None, None)
         self.game = game
         self._current_path: List[List[int]] = []
