@@ -84,6 +84,7 @@ class Actuator(base.PglBaseObject):
         exception will be raised.
 
         :raises: NotImplementedError
+        :returns: :class:`~pygamelib.base.Vector2D` | int
         """
         # Note #1
         # the generality of the return type int suggests
@@ -215,8 +216,7 @@ class RandomActuator(Actuator):
         The movement is randomly selected from moveset if state is RUNNING,
         otherwise it returns NO_DIR from the :py:mod:`~pygamelib.constants` module.
 
-        :return: The next movement
-        :rtype: int | :py:const:`pygamelib.constants.NO_DIR`
+        :returns: The next movement :class:`~pygamelib.base.Vector2D` | int
 
         Example::
 
