@@ -573,7 +573,7 @@ class PathFinder(Behavioral):
         super().__init__(effective_parent)
         self.destination: Tuple[Optional[int], Optional[int]] = (None, None)
         self.game = game
-        self._current_path: List[List[int]] = []
+        self._current_path: List[Tuple[int, int]] = []
         self.waypoints: List[Tuple[int, int]] = []
         self._waypoint_index = 0
         self.circle_waypoints = circle_waypoints
@@ -609,7 +609,7 @@ class PathFinder(Behavioral):
             )
         self.destination = (row, column)
 
-    def find_path(self) -> List[List[int]]:
+    def find_path(self) -> List[Tuple[int, int]]:
         """Find a path to the destination.
 
         Destination (PathFinder.destination) has to be set beforehand.
@@ -662,9 +662,9 @@ class PathFinder(Behavioral):
 
         return self.__find_path_astar()
 
-    def __find_path_bfs(self) -> List[List[int]]:
-        queue = collections.deque(
-            [[[self.actuated_object.pos[0], self.actuated_object.pos[1]]]]
+    def __find_path_bfs(self) -> List[Tuple[int, int]]:
+        queue: collections.deque[List[Tuple[int, int]]] = collections.deque(
+            [[(self.actuated_object.pos[0], self.actuated_object.pos[1])]]
         )
         seen = set([(self.actuated_object.pos[0], self.actuated_object.pos[1])])
         while queue:
@@ -689,9 +689,9 @@ class PathFinder(Behavioral):
                     seen.add((r, c))
         return []
 
-    def __find_path_astar(self) -> List[List[int]]:
+    def __find_path_astar(self) -> List[Tuple[int, int]]:
 
-        queue: PriorityQueue[List[List[int]]] = PriorityQueue()
+        queue: PriorityQueue[Tuple[int, List[Tuple[int, int]]]] = PriorityQueue()
 
         # queue stores a tuple with values:
         # h - heuristic value = depth + manhattan distance from current node to
@@ -710,7 +710,7 @@ class PathFinder(Behavioral):
         )
 
         queue.put(
-            (initial_h, [[self.actuated_object.pos[0], self.actuated_object.pos[1]]])
+            (initial_h, [(self.actuated_object.pos[0], self.actuated_object.pos[1])])
         )
         seen = set()
         while not queue.empty():
@@ -739,7 +739,7 @@ class PathFinder(Behavioral):
                     seen.add((r, c))
         return []
 
-    def current_path(self) -> List[List[int]]:
+    def current_path(self) -> List[Tuple[int, int]]:
         """This method simply return a copy of the current path of the actuator.
 
         The current path is to be understood as: the list of positions still
