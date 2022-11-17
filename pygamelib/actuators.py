@@ -35,7 +35,7 @@ class Actuator(base.PglBaseObject):
 
     """
 
-    def __init__(self, parent: Optional[board_items.BoardItem]):
+    def __init__(self, parent: Optional["board_items.BoardItem"]):
         """
         The constructor take only one (positional) parameter: the parent object.
 
@@ -130,7 +130,7 @@ class Behavioral(Actuator):
 
     """
 
-    def __init__(self, parent: Optional[board_items.BoardItem]):
+    def __init__(self, parent: Optional["board_items.BoardItem"]):
         """
         The constructor simply construct an Actuator. It takes on positional parameter:
         the parent object.
@@ -162,7 +162,7 @@ class RandomActuator(Actuator):
 
     def __init__(self,
                  moveset: Optional[List[Union[base.Vector2D, int]]] = None,
-                 parent: Optional[board_items.BoardItem] = None):
+                 parent: Optional["board_items.BoardItem"] = None):
         # Note: the length of the type hint suggests
         # that it was time for a MoveSet or a Move class
         if moveset is None:
@@ -292,7 +292,7 @@ class PathActuator(Actuator):
 
     def __init__(self,
                  path: Optional[List[int]] = None,
-                 parent: Optional[board_items.BoardItem] = None):
+                 parent: Optional["board_items.BoardItem"] = None):
         if path is None:
             path = []  # pragma: no cover
         super().__init__(parent)
@@ -471,7 +471,7 @@ class UnidirectionalActuator(Actuator):
 
     def __init__(self,
                  direction: int = constants.RIGHT,
-                 parent: Optional[board_items.BoardItem] = None):
+                 parent: Optional["board_items.BoardItem"] = None):
         if direction is None:
             direction = constants.RIGHT
         super().__init__(parent)
@@ -558,9 +558,9 @@ class PathFinder(Behavioral):
     def __init__(
         self,
         game: Optional["engine.Game"] = None,
-        actuated_object: Optional[board_items.BoardItem] = None,
+        actuated_object: Optional["board_items.BoardItem"] = None,
         circle_waypoints=True,
-        parent: Optional[board_items.BoardItem] = None,
+        parent: Optional["board_items.BoardItem"] = None,
         algorithm=constants.ALGO_BFS,
     ):
         effective_parent = parent
