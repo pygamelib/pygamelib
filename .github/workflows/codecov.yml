@@ -1,0 +1,30 @@
+# This is a test of a switch to Github actions
+# IT MIGHT BE REMOVED IN A NEAR FUTUR!
+name: Codecov
+
+on: [push, pull_request]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    name: Code coveragbe
+    defaults:
+      run:
+        working-directory: ./pygamelib
+    steps:
+    - uses: actions/checkout@v1
+    - uses: actions/setup-python@v2
+      with:
+        python-version: '3.10'
+    - name: Install requirements
+      run: |
+        pip3 install pipenv
+        pipenv install --dev
+    - name: Run tests and collect coverage
+      run: |
+        pipenv run coverage run --source=./pygamelib -m unittest discover -s tests
+        pipenv run coverage report
+        pipenv run coverage xml
+        pipenv run coverage html
+    - name: Upload coverage reports to Codecov with GitHub Action
+      uses: codecov/codecov-action@v3
