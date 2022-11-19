@@ -21,11 +21,15 @@ __docformat__ = "restructuredtext"
    pygamelib.gfx.ui.MenuAction
 
 """
+from typing import List, Union, Optional, TYPE_CHECKING
 from pygamelib.assets import graphics
 from pygamelib.gfx import core
 from pygamelib import base, constants
 from pygamelib import functions
 from pathlib import Path
+
+if TYPE_CHECKING:
+    import numpy
 
 # TODO: make sure that Sprixels works as parameters for UiConfig (and are correctly
 # processed)
@@ -4204,3 +4208,109 @@ class MenuBar(object):
     #                 break
     #         inkey = term.inkey(timeout=0.05)
     #     screen.force_update()
+
+
+class Widget(base.PglBaseObject):
+    def __init__(self) -> None:
+        super().__init__()
+        self.__children_widgets: List["Widget"] = []
+        self.__parent: Union["Widget", None] = None
+        self.__width: int = 0
+        self.__height: int = 0
+        self.__maximum_width: int = 0
+        self.__maximum_height: int = 0
+        self.__maximum_width: int = 0
+        self.__maximum_height: int = 0
+
+    @property
+    def children(self) -> List["Widget"]:
+        return self.__children_widgets
+
+    @property
+    def parent(self) -> Union["Widget", None]:
+        return self.__parent
+
+    @property
+    def width(self) -> int:
+        return self.__width
+
+    @width.setter
+    def width(self, data: int) -> None:
+        if isinstance(data, int):
+            self.__width = data
+
+    @property
+    def height(self) -> int:
+        return self.__height
+
+    @height.setter
+    def height(self, data: int) -> None:
+        if isinstance(data, int):
+            self.__height = data
+
+    @property
+    def maximum_width(self) -> int:
+        return self.__maximum_width
+
+    @maximum_width.setter
+    def maximum_width(self, data: int) -> None:
+        if isinstance(data, int):
+            self.__maximum_width = data
+
+    @property
+    def maximum_height(self) -> int:
+        return self.__maximum_height
+
+    @maximum_height.setter
+    def maximum_height(self, data: int) -> None:
+        if isinstance(data, int):
+            self.__maximum_height = data
+
+    @property
+    def minimum_width(self) -> int:
+        return self.__minimum_width
+
+    @minimum_width.setter
+    def minimum_width(self, data: int) -> None:
+        if isinstance(data, int):
+            self.__minimum_width = data
+
+    @property
+    def minimum_height(self) -> int:
+        return self.__minimum_height
+
+    @minimum_height.setter
+    def minimum_height(self, data: int) -> None:
+        if isinstance(data, int):
+            self.__minimum_height = data
+
+    @parent.setter
+    def parent(self, data: Optional["Widget"] = None):
+        if isinstance(data, Widget) or data is None:
+            self.__parent = data
+
+    @property
+    def y(self) -> int:
+        return self.screen_row
+
+    @y.setter
+    def y(self, data: int) -> None:
+        self.screen_row = data
+
+    @property
+    def x(self) -> int:
+        return self.screen_column
+
+    @x.setter
+    def x(self, data: int) -> None:
+        self.screen_column = data
+
+    def render_to_buffer(
+        self,
+        buffer: "numpy.array",
+        row: int,
+        column: int,
+        buffer_height: int,
+        buffer_width: int,
+    ) -> None:
+        pass
