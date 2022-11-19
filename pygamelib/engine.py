@@ -1785,9 +1785,6 @@ class Game(base.PglBaseObject):
         :param boards: A dictionary of boards with the level number as key and a board
             reference as value.
         :type boards: dict
-        :param menu: A dictionary of menus with a category (str) as key and another
-            dictionary (key: a shortcut, value: a description) as value.
-        :type menu: dict
         :param current_level: The current level.
         :type current_level: int
         :param enable_partial_display: A boolean to tell the Game object to enable or
@@ -4192,6 +4189,7 @@ class Screen(base.PglBaseObject):
         self._is_dirty = False
         self._run_threaded_loop = False
         self._rendering_thread = None
+        self._current_rendering_cycle = 0
         self.__scene_graph = []
 
     def clear(self):
