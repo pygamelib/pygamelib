@@ -21,14 +21,14 @@ __docformat__ = "restructuredtext"
    pygamelib.gfx.ui.MenuAction
 
 """
-from typing import List, Union, Optional, TYPE_CHECKING
+from typing import Union, Optional, Set, TYPE_CHECKING
 from pygamelib.assets import graphics
 from pygamelib.gfx import core
 from pygamelib import base, constants
 from pygamelib import functions
 from pathlib import Path
 
-if TYPE_CHECKING:
+if TYPE_CHECKING:  # pragma: no cover
     import numpy
 
 # TODO: make sure that Sprixels works as parameters for UiConfig (and are correctly
@@ -106,17 +106,18 @@ class UiConfig(object):
         box_bottom_right_corner=graphics.BoxDrawings.LIGHT_ARC_UP_AND_LEFT,
         box_vertical_and_right=graphics.BoxDrawings.LIGHT_VERTICAL_AND_RIGHT,
         box_vertical_and_left=graphics.BoxDrawings.LIGHT_VERTICAL_AND_LEFT,
-        fg_color=core.Color(255, 255, 255),
-        bg_color=core.Color(0, 128, 128),
-        fg_color_inactive=core.Color(128, 128, 128),
-        bg_color_selected=core.Color(128, 128, 128),
+        fg_color: core.Color = core.Color(255, 255, 255),
+        bg_color: core.Color = core.Color(0, 128, 128),
+        fg_color_inactive: core.Color = core.Color(128, 128, 128),
+        bg_color_selected: core.Color = core.Color(128, 128, 128),
         bg_color_not_selected=None,
-        fg_color_selected=core.Color(0, 255, 0),
-        fg_color_not_selected=core.Color(255, 255, 255),
-        bg_color_menu_not_selected=core.Color(128, 128, 128),
-        border_fg_color=core.Color(255, 255, 255),
-        border_bg_color=None,
+        fg_color_selected: core.Color = core.Color(0, 255, 0),
+        fg_color_not_selected: core.Color = core.Color(255, 255, 255),
+        bg_color_menu_not_selected: core.Color = core.Color(128, 128, 128),
+        border_fg_color: core.Color = core.Color(255, 255, 255),
+        border_bg_color: core.Color = None,
         borderless_dialog=True,
+        widget_bg_color: core.Color = core.Color(0, 128, 128),
     ):
         super().__init__()
         if game is None:
@@ -132,17 +133,18 @@ class UiConfig(object):
         self.box_bottom_right_corner = box_bottom_right_corner
         self.box_vertical_and_right = box_vertical_and_right
         self.box_vertical_and_left = box_vertical_and_left
-        self.fg_color = fg_color
-        self.bg_color = bg_color
-        self.fg_color_inactive = fg_color_inactive
-        self.bg_color_selected = bg_color_selected
-        self.bg_color_not_selected = bg_color_not_selected
-        self.fg_color_selected = fg_color_selected
-        self.fg_color_not_selected = fg_color_not_selected
-        self.bg_color_menu_not_selected = bg_color_menu_not_selected
-        self.border_fg_color = border_fg_color
-        self.border_bg_color = border_bg_color
+        self.fg_color: core.Color = fg_color
+        self.bg_color: core.Color = bg_color
+        self.fg_color_inactive: core.Color = fg_color_inactive
+        self.bg_color_selected: core.Color = bg_color_selected
+        self.bg_color_not_selected: core.Color = bg_color_not_selected
+        self.fg_color_selected: core.Color = fg_color_selected
+        self.fg_color_not_selected: core.Color = fg_color_not_selected
+        self.bg_color_menu_not_selected: core.Color = bg_color_menu_not_selected
+        self.border_fg_color: core.Color = border_fg_color
+        self.border_bg_color: core.Color = border_bg_color
         self.borderless_dialog = borderless_dialog
+        self.widget_bg_color: core.Color = widget_bg_color
 
     @classmethod
     def instance(cls, *args, **kwargs):
@@ -4211,19 +4213,36 @@ class MenuBar(object):
 
 
 class Widget(base.PglBaseObject):
-    def __init__(self) -> None:
+    # Base class does not do anything by itself aside from enforcing geometry and
+    # sending resize events.
+    def __init__(
+        self,
+        width: int = 0,
+        height: int = 0,
+        minimum_width: int = 0,
+        minimum_height: int = 0,
+        maximum_width: int = 0,
+        maximum_height: int = 0,
+        config: Optional[UiConfig] = None,
+    ) -> None:
         super().__init__()
-        self.__children_widgets: List["Widget"] = []
+        self.__children_widgets: Set["Widget"] = set()
         self.__parent: Union["Widget", None] = None
-        self.__width: int = 0
-        self.__height: int = 0
-        self.__maximum_width: int = 0
-        self.__maximum_height: int = 0
-        self.__maximum_width: int = 0
-        self.__maximum_height: int = 0
+        self.__width: int = width
+        self.__height: int = height
+        self.__maximum_width: int = maximum_width
+        self.__maximum_height: int = maximum_height
+        if height > maximum_height:
+            self.__maximum_height = height
+
+        self.__minimum_width: int = minimum_width
+        self.__minimum_height: int = minimum_height
+        if width > maximum_width:
+            self.__maximum_width = width
+        self.ui_config = config
 
     @property
-    def children(self) -> List["Widget"]:
+    def children(self) -> Set["Widget"]:
         return self.__children_widgets
 
     @property
@@ -4236,8 +4255,13 @@ class Widget(base.PglBaseObject):
 
     @width.setter
     def width(self, data: int) -> None:
-        if isinstance(data, int):
+        if (
+            isinstance(data, int)
+            and data >= self.__minimum_width
+            and data <= self.__maximum_width
+        ):
             self.__width = data
+            self.notify(self, "pygamelib.gfx.ui.Widget.resizeEvent:width", data)
 
     @property
     def height(self) -> int:
@@ -4245,8 +4269,13 @@ class Widget(base.PglBaseObject):
 
     @height.setter
     def height(self, data: int) -> None:
-        if isinstance(data, int):
+        if (
+            isinstance(data, int)
+            and data >= self.__minimum_height
+            and data <= self.__maximum_height
+        ):
             self.__height = data
+            self.notify(self, "pygamelib.gfx.ui.Widget.resizeEvent:height", data)
 
     @property
     def maximum_width(self) -> int:
@@ -4314,3 +4343,19 @@ class Widget(base.PglBaseObject):
         buffer_width: int,
     ) -> None:
         pass
+
+
+class Layout(Widget):
+    pass
+
+
+class BoxLayout(Layout):
+    pass
+
+
+class GridLayout(Layout):
+    pass
+
+
+class FormLayour(Layout):
+    pass

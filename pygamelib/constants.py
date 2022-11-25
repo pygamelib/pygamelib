@@ -1,3 +1,5 @@
+import enum
+
 __docformat__ = "restructuredtext"
 """
 Documentation is located in docs/source/constants.rst
@@ -54,3 +56,22 @@ ALGO_ASTAR = 90000101
 # Text styling constants
 BOLD = "\x1b[1m"
 UNDERLINE = "\x1b[4m"
+
+
+class SizeConstraint(enum.IntEnum):
+    # Use current height and width
+    DEFAULT_SIZE = 60000001
+    # Use minimum height and width
+    MINIMUM_SIZE = 60000002
+    # Use maximum height and width
+    MAXIMUM_SIZE = 60000003
+
+
+class Alignment(enum.IntEnum):
+    LEFT = 30000011
+    RIGHT = 30000100
+    CENTER = 30000101
+    TOP = 30000110
+    BOTTOM = 30000111
+    V_CENTER = 30001000
+    H_CENTER = 30001001

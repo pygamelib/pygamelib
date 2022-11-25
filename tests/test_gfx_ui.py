@@ -594,6 +594,49 @@ class TestBase(unittest.TestCase):
         with self.assertRaises(pgl_base.PglInvalidTypeException):
             menubar.entries = [42]
 
+    def test_widget(self):
+        w = ui.Widget()
+        self.assertEqual(w.maximum_height, 0)
+        self.assertEqual(w.minimum_height, 0)
+        self.assertEqual(w.maximum_width, 0)
+        self.assertEqual(w.minimum_width, 0)
+        self.assertEqual(w.width, 0)
+        self.assertEqual(w.height, 0)
+        w.maximum_height = 10
+        w.minimum_height = 2
+        self.assertEqual(w.maximum_height, 10)
+        self.assertEqual(w.minimum_height, 2)
+        w.height = 5
+        self.assertEqual(w.height, 5)
+        w.height = 15
+        self.assertEqual(w.height, 5)
+        w.height = 0
+        self.assertEqual(w.height, 5)
+        w.maximum_width = 10
+        w.minimum_width = 2
+        self.assertEqual(w.maximum_width, 10)
+        self.assertEqual(w.minimum_width, 2)
+        w.width = 5
+        self.assertEqual(w.width, 5)
+        w.width = 15
+        self.assertEqual(w.width, 5)
+        w.width = 0
+        self.assertEqual(w.width, 5)
+
+        w = ui.Widget(4, 2, 0, 0, 3, 1)
+        self.assertEqual(w.maximum_height, 2)
+        self.assertEqual(w.maximum_width, 4)
+
+        self.assertIsNone(w.parent)
+        self.assertEqual(len(w.children), 0)
+
+        parent = ui.Widget()
+        w.parent = parent
+        self.assertEqual(w.parent, parent)
+
+        self.game.screen.place(w, 0, 0)
+        self.game.screen.render()
+
 
 if __name__ == "__main__":
     unittest.main()
