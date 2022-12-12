@@ -21,7 +21,7 @@ __docformat__ = "restructuredtext"
    pygamelib.gfx.ui.MenuAction
 
 """
-from typing import Union, Optional, Set, TYPE_CHECKING
+from typing import Union, Optional, Set, List, TYPE_CHECKING
 from pygamelib.assets import graphics
 from pygamelib.gfx import core
 from pygamelib import base, constants
@@ -4223,31 +4223,66 @@ class Widget(base.PglBaseObject):
         minimum_height: int = 0,
         maximum_width: int = 0,
         maximum_height: int = 0,
+        layout: Optional["Layout"] = None,
+        bg_color: Optional[core.Color] = None,
         config: Optional[UiConfig] = None,
     ) -> None:
         super().__init__()
         self.__children_widgets: Set["Widget"] = set()
-        self.__parent: Union["Widget", None] = None
+        self.__parent: Union["Widget", "Layout", None] = None
         self.__width: int = width
         self.__height: int = height
         self.__maximum_width: int = maximum_width
+        if self.__maximum_width < self.__width:
+            self.__maximum_width = self.__width
         self.__maximum_height: int = maximum_height
-        if height > maximum_height:
-            self.__maximum_height = height
+        if self.__height > self.__maximum_height:
+            self.__maximum_height = self.__height
 
         self.__minimum_width: int = minimum_width
         self.__minimum_height: int = minimum_height
         if width > maximum_width:
             self.__maximum_width = width
         self.ui_config = config
+        if config is None:
+            self.ui_config = UiConfig.instance()
+        self.__default_bg_sprixel = core.Sprixel(" ", self.ui_config.widget_bg_color)
+        self.__layout = None
+        if isinstance(layout, Layout):
+            self.__layout = layout
+            self.__layout.parent = self
+        self.__bg_color = None
+        if isinstance(bg_color, core.Color):
+            self.__bg_color = bg_color
+            self.__default_bg_sprixel.bg_color = bg_color
+        self.__size_constraint = constants.SizeConstraint.DEFAULT_SIZE
 
     @property
     def children(self) -> Set["Widget"]:
-        return self.__children_widgets
+        if self.__layout is None:
+            return self.__children_widgets
+        else:
+            return self.__layout.widgets()
 
     @property
     def parent(self) -> Union["Widget", None]:
         return self.__parent
+
+    @parent.setter
+    def parent(self, data: Union["Widget", "Layout", None] = None):
+        if isinstance(data, Widget) or isinstance(data, Layout) or data is None:
+            self.__parent = data
+
+    @property
+    def bg_color(self) -> core.Color:
+        return self.__bg_color
+
+    @bg_color.setter
+    def bg_color(self, data: core.Color) -> None:
+        if isinstance(data, core.Color):
+            self.__bg_color = data
+            self.__default_bg_sprixel.bg_color = data
+            self.notify(self, "pygamelib.gfx.ui.Widget.bg_color:changed", data)
 
     @property
     def width(self) -> int:
@@ -4285,6 +4320,8 @@ class Widget(base.PglBaseObject):
     def maximum_width(self, data: int) -> None:
         if isinstance(data, int):
             self.__maximum_width = data
+            if data < self.__width:
+                self.__width = data
 
     @property
     def maximum_height(self) -> int:
@@ -4294,6 +4331,8 @@ class Widget(base.PglBaseObject):
     def maximum_height(self, data: int) -> None:
         if isinstance(data, int):
             self.__maximum_height = data
+            if data < self.__height:
+                self.__height = data
 
     @property
     def minimum_width(self) -> int:
@@ -4303,6 +4342,8 @@ class Widget(base.PglBaseObject):
     def minimum_width(self, data: int) -> None:
         if isinstance(data, int):
             self.__minimum_width = data
+            if self.__width > data:
+                self.__width = data
 
     @property
     def minimum_height(self) -> int:
@@ -4312,11 +4353,6 @@ class Widget(base.PglBaseObject):
     def minimum_height(self, data: int) -> None:
         if isinstance(data, int):
             self.__minimum_height = data
-
-    @parent.setter
-    def parent(self, data: Optional["Widget"] = None):
-        if isinstance(data, Widget) or data is None:
-            self.__parent = data
 
     @property
     def y(self) -> int:
@@ -4334,6 +4370,39 @@ class Widget(base.PglBaseObject):
     def x(self, data: int) -> None:
         self.screen_column = data
 
+    @property
+    def layout(self) -> "Layout":
+        return self.__layout
+
+    @layout.setter
+    def layout(self, data: "Layout") -> None:
+        if isinstance(data, Layout):
+            self.__layout = data
+            if self.__layout.parent != self:
+                self.__layout.parent = self
+            self.notify(self, "pygamelib.gfx.ui.Widget.layout:changed", data)
+        else:
+            raise base.PglInvalidTypeException(
+                "Widget.layout = some_layout: the value given to Widget.layout (here: "
+                "some_layout) must be a pygamelib.gfx.ui.Layout object (or a class that"
+                f" inherits from Layout). {type(data)} is not a supported type."
+            )
+
+    @property
+    def size_constraint(self) -> constants.SizeConstraint:
+        return self.__size_constraint
+
+    @size_constraint.setter
+    def size_constraint(self, data: constants.SizeConstraint) -> None:
+        if isinstance(data, constants.SizeConstraint):
+            self.__size_constraint = data
+            if data == constants.SizeConstraint.MINIMUM_SIZE:
+                self.__width = self.__minimum_width
+                self.__height = self.__minimum_height
+            elif data == constants.SizeConstraint.MAXIMUM_SIZE:
+                self.__width = self.__maximum_width
+                self.__height = self.__maximum_height
+
     def render_to_buffer(
         self,
         buffer: "numpy.array",
@@ -4342,20 +4411,203 @@ class Widget(base.PglBaseObject):
         buffer_height: int,
         buffer_width: int,
     ) -> None:
-        pass
+        for r in range(row, min(row + self.__height, row + buffer_height)):
+            for c in range(column, min(column + self.__width, column + buffer_width)):
+                buffer[r][c] = self.__default_bg_sprixel
+        if self.__layout is not None:
+            self.__layout.render_to_buffer(
+                buffer,
+                row,
+                column,
+                min(self.__height, buffer_height),
+                min(self.__width, buffer_width),
+            )
 
 
-class Layout(Widget):
-    pass
+class Layout(base.PglBaseObject):
+    def __init__(self, parent: Optional[Widget] = None) -> None:
+        super().__init__()
+        self.__parent = None
+        if isinstance(parent, Widget):
+            self.__parent = parent
+            self.__parent.layout = self
+        self.__spacing = 0
+
+    @property
+    def parent(self) -> Union["Widget", None]:
+        return self.__parent
+
+    @parent.setter
+    def parent(self, data: Widget) -> None:
+        if isinstance(data, Widget):
+            self.__parent = data
+            if self.__parent.layout != self:
+                self.__parent.layout = self
+
+    @property
+    def spacing(self) -> int:
+        return self.__spacing
+
+    @spacing.setter
+    def spacing(self, data: int) -> None:
+        if isinstance(data, int) and data >= 0:
+            self.__spacing = data
+            self.notify(self, "pygamelib.gfx.ui.Layout.spacing:changed", data)
+
+    def add_widget(self, w: Widget) -> bool:
+        raise NotImplementedError(
+            "Layout.add_widget(widget) is a pure virtual method. This means that the "
+            "layout that you are using does not yet implement the addWidget() method."
+        )
+
+    def count(self) -> int:
+        raise NotImplementedError(
+            "Layout.count() is a pure virtual method. This means that the "
+            "layout that you are using does not yet implement the addWidget() method."
+        )
+
+    def widgets(self) -> List[Widget]:
+        raise NotImplementedError(
+            "Layout.widgets() is a pure virtual method. This means that the "
+            "layout that you are using does not yet implement the widgets() method."
+        )
+
+    def render_to_buffer(
+        self,
+        buffer: "numpy.array",
+        row: int,
+        column: int,
+        buffer_height: int,
+        buffer_width: int,
+    ) -> None:
+        raise NotImplementedError(
+            "Layout.render_to_buffer() is a pure virtual method. This means that the "
+            "layout that you are using does not yet implement the render_to_buffer() "
+            "method."
+        )
 
 
 class BoxLayout(Layout):
-    pass
+    def __init__(
+        self,
+        orientation: Optional[constants.Orientation] = None,
+        size_constraint: Optional[constants.SizeConstraint] = None,
+        parent: Optional[Widget] = None,
+    ) -> None:
+        super().__init__(parent)
+        self.__widgets: List[Widget] = list()
+        self.__orientation: constants.Orientation = orientation
+        if self.__orientation is None:
+            self.__orientation = constants.Orientation.HORIZONTAL
+        self.__size_constraint: constants.SizeConstraint = size_constraint
+        if self.__size_constraint is None:
+            self.__size_constraint = constants.SizeConstraint.DEFAULT_SIZE
+
+    @property
+    def orientation(self) -> constants.Orientation:
+        return self.__orientation
+
+    @orientation.setter
+    def orientation(self, data: constants.Orientation) -> None:
+        if isinstance(data, constants.Orientation):
+            self.__orientation = data
+
+    @property
+    def size_constraint(self) -> constants.SizeConstraint:
+        return self.__size_constraint
+
+    @size_constraint.setter
+    def size_constraint(self, data: constants.SizeConstraint) -> None:
+        if isinstance(data, constants.SizeConstraint):
+            self.__size_constraint = data
+            for w in self.__widgets:
+                w.size_constraint = data
+
+    def add_widget(self, w: Widget) -> bool:
+        if isinstance(w, Widget):
+            self.__widgets.append(w)
+            w.parent = self
+            return True
+        return False
+
+    def count(self):
+        return len(self.__widgets)
+
+    def widgets(self) -> Set[Widget]:
+        return self.__widgets
+
+    def render_to_buffer(
+        self,
+        buffer: "numpy.array",
+        row: int,
+        column: int,
+        buffer_height: int,
+        buffer_width: int,
+    ) -> None:
+        c_offset = r_offset = 0
+        for w in self.__widgets:
+            # NOTE: When we add scrollable, this will need to be updated.
+            if (row + r_offset >= row + buffer_height) or (
+                column + c_offset >= column + buffer_width
+            ):
+                # Here we cull the widgets that are not visible.
+                continue
+            w.render_to_buffer(
+                buffer,
+                row + r_offset,
+                column + c_offset,
+                buffer_height - r_offset,
+                buffer_width - c_offset,
+            )
+            w.store_screen_position(row + r_offset, column + c_offset)
+            if self.__orientation == constants.Orientation.HORIZONTAL:
+                c_offset += w.width + self.spacing
+            elif self.__orientation == constants.Orientation.VERTICAL:
+                r_offset += w.height + self.spacing
 
 
 class GridLayout(Layout):
-    pass
+    def __init__(self) -> None:
+        super().__init__()
+        self.__h_spacing = self.__v_spacing = 0
+
+    @property
+    def spacing(self) -> int:
+        if self.__h_spacing == self.__v_spacing:
+            return self.__h_spacing
+        else:
+            return -1
+
+    @spacing.setter
+    def spacing(self, data: int) -> None:
+        if isinstance(data, int):
+            self.__h_spacing = self.__v_spacing = data
+            self.notify(self, "pygamelib.gfx.ui.GridLayout.spacing:changed", data)
+
+    @property
+    def horizontal_spacing(self) -> int:
+        return self.__h_spacing
+
+    @horizontal_spacing.setter
+    def horizontal_spacing(self, data: int) -> None:
+        if isinstance(data, int):
+            self.__h_spacing = data
+            self.notify(
+                self, "pygamelib.gfx.ui.GridLayout.horizontal_spacing:changed", data
+            )
+
+    @property
+    def vertical_spacing(self) -> int:
+        return self.__v_spacing
+
+    @vertical_spacing.setter
+    def vertical_spacing(self, data: int) -> None:
+        if isinstance(data, int):
+            self.__v_spacing = data
+            self.notify(
+                self, "pygamelib.gfx.ui.GridLayout.vertical_spacing:changed", data
+            )
 
 
-class FormLayour(Layout):
+class FormLayout(Layout):
     pass

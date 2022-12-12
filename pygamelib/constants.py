@@ -65,6 +65,8 @@ class SizeConstraint(enum.IntEnum):
     MINIMUM_SIZE = 60000002
     # Use maximum height and width
     MAXIMUM_SIZE = 60000003
+    # Use available space up to maximum height and width
+    EXPAND = 60000004
 
 
 class Alignment(enum.IntEnum):
@@ -75,3 +77,8 @@ class Alignment(enum.IntEnum):
     BOTTOM = 30000111
     V_CENTER = 30001000
     H_CENTER = 30001001
+
+
+class Orientation(enum.IntEnum):
+    HORIZONTAL = 30000001
+    VERTICAL = 30000010

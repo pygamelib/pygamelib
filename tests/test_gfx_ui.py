@@ -637,6 +637,15 @@ class TestBase(unittest.TestCase):
         self.game.screen.place(w, 0, 0)
         self.game.screen.render()
 
+        w.y = 5
+        w.x = 10
+        self.assertEqual(w.y, w.screen_row)
+        self.assertEqual(w.x, w.screen_column)
+
+        w.store_screen_position(6, 11)
+        self.assertEqual(w.screen_row, w.y)
+        self.assertEqual(w.screen_column, w.x)
+
 
 if __name__ == "__main__":
     unittest.main()
