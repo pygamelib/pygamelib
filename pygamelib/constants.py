@@ -54,3 +54,5 @@ ALGO_ASTAR = 90000101
 # Text styling constants
 BOLD = "\x1b[1m"
 UNDERLINE = "\x1b[4m"
+
+HORIZONTAL_EXTEND = (1, 1)

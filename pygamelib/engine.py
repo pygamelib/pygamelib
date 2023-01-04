@@ -26,6 +26,7 @@ from pygamelib.assets import graphics
 from pygamelib.gfx import core, particles
 from pygamelib.functions import pgl_isinstance
 from blessed import Terminal
+from typing import Optional
 import random
 import json
 import sys
@@ -4914,3 +4915,62 @@ class Screen(base.PglBaseObject):
         before the next update.
         """
         self._is_dirty = True
+
+
+class ExtendableBoard(base.PglBaseObject):
+    def __init__(
+        self, 
+        max_width: int = None, 
+        max_height: int = None, 
+        screen_width: int = None, 
+        screen_height: int = None,
+        extend_strategy: int = None,
+        discard_strategy: int = None,
+        chunks: dict = None,
+    ) -> None:
+        self.max_width = max_width
+        self.max_height = max_height
+        self.screen_width = screen_width
+        self.screen_height = screen_height
+        self._chunks = {}
+        if chunks:
+            self._chunks = chunks
+        else:
+            self.add_chunk(Board(), 0, 0)
+
+    def add_chunk(self, board: Board, chunk_row: Optional(int), chunk_column: Optional(int)) -> bool:
+        self._chunk[(chunk_row, chunk_column)] = board
+
+    def discard_chunks(self, chunk_row: Optional(int), chunk_column: Optional(int)) -> bool:
+        del self._chunk[(chunk_row, chunk_column)]
+
+    def discard_chunk_by_object(self, chunk):
+        for position, c in self._chunks.items():
+            if c == chunk:
+                del self._chunks[position]
+                return True
+        return False
+
+    def render_to_buffer(self, buffer, row, column, buffer_height, buffer_width):
+        # Render the chunks to the buffer
+        for r in range(row, row + buffer_height):
+            for c in range(column, column + buffer_width):
+                try:
+                    chunk = self._chunks[(r, c)]
+                    chunk.render_to_buffer(buffer, (r - row) * chunk.height, (c - column) * chunk.width)
+                except KeyError:
+                    # Chunk does not exist, render empty space
+                    for i in range((r - row) * chunk.height, (r - row + 1) * chunk.height):
+                        for j in range((c - column) * chunk.width, (c - column + 1) * chunk.width):
+                            buffer[i][j] = ' '
+    
+    # Wrapper methods for pygamelib.engine.Board methods
+    def set_tile(self, row, column, value):
+        chunk_row, chunk_column = self._get_chunk_position(row, column)
+        chunk = self._chunks[(chunk_row, chunk_column)]
+        chunk.set_tile(row % chunk.height, column % chunk.width, value)
+    
+    def get_tile(self, row, column):
+        chunk_row, chunk_column = self._get_chunk_position(row, column)
+        chunk = self._chunks[(chunk_row, chunk_column)]
+        return chunk.get_tile(row % chunk.height, column % chunk.width)
