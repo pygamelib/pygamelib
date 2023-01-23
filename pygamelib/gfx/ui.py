@@ -155,7 +155,7 @@ class UiConfig(object):
         Useful for a default configuration. It accepts all the parameters from the
         constructor.
 
-        :return: Instance of Game object
+        :return: Instance of UiConfig object
 
         """
         if cls.__instance is None:
@@ -4215,6 +4215,7 @@ class MenuBar(object):
 class Widget(base.PglBaseObject):
     # Base class does not do anything by itself aside from enforcing geometry and
     # sending resize events.
+    # TODO: When we had widget visibility (show(), hide(), is_visible)
     def __init__(
         self,
         width: int = 0,
@@ -4279,7 +4280,7 @@ class Widget(base.PglBaseObject):
 
     @bg_color.setter
     def bg_color(self, data: core.Color) -> None:
-        if isinstance(data, core.Color):
+        if isinstance(data, core.Color) and self.__bg_color != data:
             self.__bg_color = data
             self.__default_bg_sprixel.bg_color = data
             self.notify(self, "pygamelib.gfx.ui.Widget.bg_color:changed", data)
@@ -4290,13 +4291,13 @@ class Widget(base.PglBaseObject):
 
     @width.setter
     def width(self, data: int) -> None:
-        if (
-            isinstance(data, int)
-            and data >= self.__minimum_width
-            and data <= self.__maximum_width
-        ):
-            self.__width = data
-            self.notify(self, "pygamelib.gfx.ui.Widget.resizeEvent:width", data)
+        if isinstance(data, int):
+            data = functions.clamp(data, self.__minimum_width, self.__maximum_width)
+            if self.__width != data:
+                self.__width = data
+                self.notify(
+                    self, "pygamelib.gfx.ui.Widget.resizeEvent:width", self.__width
+                )
 
     @property
     def height(self) -> int:
@@ -4304,13 +4305,20 @@ class Widget(base.PglBaseObject):
 
     @height.setter
     def height(self, data: int) -> None:
-        if (
-            isinstance(data, int)
-            and data >= self.__minimum_height
-            and data <= self.__maximum_height
-        ):
-            self.__height = data
-            self.notify(self, "pygamelib.gfx.ui.Widget.resizeEvent:height", data)
+        # if (
+        #     isinstance(data, int)
+        #     and data >= self.__minimum_height
+        #     and data <= self.__maximum_height
+        # ):
+        #     self.__height = data
+        #     self.notify(self, "pygamelib.gfx.ui.Widget.resizeEvent:height", data)
+        if isinstance(data, int):
+            data = functions.clamp(data, self.__minimum_height, self.__maximum_height)
+            if data != self.__height:
+                self.__height = data
+                self.notify(
+                    self, "pygamelib.gfx.ui.Widget.resizeEvent:height", self.__height
+                )
 
     @property
     def maximum_width(self) -> int:
@@ -4425,6 +4433,8 @@ class Widget(base.PglBaseObject):
 
 
 class Layout(base.PglBaseObject):
+    # NOTE: Add to doc that a layout will always use the maximum available space in render_to_buffer (i.e: buffer_width and buffer_height)
+    # it is therefor the responsibility of the Widget or layout that triggers the rendering of said layout to confine it in its own rendering space.
     def __init__(self, parent: Optional[Widget] = None) -> None:
         super().__init__()
         self.__parent = None
@@ -4454,16 +4464,30 @@ class Layout(base.PglBaseObject):
             self.__spacing = data
             self.notify(self, "pygamelib.gfx.ui.Layout.spacing:changed", data)
 
+    @property
+    def width(self) -> int:
+        raise NotImplementedError(
+            "Layout.width is a pure virtual property. This means that the "
+            "layout that you are using does not yet implement the width property."
+        )
+
+    @property
+    def height(self) -> int:
+        raise NotImplementedError(
+            "Layout.height is a pure virtual property. This means that the "
+            "layout that you are using does not yet implement the height property."
+        )
+
     def add_widget(self, w: Widget) -> bool:
         raise NotImplementedError(
             "Layout.add_widget(widget) is a pure virtual method. This means that the "
-            "layout that you are using does not yet implement the addWidget() method."
+            "layout that you are using does not yet implement the add_widget() method."
         )
 
     def count(self) -> int:
         raise NotImplementedError(
             "Layout.count() is a pure virtual method. This means that the "
-            "layout that you are using does not yet implement the addWidget() method."
+            "layout that you are using does not yet implement the count() method."
         )
 
     def widgets(self) -> List[Widget]:
@@ -4523,6 +4547,32 @@ class BoxLayout(Layout):
             for w in self.__widgets:
                 w.size_constraint = data
 
+    @property
+    def width(self) -> int:
+        tmp_width = 0
+        if self.__orientation == constants.Orientation.VERTICAL:
+            for w in self.__widgets:
+                if w.width > tmp_width:
+                    tmp_width = w.width
+        elif self.__orientation == constants.Orientation.HORIZONTAL:
+            for w in self.__widgets:
+                tmp_width += w.width + self.spacing
+            tmp_width -= self.spacing
+        return tmp_width
+
+    @property
+    def height(self) -> int:
+        tmp_height = 0
+        if self.__orientation == constants.Orientation.HORIZONTAL:
+            for w in self.__widgets:
+                if w.height > tmp_height:
+                    tmp_height = w.height
+        elif self.__orientation == constants.Orientation.VERTICAL:
+            for w in self.__widgets:
+                tmp_height += w.height + self.spacing
+            tmp_height -= self.spacing
+        return tmp_height
+
     def add_widget(self, w: Widget) -> bool:
         if isinstance(w, Widget):
             self.__widgets.append(w)
@@ -4530,7 +4580,7 @@ class BoxLayout(Layout):
             return True
         return False
 
-    def count(self):
+    def count(self) -> int:
         return len(self.__widgets)
 
     def widgets(self) -> Set[Widget]:
@@ -4545,10 +4595,14 @@ class BoxLayout(Layout):
         buffer_width: int,
     ) -> None:
         c_offset = r_offset = 0
+        max_buffer_row = row + buffer_height
+        max_buffer_col = column + buffer_width
         for w in self.__widgets:
             # NOTE: When we add scrollable, this will need to be updated.
-            if (row + r_offset >= row + buffer_height) or (
-                column + c_offset >= column + buffer_width
+            # particularly the culling. We'll need to keep culling but also to manage
+            # the scroll indicator.
+            if (row + r_offset >= max_buffer_row) or (
+                column + c_offset >= max_buffer_col
             ):
                 # Here we cull the widgets that are not visible.
                 continue
@@ -4567,9 +4621,40 @@ class BoxLayout(Layout):
 
 
 class GridLayout(Layout):
-    def __init__(self) -> None:
-        super().__init__()
+    def __init__(self, parent: Optional[Widget] = None) -> None:
+        super().__init__(parent)
         self.__h_spacing = self.__v_spacing = 0
+        self.__row_minimum_height = 1
+        self.__column_minimum_width = 5
+        self.__nb_rows = 0
+        self.__nb_columns = 0
+        self.__grid = {}
+        self.__columns_geometry = []
+        self.__rows_geometry = []
+
+    @property
+    def row_minimum_height(self) -> int:
+        return self.__row_minimum_height
+
+    @row_minimum_height.setter
+    def row_minimum_height(self, data: int) -> None:
+        if isinstance(data, int):
+            self.__row_minimum_height = data
+            self.notify(
+                self, "pygamelib.gfx.ui.GridLayout.row_minimum_height:changed", data
+            )
+
+    @property
+    def column_minimum_width(self) -> int:
+        return self.__column_minimum_width
+
+    @column_minimum_width.setter
+    def column_minimum_width(self, data: int) -> None:
+        if isinstance(data, int):
+            self.__column_minimum_width = data
+            self.notify(
+                self, "pygamelib.gfx.ui.GridLayout.column_minimum_width:changed", data
+            )
 
     @property
     def spacing(self) -> int:
@@ -4608,6 +4693,113 @@ class GridLayout(Layout):
                 self, "pygamelib.gfx.ui.GridLayout.vertical_spacing:changed", data
             )
 
+    def add_widget(self, widget: Widget, row: int = None, column: int = None) -> bool:
+        if isinstance(widget, Widget):
+            if row >= self.__nb_rows:
+                self.__nb_rows = row + 1
+            if column >= self.__nb_columns:
+                self.__nb_columns = column + 1
+            try:
+                if self.__rows_geometry[row] < widget.height:
+                    self.__rows_geometry[row] = widget.height
+            except IndexError:
+                for _ in range(len(self.__rows_geometry), row + 1):
+                    self.__rows_geometry.append(0)
+                self.__rows_geometry[row] = widget.height
+            try:
+                if self.__columns_geometry[column] < widget.width:
+                    self.__columns_geometry[column] = widget.width
+            except IndexError:
+                for _ in range(len(self.__columns_geometry), column + 1):
+                    self.__columns_geometry.append(0)
+                self.__columns_geometry[column] = widget.width
+            self.__grid[(row, column)] = widget
+            widget.parent = self
+            widget.attach(self)
+            return True
+        return False
 
-class FormLayout(Layout):
-    pass
+    def handle_notification(self, subject, attribute=None, value=None):
+        if attribute == "pygamelib.gfx.ui.Widget.resizeEvent:height":
+            for c in self.__grid:
+                if self.__grid[c] == subject:
+                    # if self.__rows_geometry[c[0]] < value:
+                    self.__rows_geometry[c[0]] = value
+                    break
+        elif attribute == "pygamelib.gfx.ui.Widget.resizeEvent:width":
+            for c in self.__grid:
+                if self.__grid[c] == subject:
+                    # if self.__columns_geometry[c[1]] < value:
+                    self.__columns_geometry[c[1]] = value
+                    break
+
+    def count_rows(self) -> int:
+        return self.__nb_rows
+
+    def count_columns(self) -> int:
+        return self.__nb_columns
+
+    def count(self) -> int:
+        return len(self.__grid)
+
+    def widgets(self) -> Set[Widget]:
+        return set(self.__grid.values())
+
+    def render_to_buffer(
+        self,
+        buffer: "numpy.array",
+        row: int,
+        column: int,
+        buffer_height: int,
+        buffer_width: int,
+    ) -> None:
+        max_buffer_row = row + buffer_height
+        max_buffer_col = column + buffer_width
+        c_offset = r_offset = 0
+
+        for r in range(0, self.count_rows()):
+            for c in range(0, self.count_columns()):
+                try:
+                    w = self.__grid[(r, c)]
+                    # Now resize the widget for the column width
+                    w.width = self.__columns_geometry[c]
+                    w.height = self.__rows_geometry[r]
+                    # NOTE: When we add scrollable, this will need to be updated.
+                    # particularly the culling. We'll need to keep culling but also to
+                    # manage the scroll indicator.
+                    # Culling will need to happen more intelligently and compute what is
+                    # actually visible.
+                    if (r + r_offset >= max_buffer_row) or (
+                        c + c_offset >= max_buffer_col
+                    ):
+                        # Here we cull the widgets that are not visible.
+                        continue
+                    w.render_to_buffer(
+                        buffer,
+                        row + r_offset,
+                        column + c_offset,
+                        buffer_height - r_offset,
+                        buffer_width - c_offset,
+                    )
+                    w.store_screen_position(row + r_offset, column + c_offset)
+                    c_offset += self.__columns_geometry[c] + self.__h_spacing
+                except KeyError:
+                    # If there's nothing in that layout's cell we just skip to next cell
+                    c_offset += self.__columns_geometry[c] + self.__h_spacing
+            c_offset = 0
+            r_offset += self.__rows_geometry[r] + self.__v_spacing
+
+
+class FormLayout(GridLayout):
+    def __init__(self, parent: Optional[Widget] = None) -> None:
+        super().__init__(parent)
+        self.__current_row = -1
+
+    def add_row(self, label: base.Text, widget: Widget) -> int:
+        self.__current_row += 1
+        # TODO: Add it to the grid
+
+    def remove_row(self, row: int = None):
+        # Remove row, if row is None remove the last row.
+        # If row is a widget find the widget and remove it
+        pass
