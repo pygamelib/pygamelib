@@ -1,3 +1,12 @@
+from pygamelib import constants
+from pygamelib.functions import pgl_isinstance
+import math
+from colorama import Fore, Back, Style, init
+from blessed import Terminal
+
+# import time
+from typing import Any
+
 __docformat__ = "restructuredtext"
 """
 The base module is a collection of base objects that are used by the entire library,
@@ -22,14 +31,6 @@ exceptions.
    pygamelib.base.Vector2D
    pygamelib.base.Text
 """
-from pygamelib import constants
-from pygamelib.functions import pgl_isinstance
-import math
-from colorama import Fore, Back, Style, init
-from blessed import Terminal
-
-# import time
-from typing import Any
 
 # Initialize terminal colors for colorama.
 init()
@@ -641,9 +642,13 @@ class Text(PglBaseObject):
         if self.__font is None:
             for line in self.text.splitlines():
                 idx = 0
+                # FIXME: this can be optimized by switching the for to a
+                # FIXME: range(0, min(column + idx, buffer_width)) <- not idx but len()
                 for char in line:
                     if column + idx >= buffer_width:
                         break
+                    # FIXME: At minimum this test should be done after row_idx += 1
+                    # FIXME: but it can be optimized the same way than the other for.
                     if row + row_idx >= buffer_height:
                         break
                     buffer[row + row_idx][column + idx] = "".join(
@@ -1246,7 +1251,7 @@ class Vector2D(object):
                 print('We are not moving... at all...')
         """
         return round(
-            math.sqrt(self.row**2 + self.column**2), self.rounding_precision
+            math.sqrt(self.row ** 2 + self.column ** 2), self.rounding_precision
         )
 
     def unit(self):
@@ -1447,3 +1452,32 @@ class Math(object):
             value = lerp(0, 100, 0.5) # 50
         """
         return (1 - t) * a + t * b
+
+
+class History:
+    def __init__(self) -> None:
+        self.__past_actions = []
+        self.__current_action = None
+        self.__future_actions = []
+
+    def add(self, action: object) -> None:
+        self.__past_actions.append(self.__current_action)
+        self.__current_action = action
+        if len(self.__future_actions) > 0:
+            self.__future_actions.clear()
+
+    def undo(self):
+        if len(self.__past_actions) <= 0:
+            return
+        self.__future_actions.append(self.__current_action)
+        self.__current_action = self.__past_actions.pop()
+
+    def redo(self):
+        if len(self.__future_actions) <= 0:
+            return
+        self.__past_actions.append(self.__current_action)
+        self.__current_action = self.__future_actions.pop()
+
+    @property
+    def current_action(self):
+        return self.__current_action

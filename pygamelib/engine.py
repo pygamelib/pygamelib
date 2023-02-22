@@ -4217,6 +4217,8 @@ class Screen(base.PglBaseObject):
            **Legacy Direct Display** stack.
 
         """
+        # TODO: BUG: This is not clearing the buffers, this is recreating them...
+        #       FIXME: Create one empty sprixel and put it in every cells of both buffers
         self._display_buffer = np.array(
             [
                 [core.Sprixel(" ") for i in range(0, self.__width, 1)]
@@ -4251,6 +4253,8 @@ class Screen(base.PglBaseObject):
            stack and is incompatible with the methods identified as being part of the
            **Legacy Direct Display** stack.
         """
+        # TODO: BUG: This is not clearing the buffer, this is recreating it...
+        #       FIXME: Create one empty sprixel and put it in every cells the buffer
         self._frame_buffer = np.array(
             [
                 [core.Sprixel(" ") for i in range(0, self.__width, 1)]
