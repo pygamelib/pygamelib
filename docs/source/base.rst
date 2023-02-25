@@ -18,6 +18,7 @@ The base module provide basic objects and exceptions that are used by the entire
    pygamelib.base.PglOutOfBoardBoundException.rst
    pygamelib.base.Text.rst
    pygamelib.base.Vector2D.rst
+   pygamelib.base.History.rst
    base_deprecated
 
 
