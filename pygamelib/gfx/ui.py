@@ -28,6 +28,8 @@ from pygamelib import base, constants
 from pygamelib import functions
 from pathlib import Path
 
+import logging
+
 if TYPE_CHECKING:  # pragma: no cover
     import numpy
 
@@ -118,6 +120,7 @@ class UiConfig(object):
         border_bg_color: core.Color = None,
         borderless_dialog=True,
         widget_bg_color: core.Color = core.Color(0, 128, 128),
+        input_bg_color: core.Color = core.Color(163, 163, 163),
     ):
         super().__init__()
         if game is None:
@@ -145,6 +148,7 @@ class UiConfig(object):
         self.border_bg_color: core.Color = border_bg_color
         self.borderless_dialog = borderless_dialog
         self.widget_bg_color: core.Color = widget_bg_color
+        self.input_bg_color: core.Color = input_bg_color
 
     @classmethod
     def instance(cls, *args, **kwargs):
@@ -4257,6 +4261,7 @@ class Widget(base.PglBaseObject):
             self.__bg_color = bg_color
             self.__default_bg_sprixel.bg_color = bg_color
         self.__size_constraint = constants.SizeConstraint.DEFAULT_SIZE
+        self.__focus = False
 
     @property
     def children(self) -> Set["Widget"]:
@@ -4312,12 +4317,19 @@ class Widget(base.PglBaseObject):
         # ):
         #     self.__height = data
         #     self.notify(self, "pygamelib.gfx.ui.Widget.resizeEvent:height", data)
+        logging.debug(
+            f"     *** Widget ({id(self)}): height setter data={data} current height={self.__height}"
+        )
         if isinstance(data, int):
             data = functions.clamp(data, self.__minimum_height, self.__maximum_height)
+            logging.debug(f"     *** Widget ({id(self)}): height CLAMPED data={data}")
             if data != self.__height:
                 self.__height = data
                 self.notify(
                     self, "pygamelib.gfx.ui.Widget.resizeEvent:height", self.__height
+                )
+                logging.debug(
+                    f"     *** Widget ({id(self)}): height set to {self.__height}"
                 )
 
     @property
@@ -4411,6 +4423,15 @@ class Widget(base.PglBaseObject):
                 self.__width = self.__maximum_width
                 self.__height = self.__maximum_height
 
+    @property
+    def focus(self) -> bool:
+        return self.__focus
+
+    @focus.setter
+    def focus(self, data: bool):
+        if isinstance(data, bool):
+            self.__focus = data
+
     def render_to_buffer(
         self,
         buffer: "numpy.array",
@@ -4419,6 +4440,9 @@ class Widget(base.PglBaseObject):
         buffer_height: int,
         buffer_width: int,
     ) -> None:
+        logging.debug(
+            f"     +++ Widget ({id(self)}): rendering at {row},{column} with buffer geometry {buffer_height}x{buffer_width} my geometry {self.__height}x{self.__width}"
+        )
         for r in range(row, min(row + self.__height, row + buffer_height)):
             for c in range(column, min(column + self.__width, column + buffer_width)):
                 buffer[r][c] = self.__default_bg_sprixel
@@ -4724,6 +4748,11 @@ class GridLayout(Layout):
             for c in self.__grid:
                 if self.__grid[c] == subject:
                     # if self.__rows_geometry[c[0]] < value:
+                    self.notify(
+                        self,
+                        "pygamelib.gfx.ui.GridLayout.handle_notification",
+                        f"widget found at {c}",
+                    )
                     self.__rows_geometry[c[0]] = value
                     break
         elif attribute == "pygamelib.gfx.ui.Widget.resizeEvent:width":
@@ -4757,11 +4786,16 @@ class GridLayout(Layout):
         max_buffer_col = column + buffer_width
         c_offset = r_offset = 0
 
+        logging.debug(">>>> GridLayout: START rendering")
+
         for r in range(0, self.count_rows()):
             for c in range(0, self.count_columns()):
                 try:
                     w = self.__grid[(r, c)]
                     # Now resize the widget for the column width
+                    logging.debug(
+                        f"GridLayout: at {r},{c} set geometry to {self.__rows_geometry[r]}x{self.__columns_geometry[c]}"
+                    )
                     w.width = self.__columns_geometry[c]
                     w.height = self.__rows_geometry[r]
                     # NOTE: When we add scrollable, this will need to be updated.
@@ -4774,12 +4808,25 @@ class GridLayout(Layout):
                     ):
                         # Here we cull the widgets that are not visible.
                         continue
+                    # w.render_to_buffer(
+                    #     buffer,
+                    #     row + r_offset,
+                    #     column + c_offset,
+                    #     buffer_height - r_offset,
+                    #     buffer_width - c_offset,
+                    # )
                     w.render_to_buffer(
-                        buffer,
-                        row + r_offset,
-                        column + c_offset,
-                        buffer_height - r_offset,
-                        buffer_width - c_offset,
+                        buffer[
+                            row + r_offset : row + r_offset + self.__rows_geometry[r],
+                            column
+                            + c_offset : column
+                            + c_offset
+                            + self.__columns_geometry[c],
+                        ],
+                        0,
+                        0,
+                        self.__rows_geometry[r],
+                        self.__columns_geometry[c],
                     )
                     w.store_screen_position(row + r_offset, column + c_offset)
                     c_offset += self.__columns_geometry[c] + self.__h_spacing
@@ -4788,6 +4835,8 @@ class GridLayout(Layout):
                     c_offset += self.__columns_geometry[c] + self.__h_spacing
             c_offset = 0
             r_offset += self.__rows_geometry[r] + self.__v_spacing
+
+        logging.debug("GridLayout: DONE rendering <<<<")
 
 
 class FormLayout(GridLayout):
@@ -4803,3 +4852,169 @@ class FormLayout(GridLayout):
         # Remove row, if row is None remove the last row.
         # If row is a widget find the widget and remove it
         pass
+
+
+class LineInput(Widget):
+    """
+    The LineInputDialog allows the user to enter and edit a single line of text.
+
+    This dialog can be configured to accept either anything printable or only digits.
+
+    The show() method returns the user input.
+
+    **Key mapping**:
+
+     * ESC: set the user input to "" and exit from the :meth:`show()` method.
+     * ENTER: Exit from the :meth:`show()` method. Returns the user input.
+     * BACKSPACE / DELETE: delete a character (both keys have the same result)
+     * All other keys input characters in the input field.
+
+    In all cases, when the dialog is closed, the user input is returned.
+
+    Like all dialogs, it is automatically destroyed on exit of the :meth:`show()`
+    method. It is also deleted from the screen buffer.
+
+    """
+
+    def __init__(
+        self,
+        default: str = "",
+        filter=constants.PRINTABLE_FILTER,
+        width: int = 0,
+        height: int = 0,
+        minimum_width: int = 0,
+        minimum_height: int = 1,
+        maximum_width: int = 0,
+        maximum_height: int = 1,
+        layout: Optional["Layout"] = None,
+        config: Optional[UiConfig] = None,
+    ) -> None:
+        """
+        :param default: The default value in the input field.
+        :type default: str
+        :param filter: Sets the type of accepted input. It comes from the
+           :mod:`constants` module.
+        :type filter: :py:const:`constants.PRINTABLE_FILTER` |
+           :py:const:`constants.INTEGER_FILTER`
+        :param config: The configuration object.
+        :type config: :class:`UiConfig`
+
+        Example::
+
+            line_input = LineInputDialog(
+                "Name the pet",
+                "Enter the name of your pet:",
+                "Stupido",
+            )
+            screen.place(line_input, 10, 10)
+            pet_name = line_input.show()
+        """
+        if config is None:
+            config = UiConfig.instance()
+        super().__init__(
+            width=width,
+            height=height,
+            minimum_height=minimum_height,
+            minimum_width=minimum_width,
+            maximum_height=maximum_height,
+            maximum_width=maximum_width,
+            bg_color=config.input_bg_color,
+            config=config,
+        )
+        self.__default = default
+        self.__filter = filter
+        if self.__default is None or not (
+            isinstance(self.__default, base.Text) or type(self.__default) is str
+        ):
+            raise base.PglInvalidTypeException("LineInput: default must be a str.")
+        self.__content = self.__default
+        self.__text = base.Text(
+            self.__content,
+            bg_color=config.input_bg_color,
+            fg_color=core.Color(0, 0, 0),
+            font=None,
+        )
+        self.__empty_sprixel = core.Sprixel(" ", bg_color=config.input_bg_color)
+
+    @property
+    def filter(self) -> base.Text:
+        """
+        Get and set the filter of the line input, it has to be a str or
+        :class:`base.Text`.
+        """
+        return self.__filter
+
+    @filter.setter
+    def filter(self, value) -> None:
+        if value == constants.PRINTABLE_FILTER or value == constants.INTEGER_FILTER:
+            self.__filter = value
+        else:
+            raise base.PglInvalidTypeException(
+                "LineInput.filter: value needs to be either pygamelib.constants."
+                "INTEGER_FILTER or pygamelib.constants.PRINTABLE_FILTER."
+            )
+
+    @property
+    def text(self) -> str:
+        """
+        Get and set the text of the line input, it has to be a str or
+        :class:`base.Text`.
+        """
+        return self.__content
+
+    @text.setter
+    def text(self, value: str) -> None:
+        if isinstance(value, str) and (
+            (self.__filter == constants.PRINTABLE_FILTER and value.isprintable())
+            or (self.__filter == constants.INTEGER_FILTER and value.isdigit())
+        ):
+            self.__content = value
+            self.__text.text = value
+        else:
+            raise base.PglInvalidTypeException(
+                "LineInput.text: value needs to be a string and respect the filter "
+                "validation."
+            )
+
+    def backspace(self) -> None:
+        self.text = self.text[0:-1]
+
+    def render_to_buffer(
+        self, buffer, row, column, buffer_height, buffer_width
+    ) -> None:
+        """Render the object from the display buffer to the frame buffer.
+
+        This method is automatically called by :func:`pygamelib.engine.Screen.render`.
+
+        :param buffer: A screen buffer to render the item into.
+        :type buffer: numpy.array
+        :param row: The row to render in.
+        :type row: int
+        :param column: The column to render in.
+        :type column: int
+        :param height: The total height of the display buffer.
+        :type height: int
+        :param width: The total width of the display buffer.
+        :type width: int
+
+        """
+        logging.debug(f"LineInput: >>> START RENDERING <<<")
+        self.store_screen_position(row, column)
+        # self._store_position(row, column)
+        # lbl = core.Sprite.from_text(
+        #     self.__label
+        # )  # TODO: set up a new __need_rendering/__is_dirty member to skip sprite creation if nothing changed
+        # TODO: en vrai ici il faut juste rendre la chaine avec le bon background et compléter avec des espaces qui utilisent la couleur
+        # De background.
+        input_size = max(min(len(self.__content), buffer_width), self.minimum_width)
+        # for ic in range(0, input_size):
+        #     buffer[row][column + ic] = self.__empty_sprixel
+        logging.debug(
+            f"LineInput.render_to_buffer(): starting text rendering (text={self.__text.text}) at row={row} column={column} with buffer_height={buffer_height} and buffer_width={input_size}"
+        )
+        self.__text.render_to_buffer(
+            buffer[row : row + 1, column : column + input_size], 0, 0, 1, input_size
+        )
+        # for ic in range(input_size, min(buffer_width, column + self.width)):
+        #     buffer[row][column + ic] = self.__empty_sprixel
+        logging.debug(f"LineInput: >>> DONE RENDERING <<<")
