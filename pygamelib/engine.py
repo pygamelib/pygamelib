@@ -4128,7 +4128,7 @@ class Screen(base.PglBaseObject):
     * Alacritty
     * GNOME Terminal
 
-    Performances are consistants across the different terminals. The only exception is
+    Performances are consistent across the different terminals. The only exception is
     the GNOME Terminal, which is slower than the others (about 20~30 % slower).
 
 
@@ -4218,7 +4218,7 @@ class Screen(base.PglBaseObject):
 
         """
         # TODO: BUG: This is not clearing the buffers, this is recreating them...
-        #       FIXME: Create one empty sprixel and put it in every cells of both buffers
+        #     FIXME: Create one empty sprixel and put it in every cells of both buffers
         self._display_buffer = np.array(
             [
                 [core.Sprixel(" ") for i in range(0, self.__width, 1)]
