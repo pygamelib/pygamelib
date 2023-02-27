@@ -1,3 +1,12 @@
+from pygamelib import constants
+from pygamelib.functions import pgl_isinstance
+import math
+from colorama import Fore, Back, Style, init
+from blessed import Terminal
+
+# import time
+from typing import Any
+
 __docformat__ = "restructuredtext"
 """
 The base module is a collection of base objects that are used by the entire library,
@@ -22,14 +31,6 @@ exceptions.
    pygamelib.base.Vector2D
    pygamelib.base.Text
 """
-from pygamelib import constants
-from pygamelib.functions import pgl_isinstance
-import math
-from colorama import Fore, Back, Style, init
-from blessed import Terminal
-
-# import time
-from typing import Any
 
 # Initialize terminal colors for colorama.
 init()
@@ -641,9 +642,13 @@ class Text(PglBaseObject):
         if self.__font is None:
             for line in self.text.splitlines():
                 idx = 0
+                # FIXME: this can be optimized by switching the for to a
+                # FIXME: range(0, min(column + idx, buffer_width)) <- not idx but len()
                 for char in line:
                     if column + idx >= buffer_width:
                         break
+                    # FIXME: At minimum this test should be done after row_idx += 1
+                    # FIXME: but it can be optimized the same way than the other for.
                     if row + row_idx >= buffer_height:
                         break
                     buffer[row + row_idx][column + idx] = "".join(
