@@ -4854,25 +4854,20 @@ class FormLayout(GridLayout):
         pass
 
 
+class Cursor(base.PglBaseObject):
+    def __init__(self) -> None:
+        super().__init__()
+
+
 class LineInput(Widget):
     """
-    The LineInputDialog allows the user to enter and edit a single line of text.
+    The LineInput allows the user to enter and edit a single line of text.
 
-    This dialog can be configured to accept either anything printable or only digits.
+    This widget can be configured to accept either anything printable or only digits.
 
-    The show() method returns the user input.
-
-    **Key mapping**:
-
-     * ESC: set the user input to "" and exit from the :meth:`show()` method.
-     * ENTER: Exit from the :meth:`show()` method. Returns the user input.
-     * BACKSPACE / DELETE: delete a character (both keys have the same result)
-     * All other keys input characters in the input field.
-
-    In all cases, when the dialog is closed, the user input is returned.
-
-    Like all dialogs, it is automatically destroyed on exit of the :meth:`show()`
-    method. It is also deleted from the screen buffer.
+    Contrary to its dialog version that widget does not have any key binding. It
+    provides all the tools to manipulate it but it is the user's (developer)
+    responsibility to bind keys to specific actions.
 
     """
 
@@ -4886,8 +4881,8 @@ class LineInput(Widget):
         minimum_height: int = 1,
         maximum_width: int = 0,
         maximum_height: int = 1,
-        layout: Optional["Layout"] = None,
         config: Optional[UiConfig] = None,
+        history: Optional[base.History] = None,
     ) -> None:
         """
         :param default: The default value in the input field.
@@ -4898,6 +4893,8 @@ class LineInput(Widget):
            :py:const:`constants.INTEGER_FILTER`
         :param config: The configuration object.
         :type config: :class:`UiConfig`
+        :param history: The history object.
+        :type history: :class:`~pygamelib.base.History`
 
         Example::
 
@@ -4928,13 +4925,15 @@ class LineInput(Widget):
         ):
             raise base.PglInvalidTypeException("LineInput: default must be a str.")
         self.__content = self.__default
-        self.__text = base.Text(
-            self.__content,
-            bg_color=config.input_bg_color,
-            fg_color=core.Color(0, 0, 0),
-            font=None,
-        )
         self.__empty_sprixel = core.Sprixel(" ", bg_color=config.input_bg_color)
+        self.__text_sprixels = [
+            core.Sprixel("", bg_color=config.input_bg_color)
+            for _ in range(len(self.__content))
+        ]
+        self.__cursor = Cursor()
+        self.__history = history
+        if history is None:
+            self.__history = base.History.instance()
 
     @property
     def filter(self) -> base.Text:
@@ -4969,7 +4968,6 @@ class LineInput(Widget):
             or (self.__filter == constants.INTEGER_FILTER and value.isdigit())
         ):
             self.__content = value
-            self.__text.text = value
         else:
             raise base.PglInvalidTypeException(
                 "LineInput.text: value needs to be a string and respect the filter "
@@ -4978,6 +4976,29 @@ class LineInput(Widget):
 
     def backspace(self) -> None:
         self.text = self.text[0:-1]
+
+    def delete(self):
+        """
+        Delete the character immediately before the :class:`Cursor`.
+        """
+        pass
+
+    def undo(self) -> None:
+        """
+        If an :class:`~pygamelib.base.History` is available, undo the last changes.
+        """
+        if self.__history is not None:
+            self.__history.undo()
+            self.__content = self.__history.current
+
+    def redo(self) -> None:
+        """
+        If an :class:`~pygamelib.base.History` is available, redo previously undone
+        changes.
+        """
+        if self.__history is not None:
+            self.__history.redo()
+            self.__content = self.__history.current
 
     def render_to_buffer(
         self, buffer, row, column, buffer_height, buffer_width
@@ -4998,7 +5019,7 @@ class LineInput(Widget):
         :type width: int
 
         """
-        logging.debug(f"LineInput: >>> START RENDERING <<<")
+        logging.debug("LineInput: >>> START RENDERING <<<")
         self.store_screen_position(row, column)
         # self._store_position(row, column)
         # lbl = core.Sprite.from_text(
@@ -5010,11 +5031,13 @@ class LineInput(Widget):
         # for ic in range(0, input_size):
         #     buffer[row][column + ic] = self.__empty_sprixel
         logging.debug(
-            f"LineInput.render_to_buffer(): starting text rendering (text={self.__text.text}) at row={row} column={column} with buffer_height={buffer_height} and buffer_width={input_size}"
+            f"LineInput.render_to_buffer(): starting text rendering (text={self.__text.text}) at row={row} column={column} with buffer_height={buffer_height} and buffer_width=input_size={input_size}"
         )
         self.__text.render_to_buffer(
             buffer[row : row + 1, column : column + input_size], 0, 0, 1, input_size
         )
+        for c in range(input_size):
+            buffer[]
         # for ic in range(input_size, min(buffer_width, column + self.width)):
         #     buffer[row][column + ic] = self.__empty_sprixel
         logging.debug(f"LineInput: >>> DONE RENDERING <<<")

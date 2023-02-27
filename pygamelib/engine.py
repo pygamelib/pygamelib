@@ -4128,7 +4128,7 @@ class Screen(base.PglBaseObject):
     * Alacritty
     * GNOME Terminal
 
-    Performances are consistants across the different terminals. The only exception is
+    Performances are consistent across the different terminals. The only exception is
     the GNOME Terminal, which is slower than the others (about 20~30 % slower).
 
 
