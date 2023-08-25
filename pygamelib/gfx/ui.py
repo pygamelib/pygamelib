@@ -4876,7 +4876,7 @@ class LineInput(Widget):
     def __init__(
         self,
         default: str = "",
-        filter=constants.InputValidators.PRINTABLE_FILTER,  # TODO: do the switch to the InputValidators enum and update the exceptions, setters/getters and documentation
+        filter=constants.InputValidators.PRINTABLE_FILTER,
         width: int = 0,
         height: int = 0,
         minimum_width: int = 0,
@@ -4935,10 +4935,6 @@ class LineInput(Widget):
             )
             for idx in range(len(self.__content))
         ]
-
-        logging.debug(
-            f"LineInput: [CONSTRUCTOR] empty sprixel={self.__empty_sprixel} first character={self.__text_sprixels[0]} config.input_bg_color={config.input_bg_color} self.ui_config.input_bg_color={self.ui_config.input_bg_color}"
-        )
         self.__cursor = Cursor()
         self.__history = history
         if history is None:
@@ -5000,9 +4996,11 @@ class LineInput(Widget):
                 self.__text_sprixels[idx].model = letter
                 idx += 1
         else:
-            raise base.PglInvalidTypeException(
+            self.notify(
+                self,
+                "pygamelib.gfx.ui.LineInput.text:setter",
                 "LineInput.text: value needs to be a string and respect the filter "
-                "validation."
+                f"validation. Value={value} is not valid.",
             )
 
     def backspace(self) -> None:
@@ -5050,38 +5048,12 @@ class LineInput(Widget):
         :type width: int
 
         """
-        logging.debug("LineInput: >>> START RENDERING <<<")
         self.store_screen_position(row, column)
-        # self._store_position(row, column)
-        # lbl = core.Sprite.from_text(
-        #     self.__label
-        # )  # TODO: set up a new __need_rendering/__is_dirty member to skip sprite creation if nothing changed
-        # TODO: en vrai ici il faut juste rendre la chaine avec le bon background et compléter avec des espaces qui utilisent la couleur
-        # De background.
-        # input_size = max(min(len(self.__content), buffer_width), self.minimum_width)
-        logging.debug(
-            f"LineInput.render_to_buffer(): content len={len(self.__content)} min width={self.minimum_width} buffer width={buffer_width} self.width={self.width}"
-        )
         # input_size = min(len(self.__content), self.minimum_width)
         input_size = min(len(self.__content), self.width)
         input_size = functions.clamp(input_size, 0, buffer_width)
-        # for ic in range(0, input_size):
-        #     buffer[row][column + ic] = self.__empty_sprixel
-        # logging.debug(
-        #     f"LineInput.render_to_buffer(): starting text rendering (text={self.__text.text}) at row={row} column={column} with buffer_height={buffer_height} and buffer_width=input_size={input_size}"
-        # )
-        # self.__text.render_to_buffer(
-        #     buffer[row : row + 1, column : column + input_size], 0, 0, 1, input_size
-        # )
-        logging.debug(
-            f"LineInput.render_to_buffer(): starting text rendering (text={self.__content}) at row={row} column={column} with buffer_height={buffer_height} and buffer_width=input_size={input_size}"
-        )
         for c in range(input_size):
-            logging.debug(
-                f"LineInput.render_to_buffer(): rendering (char={self.__content[c]} sprix={self.__text_sprixels[c]} @ {c}) at row={row} column={column+c} with buffer_height={buffer_height} and buffer_width=input_size={input_size}"
-            )
             # buffer[row][column + c] = self.__content[c]
             buffer[row][column + c] = self.__text_sprixels[c]
         for ic in range(input_size, min(buffer_width, column + self.width)):
             buffer[row][column + ic] = self.__empty_sprixel
-        logging.debug("LineInput: >>> DONE RENDERING <<<")
