@@ -82,3 +82,8 @@ class Alignment(enum.IntEnum):
 class Orientation(enum.IntEnum):
     HORIZONTAL = 30000001
     VERTICAL = 30000010
+
+
+class InputValidators(enum.IntEnum):
+    INTEGER_FILTER = 50000001
+    PRINTABLE_FILTER = 50000002
