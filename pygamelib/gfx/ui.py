@@ -4876,7 +4876,7 @@ class LineInput(Widget):
     def __init__(
         self,
         default: str = "",
-        filter=constants.InputValidators.PRINTABLE_FILTER,
+        filter: constants.InputValidators = constants.InputValidators.PRINTABLE_FILTER,
         width: int = 0,
         height: int = 0,
         minimum_width: int = 0,
@@ -4899,10 +4899,11 @@ class LineInput(Widget):
 
         Example::
 
-            line_input = LineInputDialog(
-                "Name the pet",
-                "Enter the name of your pet:",
-                "Stupido",
+            line_input = LineInput(
+                "Test of the LineInput widget",
+                config=UiConfig.instance(),
+                minimum_width=6,
+                maximum_width=200,
             )
             screen.place(line_input, 10, 10)
             pet_name = line_input.show()
@@ -4939,6 +4940,27 @@ class LineInput(Widget):
         self.__history = history
         if history is None:
             self.__history = base.History.instance()
+        self.__history.add(self.__content)
+
+    def __update_sprixels_array(self):
+        # Private method to sync the sprixels array with the current content.
+        # First, we create the missing sprixels (if any)
+        # NOTE: This is not memory efficient, as we do not free the sprixels that
+        #       are no longer useful. But performances are better this way.
+        if len(self.__content) > len(self.__text_sprixels):
+            for _ in range(len(self.__content) - len(self.__text_sprixels)):
+                self.__text_sprixels.append(
+                    core.Sprixel(
+                        "",
+                        fg_color=self.ui_config.input_fg_color,
+                        bg_color=self.ui_config.input_bg_color,
+                    )
+                )
+        # Then we update the content of these sprixels
+        idx = 0
+        for letter in self.__content:
+            self.__text_sprixels[idx].model = letter
+            idx += 1
 
     @property
     def filter(self) -> base.Text:
@@ -4949,7 +4971,7 @@ class LineInput(Widget):
         return self.__filter
 
     @filter.setter
-    def filter(self, value) -> None:
+    def filter(self, value: constants.InputValidators) -> None:
         if (
             value == constants.InputValidators.PRINTABLE_FILTER
             or value == constants.InputValidators.INTEGER_FILTER
@@ -4983,18 +5005,12 @@ class LineInput(Widget):
             )
         ):
             self.__content = value
-            # NOTE: This is not memory efficient, as we do not free the sprixels that
-            #       are no longer useful. But performances are better this way.
-            if len(self.__content) > len(self.__text_sprixels):
-                for _ in range(len(self.__content) - len(self.__text_sprixels)):
-                    self.__text_sprixels.append(
-                        core.Sprixel("", bg_color=self.ui_config.input_bg_color)
-                    )
+
             # Now we update the sprixel array
-            idx = 0
-            for letter in self.__content:
-                self.__text_sprixels[idx].model = letter
-                idx += 1
+            self.__update_sprixels_array()
+
+            if self.__history is not None and self.__history.current != self.text:
+                self.__history.add(self.text)
         else:
             self.notify(
                 self,
@@ -5004,6 +5020,17 @@ class LineInput(Widget):
             )
 
     def backspace(self) -> None:
+        """
+        Erase the last character of whatever is present in the LineInput.
+
+        The modification is reported to the history (i.e: can be undone)
+
+        Example::
+
+            # If the LineInput contains "Hello"
+            line_input.backspace()
+            # Will modify it to "Hell"
+        """
         self.text = self.text[0:-1]
 
     def delete(self):
@@ -5014,20 +5041,24 @@ class LineInput(Widget):
 
     def undo(self) -> None:
         """
-        If an :class:`~pygamelib.base.History` is available, undo the last changes.
+        If a :class:`~pygamelib.base.History` is available, undo the last changes.
         """
         if self.__history is not None:
             self.__history.undo()
-            self.__content = self.__history.current
+            if self.__history.current is not None:
+                self.__content = self.__history.current
+            self.__update_sprixels_array()
 
     def redo(self) -> None:
         """
-        If an :class:`~pygamelib.base.History` is available, redo previously undone
+        If a :class:`~pygamelib.base.History` is available, redo previously undone
         changes.
         """
         if self.__history is not None:
             self.__history.redo()
-            self.__content = self.__history.current
+            if self.__history.current is not None:
+                self.__content = self.__history.current
+            self.__update_sprixels_array()
 
     def render_to_buffer(
         self, buffer, row, column, buffer_height, buffer_width

@@ -1251,7 +1251,7 @@ class Vector2D(object):
                 print('We are not moving... at all...')
         """
         return round(
-            math.sqrt(self.row ** 2 + self.column ** 2), self.rounding_precision
+            math.sqrt(self.row**2 + self.column**2), self.rounding_precision
         )
 
     def unit(self):
@@ -1489,7 +1489,7 @@ class History:
         print(global_history.current)  # print "Hello"
         global_history.redo()
         global_history.redo()
-        global_history.redo() # This one does nothing as we undo twice.
+        global_history.redo() # This one does nothing as we called undo only twice.
         print(global_history.current)  # print "Hello World"
         # Now an example of reset through add()
         global_history.undo()
