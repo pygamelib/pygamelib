@@ -4797,9 +4797,10 @@ class GridLayout(Layout):
                 try:
                     w = self.__grid[(r, c)]
                     # Now resize the widget for the column width
-                    logging.debug(
-                        f"GridLayout: at {r},{c} set geometry to {self.__rows_geometry[r]}x{self.__columns_geometry[c]}"
-                    )
+                    # logging.debug(
+                    #     f"GridLayout: at {r},{c} set geometry to "
+                    #     f"{self.__rows_geometry[r]}x{self.__columns_geometry[c]}"
+                    # )
                     w.width = self.__columns_geometry[c]
                     w.height = self.__rows_geometry[r]
                     # NOTE: When we add scrollable, this will need to be updated.
@@ -4859,14 +4860,50 @@ class FormLayout(GridLayout):
 
 
 class Cursor(base.PglBaseObject):
+    """
+    The Cursor class represent a typing cursor on screen.
+
+    .. warning:: The Cursor **need** to be rendered last! For example, in a LineInput
+       widget, the cursor is rendered when the rest of the LineInput is already rendered
+       . The reason being that the Cursor need to know what is already on screen in case
+       it overlap something.
+
+    """
+
     def __init__(
         self,
         relative_row: Optional[int] = 0,
         relative_column: Optional[int] = 0,
-        blink_time: Optional[float] = 0.35,
+        blink_time: Optional[float] = 0.4,
         model: Optional[core.Sprixel] = None,
         parent: Optional[Widget] = None,
     ) -> None:
+        """
+        :param relative_row: The relative row position inside the parent widget.
+        :type relative_row: int
+        :param relative_column: The relative column position inside the parent widget.
+        :type relative_column: int
+        :param blink_time: The time interval between blinks. Default is 0.4 seconde. If
+           you want to keep the cursor solid (i.e: not blinking) set this parameter to
+           0.
+        :type blink_time: float
+        :param model: The cursor's model (or representation) as a Sprixel.
+        :type model: :class:`~core.Sprixel`
+        :param parent: The parent object, ie: the one in which the cursor reside. It's
+           optional because you can share a cursor with multiple widgets.
+        :type parent: :class:`Widget`
+
+        Example::
+
+            line_input = LineInput(
+                "Test of the LineInput widget",
+                config=UiConfig.instance(),
+                minimum_width=6,
+                maximum_width=200,
+            )
+            screen.place(line_input, 10, 10)
+            pet_name = line_input.show()
+        """
         super().__init__()
         self.__model: core.Sprixel = model
         if model is None:
@@ -4897,6 +4934,10 @@ class Cursor(base.PglBaseObject):
 
     @property
     def parent(self) -> Union["Widget", None]:
+        """
+        Get and set the parent widget of the cursor, it has to be a :class:`Widget` or
+        None.
+        """
         return self.__parent
 
     @parent.setter
