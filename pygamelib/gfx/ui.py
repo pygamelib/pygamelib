@@ -5164,6 +5164,7 @@ class LineInput(Widget):
             buffer[row][column + c] = self.__text_sprixels[c]
         for ic in range(input_size, min(buffer_width, column + self.width)):
             buffer[row][column + ic] = self.__empty_sprixel
-        self.__cursor.render_to_buffer(
-            buffer, row, column + input_size, buffer_height, buffer_width
-        )
+        if self.focus:
+            self.__cursor.render_to_buffer(
+                buffer, row, column + input_size, buffer_height, buffer_width
+            )
