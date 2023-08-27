@@ -28,6 +28,8 @@ from pygamelib import base, constants
 from pygamelib import functions
 from pathlib import Path
 
+import time
+
 import logging
 
 if TYPE_CHECKING:  # pragma: no cover
@@ -4857,8 +4859,79 @@ class FormLayout(GridLayout):
 
 
 class Cursor(base.PglBaseObject):
-    def __init__(self) -> None:
+    def __init__(
+        self,
+        relative_row: Optional[int] = 0,
+        relative_column: Optional[int] = 0,
+        blink_time: Optional[float] = 0.35,
+        model: Optional[core.Sprixel] = None,
+        parent: Optional[Widget] = None,
+    ) -> None:
         super().__init__()
+        self.__model: core.Sprixel = model
+        if model is None:
+            self.__model = core.Sprixel(" ", bg_color=core.Color(255, 255, 255))
+
+        self.relative_row = relative_row
+        self.relative_column = relative_column
+        self.__parent = parent
+        self.blink_time = blink_time
+        self.__blink_ctrl_timer = 0
+        self.__blink_ctrl_show = True
+
+    @property
+    def model(self) -> core.Sprixel:
+        """
+        Get and set the model of the cursor, it has to be :class:`core.Sprixel`.
+        """
+        return self.__model
+
+    @model.setter
+    def model(self, value: core.Sprixel) -> None:
+        if isinstance(value, core.Sprixel):
+            self.__model = value
+        else:
+            raise base.PglInvalidTypeException(
+                "Cursor.model needs to be a pygamelib.gfx.core.Sprixel object."
+            )
+
+    @property
+    def parent(self) -> Union["Widget", None]:
+        return self.__parent
+
+    @parent.setter
+    def parent(self, data: Widget) -> None:
+        if isinstance(data, Widget):
+            self.__parent = data
+
+    def render_to_buffer(
+        self, buffer, row, column, buffer_height, buffer_width
+    ) -> None:
+        """Render the object from the display buffer to the frame buffer.
+
+        This method is automatically called by :func:`pygamelib.engine.Screen.render`.
+
+        :param buffer: A screen buffer to render the item into.
+        :type buffer: numpy.array
+        :param row: The row to render in.
+        :type row: int
+        :param column: The column to render in.
+        :type column: int
+        :param height: The total height of the display buffer.
+        :type height: int
+        :param width: The total width of the display buffer.
+        :type width: int
+
+        """
+        self.store_screen_position(row, column)
+        if self.blink_time > 0:
+            current_time = time.time()
+            if current_time - self.__blink_ctrl_timer >= self.blink_time:
+                self.__blink_ctrl_timer = current_time
+                self.__blink_ctrl_show = not self.__blink_ctrl_show
+
+        if self.__blink_ctrl_show and row < buffer_height and column < buffer_width:
+            buffer[row][column] = self.__model
 
 
 class LineInput(Widget):
@@ -4885,6 +4958,7 @@ class LineInput(Widget):
         maximum_height: int = 1,
         config: Optional[UiConfig] = None,
         history: Optional[base.History] = None,
+        cursor: Cursor = None,
     ) -> None:
         """
         :param default: The default value in the input field.
@@ -4936,7 +5010,9 @@ class LineInput(Widget):
             )
             for idx in range(len(self.__content))
         ]
-        self.__cursor = Cursor()
+        self.__cursor = cursor
+        if cursor is None:
+            self.__cursor = Cursor()
         self.__history = history
         if history is None:
             self.__history = base.History.instance()
@@ -5088,3 +5164,6 @@ class LineInput(Widget):
             buffer[row][column + c] = self.__text_sprixels[c]
         for ic in range(input_size, min(buffer_width, column + self.width)):
             buffer[row][column + ic] = self.__empty_sprixel
+        self.__cursor.render_to_buffer(
+            buffer, row, column + input_size, buffer_height, buffer_width
+        )
