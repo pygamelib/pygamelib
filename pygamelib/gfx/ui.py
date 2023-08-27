@@ -5136,6 +5136,15 @@ class LineInput(Widget):
                 self.__content = self.__history.current
             self.__update_sprixels_array()
 
+    def clear(self) -> None:
+        """
+        Clear everything from the LineInput. If a :class:`~pygamelib.base.History` is
+        available, it will also clear the history.
+        """
+        if self.__history is not None:
+            self.__history.reset()
+            self.text = ""
+
     def render_to_buffer(
         self, buffer, row, column, buffer_height, buffer_width
     ) -> None:

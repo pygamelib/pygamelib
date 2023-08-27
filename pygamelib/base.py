@@ -1597,6 +1597,15 @@ class History:
         self.__past_actions.append(self.__current_action)
         self.__current_action = self.__future_actions.pop()
 
+    def reset(self) -> None:
+        """
+        Reset the history to its initial state. It clears all the past and future
+        actions. It also set the current action to None.
+        """
+        self.__past_actions = []
+        self.__current_action = None
+        self.__future_actions = []
+
     @property
     def current(self) -> object:
         """
