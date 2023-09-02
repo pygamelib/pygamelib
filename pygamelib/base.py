@@ -421,8 +421,6 @@ class Text(PglBaseObject):
 
         .. versionadded:: 1.3.0
 
-        .. role:: boldblue
-
         When the text is changed, the observers are notified of the change
         with the :boldblue:`pygamelib.base.Text.text:changed` event. The new text
         is passed as the `value` parameter.
@@ -444,8 +442,6 @@ class Text(PglBaseObject):
         :class:`~pygamelib.gfx.core.Color`.
 
         .. versionadded:: 1.3.0
-
-        .. role:: boldblue
 
         When the background color is changed, the observers are notified of the change
         with the :boldblue:`pygamelib.base.Text.bg_color:changed` event. The new color
@@ -480,8 +476,6 @@ class Text(PglBaseObject):
         :class:`~pygamelib.gfx.core.Color`.
 
         .. versionadded:: 1.3.0
-
-        .. role:: boldblue
 
         When the foreground color is changed, the observers are notified of the change
         with the :boldblue:`pygamelib.base.Text.fg_color:changed` event. The new color
