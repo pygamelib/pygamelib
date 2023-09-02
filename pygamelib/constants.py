@@ -84,6 +84,19 @@ class Orientation(enum.IntEnum):
     VERTICAL = 30000010
 
 
-class InputValidators(enum.IntEnum):
+class InputValidator(enum.IntEnum):
     INTEGER_FILTER = 50000001
     PRINTABLE_FILTER = 50000002
+
+
+class Direction(enum.IntEnum):
+    # Directions
+    NO_DIR = 10000000
+    UP = 10000001
+    DOWN = 10000010
+    LEFT = 10000011
+    RIGHT = 10000100
+    DRUP = 10000101
+    DRDOWN = 10000110
+    DLUP = 10000111
+    DLDOWN = 10001000
