@@ -185,3 +185,14 @@ texinfo_documents = [
 # -- Extension configuration -------------------------------------------------
 todo_include_todos = True
 autosummary_generate = True
+
+# -- RST Prolog --------------------------------------------------------------
+rst_prolog = """
+.. role:: virtual
+.. role:: boldblue
+.. role:: blue
+.. role:: boldgreen
+.. role:: green
+.. role:: boldred
+.. role:: red
+"""
