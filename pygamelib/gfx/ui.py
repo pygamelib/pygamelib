@@ -19,6 +19,13 @@ __docformat__ = "restructuredtext"
    pygamelib.gfx.ui.MenuBar
    pygamelib.gfx.ui.Menu
    pygamelib.gfx.ui.MenuAction
+   pygamelib.gfx.ui.Widget
+   pygamelib.gfx.ui.Layout
+   pygamelib.gfx.ui.BoxLayout
+   pygamelib.gfx.ui.GridLayout
+   pygamelib.gfx.ui.FormLayout
+   pygamelib.gfx.ui.Cursor
+   pygamelib.gfx.ui.LineInput
 
 """
 from typing import Union, Optional, Set, List, TYPE_CHECKING
@@ -88,6 +95,13 @@ class UiConfig(object):
     :type border_bg_color: :class:`~pygamelib.gfx.core.Color`
     :param borderless_dialog: Is the dialog borderless or not.
     :type borderless_dialog: bool
+    :param widget_bg_color: The background color of a widget.
+    :type widget_bg_color: :class:`~pygamelib.gfx.core.Color`
+    :param input_fg_color: The foreground color (i.e the text color) of a LineInput
+       widget.
+    :type input_fg_color: :class:`~pygamelib.gfx.core.Color`
+    :param input_bg_color: The background color of a LineInput widget.
+    :type input_bg_color: :class:`~pygamelib.gfx.core.Color`
 
     Example::
 
@@ -120,7 +134,7 @@ class UiConfig(object):
         bg_color_menu_not_selected: core.Color = core.Color(128, 128, 128),
         border_fg_color: core.Color = core.Color(255, 255, 255),
         border_bg_color: core.Color = None,
-        borderless_dialog=True,
+        borderless_dialog: bool = True,
         widget_bg_color: core.Color = core.Color(0, 128, 128),
         input_fg_color: core.Color = core.Color(255, 255, 255),
         input_bg_color: core.Color = core.Color(163, 163, 163),
@@ -4224,6 +4238,15 @@ class Widget(base.PglBaseObject):
     # Base class does not do anything by itself aside from enforcing geometry and
     # sending resize events.
     # TODO: When we had widget visibility (show(), hide(), is_visible)
+    """
+    The Widget object is the base for all UI elements (or should be). By itself it does
+    not do anything functionally useful. What it does however, is taking care of the
+    geometry logic.
+
+    It enforces the geometry constraints and takes care of sending resize events
+    messages.
+    """
+
     def __init__(
         self,
         width: int = 0,
@@ -4236,6 +4259,28 @@ class Widget(base.PglBaseObject):
         bg_color: Optional[core.Color] = None,
         config: Optional[UiConfig] = None,
     ) -> None:
+        """
+        :param default: The default value in the input field.
+        :type default: str
+        :param filter: Sets the type of accepted input. It comes from the
+           :mod:`constants` module.
+        :type filter: :class:`constants.InputValidator`
+        :param config: The configuration object.
+        :type config: :class:`UiConfig`
+        :param history: The history object.
+        :type history: :class:`~pygamelib.base.History`
+
+        Example::
+
+            line_input = LineInput(
+                "Test of the LineInput widget",
+                config=UiConfig.instance(),
+                minimum_width=6,
+                maximum_width=200,
+            )
+            screen.place(line_input, 10, 10)
+            pet_name = line_input.show()
+        """
         super().__init__()
         self.__children_widgets: Set["Widget"] = set()
         self.__parent: Union["Widget", "Layout", None] = None
@@ -4461,9 +4506,34 @@ class Widget(base.PglBaseObject):
 
 
 class Layout(base.PglBaseObject):
-    # NOTE: Add to doc that a layout will always use the maximum available space in render_to_buffer (i.e: buffer_width and buffer_height)
-    # it is therefor the responsibility of the Widget or layout that triggers the rendering of said layout to confine it in its own rendering space.
+    # NOTE: Add to doc that a layout will always use the maximum available space in
+    # render_to_buffer (i.e: buffer_width and buffer_height)
+    # it is therefor the responsibility of the Widget or layout that triggers the
+    # rendering of said layout to confine it in its own rendering space.
+    """
+
+    The Layout class is mostly a virtual class. It implements a few properties but all
+    of the methods and properties marked with the :virtual:`virtual method` tag need to
+    be implemented in the inheriting object.
+
+    By convention, a layout will always use the maximum space available in a rendering
+    buffer. That means that in :py:func:`render_to_buffer` it will try to use the entire
+    buffer_width and buffer_height while respecting the layout's constraints.
+
+    It is therefore the responsibility of the widget or layout that triggers the
+    rendering loop to confine said layout inside its own rendering space. Most of the
+    time it involves passing a different set of argument to :py:func:`render_to_buffer`
+    (like the position or size of the buffer).
+
+    """
+
     def __init__(self, parent: Optional[Widget] = None) -> None:
+        """
+        The box constructor takes the following parameters.
+
+        :param parent: The parent widget. If set, it will set the parent's layout.
+        :type width: :class:`Widget`
+        """
         super().__init__()
         self.__parent = None
         if isinstance(parent, Widget):
@@ -4473,6 +4543,9 @@ class Layout(base.PglBaseObject):
 
     @property
     def parent(self) -> Union["Widget", None]:
+        """
+        This property get/set the parent of the Layout (if any).
+        """
         return self.__parent
 
     @parent.setter
@@ -4484,6 +4557,9 @@ class Layout(base.PglBaseObject):
 
     @property
     def spacing(self) -> int:
+        """
+        This property get/set the inter-widgets spacing of the Layout.
+        """
         return self.__spacing
 
     @spacing.setter
@@ -4494,6 +4570,15 @@ class Layout(base.PglBaseObject):
 
     @property
     def width(self) -> int:
+        """
+        :virtual:`virtual attribute`
+
+        This property is purely virtual and needs to be implemented in the inheriting
+        class.
+
+        It must return the total width of the Layout.
+
+        """
         raise NotImplementedError(
             "Layout.width is a pure virtual property. This means that the "
             "layout that you are using does not yet implement the width property."
@@ -4501,24 +4586,67 @@ class Layout(base.PglBaseObject):
 
     @property
     def height(self) -> int:
+        """
+        :virtual:`virtual attribute`
+
+        This property is purely virtual and needs to be implemented in the inheriting
+        class.
+
+        It must return the total height of the Layout.
+
+        """
         raise NotImplementedError(
             "Layout.height is a pure virtual property. This means that the "
             "layout that you are using does not yet implement the height property."
         )
 
     def add_widget(self, w: Widget) -> bool:
+        """
+        :virtual:`virtual method`
+
+        This method is purely virtual and needs to be implemented in the inheriting
+        class.
+
+        It must allow adding a :class:`Widget` to the layout. Adding can mean different
+        things depending on the type of layout. For example, a :class:`GridLayout`
+        need a row and a column to place the widget. However, these parameters are
+        optional. All layouts should be able to add a :class:`Widget` in the first
+        available space.
+
+        """
         raise NotImplementedError(
             "Layout.add_widget(widget) is a pure virtual method. This means that the "
             "layout that you are using does not yet implement the add_widget() method."
         )
 
     def count(self) -> int:
+        """
+        :virtual:`virtual method`
+
+        This method is purely virtual and needs to be implemented in the inheriting
+        class.
+
+        It must count and returns the amount of widgets in the layout as an integer.
+
+        """
         raise NotImplementedError(
             "Layout.count() is a pure virtual method. This means that the "
             "layout that you are using does not yet implement the count() method."
         )
 
     def widgets(self) -> List[Widget]:
+        """
+        :virtual:`virtual method`
+
+        :return: A list of widgets
+        :rtype: List[Widget]
+
+        This method is purely virtual and needs to be implemented in the inheriting
+        class.
+
+        It must returns a list of widgets that are contained in the layout.
+
+        """
         raise NotImplementedError(
             "Layout.widgets() is a pure virtual method. This means that the "
             "layout that you are using does not yet implement the widgets() method."
@@ -4532,6 +4660,39 @@ class Layout(base.PglBaseObject):
         buffer_height: int,
         buffer_width: int,
     ) -> None:
+        """
+
+        :virtual:`virtual method`
+
+        This method is automatically called by :func:`pygamelib.engine.Screen.render`.
+
+        :param buffer: A screen buffer to render the item into.
+        :type buffer: numpy.array
+        :param row: The row to render in.
+        :type row: int
+        :param column: The column to render in.
+        :type column: int
+        :param height: The total height of the display buffer.
+        :type height: int
+        :param width: The total width of the display buffer.
+        :type width: int
+
+        This method is purely virtual and needs to be implemented in the inheriting
+        class.
+
+        It must render the object from the display buffer to the frame buffer.
+
+        By convention, a layout will always use the maximum space available in a
+        rendering buffer. That means that in :py:func:`render_to_buffer` it will try to
+        use the entire buffer_width and buffer_height while respecting the layout's
+        constraints.
+
+        It is therefore the responsibility of the widget or layout that triggers the
+        rendering loop to confine said layout inside its own rendering space. Most of
+        the time it involves passing a different set of argument to
+        :py:func:`render_to_buffer` (like the position or size of the buffer).
+
+        """
         raise NotImplementedError(
             "Layout.render_to_buffer() is a pure virtual method. This means that the "
             "layout that you are using does not yet implement the render_to_buffer() "
@@ -4540,6 +4701,12 @@ class Layout(base.PglBaseObject):
 
 
 class BoxLayout(Layout):
+    """
+    The box layout lines up child widgets horizontally or vertically. The orientation of
+    the layout is controlled using the :class:`~pygamelib.constants.Orientation`
+    constants.
+    """
+
     def __init__(
         self,
         orientation: Optional[constants.Orientation] = None,
@@ -4909,8 +5076,8 @@ class Cursor(base.PglBaseObject):
         if model is None:
             self.__model = core.Sprixel(" ", bg_color=core.Color(255, 255, 255))
 
-        self.relative_row = relative_row
-        self.relative_column = relative_column
+        self.__relative_row = relative_row
+        self.__relative_column = relative_column
         self.__parent = parent
         self.blink_time = blink_time
         self.__blink_ctrl_timer = 0
@@ -4944,6 +5111,30 @@ class Cursor(base.PglBaseObject):
     def parent(self, data: Widget) -> None:
         if isinstance(data, Widget):
             self.__parent = data
+
+    @property
+    def relative_row(self) -> int:
+        """
+        Get and set the relative_row of the cursor, it has to be an int.
+        """
+        return self.__relative_row
+
+    @relative_row.setter
+    def relative_row(self, data: int) -> None:
+        if isinstance(data, int) and data >= 0:
+            self.__relative_row = data
+
+    @property
+    def relative_column(self) -> int:
+        """
+        Get and set the relative_column of the cursor, it has to be an int.
+        """
+        return self.__relative_column
+
+    @relative_column.setter
+    def relative_column(self, data: int) -> None:
+        if isinstance(data, int) and data >= 0:
+            self.__relative_column = data
 
     def render_to_buffer(
         self, buffer, row, column, buffer_height, buffer_width
@@ -4990,7 +5181,7 @@ class LineInput(Widget):
     def __init__(
         self,
         default: str = "",
-        filter: constants.InputValidators = constants.InputValidators.PRINTABLE_FILTER,
+        filter: constants.InputValidator = constants.InputValidator.PRINTABLE_FILTER,
         width: int = 0,
         height: int = 0,
         minimum_width: int = 0,
@@ -5006,7 +5197,7 @@ class LineInput(Widget):
         :type default: str
         :param filter: Sets the type of accepted input. It comes from the
            :mod:`constants` module.
-        :type filter: :class:`constants.InputValidators`
+        :type filter: :class:`constants.InputValidator`
         :param config: The configuration object.
         :type config: :class:`UiConfig`
         :param history: The history object.
@@ -5088,16 +5279,16 @@ class LineInput(Widget):
         return self.__filter
 
     @filter.setter
-    def filter(self, value: constants.InputValidators) -> None:
+    def filter(self, value: constants.InputValidator) -> None:
         if (
-            value == constants.InputValidators.PRINTABLE_FILTER
-            or value == constants.InputValidators.INTEGER_FILTER
+            value == constants.InputValidator.PRINTABLE_FILTER
+            or value == constants.InputValidator.INTEGER_FILTER
         ):
             self.__filter = value
         else:
             raise base.PglInvalidTypeException(
                 "LineInput.filter: value needs to be either pygamelib.constants."
-                "InputValidators.INTEGER_FILTER or pygamelib.constants.InputValidators."
+                "InputValidator.INTEGER_FILTER or pygamelib.constants.InputValidator."
                 "PRINTABLE_FILTER."
             )
 
@@ -5113,11 +5304,11 @@ class LineInput(Widget):
     def text(self, value: str) -> None:
         if isinstance(value, str) and (
             (
-                self.__filter == constants.InputValidators.PRINTABLE_FILTER
+                self.__filter == constants.InputValidator.PRINTABLE_FILTER
                 and value.isprintable()
             )
             or (
-                self.__filter == constants.InputValidators.INTEGER_FILTER
+                self.__filter == constants.InputValidator.INTEGER_FILTER
                 and value.isdigit()
             )
         ):
@@ -5136,6 +5327,23 @@ class LineInput(Widget):
                 f"validation. Value={value} is not valid.",
             )
 
+    def move_cursor(self, direction: constants.Direction):
+        if direction == constants.Direction.LEFT and self.__cursor.relative_column > 0:
+            self.__cursor.relative_column -= 1
+        elif (
+            direction == constants.Direction.RIGHT
+            and self.__cursor.relative_column < len(self.__content)
+        ):
+            self.__cursor.relative_column += 1
+        else:
+            self.notify(
+                self,
+                "pygamelib.gfx.ui.LineInput.move_cursor:error",
+                "LineInput.move_cursor(direction): direction need to be either"
+                "pygamelib.constants.Direction.LEFT or "
+                "pygamelib.constants.Direction.RIGHT",
+            )
+
     def backspace(self) -> None:
         """
         Erase the last character of whatever is present in the LineInput.
@@ -5148,7 +5356,11 @@ class LineInput(Widget):
             line_input.backspace()
             # Will modify it to "Hell"
         """
-        self.text = self.text[0:-1]
+        self.text = (
+            self.text[0 : self.__cursor.relative_column - 1]
+            + self.text[self.__cursor.relative_column :]
+        )
+        self.__cursor.relative_column -= 1
 
     def delete(self):
         """
@@ -5215,6 +5427,13 @@ class LineInput(Widget):
         for ic in range(input_size, min(buffer_width, column + self.width)):
             buffer[row][column + ic] = self.__empty_sprixel
         if self.focus:
+            # self.__cursor.render_to_buffer(
+            #     buffer, row, column + input_size, buffer_height, buffer_width
+            # )
             self.__cursor.render_to_buffer(
-                buffer, row, column + input_size, buffer_height, buffer_width
+                buffer,
+                row,
+                column + self.__cursor.relative_column,
+                buffer_height,
+                buffer_width,
             )
