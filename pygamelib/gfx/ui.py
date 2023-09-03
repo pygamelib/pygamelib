@@ -5082,6 +5082,7 @@ class Cursor(base.PglBaseObject):
         self.blink_time = blink_time
         self.__blink_ctrl_timer = 0
         self.__blink_ctrl_show = True
+        self.__position_locked = False
 
     @property
     def model(self) -> core.Sprixel:
@@ -5121,7 +5122,7 @@ class Cursor(base.PglBaseObject):
 
     @relative_row.setter
     def relative_row(self, data: int) -> None:
-        if isinstance(data, int) and data >= 0:
+        if isinstance(data, int) and data >= 0 and not self.__position_locked:
             self.__relative_row = data
 
     @property
@@ -5133,8 +5134,38 @@ class Cursor(base.PglBaseObject):
 
     @relative_column.setter
     def relative_column(self, data: int) -> None:
-        if isinstance(data, int) and data >= 0:
+        if isinstance(data, int) and data >= 0 and not self.__position_locked:
             self.__relative_column = data
+
+    def lock_position(self):
+        """
+        Prevent the cursor's relative position to be changed automatically.
+
+        Example::
+
+            my_cursor = Cursor()
+            my_lineedit = LineEdit(cursor=my_cursor)
+            my_cursor.lock_position()
+            my_lineedit.delete()
+            my_cursor.unlock_position()
+
+        """
+        self.__position_locked = True
+
+    def unlock_position(self):
+        """
+        Authorize the cursor's relative position to be changed automatically.
+
+        Example::
+
+            my_cursor = Cursor()
+            my_lineedit = LineEdit(cursor=my_cursor)
+            my_cursor.lock_position()
+            my_lineedit.delete()
+            my_cursor.unlock_position()
+
+        """
+        self.__position_locked = False
 
     def render_to_buffer(
         self, buffer, row, column, buffer_height, buffer_width
@@ -5312,11 +5343,20 @@ class LineInput(Widget):
                 and value.isdigit()
             )
         ):
+            # If there's no change in the content we do not want to trigger any actual
+            # update.
+            if self.__content == value:
+                return
+
             self.__content = value
 
             # Now we update the sprixel array
             self.__update_sprixels_array()
 
+            # Put the cursor at the end of the string (unless it's been locked in place)
+            self.__cursor.relative_column = len(self.__content)
+
+            # Update history if necessary
             if self.__history is not None and self.__history.current != self.text:
                 self.__history.add(self.text)
         else:
@@ -5339,10 +5379,16 @@ class LineInput(Widget):
             self.notify(
                 self,
                 "pygamelib.gfx.ui.LineInput.move_cursor:error",
-                "LineInput.move_cursor(direction): direction need to be either"
+                "LineInput.move_cursor(direction): direction need to be either "
                 "pygamelib.constants.Direction.LEFT or "
                 "pygamelib.constants.Direction.RIGHT",
             )
+
+    def end(self):
+        self.__cursor.relative_column = len(self.__content)
+
+    def home(self):
+        self.__cursor.relative_column = 0
 
     def backspace(self) -> None:
         """
@@ -5356,17 +5402,25 @@ class LineInput(Widget):
             line_input.backspace()
             # Will modify it to "Hell"
         """
+        self.__cursor.lock_position()
         self.text = (
             self.text[0 : self.__cursor.relative_column - 1]
             + self.text[self.__cursor.relative_column :]
         )
+        self.__cursor.unlock_position()
         self.__cursor.relative_column -= 1
 
     def delete(self):
         """
         Delete the character immediately before the :class:`Cursor`.
         """
-        pass
+        if self.__cursor.relative_column < len(self.__content):
+            self.__cursor.lock_position()
+            self.text = (
+                self.text[0 : self.__cursor.relative_column]
+                + self.text[self.__cursor.relative_column + 1 :]
+            )
+            self.__cursor.unlock_position()
 
     def undo(self) -> None:
         """
