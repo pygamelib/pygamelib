@@ -609,9 +609,9 @@ class TestBase(unittest.TestCase):
         w.height = 5
         self.assertEqual(w.height, 5)
         w.height = 15
-        self.assertEqual(w.height, 5)
+        self.assertEqual(w.height, 10)
         w.height = 0
-        self.assertEqual(w.height, 5)
+        self.assertEqual(w.height, 2)
         w.maximum_width = 10
         w.minimum_width = 2
         self.assertEqual(w.maximum_width, 10)
@@ -619,9 +619,9 @@ class TestBase(unittest.TestCase):
         w.width = 5
         self.assertEqual(w.width, 5)
         w.width = 15
-        self.assertEqual(w.width, 5)
+        self.assertEqual(w.width, 10)
         w.width = 0
-        self.assertEqual(w.width, 5)
+        self.assertEqual(w.width, 2)
 
         w = ui.Widget(4, 2, 0, 0, 3, 1)
         self.assertEqual(w.maximum_height, 2)
