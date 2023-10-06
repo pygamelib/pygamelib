@@ -21,9 +21,11 @@ Cursor
       ~Cursor.attach
       ~Cursor.detach
       ~Cursor.handle_notification
+      ~Cursor.lock_position
       ~Cursor.notify
       ~Cursor.render_to_buffer
       ~Cursor.store_screen_position
+      ~Cursor.unlock_position
    
    
 
@@ -37,5 +39,7 @@ Cursor
       ~Cursor.parent
       ~Cursor.screen_column
       ~Cursor.screen_row
+      ~Cursor.relative_column
+      ~Cursor.relative_row
    
    

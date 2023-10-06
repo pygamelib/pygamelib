@@ -23,7 +23,12 @@ LineInput
       ~LineInput.clear
       ~LineInput.delete
       ~LineInput.detach
+      ~LineInput.end
       ~LineInput.handle_notification
+      ~LineInput.home
+      ~LineInput.insert_character
+      ~LineInput.length
+      ~LineInput.move_cursor
       ~LineInput.notify
       ~LineInput.redo
       ~LineInput.render_to_buffer
