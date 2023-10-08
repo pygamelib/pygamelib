@@ -4253,8 +4253,8 @@ class Widget(base.PglBaseObject):
         height: int = 0,
         minimum_width: int = 0,
         minimum_height: int = 0,
-        maximum_width: int = 0,
-        maximum_height: int = 0,
+        maximum_width: int = 20,
+        maximum_height: int = 10,
         layout: Optional["Layout"] = None,
         bg_color: Optional[core.Color] = None,
         config: Optional[UiConfig] = None,
@@ -4302,8 +4302,10 @@ class Widget(base.PglBaseObject):
 
         self.__minimum_width: int = minimum_width
         self.__minimum_height: int = minimum_height
-        if width > maximum_width:
-            self.__maximum_width = width
+        if width < minimum_width:
+            self.__width = minimum_width
+        if self.__height < self.__minimum_height:
+            self.__height = self.__minimum_height
         self.ui_config = config
         if config is None:
             self.ui_config = UiConfig.instance()
@@ -5520,7 +5522,7 @@ class LineInput(Widget):
         height: int = 0,
         minimum_width: int = 0,
         minimum_height: int = 1,
-        maximum_width: int = 0,
+        maximum_width: int = 20,
         maximum_height: int = 1,
         config: Optional[UiConfig] = None,
         history: Optional[base.History] = None,
@@ -5546,7 +5548,8 @@ class LineInput(Widget):
         :type maximum_height: int
         :param config: The configuration object.
         :type config: :class:`UiConfig`
-        :param history: The history object.
+        :param history: The history object. If none is provided, the LineInput will use
+           the global instance of History.
         :type history: :class:`~pygamelib.base.History`
 
         Example::
@@ -5576,9 +5579,7 @@ class LineInput(Widget):
         )
         self.__default = default
         self.__filter = filter
-        if self.__default is None or not (
-            isinstance(self.__default, base.Text) or type(self.__default) is str
-        ):
+        if self.__default is None or not (type(self.__default) is str):
             raise base.PglInvalidTypeException("LineInput: default must be a str.")
         self.__content = self.__default
         self.__empty_sprixel = core.Sprixel(" ", bg_color=self.ui_config.input_bg_color)
@@ -5642,9 +5643,20 @@ class LineInput(Widget):
             )
 
     @property
+    def cursor(self) -> Cursor:
+        """
+        A read-only property that gives access to the cursor.
+        """
+        return self.__cursor
+
+    @property
     def text(self) -> str:
         """
         Get and set the text of the line input, it has to be a str.
+        When setting this property tries to set the LineInput.width to the size of the
+        content if the content's length is greater than the width.
+
+        Obviously the width is constrained by the maximum_width property.
         """
         return self.__content
 
@@ -5676,6 +5688,10 @@ class LineInput(Widget):
             # Update history if necessary
             if self.__history is not None and self.__history.current != self.text:
                 self.__history.add(self.text)
+
+            # Update the width if it's lesser than the content's length
+            if self.width < len(self.__content):
+                self.width = len(self.__content)
         else:
             self.notify(
                 self,
@@ -5710,6 +5726,8 @@ class LineInput(Widget):
         # If position is negative we set it to 0.
         if isinstance(position, int) and position < 0:
             position = 0
+        elif position is None:
+            position = self.__cursor.relative_column
         if isinstance(character, str) and (
             (
                 self.__filter == constants.InputValidator.PRINTABLE_FILTER
@@ -5721,11 +5739,7 @@ class LineInput(Widget):
             )
         ):
             self.__cursor.lock_position()
-            self.text = (
-                self.text[0 : self.__cursor.relative_column]
-                + character
-                + self.text[self.__cursor.relative_column :]
-            )
+            self.text = self.text[0:position] + character + self.text[position:]
             self.__cursor.unlock_position()
             self.__cursor.relative_column += len(character)
         else:
@@ -5786,6 +5800,10 @@ class LineInput(Widget):
             line_input.backspace()
             # Will modify it to "Hell" if the cursor is at the end of the line.
         """
+        # If the cursor is at the beginning we return immediately as there's nothing to
+        # erase.
+        if self.__cursor.relative_column <= 0:
+            return
         self.__cursor.lock_position()
         self.text = (
             self.text[0 : self.__cursor.relative_column - 1]
@@ -5798,6 +5816,10 @@ class LineInput(Widget):
         """
         Delete the character immediately under the :class:`Cursor`.
         """
+        # If the cursor is at the end we return immediately as there's nothing to
+        # erase.
+        if self.__cursor.relative_column >= len(self.__content):
+            return
         if self.__cursor.relative_column < len(self.__content):
             self.__cursor.lock_position()
             self.text = (
@@ -5814,6 +5836,7 @@ class LineInput(Widget):
             self.__history.undo()
             if self.__history.current is not None:
                 self.__content = self.__history.current
+                self.__cursor.relative_column = len(self.__content)
             self.__update_sprixels_array()
 
     def redo(self) -> None:
@@ -5825,6 +5848,7 @@ class LineInput(Widget):
             self.__history.redo()
             if self.__history.current is not None:
                 self.__content = self.__history.current
+                self.__cursor.relative_column = len(self.__content)
             self.__update_sprixels_array()
 
     def clear(self) -> None:
