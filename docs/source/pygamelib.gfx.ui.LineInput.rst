@@ -21,6 +21,7 @@ LineInput
       ~LineInput.attach
       ~LineInput.backspace
       ~LineInput.clear
+      ~LineInput.cursor
       ~LineInput.delete
       ~LineInput.detach
       ~LineInput.end
