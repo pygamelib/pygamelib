@@ -37,7 +37,7 @@ from pathlib import Path
 
 import time
 
-import logging
+# import logging
 
 if TYPE_CHECKING:  # pragma: no cover
     import numpy
@@ -4410,15 +4410,15 @@ class Widget(base.PglBaseObject):
         # )
         if isinstance(data, int):
             data = functions.clamp(data, self.__minimum_height, self.__maximum_height)
-            logging.debug(f"     *** Widget ({id(self)}): height CLAMPED data={data}")
+            # logging.debug(f"     *** Widget ({id(self)}): height CLAMPED data={data}")
             if data != self.__height:
                 self.__height = data
                 self.notify(
                     self, "pygamelib.gfx.ui.Widget.resizeEvent:height", self.__height
                 )
-                logging.debug(
-                    f"     *** Widget ({id(self)}): height set to {self.__height}"
-                )
+                # logging.debug(
+                #     f"     *** Widget ({id(self)}): height set to {self.__height}"
+                # )
 
     @property
     def maximum_width(self) -> int:
@@ -4462,7 +4462,7 @@ class Widget(base.PglBaseObject):
     def minimum_width(self, data: int) -> None:
         if isinstance(data, int):
             self.__minimum_width = data
-            if self.__width > data:
+            if self.__width < data:
                 self.__width = data
 
     @property
