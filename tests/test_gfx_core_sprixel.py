@@ -2,7 +2,7 @@ import pygamelib.gfx.core as gfx_core
 import pygamelib.base as base
 import unittest
 
-# Test cases for all classes in pygamelib.gfx.core except for Animation.
+# Test cases for all classes in pygamelib.gfx.core.Sprixel.
 
 
 class TestBase(unittest.TestCase):

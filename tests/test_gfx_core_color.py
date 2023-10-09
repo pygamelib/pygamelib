@@ -1,7 +1,7 @@
 import pygamelib.gfx.core as gfx_core
 import unittest
 
-# Test cases for all classes in pygamelib.gfx.core except for Animation.
+# Test cases for all classes in pygamelib.gfx.core.Color.
 
 
 class TestBase(unittest.TestCase):
