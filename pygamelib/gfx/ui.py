@@ -4835,6 +4835,21 @@ class BoxLayout(Layout):
         """
         super().__init__(parent)
         self.__widgets: List[Widget] = list()
+        # Raise exceptions if the types are incorrect.
+        if orientation is not None and not isinstance(
+            orientation, constants.Orientation
+        ):
+            raise base.PglInvalidTypeException(
+                "BoxLayout: the orientation constructor parameter needs to be a "
+                "pygamelib.constants.Orientation."
+            )
+        if size_constraint is not None and not isinstance(
+            size_constraint, constants.SizeConstraint
+        ):
+            raise base.PglInvalidTypeException(
+                "BoxLayout: the size_constraint constructor parameter needs to be a "
+                "pygamelib.constants.SizeConstraint."
+            )
         self.__orientation: constants.Orientation = orientation
         if self.__orientation is None:
             self.__orientation = constants.Orientation.HORIZONTAL
