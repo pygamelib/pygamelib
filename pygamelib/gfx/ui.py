@@ -5022,6 +5022,10 @@ class GridLayout(Layout):
     """
 
     def __init__(self, parent: Optional[Widget] = None) -> None:
+        # NOTE: We could add a nb_columns and nb_rows parameters to set the geometry of
+        #       the grid. It would require to add 2 methods: add_row() and add_column().
+        #       The code for these method is already in add_widget(). We need to add
+        #       their geometry to the relevant places.
         """
         :param parent: The parent object, ie: the one in which the GridLayout reside.
         :type parent: :class:`Widget`
@@ -5045,6 +5049,36 @@ class GridLayout(Layout):
         self.__grid = {}
         self.__columns_geometry = []
         self.__rows_geometry = []
+
+    @property
+    def width(self) -> int:
+        """
+        Get the layout's width (including spacing).
+
+        Returns an int.
+
+        This is a read-only property.
+        """
+        tmp_width = 0
+        for geom in self.__columns_geometry:
+            tmp_width += geom + self.horizontal_spacing
+        tmp_width -= self.horizontal_spacing
+        return tmp_width
+
+    @property
+    def height(self) -> int:
+        """
+        Get the layout's height (including spacing).
+
+        Returns an int.
+
+        This is a read-only property.
+        """
+        tmp_height = 0
+        for geom in self.__rows_geometry:
+            tmp_height += geom + self.vertical_spacing
+        tmp_height -= self.vertical_spacing
+        return tmp_height
 
     @property
     def row_minimum_height(self) -> int:
@@ -5096,7 +5130,7 @@ class GridLayout(Layout):
 
     @spacing.setter
     def spacing(self, data: int) -> None:
-        if isinstance(data, int):
+        if isinstance(data, int) and data >= 0:
             self.__h_spacing = self.__v_spacing = data
             self.notify(self, "pygamelib.gfx.ui.GridLayout.spacing:changed", data)
 
@@ -5110,7 +5144,7 @@ class GridLayout(Layout):
 
     @horizontal_spacing.setter
     def horizontal_spacing(self, data: int) -> None:
-        if isinstance(data, int):
+        if isinstance(data, int) and data >= 0:
             self.__h_spacing = data
             self.notify(
                 self, "pygamelib.gfx.ui.GridLayout.horizontal_spacing:changed", data
@@ -5126,7 +5160,7 @@ class GridLayout(Layout):
 
     @vertical_spacing.setter
     def vertical_spacing(self, data: int) -> None:
-        if isinstance(data, int):
+        if isinstance(data, int) and data >= 0:
             self.__v_spacing = data
             self.notify(
                 self, "pygamelib.gfx.ui.GridLayout.vertical_spacing:changed", data
@@ -5155,8 +5189,36 @@ class GridLayout(Layout):
             # Step 2: add it to the layout.
             parent_widget.layout.add_widget(child_widget1, 2, 3)
             # That's it!
+
+        If either of the row or column (or both) are None, the method will find the
+        first unused cell to put the widget in.
+
+        .. Important:: If there's no space within the existing grid, a new line will be
+           added. For now, the expansion policy cannot be chosen and it is vertically.
+           In the future an expand policy could be added.
         """
         if isinstance(widget, Widget):
+            # Finding a spot in the layout if one of the coordinate is None.
+            # In that case we are just ignoring both of them. We might want to do it
+            # differently in the future.
+            if row is None or column is None:
+                tr = tc = 0
+                while tr < self.__nb_rows and tc < self.__nb_columns:
+                    if (tr, tc) not in self.__grid:
+                        row = tr
+                        column = tc
+                        break
+                    tc += 1
+                    if tc >= self.__nb_columns:
+                        tc = 0
+                        tr += 1
+                # Now if nothing's changed we did not find any space free in the grid.
+                # Therefor, we add a line to the grid and put our widget to the first
+                # column.
+                if row is None or column is None:
+                    row = self.__nb_rows
+                    column = 0
+
             if row >= self.__nb_rows:
                 self.__nb_rows = row + 1
             if column >= self.__nb_columns:
