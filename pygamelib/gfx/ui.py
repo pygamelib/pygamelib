@@ -5380,7 +5380,9 @@ class GridLayout(Layout):
 
 
 # NOTE: This is a placeholder for future PR.
-class FormLayout(GridLayout):
+#       WHEN IMPLEMENTED IT NEEDS TO BE TESTED!
+#       The no cover pragma is only for the placeholder
+class FormLayout(GridLayout):  # pragma: no cover
     def __init__(self, parent: Optional[Widget] = None) -> None:
         super().__init__(parent)
         self.__current_row = -1
@@ -5452,13 +5454,14 @@ class Cursor(base.PglBaseObject):
         if model is None:
             self.__model = core.Sprixel(" ", bg_color=core.Color(255, 255, 255))
 
-        self.__relative_row = relative_row
-        self.__relative_column = relative_column
         self.__parent = parent
         self.blink_time = blink_time
         self.__blink_ctrl_timer = 0
         self.__blink_ctrl_show = True
         self.__position_locked = False
+        self.__relative_row = self.__relative_column = 0
+        self.relative_row = relative_row
+        self.relative_column = relative_column
 
     @property
     def model(self) -> core.Sprixel:
