@@ -2,7 +2,10 @@ import enum
 
 __docformat__ = "restructuredtext"
 """
-Documentation is located in docs/source/constants.rst
+Documentation for constants is located in docs/source/constants.rst
+
+Starting with version 1.4.0, all constants must be an Enum.
+
 """
 
 # Main version
@@ -59,6 +62,11 @@ UNDERLINE = "\x1b[4m"
 
 
 class SizeConstraint(enum.IntEnum):
+    """
+    SizeConstraint regroup constants that are used in element which the size can vary
+    depending on context.
+    """
+
     # Use current height and width
     DEFAULT_SIZE = 60000001
     # Use minimum height and width
@@ -70,6 +78,13 @@ class SizeConstraint(enum.IntEnum):
 
 
 class Alignment(enum.IntEnum):
+    """
+    Alignment regroup constants that used for various alignment purpose when organizing
+    UI elements or other such graphical elements.
+
+    V_CENTER and H_CENTER respectively stand for Vertical center and Horizontal Center.
+    """
+
     LEFT = 30000011
     RIGHT = 30000100
     CENTER = 30000101
@@ -80,16 +95,33 @@ class Alignment(enum.IntEnum):
 
 
 class Orientation(enum.IntEnum):
+    """
+    Orientation regroup constants that are used to describe the orientation of graphical
+    elements. The best example, is the BoxLayout: it can be organized vertically or
+    horizontally.
+    """
+
     HORIZONTAL = 30000001
     VERTICAL = 30000010
 
 
 class InputValidator(enum.IntEnum):
+    """
+    InputValidators are used in the UI module to indicate what type of inputs are valid
+    and/or accepted from the user.
+    """
+
     INTEGER_FILTER = 50000001
     PRINTABLE_FILTER = 50000002
 
 
 class Direction(enum.IntEnum):
+    """
+    Direction hold the basic constants for directions in the pygamelib. It is used for
+    a wide variety of use cases from moving a player or NPC to indicate the direction of
+    the movement of a cursor in the UI module!
+    """
+
     # Directions
     NO_DIR = 10000000
     UP = 10000001
