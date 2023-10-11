@@ -8,6 +8,7 @@ The base module provide basic objects and exceptions that are used by the entire
 .. toctree::
 
    pygamelib.base.Console
+   pygamelib.base.History.rst
    pygamelib.base.Math.rst
    pygamelib.base.PglBaseObject.rst
    pygamelib.base.PglException.rst
@@ -18,7 +19,6 @@ The base module provide basic objects and exceptions that are used by the entire
    pygamelib.base.PglOutOfBoardBoundException.rst
    pygamelib.base.Text.rst
    pygamelib.base.Vector2D.rst
-   pygamelib.base.History.rst
    base_deprecated
 
 
