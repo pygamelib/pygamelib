@@ -21,6 +21,7 @@ History
       ~History.add
       ~History.instance
       ~History.redo
+      ~History.reset
       ~History.undo
    
    
