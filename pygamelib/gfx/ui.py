@@ -4239,6 +4239,8 @@ class Widget(base.PglBaseObject):
     # sending resize events.
     # TODO: When we had widget visibility (show(), hide(), is_visible)
     """
+    .. versionadded:: 1.4.0
+
     The Widget object is the base for all UI elements (or should be). By itself it does
     not do anything functionally useful. What it does however, is taking care of the
     geometry logic.
@@ -4612,6 +4614,8 @@ class Widget(base.PglBaseObject):
 
 class Layout(base.PglBaseObject):
     """
+    .. versionadded:: 1.4.0
+
 
     The Layout class is mostly a virtual class. It implements a few properties but all
     of the methods and properties marked with the :virtual:`virtual method` tag need to
@@ -5016,6 +5020,8 @@ class BoxLayout(Layout):
 
 class GridLayout(Layout):
     """
+    .. versionadded:: 1.4.0
+
     The GridLayout is a layout to organize the widgets in a grid (shocking right?). All
     widgets are managed in a grid, one per cell. Layouts can be nested of course to
     adapt to your need.
@@ -5400,6 +5406,8 @@ class FormLayout(GridLayout):  # pragma: no cover
 
 class Cursor(base.PglBaseObject):
     """
+    .. versionadded:: 1.4.0
+
     The Cursor class represent a typing cursor on screen.
 
     .. warning:: The Cursor **need** to be rendered last! For example, in a LineInput
