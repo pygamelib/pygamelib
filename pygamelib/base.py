@@ -1489,7 +1489,7 @@ class History:
         global_history.undo()
         global_history.undo()
         print(global_history.current)  # print "Hello"
-        global_history.add(" there!")
+        global_history.add("Hello there!")
         print(global_history.current)  # print "Hello there!"
         global_history.redo() # does nothing as the future was reset by add()
 
