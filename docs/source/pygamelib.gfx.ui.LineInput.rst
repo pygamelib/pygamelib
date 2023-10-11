@@ -27,7 +27,7 @@ LineInput
       ~LineInput.end
       ~LineInput.handle_notification
       ~LineInput.home
-      ~LineInput.insert_character
+      ~LineInput.insert_characters
       ~LineInput.length
       ~LineInput.move_cursor
       ~LineInput.notify
@@ -46,6 +46,7 @@ LineInput
    
       ~LineInput.bg_color
       ~LineInput.children
+      ~LineInput.cursor
       ~LineInput.filter
       ~LineInput.focus
       ~LineInput.height

@@ -4808,7 +4808,7 @@ class Layout(base.PglBaseObject):
 class BoxLayout(Layout):
     """
     The box layout lines up child widgets horizontally or vertically. The orientation of
-    the layout is controlled using the :class:`~pygamelib.constants.Orientation`
+    the layout is controlled using the :py:enum:`~pygamelib.constants.Orientation`
     constants.
     """
 
@@ -4820,9 +4820,9 @@ class BoxLayout(Layout):
     ) -> None:
         """
         :param orientation: The orientation of the layout.
-        :type orientation: :class:`~pygamelib.constants.Orientation`
+        :type orientation: :py:enum:`~pygamelib.constants.Orientation`
         :param size_constraint: The size constraint policy for managed widgets.
-        :type size_constraint: :class:`~pygamelib.constants.SizeConstraint`
+        :type size_constraint: :py:enum:`~pygamelib.constants.SizeConstraint`
         :param parent: The parent object, ie: the one in which the GridLayout reside.
         :type parent: :class:`Widget`
 
@@ -4865,7 +4865,7 @@ class BoxLayout(Layout):
         The orientation of the BoxLayout can be changed dynamically and will take effect
         immediately.
 
-        It has to be a :class:`~pygamelib.constants.Orientation`.
+        It has to be a :py:enum:`~pygamelib.constants.Orientation`.
         """
         return self.__orientation
 
@@ -4878,7 +4878,7 @@ class BoxLayout(Layout):
     def size_constraint(self) -> constants.SizeConstraint:
         """
         Get and set the layout's size constraint policy.
-        It has to be a :class:`~pygamelib.constants.SizeConstraint`.
+        It has to be a :py:enum:`~pygamelib.constants.SizeConstraint`.
         """
         return self.__size_constraint
 
@@ -5414,7 +5414,7 @@ class Cursor(base.PglBaseObject):
         relative_row: Optional[int] = 0,
         relative_column: Optional[int] = 0,
         blink_time: Optional[float] = 0.4,
-        model: Optional[core.Sprixel] = None,
+        sprixel: Optional[core.Sprixel] = None,
         parent: Optional[Widget] = None,
     ) -> None:
         """
@@ -5426,8 +5426,8 @@ class Cursor(base.PglBaseObject):
            you want to keep the cursor solid (i.e: not blinking) set this parameter to
            0.
         :type blink_time: float
-        :param model: The cursor's model (or representation) as a Sprixel.
-        :type model: :class:`~core.Sprixel`
+        :param sprixel: The cursor's sprixel (or representation) as a Sprixel.
+        :type sprixel: :class:`~core.Sprixel`
         :param parent: The parent object, ie: the one in which the cursor reside. It's
            optional because you can share a cursor with multiple widgets.
         :type parent: :class:`Widget`
@@ -5437,7 +5437,7 @@ class Cursor(base.PglBaseObject):
             # Create a cyan cursor rapidly blinking.
             custom_cursor = Cursor(
                 blink_time=0.1,
-                model=Sprixel(
+                sprixel=Sprixel(
                     "|", bg_color=config.input_bg_color, fg_color=Color(0, 255, 255)
                 ),
             )
@@ -5450,9 +5450,9 @@ class Cursor(base.PglBaseObject):
             )
         """
         super().__init__()
-        self.__model: core.Sprixel = model
-        if model is None:
-            self.__model = core.Sprixel(" ", bg_color=core.Color(255, 255, 255))
+        self.__sprixel: core.Sprixel = sprixel
+        if sprixel is None:
+            self.__sprixel = core.Sprixel(" ", bg_color=core.Color(255, 255, 255))
 
         self.__parent = parent
         self.blink_time = blink_time
@@ -5464,16 +5464,16 @@ class Cursor(base.PglBaseObject):
         self.relative_column = relative_column
 
     @property
-    def model(self) -> core.Sprixel:
+    def sprixel(self) -> core.Sprixel:
         """
-        Get and set the model of the cursor, it has to be :class:`core.Sprixel`.
+        Get and set the sprixel of the cursor, it has to be :class:`core.Sprixel`.
         """
-        return self.__model
+        return self.__sprixel
 
-    @model.setter
-    def model(self, value: core.Sprixel) -> None:
+    @sprixel.setter
+    def sprixel(self, value: core.Sprixel) -> None:
         if isinstance(value, core.Sprixel):
-            self.__model = value
+            self.__sprixel = value
         else:
             raise base.PglInvalidTypeException(
                 "Cursor.model needs to be a pygamelib.gfx.core.Sprixel object."
@@ -5579,11 +5579,13 @@ class Cursor(base.PglBaseObject):
                 self.__blink_ctrl_show = not self.__blink_ctrl_show
 
         if self.__blink_ctrl_show and row < buffer_height and column < buffer_width:
-            buffer[row][column] = self.__model
+            buffer[row][column] = self.__sprixel
 
 
 class LineInput(Widget):
     """
+    .. versionadded:: 1.4.0
+
     The LineInput widget allows the user to enter and edit a single line of text.
 
     This widget can be configured to accept either anything printable or only digits.
@@ -5613,7 +5615,7 @@ class LineInput(Widget):
         :type default: str
         :param filter: Sets the type of accepted input. It comes from the
            :mod:`constants` module.
-        :type filter: :class:`~pygamelib.constants.InputValidator`
+        :type filter: :py:enum:`~pygamelib.constants.InputValidator`
         :param width: The width of the LineInput.
         :type width: int
         :param height: The height of the LineInput.
@@ -5704,7 +5706,7 @@ class LineInput(Widget):
     def filter(self) -> constants.InputValidator:
         """
         Get and set the filter of the line input, it has to be an
-        :class:`~pygamelib.constants.InputValidator`.
+        :py:enum:`~pygamelib.constants.InputValidator`.
         """
         return self.__filter
 
@@ -5780,10 +5782,14 @@ class LineInput(Widget):
                 f"validation. Value={value} is not valid.",
             )
 
-    def insert_character(
+    def insert_characters(
         self, character: str = None, position: Optional[int] = None
     ) -> None:
         """
+        Insert one or more characters at a given position.
+
+        If no position is given, the characters are inserted at the cursor's position.
+
         :param character: The character to insert.
         :type character: str
         :param position: The position at which a character must be inserted.
@@ -5833,6 +5839,9 @@ class LineInput(Widget):
     def move_cursor(self, direction: constants.Direction) -> None:
         """
         Move the :class:`Cursor` in the specified direction.
+
+        :param direction: The direction to move the cursor to.
+        :type direction: :py:enum:`~pygamelib.constants.Direction`
 
         Example::
 

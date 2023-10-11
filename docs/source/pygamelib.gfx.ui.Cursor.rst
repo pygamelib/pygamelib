@@ -35,7 +35,7 @@ Cursor
 
    .. autosummary::
    
-      ~Cursor.model
+      ~Cursor.sprixel
       ~Cursor.parent
       ~Cursor.screen_column
       ~Cursor.screen_row
