@@ -1,5 +1,5 @@
 import pygamelib.engine as pgl_engine
-import pygamelib.base as pgl_base
+import pygamelib.base as base
 import pygamelib.board_items as pgl_board_items
 import pygamelib.gfx.core as gfx_core
 from pygamelib.gfx import particles
@@ -108,7 +108,7 @@ class TestBoard(unittest.TestCase):
         self.assertTrue("must be a string" in str(context.exception))
 
     def test_sanity_ui_border_bottom_string(self):
-        with self.assertRaises(pgl_base.PglException) as context:
+        with self.assertRaises(base.PglException) as context:
             self.board = pgl_engine.Board(
                 name="test", size=[10, 10], ui_border_bottom=[]
             )
@@ -146,7 +146,7 @@ class TestBoard(unittest.TestCase):
         self.assertTrue("must be a string" in str(context.exception))
 
     def test_sanity_ui_board_void_cell_sprixel(self):
-        with self.assertRaises(pgl_base.PglException) as context:
+        with self.assertRaises(base.PglException) as context:
             self.board = pgl_engine.Board(
                 name="test_board", size=[10, 10], ui_board_void_cell_sprixel=[]
             )
@@ -172,7 +172,7 @@ class TestBoard(unittest.TestCase):
         self.returned_item = self.board.item(1, 1)
         self.assertEqual(self.placed_item, self.returned_item)
 
-        with self.assertRaises(pgl_base.PglOutOfBoardBoundException) as excinfo:
+        with self.assertRaises(base.PglOutOfBoardBoundException) as excinfo:
             self.board.item(15, 15)
         self.assertTrue("out of the board boundaries" in str(excinfo.exception))
         sprix = gfx_core.Sprixel(bg_color=gfx_core.Color(45, 45, 45))
@@ -200,16 +200,16 @@ class TestBoard(unittest.TestCase):
             )
         )
         self.assertIsNone(self.board.place_item(pgl_board_items.Tile(), 8, 2))
-        with self.assertRaises(pgl_base.PglInvalidTypeException):
+        with self.assertRaises(base.PglInvalidTypeException):
             self.board.place_item(1, 1, 1)
-        with self.assertRaises(pgl_base.PglOutOfBoardBoundException):
+        with self.assertRaises(base.PglOutOfBoardBoundException):
             self.board.place_item(i, 100, 100)
-        with self.assertRaises(pgl_base.PglInvalidTypeException):
+        with self.assertRaises(base.PglInvalidTypeException):
             self.board.remove_item(1)
         # Let's try to break things
         j = pgl_board_items.NPC()
         j.store_position(2, 2)
-        with self.assertRaises(pgl_base.PglException) as e:
+        with self.assertRaises(base.PglException) as e:
             self.board.remove_item(j)
         self.assertEqual(e.exception.error, "invalid_item")
         self.assertTrue(self.board.remove_item(i))
@@ -261,19 +261,19 @@ class TestBoard(unittest.TestCase):
         self.assertEqual(i.inventory.value(), 50)
         i.parent = g
         i.dtmove = 0.0
-        self.assertIsNone(self.board.move(i, pgl_base.Vector2D(1, 0)))
+        self.assertIsNone(self.board.move(i, base.Vector2D(1, 0)))
         i.dtmove = 5.0
-        self.assertIsNone(self.board.move(i, pgl_base.Vector2D(1, 0)))
-        with self.assertRaises(pgl_base.PglObjectIsNotMovableException):
+        self.assertIsNone(self.board.move(i, base.Vector2D(1, 0)))
+        with self.assertRaises(base.PglObjectIsNotMovableException):
             self.board.move(pgl_board_items.Immovable(), constants.DOWN, 1)
         g.mode = constants.MODE_TBT
         self.board.place_item(pgl_board_items.Door(), i.row, i.column + i.width)
         self.assertIsNone(self.board.move(i, constants.RIGHT, 1))
         self.assertIsNone(self.board.move(i, constants.RIGHT, 2))
         self.assertIsNone(self.board.move(i, constants.DOWN, 2))
-        with self.assertRaises(pgl_base.PglInvalidTypeException):
+        with self.assertRaises(base.PglInvalidTypeException):
             self.board.move(i, constants.DOWN, "1")
-        with self.assertRaises(pgl_base.PglInvalidTypeException):
+        with self.assertRaises(base.PglInvalidTypeException):
             self.board.move(i, "constants.DOWN", 1)
 
     def test_move_simple(self):
@@ -297,7 +297,7 @@ class TestBoard(unittest.TestCase):
         self.assertIsNone(b.move(i, constants.DRUP, 1))
         self.assertIsNone(b.move(i, constants.DLDOWN, 1))
         self.assertIsNone(b.move(i, constants.DLUP, 1))
-        self.assertIsNone(b.move(i, pgl_base.Vector2D(0, 0)))
+        self.assertIsNone(b.move(i, base.Vector2D(0, 0)))
         self.assertEqual(i.pos, [0, 0, 0])
         setattr(self, "test_callback", False)
         b.place_item(
@@ -337,7 +337,7 @@ class TestBoard(unittest.TestCase):
         g.change_level(1)
         npc = pgl_board_items.NPC(movement_speed=20)
         g.current_board().place_item(npc, 0, 0)
-        g.current_board().move(npc, pgl_base.Vector2D(1, 0))
+        g.current_board().move(npc, base.Vector2D(1, 0))
         self.assertEqual(npc.row, 0)
         self.assertEqual(npc.column, 0)
 
@@ -399,11 +399,11 @@ class TestBoard(unittest.TestCase):
         i = pgl_board_items.NPC()
         self.board.place_item(i, 2, 2)
         self.board.display_around(i, 2, 2)
-        with self.assertRaises(pgl_base.PglInvalidTypeException):
+        with self.assertRaises(base.PglInvalidTypeException):
             self.board.display_around(1, 2, 2)
-        with self.assertRaises(pgl_base.PglInvalidTypeException):
+        with self.assertRaises(base.PglInvalidTypeException):
             self.board.display_around(i, "2", 2)
-        with self.assertRaises(pgl_base.PglInvalidTypeException):
+        with self.assertRaises(base.PglInvalidTypeException):
             self.board.display_around(i, 2, "2")
         self.assertIsNone(self.board.display_around(i, 20, 20))
         self.assertIsNone(self.board.display_around(i, 2, 20))

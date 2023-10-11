@@ -1,6 +1,11 @@
+import enum
+
 __docformat__ = "restructuredtext"
 """
-Documentation is located in docs/source/constants.rst
+Documentation for constants is located in docs/source/constants.rst
+
+Starting with version 1.4.0, all constants must be an Enum.
+
 """
 
 # Main version
@@ -54,3 +59,76 @@ ALGO_ASTAR = 90000101
 # Text styling constants
 BOLD = "\x1b[1m"
 UNDERLINE = "\x1b[4m"
+
+
+class SizeConstraint(enum.IntEnum):
+    """
+    SizeConstraint regroup constants that are used in element which the size can vary
+    depending on context.
+    """
+
+    # Use current height and width
+    DEFAULT_SIZE = 60000001
+    # Use minimum height and width
+    MINIMUM_SIZE = 60000002
+    # Use maximum height and width
+    MAXIMUM_SIZE = 60000003
+    # Use available space up to maximum height and width
+    EXPAND = 60000004
+
+
+class Alignment(enum.IntEnum):
+    """
+    Alignment regroup constants that used for various alignment purpose when organizing
+    UI elements or other such graphical elements.
+
+    V_CENTER and H_CENTER respectively stand for Vertical center and Horizontal Center.
+    """
+
+    LEFT = 30000011
+    RIGHT = 30000100
+    CENTER = 30000101
+    TOP = 30000110
+    BOTTOM = 30000111
+    V_CENTER = 30001000
+    H_CENTER = 30001001
+
+
+class Orientation(enum.IntEnum):
+    """
+    Orientation regroup constants that are used to describe the orientation of graphical
+    elements. The best example, is the BoxLayout: it can be organized vertically or
+    horizontally.
+    """
+
+    HORIZONTAL = 30000001
+    VERTICAL = 30000010
+
+
+class InputValidator(enum.IntEnum):
+    """
+    InputValidators are used in the UI module to indicate what type of inputs are valid
+    and/or accepted from the user.
+    """
+
+    INTEGER_FILTER = 50000001
+    PRINTABLE_FILTER = 50000002
+
+
+class Direction(enum.IntEnum):
+    """
+    Direction hold the basic constants for directions in the pygamelib. It is used for
+    a wide variety of use cases from moving a player or NPC to indicate the direction of
+    the movement of a cursor in the UI module!
+    """
+
+    # Directions
+    NO_DIR = 10000000
+    UP = 10000001
+    DOWN = 10000010
+    LEFT = 10000011
+    RIGHT = 10000100
+    DRUP = 10000101
+    DRDOWN = 10000110
+    DLUP = 10000111
+    DLDOWN = 10001000

@@ -19,13 +19,28 @@ __docformat__ = "restructuredtext"
    pygamelib.gfx.ui.MenuBar
    pygamelib.gfx.ui.Menu
    pygamelib.gfx.ui.MenuAction
+   pygamelib.gfx.ui.Widget
+   pygamelib.gfx.ui.Layout
+   pygamelib.gfx.ui.BoxLayout
+   pygamelib.gfx.ui.GridLayout
+   pygamelib.gfx.ui.FormLayout
+   pygamelib.gfx.ui.Cursor
+   pygamelib.gfx.ui.LineInput
 
 """
+from typing import Union, Optional, Set, List, TYPE_CHECKING
 from pygamelib.assets import graphics
 from pygamelib.gfx import core
 from pygamelib import base, constants
 from pygamelib import functions
 from pathlib import Path
+
+import time
+
+# import logging
+
+if TYPE_CHECKING:  # pragma: no cover
+    import numpy
 
 # TODO: make sure that Sprixels works as parameters for UiConfig (and are correctly
 # processed)
@@ -80,6 +95,13 @@ class UiConfig(object):
     :type border_bg_color: :class:`~pygamelib.gfx.core.Color`
     :param borderless_dialog: Is the dialog borderless or not.
     :type borderless_dialog: bool
+    :param widget_bg_color: The background color of a widget.
+    :type widget_bg_color: :class:`~pygamelib.gfx.core.Color`
+    :param input_fg_color: The foreground color (i.e the text color) of a LineInput
+       widget.
+    :type input_fg_color: :class:`~pygamelib.gfx.core.Color`
+    :param input_bg_color: The background color of a LineInput widget.
+    :type input_bg_color: :class:`~pygamelib.gfx.core.Color`
 
     Example::
 
@@ -102,17 +124,20 @@ class UiConfig(object):
         box_bottom_right_corner=graphics.BoxDrawings.LIGHT_ARC_UP_AND_LEFT,
         box_vertical_and_right=graphics.BoxDrawings.LIGHT_VERTICAL_AND_RIGHT,
         box_vertical_and_left=graphics.BoxDrawings.LIGHT_VERTICAL_AND_LEFT,
-        fg_color=core.Color(255, 255, 255),
-        bg_color=core.Color(0, 128, 128),
-        fg_color_inactive=core.Color(128, 128, 128),
-        bg_color_selected=core.Color(128, 128, 128),
+        fg_color: core.Color = core.Color(255, 255, 255),
+        bg_color: core.Color = core.Color(0, 128, 128),
+        fg_color_inactive: core.Color = core.Color(128, 128, 128),
+        bg_color_selected: core.Color = core.Color(128, 128, 128),
         bg_color_not_selected=None,
-        fg_color_selected=core.Color(0, 255, 0),
-        fg_color_not_selected=core.Color(255, 255, 255),
-        bg_color_menu_not_selected=core.Color(128, 128, 128),
-        border_fg_color=core.Color(255, 255, 255),
-        border_bg_color=None,
-        borderless_dialog=True,
+        fg_color_selected: core.Color = core.Color(0, 255, 0),
+        fg_color_not_selected: core.Color = core.Color(255, 255, 255),
+        bg_color_menu_not_selected: core.Color = core.Color(128, 128, 128),
+        border_fg_color: core.Color = core.Color(255, 255, 255),
+        border_bg_color: core.Color = None,
+        borderless_dialog: bool = True,
+        widget_bg_color: core.Color = core.Color(0, 128, 128),
+        input_fg_color: core.Color = core.Color(255, 255, 255),
+        input_bg_color: core.Color = core.Color(163, 163, 163),
     ):
         super().__init__()
         if game is None:
@@ -128,17 +153,20 @@ class UiConfig(object):
         self.box_bottom_right_corner = box_bottom_right_corner
         self.box_vertical_and_right = box_vertical_and_right
         self.box_vertical_and_left = box_vertical_and_left
-        self.fg_color = fg_color
-        self.bg_color = bg_color
-        self.fg_color_inactive = fg_color_inactive
-        self.bg_color_selected = bg_color_selected
-        self.bg_color_not_selected = bg_color_not_selected
-        self.fg_color_selected = fg_color_selected
-        self.fg_color_not_selected = fg_color_not_selected
-        self.bg_color_menu_not_selected = bg_color_menu_not_selected
-        self.border_fg_color = border_fg_color
-        self.border_bg_color = border_bg_color
+        self.fg_color: core.Color = fg_color
+        self.bg_color: core.Color = bg_color
+        self.fg_color_inactive: core.Color = fg_color_inactive
+        self.bg_color_selected: core.Color = bg_color_selected
+        self.bg_color_not_selected: core.Color = bg_color_not_selected
+        self.fg_color_selected: core.Color = fg_color_selected
+        self.fg_color_not_selected: core.Color = fg_color_not_selected
+        self.bg_color_menu_not_selected: core.Color = bg_color_menu_not_selected
+        self.border_fg_color: core.Color = border_fg_color
+        self.border_bg_color: core.Color = border_bg_color
         self.borderless_dialog = borderless_dialog
+        self.widget_bg_color: core.Color = widget_bg_color
+        self.input_fg_color: core.Color = input_fg_color
+        self.input_bg_color: core.Color = input_bg_color
 
     @classmethod
     def instance(cls, *args, **kwargs):
@@ -149,7 +177,7 @@ class UiConfig(object):
         Useful for a default configuration. It accepts all the parameters from the
         constructor.
 
-        :return: Instance of Game object
+        :return: Instance of UiConfig object
 
         """
         if cls.__instance is None:
@@ -4204,3 +4232,1773 @@ class MenuBar(object):
     #                 break
     #         inkey = term.inkey(timeout=0.05)
     #     screen.force_update()
+
+
+class Widget(base.PglBaseObject):
+    # Base class does not do anything by itself aside from enforcing geometry and
+    # sending resize events.
+    # TODO: When we had widget visibility (show(), hide(), is_visible)
+    """
+    .. versionadded:: 1.4.0
+
+    The Widget object is the base for all UI elements (or should be). By itself it does
+    not do anything functionally useful. What it does however, is taking care of the
+    geometry logic.
+
+    It enforces the geometry constraints and takes care of sending resize events
+    messages.
+    """
+
+    def __init__(
+        self,
+        width: int = 0,
+        height: int = 0,
+        minimum_width: int = 0,
+        minimum_height: int = 0,
+        maximum_width: int = 20,
+        maximum_height: int = 10,
+        layout: Optional["Layout"] = None,
+        bg_color: Optional[core.Color] = None,
+        config: Optional[UiConfig] = None,
+    ) -> None:
+        """
+        :param width: The width of the widget.
+        :type width: int
+        :param height: The height of the widget.
+        :type height: int
+        :param minimum_width: The minimum_width of the widget.
+        :type minimum_width: int
+        :param minimum_height: The minimum_height of the widget.
+        :type minimum_height: int
+        :param maximum_width: The maximum_width of the widget.
+        :type maximum_width: int
+        :param maximum_height: The maximum_height of the widget.
+        :type maximum_height: int
+        :param layout: The layout of the widget.
+        :type layout: :class:`Layout`
+        :param bg_color: The default background color of the widget. This property
+           overrides the `widget_bg_color` from the :class:`UiConfig` class (in case
+           you want to create a specific widget with a different background color than
+           the default one).
+        :type bg_color: :class:`~pygamelib.gfx.core.Color`
+        :param config: The configuration object.
+        :type config: :class:`UiConfig`
+
+        Example::
+
+            my_widget = Widget(6, 3, minimum_width=6, minimum_height=3)
+            my_widget.bg_color = Color(255, 255, 255)
+            screen.place(my_widget, 5, 2)
+        """
+        super().__init__()
+        self.__children_widgets: Set["Widget"] = set()
+        self.__parent: Union["Widget", "Layout", None] = None
+        self.__width: int = width
+        self.__height: int = height
+        self.__maximum_width: int = maximum_width
+        if self.__maximum_width < self.__width:
+            self.__maximum_width = self.__width
+        self.__maximum_height: int = maximum_height
+        if self.__height > self.__maximum_height:
+            self.__maximum_height = self.__height
+
+        self.__minimum_width: int = minimum_width
+        self.__minimum_height: int = minimum_height
+        if width < minimum_width:
+            self.__width = minimum_width
+        if self.__height < self.__minimum_height:
+            self.__height = self.__minimum_height
+        self.ui_config = config
+        if config is None:
+            self.ui_config = UiConfig.instance()
+        self.__default_bg_sprixel = core.Sprixel(" ", self.ui_config.widget_bg_color)
+        self.__layout = None
+        if isinstance(layout, Layout):
+            self.__layout = layout
+            self.__layout.parent = self
+        self.__bg_color = None
+        if isinstance(bg_color, core.Color):
+            self.__bg_color = bg_color
+            self.__default_bg_sprixel.bg_color = bg_color
+        self.__size_constraint = constants.SizeConstraint.DEFAULT_SIZE
+        self.__focus = False
+
+    @property
+    def children(self) -> Set["Widget"]:
+        """
+        This read only property property returns the list of children widgets.
+        """
+        if self.__layout is None:
+            return self.__children_widgets
+        else:
+            return self.__layout.widgets()
+
+    @property
+    def parent(self) -> Union["Widget", None]:
+        """
+        This property get/set the parent widget of the widget.
+        """
+        return self.__parent
+
+    @parent.setter
+    def parent(self, data: Union["Widget", "Layout", None] = None):
+        if isinstance(data, Widget) or isinstance(data, Layout) or data is None:
+            self.__parent = data
+
+    @property
+    def bg_color(self) -> core.Color:
+        """
+        This property get/set the background color of the widget.
+
+        When the color is changed the
+        :boldblue:`pygamelib.gfx.ui.Widget.bg_color:changed` event is sent to the
+        observers.
+        """
+        return self.__bg_color
+
+    @bg_color.setter
+    def bg_color(self, data: core.Color) -> None:
+        if isinstance(data, core.Color) and self.__bg_color != data:
+            self.__bg_color = data
+            self.__default_bg_sprixel.bg_color = data
+            self.notify(self, "pygamelib.gfx.ui.Widget.bg_color:changed", data)
+
+    @property
+    def width(self) -> int:
+        """
+        This property get/set the width of the widget. This property respects the
+        boundaries set by the `maximum_width` and `minimum_width` properties.
+
+        When the width is changed the
+        :boldblue:`pygamelib.gfx.ui.Widget.resizeEvent:width` event is sent to the
+        observers.
+        """
+        return self.__width
+
+    @width.setter
+    def width(self, data: int) -> None:
+        if isinstance(data, int):
+            data = functions.clamp(data, self.__minimum_width, self.__maximum_width)
+            if self.__width != data:
+                self.__width = data
+                self.notify(
+                    self, "pygamelib.gfx.ui.Widget.resizeEvent:width", self.__width
+                )
+
+    @property
+    def height(self) -> int:
+        """
+        This property get/set the height of the widget. This property respects the
+        boundaries set by the `maximum_height` and `minimum_height` properties.
+
+        When the height is changed the
+        :boldblue:`pygamelib.gfx.ui.Widget.resizeEvent:height` event is sent to the
+        observers.
+        """
+        return self.__height
+
+    @height.setter
+    def height(self, data: int) -> None:
+        # if (
+        #     isinstance(data, int)
+        #     and data >= self.__minimum_height
+        #     and data <= self.__maximum_height
+        # ):
+        #     self.__height = data
+        #     self.notify(self, "pygamelib.gfx.ui.Widget.resizeEvent:height", data)
+        # logging.debug(
+        #     f"     *** Widget ({id(self)}): height setter data={data} current height="
+        #     f"{self.__height}"
+        # )
+        if isinstance(data, int):
+            data = functions.clamp(data, self.__minimum_height, self.__maximum_height)
+            # logging.debug(f"     *** Widget ({id(self)}): height CLAMPED data={data}")
+            if data != self.__height:
+                self.__height = data
+                self.notify(
+                    self, "pygamelib.gfx.ui.Widget.resizeEvent:height", self.__height
+                )
+                # logging.debug(
+                #     f"     *** Widget ({id(self)}): height set to {self.__height}"
+                # )
+
+    @property
+    def maximum_width(self) -> int:
+        """
+        This property get/set the maximum width of the widget. This property is used
+        when changing the size constraints and the width property.
+        """
+        return self.__maximum_width
+
+    @maximum_width.setter
+    def maximum_width(self, data: int) -> None:
+        if isinstance(data, int):
+            self.__maximum_width = data
+            if data < self.__width:
+                self.__width = data
+
+    @property
+    def maximum_height(self) -> int:
+        """
+        This property get/set the maximum height of the widget. This property is used
+        when changing the size constraints and the height property.
+        """
+        return self.__maximum_height
+
+    @maximum_height.setter
+    def maximum_height(self, data: int) -> None:
+        if isinstance(data, int):
+            self.__maximum_height = data
+            if data < self.__height:
+                self.__height = data
+
+    @property
+    def minimum_width(self) -> int:
+        """
+        This property get/set the minimum width of the widget. This property is used
+        when changing the size constraints and the width property.
+        """
+        return self.__minimum_width
+
+    @minimum_width.setter
+    def minimum_width(self, data: int) -> None:
+        if isinstance(data, int):
+            self.__minimum_width = data
+            if self.__width < data:
+                self.__width = data
+
+    @property
+    def minimum_height(self) -> int:
+        """
+        This property get/set the minimum height of the widget. This property is used
+        when changing the size constraints and the height property.
+        """
+        return self.__minimum_height
+
+    @minimum_height.setter
+    def minimum_height(self, data: int) -> None:
+        if isinstance(data, int):
+            self.__minimum_height = data
+
+    @property
+    def y(self) -> int:
+        """
+        This property get/set the y position of the widget on screen. Since a Widget is
+        a :class:`~pygamelib.base.PglBaseObject` this is an alias for the
+        `screen_row` property.
+        """
+        return self.screen_row
+
+    @y.setter
+    def y(self, data: int) -> None:
+        self.screen_row = data
+
+    @property
+    def x(self) -> int:
+        """
+        This property get/set the x position of the widget on screen. Since a Widget is
+        a :class:`~pygamelib.base.PglBaseObject` this is an alias for the
+        `screen_column` property.
+        """
+        return self.screen_column
+
+    @x.setter
+    def x(self, data: int) -> None:
+        self.screen_column = data
+
+    @property
+    def layout(self) -> "Layout":
+        """
+        This property get/set the layout of the widget. You can then add sub widgets to
+        the layout.
+
+        This must be a :class:`Layout` or a class that inherits from it.
+
+        When the layout is changed the
+        :boldblue:`pygamelib.gfx.ui.Widget.layout:changed` event is sent to the
+        observers.
+        """
+        return self.__layout
+
+    @layout.setter
+    def layout(self, data: "Layout") -> None:
+        if isinstance(data, Layout):
+            self.__layout = data
+            if self.__layout.parent != self:
+                self.__layout.parent = self
+            self.notify(self, "pygamelib.gfx.ui.Widget.layout:changed", data)
+        else:
+            raise base.PglInvalidTypeException(
+                "Widget.layout = some_layout: the value given to Widget.layout (here: "
+                "some_layout) must be a pygamelib.gfx.ui.Layout object (or a class that"
+                f" inherits from Layout). {type(data)} is not a supported type."
+            )
+
+    @property
+    def size_constraint(self) -> constants.SizeConstraint:
+        """
+        This property get/set the size constraints of the widget. Changing the size
+        constraints immediately resize the widget.
+        """
+        return self.__size_constraint
+
+    @size_constraint.setter
+    def size_constraint(self, data: constants.SizeConstraint) -> None:
+        if isinstance(data, constants.SizeConstraint):
+            self.__size_constraint = data
+            if data == constants.SizeConstraint.MINIMUM_SIZE:
+                self.__width = self.__minimum_width
+                self.__height = self.__minimum_height
+            elif data == constants.SizeConstraint.MAXIMUM_SIZE:
+                self.__width = self.__maximum_width
+                self.__height = self.__maximum_height
+
+    @property
+    def focus(self) -> bool:
+
+        """
+        This property get/set the focus property. It is a boolean.
+
+        At the moment it is mostly an informational property, to tell the programmer and
+        potentially the Widget user (i.e: the class inheriting from Widget) about its
+        own state.
+        """
+        return self.__focus
+
+    @focus.setter
+    def focus(self, data: bool):
+        if isinstance(data, bool):
+            self.__focus = data
+
+    def render_to_buffer(
+        self,
+        buffer: "numpy.array",
+        row: int,
+        column: int,
+        buffer_height: int,
+        buffer_width: int,
+    ) -> None:
+        """Render the object from the display buffer to the frame buffer.
+
+        This method is automatically called by :func:`pygamelib.engine.Screen.render`.
+
+        :param buffer: A screen buffer to render the item into.
+        :type buffer: numpy.array
+        :param row: The row to render in.
+        :type row: int
+        :param column: The column to render in.
+        :type column: int
+        :param height: The total height of the display buffer.
+        :type height: int
+        :param width: The total width of the display buffer.
+        :type width: int
+
+        """
+        # logging.debug(
+        #     f"     +++ Widget ({id(self)}): rendering at {row},{column} with buffer "
+        #     f"geometry {buffer_height}x{buffer_width} my geometry {self.__height}x"
+        #     f"{self.__width}"
+        # )
+        for r in range(row, min(row + self.__height, row + buffer_height)):
+            for c in range(column, min(column + self.__width, column + buffer_width)):
+                buffer[r][c] = self.__default_bg_sprixel
+        if self.__layout is not None:
+            self.__layout.render_to_buffer(
+                buffer,
+                row,
+                column,
+                min(self.__height, buffer_height),
+                min(self.__width, buffer_width),
+            )
+
+
+class Layout(base.PglBaseObject):
+    """
+    .. versionadded:: 1.4.0
+
+
+    The Layout class is mostly a virtual class. It implements a few properties but all
+    of the methods and properties marked with the :virtual:`virtual method` tag need to
+    be implemented in the inheriting object.
+
+    By convention, a layout will always use the maximum space available in a rendering
+    buffer. That means that in :py:func:`render_to_buffer` it will try to use the entire
+    buffer_width and buffer_height while respecting the layout's constraints.
+
+    It is therefore the responsibility of the widget or layout that triggers the
+    rendering loop to confine said layout inside its own rendering space. Most of the
+    time it involves passing a different set of argument to :py:func:`render_to_buffer`
+    (like the position or size of the buffer).
+
+    """
+
+    def __init__(self, parent: Optional[Widget] = None) -> None:
+        """
+        The Layout constructor takes the following parameters.
+
+        :param parent: The parent widget. If set, it will set the parent's layout.
+        :type width: :class:`Widget`
+        """
+        super().__init__()
+        self.__parent = None
+        if isinstance(parent, Widget):
+            self.__parent = parent
+            self.__parent.layout = self
+        self.__spacing = 0
+
+    @property
+    def parent(self) -> Union["Widget", None]:
+        """
+        This property get/set the parent of the Layout (if any).
+        """
+        return self.__parent
+
+    @parent.setter
+    def parent(self, data: Widget) -> None:
+        if isinstance(data, Widget):
+            self.__parent = data
+            if self.__parent.layout != self:
+                self.__parent.layout = self
+
+    @property
+    def spacing(self) -> int:
+        """
+        This property get/set the inter-widgets spacing of the Layout.
+
+        When the spacing is changed the
+        :boldblue:`pygamelib.gfx.ui.Layout.spacing:changed` event is sent to the
+        observers.
+        """
+        return self.__spacing
+
+    @spacing.setter
+    def spacing(self, data: int) -> None:
+        if isinstance(data, int) and data >= 0:
+            self.__spacing = data
+            self.notify(self, "pygamelib.gfx.ui.Layout.spacing:changed", data)
+
+    @property
+    def width(self) -> int:
+        """
+        :virtual:`virtual attribute`
+
+        This property is purely virtual and needs to be implemented in the inheriting
+        class.
+
+        It must return the total width of the Layout.
+
+        """
+        raise NotImplementedError(
+            "Layout.width is a pure virtual property. This means that the "
+            "layout that you are using does not yet implement the width property."
+        )
+
+    @property
+    def height(self) -> int:
+        """
+        :virtual:`virtual attribute`
+
+        This property is purely virtual and needs to be implemented in the inheriting
+        class.
+
+        It must return the total height of the Layout.
+
+        """
+        raise NotImplementedError(
+            "Layout.height is a pure virtual property. This means that the "
+            "layout that you are using does not yet implement the height property."
+        )
+
+    def add_widget(self, w: Widget) -> bool:
+        """
+        :virtual:`virtual method`
+
+        This method is purely virtual and needs to be implemented in the inheriting
+        class.
+
+        It must allow adding a :class:`Widget` to the layout. Adding can mean different
+        things depending on the type of layout. For example, a :class:`GridLayout`
+        need a row and a column to place the widget. However, these parameters are
+        optional. All layouts should be able to add a :class:`Widget` in the first
+        available space.
+
+        """
+        raise NotImplementedError(
+            "Layout.add_widget(widget) is a pure virtual method. This means that the "
+            "layout that you are using does not yet implement the add_widget() method."
+        )
+
+    def count(self) -> int:
+        """
+        :virtual:`virtual method`
+
+        This method is purely virtual and needs to be implemented in the inheriting
+        class.
+
+        It must count and returns as an integer the number of widgets in the layout.
+
+        """
+        raise NotImplementedError(
+            "Layout.count() is a pure virtual method. This means that the "
+            "layout that you are using does not yet implement the count() method."
+        )
+
+    def widgets(self) -> List[Widget]:
+        """
+        :virtual:`virtual method`
+
+        :return: A list of widgets
+        :rtype: List[Widget]
+
+        This method is purely virtual and needs to be implemented in the inheriting
+        class.
+
+        It must returns a list of widgets that are contained in the layout.
+
+        """
+        raise NotImplementedError(
+            "Layout.widgets() is a pure virtual method. This means that the "
+            "layout that you are using does not yet implement the widgets() method."
+        )
+
+    def render_to_buffer(
+        self,
+        buffer: "numpy.array",
+        row: int,
+        column: int,
+        buffer_height: int,
+        buffer_width: int,
+    ) -> None:
+        """
+
+        :virtual:`virtual method`
+
+        This method is automatically called by :func:`pygamelib.engine.Screen.render`.
+
+        :param buffer: A screen buffer to render the item into.
+        :type buffer: numpy.array
+        :param row: The row to render in.
+        :type row: int
+        :param column: The column to render in.
+        :type column: int
+        :param height: The total height of the display buffer.
+        :type height: int
+        :param width: The total width of the display buffer.
+        :type width: int
+
+        This method is purely virtual and needs to be implemented in the inheriting
+        class.
+
+        It must render the object from the display buffer to the frame buffer.
+
+        By convention, a layout will always use the maximum space available in a
+        rendering buffer. That means that in :py:func:`render_to_buffer` it will try to
+        use the entire buffer_width and buffer_height while respecting the layout's
+        constraints.
+
+        It is therefore the responsibility of the widget or layout that triggers the
+        rendering loop to confine said layout inside its own rendering space. Most of
+        the time it involves passing a different set of argument to
+        :py:func:`render_to_buffer` (like the position or size of the buffer).
+
+        """
+        raise NotImplementedError(
+            "Layout.render_to_buffer() is a pure virtual method. This means that the "
+            "layout that you are using does not yet implement the render_to_buffer() "
+            "method."
+        )
+
+
+class BoxLayout(Layout):
+    """
+    The box layout lines up child widgets horizontally or vertically. The orientation of
+    the layout is controlled using the :py:enum:`~pygamelib.constants.Orientation`
+    constants.
+    """
+
+    def __init__(
+        self,
+        orientation: Optional[constants.Orientation] = None,
+        size_constraint: Optional[constants.SizeConstraint] = None,
+        parent: Optional[Widget] = None,
+    ) -> None:
+        """
+        :param orientation: The orientation of the layout.
+        :type orientation: :py:enum:`~pygamelib.constants.Orientation`
+        :param size_constraint: The size constraint policy for managed widgets.
+        :type size_constraint: :py:enum:`~pygamelib.constants.SizeConstraint`
+        :param parent: The parent object, ie: the one in which the GridLayout reside.
+        :type parent: :class:`Widget`
+
+        Example::
+
+            parent_widget = Widget(45, 30, config=config)
+            # Add a GridLayout to a widget
+            parent_widget.layout = BoxLayout(orientation=Orientation.VERTICAL)
+            parent_widget.layout.add_widget(LineInput())
+        """
+        super().__init__(parent)
+        self.__widgets: List[Widget] = list()
+        # Raise exceptions if the types are incorrect.
+        if orientation is not None and not isinstance(
+            orientation, constants.Orientation
+        ):
+            raise base.PglInvalidTypeException(
+                "BoxLayout: the orientation constructor parameter needs to be a "
+                "pygamelib.constants.Orientation."
+            )
+        if size_constraint is not None and not isinstance(
+            size_constraint, constants.SizeConstraint
+        ):
+            raise base.PglInvalidTypeException(
+                "BoxLayout: the size_constraint constructor parameter needs to be a "
+                "pygamelib.constants.SizeConstraint."
+            )
+        self.__orientation: constants.Orientation = orientation
+        if self.__orientation is None:
+            self.__orientation = constants.Orientation.HORIZONTAL
+        self.__size_constraint: constants.SizeConstraint = size_constraint
+        if self.__size_constraint is None:
+            self.__size_constraint = constants.SizeConstraint.DEFAULT_SIZE
+
+    @property
+    def orientation(self) -> constants.Orientation:
+        """
+        Get and set the layout's orientation.
+
+        The orientation of the BoxLayout can be changed dynamically and will take effect
+        immediately.
+
+        It has to be a :py:enum:`~pygamelib.constants.Orientation`.
+        """
+        return self.__orientation
+
+    @orientation.setter
+    def orientation(self, data: constants.Orientation) -> None:
+        if isinstance(data, constants.Orientation):
+            self.__orientation = data
+
+    @property
+    def size_constraint(self) -> constants.SizeConstraint:
+        """
+        Get and set the layout's size constraint policy.
+        It has to be a :py:enum:`~pygamelib.constants.SizeConstraint`.
+        """
+        return self.__size_constraint
+
+    @size_constraint.setter
+    def size_constraint(self, data: constants.SizeConstraint) -> None:
+        if isinstance(data, constants.SizeConstraint):
+            self.__size_constraint = data
+            for w in self.__widgets:
+                w.size_constraint = data
+
+    @property
+    def width(self) -> int:
+        """
+        Get the layout's width (including spacing).
+
+        Returns an int.
+        """
+        tmp_width = 0
+        if self.__orientation == constants.Orientation.VERTICAL:
+            for w in self.__widgets:
+                if w.width > tmp_width:
+                    tmp_width = w.width
+        elif self.__orientation == constants.Orientation.HORIZONTAL:
+            for w in self.__widgets:
+                tmp_width += w.width + self.spacing
+            tmp_width -= self.spacing
+        return tmp_width
+
+    @property
+    def height(self) -> int:
+        """
+        Get the layout's height (including spacing).
+
+        Returns an int.
+        """
+        tmp_height = 0
+        if self.__orientation == constants.Orientation.HORIZONTAL:
+            for w in self.__widgets:
+                if w.height > tmp_height:
+                    tmp_height = w.height
+        elif self.__orientation == constants.Orientation.VERTICAL:
+            for w in self.__widgets:
+                tmp_height += w.height + self.spacing
+            tmp_height -= self.spacing
+        return tmp_height
+
+    def add_widget(self, w: Widget) -> bool:
+        """
+        Add a widget to the BoxLayout. If the widget is correctly added to the layout
+        this method returns True, otherwise it returns False.
+
+        :param widget: The widget to add to the layout.
+        :type widget: class:`Widget`
+
+        Example::
+
+            parent_widget = Widget(45, 30, config=config)
+            # Add a BoxLayout to a widget
+            parent_widget.layout = BoxLayout()
+            # Then add children widgets to the parent's layout
+            # Step 1: create a widget (here just a generic widget)
+            child_widget1 = Widget(config=UiConfig.instance())
+            # Step 2: add it to the layout.
+            parent_widget.layout.add_widget(child_widget1)
+            # That's it!
+        """
+        if isinstance(w, Widget):
+            self.__widgets.append(w)
+            w.parent = self
+            return True
+        return False
+
+    def count(self) -> int:
+        """
+        Returns the amount (the count) of widgets in the BoxLayout.
+        """
+        return len(self.__widgets)
+
+    def widgets(self) -> Set[Widget]:
+        """
+        Returns the list of widgets that are managed by the GridLayout as a set. This
+        set is not guaranteed to be ordered!
+        """
+        return self.__widgets
+
+    def render_to_buffer(
+        self,
+        buffer: "numpy.array",
+        row: int,
+        column: int,
+        buffer_height: int,
+        buffer_width: int,
+    ) -> None:
+        """Render the object from the display buffer to the frame buffer.
+
+        This method is automatically called by :func:`pygamelib.engine.Screen.render`.
+
+        :param buffer: A screen buffer to render the item into.
+        :type buffer: numpy.array
+        :param row: The row to render in.
+        :type row: int
+        :param column: The column to render in.
+        :type column: int
+        :param height: The total height of the display buffer.
+        :type height: int
+        :param width: The total width of the display buffer.
+        :type width: int
+
+        """
+        c_offset = r_offset = 0
+        max_buffer_row = row + buffer_height
+        max_buffer_col = column + buffer_width
+        for w in self.__widgets:
+            # NOTE: When we add scrollable, this will need to be updated.
+            # particularly the culling. We'll need to keep culling but also to manage
+            # the scroll indicator.
+            if (row + r_offset >= max_buffer_row) or (
+                column + c_offset >= max_buffer_col
+            ):
+                # Here we cull the widgets that are not visible.
+                continue
+            w.render_to_buffer(
+                buffer,
+                row + r_offset,
+                column + c_offset,
+                buffer_height - r_offset,
+                buffer_width - c_offset,
+            )
+            w.store_screen_position(row + r_offset, column + c_offset)
+            if self.__orientation == constants.Orientation.HORIZONTAL:
+                c_offset += w.width + self.spacing
+            elif self.__orientation == constants.Orientation.VERTICAL:
+                r_offset += w.height + self.spacing
+
+
+class GridLayout(Layout):
+    """
+    .. versionadded:: 1.4.0
+
+    The GridLayout is a layout to organize the widgets in a grid (shocking right?). All
+    widgets are managed in a grid, one per cell. Layouts can be nested of course to
+    adapt to your need.
+    """
+
+    def __init__(self, parent: Optional[Widget] = None) -> None:
+        # NOTE: We could add a nb_columns and nb_rows parameters to set the geometry of
+        #       the grid. It would require to add 2 methods: add_row() and add_column().
+        #       The code for these method is already in add_widget(). We need to add
+        #       their geometry to the relevant places.
+        """
+        :param parent: The parent object, ie: the one in which the GridLayout reside.
+        :type parent: :class:`Widget`
+
+        Example::
+
+            parent_widget = Widget(45, 30, config=config)
+            # Add a GridLayout to a widget
+            parent_widget.layout = GridLayout()
+            # You could also do:
+            parent_widget.layout = GridLayout(parent_widget)
+            # But it is not necessary because the Widget.layout property is going to do
+            # it for you.
+        """
+        super().__init__(parent)
+        self.__h_spacing = self.__v_spacing = 0
+        self.__row_minimum_height = 1
+        self.__column_minimum_width = 5
+        self.__nb_rows = 0
+        self.__nb_columns = 0
+        self.__grid = {}
+        self.__columns_geometry = []
+        self.__rows_geometry = []
+
+    @property
+    def width(self) -> int:
+        """
+        Get the layout's width (including spacing).
+
+        Returns an int.
+
+        This is a read-only property.
+        """
+        tmp_width = 0
+        for geom in self.__columns_geometry:
+            tmp_width += geom + self.horizontal_spacing
+        tmp_width -= self.horizontal_spacing
+        return tmp_width
+
+    @property
+    def height(self) -> int:
+        """
+        Get the layout's height (including spacing).
+
+        Returns an int.
+
+        This is a read-only property.
+        """
+        tmp_height = 0
+        for geom in self.__rows_geometry:
+            tmp_height += geom + self.vertical_spacing
+        tmp_height -= self.vertical_spacing
+        return tmp_height
+
+    @property
+    def row_minimum_height(self) -> int:
+        """
+        Get and set the row's minimum width of the layout. This will apply to all
+        row.
+        It has to be an int.
+        """
+        return self.__row_minimum_height
+
+    @row_minimum_height.setter
+    def row_minimum_height(self, data: int) -> None:
+        if isinstance(data, int):
+            self.__row_minimum_height = data
+            self.notify(
+                self, "pygamelib.gfx.ui.GridLayout.row_minimum_height:changed", data
+            )
+
+    @property
+    def column_minimum_width(self) -> int:
+        """
+        Get and set the column's minimum width of the layout. This will apply to all
+        columns.
+        It has to be an int.
+        """
+        return self.__column_minimum_width
+
+    @column_minimum_width.setter
+    def column_minimum_width(self, data: int) -> None:
+        if isinstance(data, int):
+            self.__column_minimum_width = data
+            self.notify(
+                self, "pygamelib.gfx.ui.GridLayout.column_minimum_width:changed", data
+            )
+
+    @property
+    def spacing(self) -> int:
+        """
+        Get and set the spacing between the widgets in the layout. This property sets
+        both the horizontal and vertical spacing. It has to be an int.
+
+        .. warning:: if you try to retrieve the spacing and the horizontal and vertical
+           spacing are not identical this property returns -1.
+        """
+        if self.__h_spacing == self.__v_spacing:
+            return self.__h_spacing
+        else:
+            return -1
+
+    @spacing.setter
+    def spacing(self, data: int) -> None:
+        if isinstance(data, int) and data >= 0:
+            self.__h_spacing = self.__v_spacing = data
+            self.notify(self, "pygamelib.gfx.ui.GridLayout.spacing:changed", data)
+
+    @property
+    def horizontal_spacing(self) -> int:
+        """
+        Get and set the horizontal spacing between the widgets in the layout. It has to
+        be an int.
+        """
+        return self.__h_spacing
+
+    @horizontal_spacing.setter
+    def horizontal_spacing(self, data: int) -> None:
+        if isinstance(data, int) and data >= 0:
+            self.__h_spacing = data
+            self.notify(
+                self, "pygamelib.gfx.ui.GridLayout.horizontal_spacing:changed", data
+            )
+
+    @property
+    def vertical_spacing(self) -> int:
+        """
+        Get and set the vertical spacing between the widgets in the layout. It has to be
+        an int.
+        """
+        return self.__v_spacing
+
+    @vertical_spacing.setter
+    def vertical_spacing(self, data: int) -> None:
+        if isinstance(data, int) and data >= 0:
+            self.__v_spacing = data
+            self.notify(
+                self, "pygamelib.gfx.ui.GridLayout.vertical_spacing:changed", data
+            )
+
+    def add_widget(self, widget: Widget, row: int = None, column: int = None) -> bool:
+        """
+        Add a widget to the GridLayout. If the widget is correctly added to the layout
+        this method returns True, otherwise it returns False.
+
+        :param widget: The widget to add to the layout.
+        :type widget: class:`Widget`
+        :param row: The row in the layout at which the widget should be added.
+        :type row: int
+        :param column: The column in the layout at which the widget should be added.
+        :type column: int
+
+        Example::
+
+            parent_widget = Widget(45, 30, config=config)
+            # Add a GridLayout to a widget
+            parent_widget.layout = GridLayout()
+            # Then add children widgets to the parent's layout
+            # Step 1: create a widget (here just a generic widget)
+            child_widget1 = Widget(config=UiConfig.instance())
+            # Step 2: add it to the layout.
+            parent_widget.layout.add_widget(child_widget1, 2, 3)
+            # That's it!
+
+        If either of the row or column (or both) are None, the method will find the
+        first unused cell to put the widget in.
+
+        .. Important:: If there's no space within the existing grid, a new line will be
+           added. For now, the expansion policy cannot be chosen and it is vertically.
+           In the future an expand policy could be added.
+        """
+        if isinstance(widget, Widget):
+            # Finding a spot in the layout if one of the coordinate is None.
+            # In that case we are just ignoring both of them. We might want to do it
+            # differently in the future.
+            if row is None or column is None:
+                tr = tc = 0
+                while tr < self.__nb_rows and tc < self.__nb_columns:
+                    if (tr, tc) not in self.__grid:
+                        row = tr
+                        column = tc
+                        break
+                    tc += 1
+                    if tc >= self.__nb_columns:
+                        tc = 0
+                        tr += 1
+                # Now if nothing's changed we did not find any space free in the grid.
+                # Therefor, we add a line to the grid and put our widget to the first
+                # column.
+                if row is None or column is None:
+                    row = self.__nb_rows
+                    column = 0
+
+            if row >= self.__nb_rows:
+                self.__nb_rows = row + 1
+            if column >= self.__nb_columns:
+                self.__nb_columns = column + 1
+            try:
+                if self.__rows_geometry[row] < widget.height:
+                    self.__rows_geometry[row] = widget.height
+            except IndexError:
+                for _ in range(len(self.__rows_geometry), row + 1):
+                    self.__rows_geometry.append(0)
+                self.__rows_geometry[row] = widget.height
+            try:
+                if self.__columns_geometry[column] < widget.width:
+                    self.__columns_geometry[column] = widget.width
+            except IndexError:
+                for _ in range(len(self.__columns_geometry), column + 1):
+                    self.__columns_geometry.append(0)
+                self.__columns_geometry[column] = widget.width
+            self.__grid[(row, column)] = widget
+            widget.parent = self
+            widget.attach(self)
+            return True
+        return False
+
+    def handle_notification(self, subject, attribute=None, value=None):
+        """
+        This is an implementation of the notification handling system that is necessary
+        for this class to handle correctly widget's resizing. If you subclass GridLayout
+        and you need to overload that method, please keep in mind that you need to let
+        GridLayout.handle_notification() do its job if you want to benefit from its
+        capabilities.
+
+        In other words, do not forget to call
+        super().handle_notification(subject, attribute, value)!
+        """
+        if attribute == "pygamelib.gfx.ui.Widget.resizeEvent:height":
+            for c in self.__grid:
+                if self.__grid[c] == subject:
+                    # if self.__rows_geometry[c[0]] < value:
+                    self.notify(
+                        self,
+                        "pygamelib.gfx.ui.GridLayout.handle_notification",
+                        f"widget found at {c}",
+                    )
+                    self.__rows_geometry[c[0]] = value
+                    break
+        elif attribute == "pygamelib.gfx.ui.Widget.resizeEvent:width":
+            for c in self.__grid:
+                if self.__grid[c] == subject:
+                    # if self.__columns_geometry[c[1]] < value:
+                    self.__columns_geometry[c[1]] = value
+                    break
+
+    def count_rows(self) -> int:
+        """
+        Returns the number of rows in the GridLayout.
+        """
+        return self.__nb_rows
+
+    def count_columns(self) -> int:
+        """
+        Returns the number of columns in the GridLayout.
+        """
+        return self.__nb_columns
+
+    def count(self) -> int:
+        """
+        Returns the amount (the count) of widgets in the GridLayout.
+        """
+        return len(self.__grid)
+
+    def widgets(self) -> Set[Widget]:
+        """
+        Returns the list of widgets that are managed by the GridLayout as a set. This
+        set is not guaranteed to be ordered!
+        """
+        return set(self.__grid.values())
+
+    def render_to_buffer(
+        self,
+        buffer: "numpy.array",
+        row: int,
+        column: int,
+        buffer_height: int,
+        buffer_width: int,
+    ) -> None:
+        """Render the object from the display buffer to the frame buffer.
+
+        This method is automatically called by :func:`pygamelib.engine.Screen.render`.
+
+        :param buffer: A screen buffer to render the item into.
+        :type buffer: numpy.array
+        :param row: The row to render in.
+        :type row: int
+        :param column: The column to render in.
+        :type column: int
+        :param height: The total height of the display buffer.
+        :type height: int
+        :param width: The total width of the display buffer.
+        :type width: int
+
+        """
+        max_buffer_row = row + buffer_height
+        max_buffer_col = column + buffer_width
+        c_offset = r_offset = 0
+
+        # logging.debug(">>>> GridLayout: START rendering")
+
+        for r in range(0, self.count_rows()):
+            for c in range(0, self.count_columns()):
+                try:
+                    w = self.__grid[(r, c)]
+                    # Now resize the widget for the column width
+                    # logging.debug(
+                    #     f"GridLayout: at {r},{c} set geometry to "
+                    #     f"{self.__rows_geometry[r]}x{self.__columns_geometry[c]}"
+                    # )
+                    w.width = self.__columns_geometry[c]
+                    w.height = self.__rows_geometry[r]
+                    # NOTE: When we add scrollable, this will need to be updated.
+                    # particularly the culling. We'll need to keep culling but also to
+                    # manage the scroll indicator.
+                    # Culling will need to happen more intelligently and compute what is
+                    # actually visible.
+                    if (r + r_offset >= max_buffer_row) or (
+                        c + c_offset >= max_buffer_col
+                    ):
+                        # Here we cull the widgets that are not visible.
+                        continue
+                    # w.render_to_buffer(
+                    #     buffer,
+                    #     row + r_offset,
+                    #     column + c_offset,
+                    #     buffer_height - r_offset,
+                    #     buffer_width - c_offset,
+                    # )
+                    w.render_to_buffer(
+                        buffer[
+                            row + r_offset : row + r_offset + self.__rows_geometry[r],
+                            column
+                            + c_offset : column
+                            + c_offset
+                            + self.__columns_geometry[c],
+                        ],
+                        0,
+                        0,
+                        self.__rows_geometry[r],
+                        self.__columns_geometry[c],
+                    )
+                    w.store_screen_position(row + r_offset, column + c_offset)
+                    c_offset += self.__columns_geometry[c] + self.__h_spacing
+                except KeyError:
+                    # If there's nothing in that layout's cell we just skip to next cell
+                    c_offset += self.__columns_geometry[c] + self.__h_spacing
+            c_offset = 0
+            r_offset += self.__rows_geometry[r] + self.__v_spacing
+
+        # logging.debug("GridLayout: DONE rendering <<<<")
+
+
+# NOTE: This is a placeholder for future PR.
+#       WHEN IMPLEMENTED IT NEEDS TO BE TESTED!
+#       The no cover pragma is only for the placeholder
+class FormLayout(GridLayout):  # pragma: no cover
+    def __init__(self, parent: Optional[Widget] = None) -> None:
+        super().__init__(parent)
+        self.__current_row = -1
+
+    def add_row(self, label: base.Text, widget: Widget) -> int:
+        # self.__current_row += 1
+        # TODO: Add it to the grid
+        pass
+
+    def remove_row(self, row: int = None):
+        # Remove row, if row is None remove the last row.
+        # If row is a widget find the widget and remove it
+        pass
+
+
+class Cursor(base.PglBaseObject):
+    """
+    .. versionadded:: 1.4.0
+
+    The Cursor class represent a typing cursor on screen.
+
+    .. warning:: The Cursor **need** to be rendered last! For example, in a LineInput
+       widget, the cursor is rendered when the rest of the LineInput is already rendered
+       . The reason being that the Cursor need to know what is already on screen in case
+       it overlap something.
+
+    """
+
+    def __init__(
+        self,
+        relative_row: Optional[int] = 0,
+        relative_column: Optional[int] = 0,
+        blink_time: Optional[float] = 0.4,
+        sprixel: Optional[core.Sprixel] = None,
+        parent: Optional[Widget] = None,
+    ) -> None:
+        """
+        :param relative_row: The relative row position inside the parent widget.
+        :type relative_row: int
+        :param relative_column: The relative column position inside the parent widget.
+        :type relative_column: int
+        :param blink_time: The time interval between blinks. Default is 0.4 seconde. If
+           you want to keep the cursor solid (i.e: not blinking) set this parameter to
+           0.
+        :type blink_time: float
+        :param sprixel: The cursor's sprixel (or representation) as a Sprixel.
+        :type sprixel: :class:`~core.Sprixel`
+        :param parent: The parent object, ie: the one in which the cursor reside. It's
+           optional because you can share a cursor with multiple widgets.
+        :type parent: :class:`Widget`
+
+        Example::
+
+            # Create a cyan cursor rapidly blinking.
+            custom_cursor = Cursor(
+                blink_time=0.1,
+                sprixel=Sprixel(
+                    "|", bg_color=config.input_bg_color, fg_color=Color(0, 255, 255)
+                ),
+            )
+            line_input = LineInput(
+                "Test of the LineInput widget",
+                config=UiConfig.instance(),
+                minimum_width=6,
+                maximum_width=200,
+                cursor=custom_cursor,
+            )
+        """
+        super().__init__()
+        self.__sprixel: core.Sprixel = sprixel
+        if sprixel is None:
+            self.__sprixel = core.Sprixel(" ", bg_color=core.Color(255, 255, 255))
+
+        self.__parent = parent
+        self.blink_time = blink_time
+        self.__blink_ctrl_timer = 0
+        self.__blink_ctrl_show = True
+        self.__position_locked = False
+        self.__relative_row = self.__relative_column = 0
+        self.relative_row = relative_row
+        self.relative_column = relative_column
+
+    @property
+    def sprixel(self) -> core.Sprixel:
+        """
+        Get and set the sprixel of the cursor, it has to be :class:`core.Sprixel`.
+        """
+        return self.__sprixel
+
+    @sprixel.setter
+    def sprixel(self, value: core.Sprixel) -> None:
+        if isinstance(value, core.Sprixel):
+            self.__sprixel = value
+        else:
+            raise base.PglInvalidTypeException(
+                "Cursor.model needs to be a pygamelib.gfx.core.Sprixel object."
+            )
+
+    @property
+    def parent(self) -> Union["Widget", None]:
+        """
+        Get and set the parent widget of the cursor, it has to be a :class:`Widget` or
+        None.
+        """
+        return self.__parent
+
+    @parent.setter
+    def parent(self, data: Widget) -> None:
+        if isinstance(data, Widget):
+            self.__parent = data
+
+    @property
+    def relative_row(self) -> int:
+        """
+        Get and set the relative_row of the cursor, it has to be an int.
+        This value cannot be negative (as it makes no sense in our coordinate
+        referential).
+        """
+        return self.__relative_row
+
+    @relative_row.setter
+    def relative_row(self, data: int) -> None:
+        if isinstance(data, int) and data >= 0 and not self.__position_locked:
+            self.__relative_row = data
+
+    @property
+    def relative_column(self) -> int:
+        """
+        Get and set the relative_column of the cursor, it has to be an int.
+        This value cannot be negative (as it makes no sense in our coordinate
+        referential).
+        """
+        return self.__relative_column
+
+    @relative_column.setter
+    def relative_column(self, data: int) -> None:
+        if isinstance(data, int) and data >= 0 and not self.__position_locked:
+            self.__relative_column = data
+
+    def lock_position(self):
+        """
+        Prevent the cursor's relative position to be changed. It is useful for objects
+        that manipulate the cursor depending on their content.
+
+        Example::
+
+            my_cursor = Cursor()
+            my_lineedit = LineEdit(cursor=my_cursor)
+            my_cursor.lock_position()
+            my_lineedit.delete()
+            my_cursor.unlock_position()
+
+        """
+        self.__position_locked = True
+
+    def unlock_position(self) -> None:
+        """
+        Authorize the cursor's relative position to be changed. It is useful for objects
+        that manipulate the cursor depending on their content.
+
+        Example::
+
+            my_cursor = Cursor()
+            my_lineedit = LineEdit(cursor=my_cursor)
+            my_cursor.lock_position()
+            my_lineedit.delete()
+            my_cursor.unlock_position()
+
+        """
+        self.__position_locked = False
+
+    def render_to_buffer(
+        self, buffer, row, column, buffer_height, buffer_width
+    ) -> None:
+        """Render the object from the display buffer to the frame buffer.
+
+        This method is automatically called by :func:`pygamelib.engine.Screen.render`.
+
+        :param buffer: A screen buffer to render the item into.
+        :type buffer: numpy.array
+        :param row: The row to render in.
+        :type row: int
+        :param column: The column to render in.
+        :type column: int
+        :param height: The total height of the display buffer.
+        :type height: int
+        :param width: The total width of the display buffer.
+        :type width: int
+
+        """
+        self.store_screen_position(row, column)
+        if self.blink_time > 0:
+            current_time = time.time()
+            if current_time - self.__blink_ctrl_timer >= self.blink_time:
+                self.__blink_ctrl_timer = current_time
+                self.__blink_ctrl_show = not self.__blink_ctrl_show
+
+        if self.__blink_ctrl_show and row < buffer_height and column < buffer_width:
+            buffer[row][column] = self.__sprixel
+
+
+class LineInput(Widget):
+    """
+    .. versionadded:: 1.4.0
+
+    The LineInput widget allows the user to enter and edit a single line of text.
+
+    This widget can be configured to accept either anything printable or only digits.
+
+    Contrary to its dialog version that widget does not have any key binding. It
+    provides all the tools to manipulate it but it is the user's (developer)
+    responsibility to bind keys to specific actions.
+
+    """
+
+    def __init__(
+        self,
+        default: str = "",
+        filter: constants.InputValidator = constants.InputValidator.PRINTABLE_FILTER,
+        width: int = 0,
+        height: int = 0,
+        minimum_width: int = 0,
+        minimum_height: int = 1,
+        maximum_width: int = 20,
+        maximum_height: int = 1,
+        config: Optional[UiConfig] = None,
+        history: Optional[base.History] = None,
+        cursor: Optional[Cursor] = None,
+    ) -> None:
+        """
+        :param default: The default value in the input field.
+        :type default: str
+        :param filter: Sets the type of accepted input. It comes from the
+           :mod:`constants` module.
+        :type filter: :py:enum:`~pygamelib.constants.InputValidator`
+        :param width: The width of the LineInput.
+        :type width: int
+        :param height: The height of the LineInput.
+        :type height: int
+        :param minimum_width: The minimum width of the LineInput.
+        :type minimum_width: int
+        :param minimum_height: The minimum height of the LineInput.
+        :type minimum_height: int
+        :param maximum_width: The maximum width of the LineInput.
+        :type maximum_width: int
+        :param maximum_height: The maximum height of the LineInput.
+        :type maximum_height: int
+        :param config: The configuration object.
+        :type config: :class:`UiConfig`
+        :param history: The history object. If none is provided, the LineInput will use
+           the global instance of History.
+        :type history: :class:`~pygamelib.base.History`
+
+        Example::
+
+            line_input = LineInput(
+                "Test of the LineInput widget",
+                config=UiConfig.instance(),
+                minimum_width=6,
+                maximum_width=200,
+            )
+            screen.place(line_input, 10, 10)
+
+            # Somewhere else in your code you can access the content with LineInput.text
+            pet_name = line_input.text
+        """
+        if config is None:
+            config = UiConfig.instance()
+        super().__init__(
+            width=width,
+            height=height,
+            minimum_height=minimum_height,
+            minimum_width=minimum_width,
+            maximum_height=maximum_height,
+            maximum_width=maximum_width,
+            bg_color=config.input_bg_color,
+            config=config,
+        )
+        self.__default = default
+        self.__filter = filter
+        if self.__default is None or not (type(self.__default) is str):
+            raise base.PglInvalidTypeException("LineInput: default must be a str.")
+        self.__content = self.__default
+        self.__empty_sprixel = core.Sprixel(" ", bg_color=self.ui_config.input_bg_color)
+        self.__text_sprixels = [
+            core.Sprixel(
+                self.__content[idx],
+                fg_color=config.input_fg_color,
+                bg_color=config.input_bg_color,
+            )
+            for idx in range(len(self.__content))
+        ]
+        self.__cursor = cursor
+        if cursor is None:
+            self.__cursor = Cursor()
+        self.__cursor.relative_column = len(self.__content)
+        self.__history = history
+        if history is None:
+            self.__history = base.History.instance()
+        self.__history.add(self.__content)
+
+    def __update_sprixels_array(self):
+        # Private method to sync the sprixels array with the current content.
+        # First, we create the missing sprixels (if any)
+        # NOTE: This is not memory efficient, as we do not free the sprixels that
+        #       are no longer useful. But performances are better this way.
+        if len(self.__content) > len(self.__text_sprixels):
+            for _ in range(len(self.__content) - len(self.__text_sprixels)):
+                self.__text_sprixels.append(
+                    core.Sprixel(
+                        "",
+                        fg_color=self.ui_config.input_fg_color,
+                        bg_color=self.ui_config.input_bg_color,
+                    )
+                )
+        # Then we update the content of these sprixels
+        idx = 0
+        for letter in self.__content:
+            self.__text_sprixels[idx].model = letter
+            idx += 1
+
+    @property
+    def filter(self) -> constants.InputValidator:
+        """
+        Get and set the filter of the line input, it has to be an
+        :py:enum:`~pygamelib.constants.InputValidator`.
+        """
+        return self.__filter
+
+    @filter.setter
+    def filter(self, value: constants.InputValidator) -> None:
+        if (
+            value == constants.InputValidator.PRINTABLE_FILTER
+            or value == constants.InputValidator.INTEGER_FILTER
+        ):
+            self.__filter = value
+        else:
+            raise base.PglInvalidTypeException(
+                "LineInput.filter: value needs to be either pygamelib.constants."
+                "InputValidator.INTEGER_FILTER or pygamelib.constants.InputValidator."
+                "PRINTABLE_FILTER."
+            )
+
+    @property
+    def cursor(self) -> Cursor:
+        """
+        A read-only property that gives access to the cursor.
+        """
+        return self.__cursor
+
+    @property
+    def text(self) -> str:
+        """
+        Get and set the text of the line input, it has to be a str.
+        When setting this property tries to set the LineInput.width to the size of the
+        content if the content's length is greater than the width.
+
+        Obviously the width is constrained by the maximum_width property.
+        """
+        return self.__content
+
+    @text.setter
+    def text(self, value: str) -> None:
+        if isinstance(value, str) and (
+            (
+                self.__filter == constants.InputValidator.PRINTABLE_FILTER
+                and value.isprintable()
+            )
+            or (
+                self.__filter == constants.InputValidator.INTEGER_FILTER
+                and value.isdigit()
+            )
+        ):
+            # If there's no change in the content we do not want to trigger any actual
+            # update.
+            if self.__content == value:
+                return
+
+            self.__content = value
+
+            # Now we update the sprixel array
+            self.__update_sprixels_array()
+
+            # Put the cursor at the end of the string (unless it's been locked in place)
+            self.__cursor.relative_column = len(self.__content)
+
+            # Update history if necessary
+            if self.__history is not None and self.__history.current != self.text:
+                self.__history.add(self.text)
+
+            # Update the width if it's lesser than the content's length
+            if self.width < len(self.__content):
+                self.width = len(self.__content)
+        else:
+            self.notify(
+                self,
+                "pygamelib.gfx.ui.LineInput.text:setter",
+                "LineInput.text: value needs to be a string and respect the filter "
+                f"validation. Value={value} is not valid.",
+            )
+
+    def insert_characters(
+        self, character: str = None, position: Optional[int] = None
+    ) -> None:
+        """
+        Insert one or more characters at a given position.
+
+        If no position is given, the characters are inserted at the cursor's position.
+
+        :param character: The character to insert.
+        :type character: str
+        :param position: The position at which a character must be inserted.
+        :type position: int
+
+        Example::
+
+            # Insert a character at position 3 of the LineInput widget (if it exists,
+            # otherwise insert at the end)
+            line_input.insert_character("a", 3)
+
+            # Insert a character at the cursor's position
+            line_input.insert_character("a")
+
+        """
+        # If position is greater than the size of the content, we just concatenate.
+        if isinstance(position, int) and position >= len(self.__content):
+            self.text += character
+            return
+        # If position is negative we set it to 0.
+        if isinstance(position, int) and position < 0:
+            position = 0
+        elif position is None:
+            position = self.__cursor.relative_column
+        if isinstance(character, str) and (
+            (
+                self.__filter == constants.InputValidator.PRINTABLE_FILTER
+                and character.isprintable()
+            )
+            or (
+                self.__filter == constants.InputValidator.INTEGER_FILTER
+                and character.isdigit()
+            )
+        ):
+            self.__cursor.lock_position()
+            self.text = self.text[0:position] + character + self.text[position:]
+            self.__cursor.unlock_position()
+            self.__cursor.relative_column += len(character)
+        else:
+            self.notify(
+                self,
+                "pygamelib.gfx.ui.LineInput.insert_character",
+                "LineInput.insert_character(): value needs to be a string and respect "
+                f"the filter validation. Character={character} is not valid.",
+            )
+
+    def move_cursor(self, direction: constants.Direction) -> None:
+        """
+        Move the :class:`Cursor` in the specified direction.
+
+        :param direction: The direction to move the cursor to.
+        :type direction: :py:enum:`~pygamelib.constants.Direction`
+
+        Example::
+
+           line_edit.move_cursor(constants.Direction.LEFT)
+        """
+        if direction == constants.Direction.LEFT and self.__cursor.relative_column > 0:
+            self.__cursor.relative_column -= 1
+        elif (
+            direction == constants.Direction.RIGHT
+            and self.__cursor.relative_column < len(self.__content)
+        ):
+            self.__cursor.relative_column += 1
+        else:
+            self.notify(
+                self,
+                "pygamelib.gfx.ui.LineInput.move_cursor:error",
+                "LineInput.move_cursor(direction): direction need to be either "
+                "pygamelib.constants.Direction.LEFT or "
+                "pygamelib.constants.Direction.RIGHT",
+            )
+
+    def end(self) -> None:
+        """
+        Set the :class:`Cursor`'s relative column to the length of the content (i.e: put
+        the cursor at the end of the LineEdit).
+        """
+        self.__cursor.relative_column = len(self.__content)
+
+    def home(self) -> None:
+        """
+        Set the :class:`Cursor`'s relative column to 0 (i.e: put the cursor at the
+        beginning of the LineEdit).
+        """
+        self.__cursor.relative_column = 0
+
+    def backspace(self) -> None:
+        """
+        Erase the character immediately before the :class:`Cursor`.
+
+        The modification is reported to the history (i.e: can be undone)
+
+        Example::
+
+            # If the LineInput contains "Hello"
+            line_input.backspace()
+            # Will modify it to "Hell" if the cursor is at the end of the line.
+        """
+        # If the cursor is at the beginning we return immediately as there's nothing to
+        # erase.
+        if self.__cursor.relative_column <= 0:
+            return
+        self.__cursor.lock_position()
+        self.text = (
+            self.text[0 : self.__cursor.relative_column - 1]
+            + self.text[self.__cursor.relative_column :]
+        )
+        self.__cursor.unlock_position()
+        self.__cursor.relative_column -= 1
+
+    def delete(self) -> None:
+        """
+        Delete the character immediately under the :class:`Cursor`.
+        """
+        # If the cursor is at the end we return immediately as there's nothing to
+        # erase.
+        if self.__cursor.relative_column >= len(self.__content):
+            return
+        if self.__cursor.relative_column < len(self.__content):
+            self.__cursor.lock_position()
+            self.text = (
+                self.text[0 : self.__cursor.relative_column]
+                + self.text[self.__cursor.relative_column + 1 :]
+            )
+            self.__cursor.unlock_position()
+
+    def undo(self) -> None:
+        """
+        If a :class:`~pygamelib.base.History` is available, undo the last changes.
+        """
+        if self.__history is not None:
+            self.__history.undo()
+            if self.__history.current is not None:
+                self.__content = self.__history.current
+                self.__cursor.relative_column = len(self.__content)
+            self.__update_sprixels_array()
+
+    def redo(self) -> None:
+        """
+        If a :class:`~pygamelib.base.History` is available, redo previously undone
+        changes.
+        """
+        if self.__history is not None:
+            self.__history.redo()
+            if self.__history.current is not None:
+                self.__content = self.__history.current
+                self.__cursor.relative_column = len(self.__content)
+            self.__update_sprixels_array()
+
+    def clear(self) -> None:
+        """
+        Clear everything from the LineInput. If a :class:`~pygamelib.base.History` is
+        available, it will also clear the history.
+        """
+        if self.__history is not None:
+            self.__history.reset()
+            self.text = ""
+
+    def length(self) -> int:
+        """
+        Return the length of the content of the LineInput widget.
+        """
+        return len(self.__content)
+
+    def render_to_buffer(
+        self, buffer, row, column, buffer_height, buffer_width
+    ) -> None:
+        """Render the object from the display buffer to the frame buffer.
+
+        This method is automatically called by :func:`pygamelib.engine.Screen.render`.
+
+        :param buffer: A screen buffer to render the item into.
+        :type buffer: numpy.array
+        :param row: The row to render in.
+        :type row: int
+        :param column: The column to render in.
+        :type column: int
+        :param height: The total height of the display buffer.
+        :type height: int
+        :param width: The total width of the display buffer.
+        :type width: int
+
+        """
+        self.store_screen_position(row, column)
+        # input_size = min(len(self.__content), self.minimum_width)
+        input_size = min(len(self.__content), self.width)
+        input_size = functions.clamp(input_size, 0, buffer_width)
+        for c in range(input_size):
+            # buffer[row][column + c] = self.__content[c]
+            buffer[row][column + c] = self.__text_sprixels[c]
+        for ic in range(input_size, min(buffer_width, column + self.width)):
+            buffer[row][column + ic] = self.__empty_sprixel
+        if self.focus:
+            # self.__cursor.render_to_buffer(
+            #     buffer, row, column + input_size, buffer_height, buffer_width
+            # )
+            self.__cursor.render_to_buffer(
+                buffer,
+                row,
+                column + self.__cursor.relative_column,
+                buffer_height,
+                buffer_width,
+            )

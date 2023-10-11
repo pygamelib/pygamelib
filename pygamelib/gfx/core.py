@@ -34,9 +34,6 @@ class Color(base.PglBaseObject):
     A color represented by red, green and blue (RGB) components.
     Values are integer between 0 and 255 (both included).
 
-    .. role:: boldblue
-    .. role:: blue
-
     :param r: The red component of the color.
     :type r: int
     :param g: The green component of the color.
@@ -577,8 +574,6 @@ class Sprixel(base.PglBaseObject):
         :param value: The new model
         :type value: str
 
-        .. role:: boldblue
-
         When the model is changed, the observers are notified of the change
         with the :boldblue:`pygamelib.gfx.core.Sprixel.model:changed` event. The new
         model is passed as the `value` parameter.
@@ -610,8 +605,6 @@ class Sprixel(base.PglBaseObject):
         :param value: The new color
         :type value: :class:`Color`
 
-        .. role:: boldblue
-
         When the bg_color is changed, the observers are notified of the change
         with the :boldblue:`pygamelib.gfx.core.Sprixel.bg_color:changed` event. The new
         bg_color is passed as the `value` parameter.
@@ -642,8 +635,6 @@ class Sprixel(base.PglBaseObject):
 
         :param value: The new color
         :type value: :class:`Color`
-
-        .. role:: boldblue
 
         When the fg_color is changed, the observers are notified of the change
         with the :boldblue:`pygamelib.gfx.core.Sprixel.fg_color:changed` event. The new
@@ -1184,8 +1175,6 @@ class Sprite(base.PglBaseObject):
         :param value: The sprixel to set at [row, column]
         :type value: :class:`Sprixel`
 
-        .. role:: boldblue
-
         When a sprixel is changed, the observers are notified of the change
         with the :boldblue:`pygamelib.gfx.core.Sprite.sprixel:changed` event. A
         structure is passed as the `value` parameter. This structure has 3 members: row,
@@ -1435,8 +1424,6 @@ class Sprite(base.PglBaseObject):
         :param state: a boolean to enable or disable background transparency
         :type name: bool
 
-        .. role:: boldblue
-
         When the transparency is changed, the observers are notified of the change
         with the :boldblue:`pygamelib.gfx.core.Sprite.transparency:changed` event. The
         new transparency state is passed as the `value` parameter.
@@ -1646,8 +1633,6 @@ class Sprite(base.PglBaseObject):
         :param ratio: The modulation ratio between 0.0 and 1.0 (default: 0.5)
         :type ratio: float
         :returns: None
-
-        .. role:: boldblue
 
         When this method is called, the observers are notified of the change
         with the :boldblue:`pygamelib.core.Sprite.color:modulated` event. No arguments

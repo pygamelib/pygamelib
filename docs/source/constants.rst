@@ -9,6 +9,23 @@ General purpose:
 
 * PYGAMELIB_VERSION
 
+.. autoenum:: pygamelib.constants.SizeConstraint
+    :members:
+
+.. autoenum:: pygamelib.constants.Alignment
+    :members:
+
+.. autoenum:: pygamelib.constants.Orientation
+    :members:
+
+.. autoenum:: pygamelib.constants.InputValidator
+    :members:
+
+.. autoenum:: pygamelib.constants.Direction
+    :members:
+
+**The following constants are used in versions <= 1.3.0 and have been deprecated starting version 1.4.0.**
+
 Directions:
 
 * NO_DIR: This one is used when no direction can be provided by an actuator (destination reached for a PathFinder for example)
@@ -66,4 +83,3 @@ Special constants:
 
 .. automodule:: pygamelib.constants
 
-    

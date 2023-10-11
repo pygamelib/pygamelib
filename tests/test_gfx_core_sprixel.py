@@ -1,8 +1,8 @@
 import pygamelib.gfx.core as gfx_core
-import pygamelib.base as pgl_base
+import pygamelib.base as base
 import unittest
 
-# Test cases for all classes in pygamelib.gfx.core except for Animation.
+# Test cases for all classes in pygamelib.gfx.core.Sprixel.
 
 
 class TestBase(unittest.TestCase):
@@ -15,7 +15,7 @@ class TestBase(unittest.TestCase):
         self.assertEqual(sprix.model, "m")
         self.assertEqual(sprix.bg_color, gfx_core.Color(0, 0, 0))
         self.assertEqual(sprix.fg_color, gfx_core.Color(1, 1, 1))
-        t = pgl_base.Console.instance()
+        t = base.Console.instance()
         self.assertEqual(
             sprix.__repr__(),
             "".join([t.on_color_rgb(0, 0, 0), t.color_rgb(1, 1, 1), "m", "\x1b[0m"]),
