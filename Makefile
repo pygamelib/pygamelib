@@ -18,6 +18,11 @@ test:
 doc:
 	cd docs && make html
 
+gen-doc:
+	(cd docs && rm -f generated/*.rst ; PYTHONPATH=.. sphinx-autogen ../pygamelib/*.py ../pygamelib/*/*.py ../pygamelib/*/*/*.py  -o ./generated)
+	@echo ""
+	@echo "GENERATED DOC WAS WRITTEN IN docs/generated PLEASE HAVE A LOOK AT IT AND IMPORT THE DOC YOU NEED MANUALLY BY MOVING THE RELEVANT FILES TO docs/source"
+
 clean:
 	rm -rf dist/
 	rm -rf pygamelib.egg-info/

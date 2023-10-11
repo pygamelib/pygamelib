@@ -1,3 +1,12 @@
+from pygamelib import constants
+from pygamelib.functions import pgl_isinstance
+import math
+from colorama import Fore, Back, Style, init
+from blessed import Terminal
+
+# import time
+from typing import Any
+
 __docformat__ = "restructuredtext"
 """
 The base module is a collection of base objects that are used by the entire library,
@@ -22,14 +31,6 @@ exceptions.
    pygamelib.base.Vector2D
    pygamelib.base.Text
 """
-from pygamelib import constants
-from pygamelib.functions import pgl_isinstance
-import math
-from colorama import Fore, Back, Style, init
-from blessed import Terminal
-
-# import time
-from typing import Any
 
 # Initialize terminal colors for colorama.
 init()
@@ -420,8 +421,6 @@ class Text(PglBaseObject):
 
         .. versionadded:: 1.3.0
 
-        .. role:: boldblue
-
         When the text is changed, the observers are notified of the change
         with the :boldblue:`pygamelib.base.Text.text:changed` event. The new text
         is passed as the `value` parameter.
@@ -443,8 +442,6 @@ class Text(PglBaseObject):
         :class:`~pygamelib.gfx.core.Color`.
 
         .. versionadded:: 1.3.0
-
-        .. role:: boldblue
 
         When the background color is changed, the observers are notified of the change
         with the :boldblue:`pygamelib.base.Text.bg_color:changed` event. The new color
@@ -479,8 +476,6 @@ class Text(PglBaseObject):
         :class:`~pygamelib.gfx.core.Color`.
 
         .. versionadded:: 1.3.0
-
-        .. role:: boldblue
 
         When the foreground color is changed, the observers are notified of the change
         with the :boldblue:`pygamelib.base.Text.fg_color:changed` event. The new color
@@ -641,9 +636,13 @@ class Text(PglBaseObject):
         if self.__font is None:
             for line in self.text.splitlines():
                 idx = 0
+                # FIXME: this can be optimized by switching the for to a
+                # FIXME: range(0, min(column + idx, buffer_width)) <- not idx but len()
                 for char in line:
                     if column + idx >= buffer_width:
                         break
+                    # FIXME: At minimum this test should be done after row_idx += 1
+                    # FIXME: but it can be optimized the same way than the other for.
                     if row + row_idx >= buffer_height:
                         break
                     buffer[row + row_idx][column + idx] = "".join(
@@ -1447,3 +1446,165 @@ class Math(object):
             value = lerp(0, 100, 0.5) # 50
         """
         return (1 - t) * a + t * b
+
+
+class History:
+    """
+    .. versionadded:: 1.4.0
+
+    History is a general history management object. It works by managing a time
+    structure with past, current and future actions. Undoing and redoing is simply
+    the action of moving along this timeline.
+
+    This object is data agnostic, it can be used with any type of objects. Internally,
+    it uses a concept of "actions". An "action" consist of any python object that can be
+    stored in an array.
+
+    Undoing or redoing over the limit of the past and future actions is not doing
+    anything.
+
+    When :py:meth:`add()` is called, it **clears the future actions**.
+
+    This object provides a singleton interface through the :py:meth:`instance()`. It can
+    be created as a normal instantiated object or as a global manager depending on your
+    needs.
+
+    Example::
+
+        global_history = History.instance()
+        global_history.add('Hel')
+        global_history.add('Hello')
+        global_history.add('Hello Wo')
+        global_history.add('Hello World')
+        print(global_history.current)  # print "Hello World"
+        global_history.undo()
+        print(global_history.current)  # print "Hello Wo"
+        global_history.undo()
+        print(global_history.current)  # print "Hello"
+        global_history.redo()
+        global_history.redo()
+        global_history.redo() # This one does nothing as we called undo only twice.
+        print(global_history.current)  # print "Hello World"
+        # Now an example of reset through add()
+        global_history.undo()
+        global_history.undo()
+        print(global_history.current)  # print "Hello"
+        global_history.add("Hello there!")
+        print(global_history.current)  # print "Hello there!"
+        global_history.redo() # does nothing as the future was reset by add()
+
+
+    """
+
+    __instance = None
+
+    def __init__(self) -> None:
+        """
+        The constructor takes no parameters. In the future, it could take some, like
+        the maximum size of the history for example.
+        """
+        self.__past_actions = []
+        self.__current_action = None
+        self.__future_actions = []
+
+    @classmethod
+    def instance(cls, *args, **kwargs):
+        """Returns/creates the instance of the History object
+
+        Creates an History object on first call an then returns the same instance
+        on further calls
+
+        :return: Instance of the History object
+        :rtype: :class:`History`
+        """
+        if cls.__instance is None:
+            cls.__instance = cls(*args, **kwargs)
+        return cls.__instance
+
+    def add(self, action: object) -> None:
+        """Add an action (i.e: object) to the history.
+
+        This action becomes the current one.
+
+        Adding an action reset the future actions (i.e: you cannot redo what was undone
+        before adding the action).
+
+        :param action: The action to add to the history.
+        :type action: object
+
+        Example::
+
+            global_history = History.instance()
+            global_history.add('Hel')
+            global_history.add('Hello')
+            print(global_history.current)  # print "Hello"
+        """
+        self.__past_actions.append(self.__current_action)
+        self.__current_action = action
+        if len(self.__future_actions) > 0:
+            self.__future_actions.clear()
+
+    def undo(self) -> None:
+        """Step backward into the actions' timeline.
+
+        This method takes the current action and puts it in the future queue. It then
+        pop the last action of the past queue and set it as current.
+
+        If there's no more past actions, it does nothing.
+
+        Example::
+
+            global_history = History.instance()
+            global_history.add('Hel')
+            global_history.add('Hello')
+            print(global_history.current)  # print "Hello"
+            global_history.undo()
+            print(global_history.current)  # print "Hel"
+        """
+        if len(self.__past_actions) <= 0:
+            return
+        self.__future_actions.append(self.__current_action)
+        self.__current_action = self.__past_actions.pop()
+
+    def redo(self) -> None:
+        """Step forward into the actions' timeline.
+
+        This method takes the current action and puts it in the past queue. It then
+        pop the last action of the future queue and set it as current.
+
+        If there's no more future actions, it does nothing.
+
+        Example::
+
+            global_history = History.instance()
+            global_history.add('Hel')
+            global_history.add('Hello')
+            print(global_history.current)  # print "Hello"
+            global_history.undo()
+            print(global_history.current)  # print "Hel"
+            global_history.redo()
+            print(global_history.current)  # print "Hello"
+
+        """
+        if len(self.__future_actions) <= 0:
+            return
+        self.__past_actions.append(self.__current_action)
+        self.__current_action = self.__future_actions.pop()
+
+    def reset(self) -> None:
+        """
+        Reset the history to its initial state. It clears all the past and future
+        actions. It also set the current action to None.
+        """
+        self.__past_actions = []
+        self.__current_action = None
+        self.__future_actions = []
+
+    @property
+    def current(self) -> object:
+        """
+        current is a read-only property to access the current action of the history.
+
+        To add an action and set it as current, use the :py:meth:`add()` method.
+        """
+        return self.__current_action
