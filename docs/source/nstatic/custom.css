@@ -32,3 +32,11 @@
 .added {
     color: green;
 }
+
+.virtual {
+    color: rgb(0, 90, 255);
+    font-weight: bold;
+    border: solid rgb(0, 90, 255) 2px;
+    background-color: rgba(0, 90, 255, 0.2);
+    padding: 2px;
+}
