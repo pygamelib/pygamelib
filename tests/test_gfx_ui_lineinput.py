@@ -106,46 +106,46 @@ class TestLineInput(unittest.TestCase):
     # Insert a character at the end of the content.
     def test_insert_character_end_of_content(self):
         line_input = ui.LineInput()
-        line_input.insert_character("a")
+        line_input.insert_characters("a")
         self.assertEqual(line_input.text, "a")
 
     # Insert a character at the cursor's position.
     def test_insert_character_cursor_position(self):
         line_input = ui.LineInput()
-        line_input.insert_character("a", 0)
-        line_input.insert_character("b", 1)
-        line_input.insert_character("c", 2)
+        line_input.insert_characters("a", 0)
+        line_input.insert_characters("b", 1)
+        line_input.insert_characters("c", 2)
         self.assertEqual(line_input.text, "abc")
 
     # Insert a character at a specific position in the content.
     def test_insert_character_specific_position(self):
         line_input = ui.LineInput("abc")
-        line_input.insert_character("d", 1)
+        line_input.insert_characters("d", 1)
         self.assertEqual(line_input.text, "adbc")
 
     # Insert a character at position 0 of an empty content.
     def test_insert_character_position_zero_empty_content(self):
         line_input = ui.LineInput()
-        line_input.insert_character("a", 0)
+        line_input.insert_characters("a", 0)
         self.assertEqual(line_input.text, "a")
 
     # Insert a character at a position greater than the size of the content.
     def test_insert_character_position_greater_than_content_size(self):
         line_input = ui.LineInput("abc")
-        line_input.insert_character("d", 5)
+        line_input.insert_characters("d", 5)
         self.assertEqual(line_input.text, "abcd")
 
     # Insert a non-printable character when the filter is set to printable.
     def test_insert_character_non_printable_character(self):
         line_input = ui.LineInput(filter=constants.InputValidator.PRINTABLE_FILTER)
-        line_input.insert_character("\x00")
+        line_input.insert_characters("\x00")
         self.assertEqual(line_input.text, "")
 
     # Insert a character at position -1.
     def test_insert_character_position_minus_1(self):
         line_input = ui.LineInput()
         line_input.text = "Hello"
-        line_input.insert_character("a", -1)
+        line_input.insert_characters("a", -1)
         self.assertEqual(line_input.text, "aHello")
 
     # Move cursor left when direction is LEFT and cursor is not at the beginning of the
@@ -298,7 +298,7 @@ class TestLineInput(unittest.TestCase):
     def test_undo_with_previous_state(self):
         line_input = ui.LineInput()
         line_input.text = "Hello"
-        line_input.insert_character(" World")
+        line_input.insert_characters(" World")
         line_input.undo()
         self.assertEqual(line_input.text, "Hello")
 
@@ -314,8 +314,8 @@ class TestLineInput(unittest.TestCase):
     def test_undo_with_multiple_character_previous_state(self):
         line_input = ui.LineInput(history=base.History())
         line_input.text = "Hello"
-        line_input.insert_character(" World")
-        line_input.insert_character("!")
+        line_input.insert_characters(" World")
+        line_input.insert_characters("!")
         line_input.undo()
         line_input.undo()
         self.assertEqual(line_input.text, "Hello")
@@ -323,9 +323,9 @@ class TestLineInput(unittest.TestCase):
     # Redo the last undone change when history is not None and current is not None.
     def test_redo_last_undone_change_with_history_and_current(self):
         line_input = ui.LineInput(history=base.History())
-        line_input.insert_character("Hello")
-        line_input.insert_character(" ")
-        line_input.insert_character("World")
+        line_input.insert_characters("Hello")
+        line_input.insert_characters(" ")
+        line_input.insert_characters("World")
         line_input.undo()
         self.assertEqual(line_input.text, "Hello ")
         line_input.redo()
