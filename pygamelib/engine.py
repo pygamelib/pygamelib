@@ -54,9 +54,6 @@ class Board(base.PglBaseObject):
     and read the "`Getting started: the Board
     <https://github.com/pygamelib/pygamelib/wiki/Getting-started-Board>`_" article.
 
-    .. role:: boldblue
-    .. role:: blue
-
 
     .. Note:: In version 1.3.0 a new screen rendering stack was introduced. With this
        came the need for some object to hold more information about their state. This is
@@ -1735,9 +1732,6 @@ class Game(base.PglBaseObject):
         properly render the colors on Windows.
 
     .. important:: The Game object automatically assumes ownership over the Player.
-
-    .. role:: boldblue
-    .. role:: blue
 
     """
 
@@ -3464,9 +3458,6 @@ class Inventory(base.PglBaseObject):
         The constructor takes two parameters: the maximum size of the inventory. And the
         Inventory owner/parent.
 
-        .. role:: boldblue
-        .. role:: blue
-
         Each :class:`~pygamelib.board_items.BoardItem` that is going to be put in the
         inventory has a size (default is 1), the total addition of all these size cannot
         exceed max_size.
@@ -3561,8 +3552,6 @@ class Inventory(base.PglBaseObject):
 
         A :class:`~pygamelib.base.PglInvalidTypeException` is raised when the item you
         try to add is not a :class:`~pygamelib.board_items.BoardItem`.
-
-        .. role:: boldblue
 
 
         Example::
@@ -3672,8 +3661,6 @@ class Inventory(base.PglBaseObject):
 
     def empty(self):
         """Empty the inventory.
-
-        .. role:: boldblue
 
         The observers are notified that the Inventory has been emptied with the
         :boldblue:`pygamelib.engine.Inventory.empty` event. Nothing is passed as the
@@ -3987,8 +3974,6 @@ class Screen(base.PglBaseObject):
     The screen object is pretty straightforward: it is an object that allow manipulation
     of the screen.
 
-    .. role:: boldgreen
-
     .. WARNING:: Starting with version 1.3.0 the terminal parameter has been removed.
        The Screen object now takes advantage of base.Console.instance() to get a
        reference to a blessed.Terminal object.
@@ -4128,7 +4113,7 @@ class Screen(base.PglBaseObject):
     * Alacritty
     * GNOME Terminal
 
-    Performances are consistants across the different terminals. The only exception is
+    Performances are consistent across the different terminals. The only exception is
     the GNOME Terminal, which is slower than the others (about 20~30 % slower).
 
 
@@ -4217,6 +4202,8 @@ class Screen(base.PglBaseObject):
            **Legacy Direct Display** stack.
 
         """
+        # TODO: BUG: This is not clearing the buffers, this is recreating them...
+        #      FIXME: Create one empty sprixel and put it in every cells of both buffers
         self._display_buffer = np.array(
             [
                 [core.Sprixel(" ") for i in range(0, self.__width, 1)]
@@ -4251,6 +4238,8 @@ class Screen(base.PglBaseObject):
            stack and is incompatible with the methods identified as being part of the
            **Legacy Direct Display** stack.
         """
+        # TODO: BUG: This is not clearing the buffer, this is recreating it...
+        #       FIXME: Create one empty sprixel and put it in every cells the buffer
         self._frame_buffer = np.array(
             [
                 [core.Sprixel(" ") for i in range(0, self.__width, 1)]
