@@ -2434,7 +2434,8 @@ class Wall(Immovable):
         super().__init__(**kwargs)
 
     def pickable(self):
-        """This represent the capacity for a :class:`~pygamelib.board_items.BoardItem` to
+        """
+        This represent the capacity for a :class:`~pygamelib.board_items.BoardItem` to
         be pick-up by player or NPC.
 
         :return: False
@@ -2450,7 +2451,8 @@ class Wall(Immovable):
         return False
 
     def overlappable(self):
-        """This represent the capacity for a :class:`~pygamelib.board_items.BoardItem` to
+        """
+        This represent the capacity for a :class:`~pygamelib.board_items.BoardItem` to
         be overlapped by player or NPC.
 
         :return: False
@@ -2667,7 +2669,9 @@ class Treasure(Immovable):
         return False
 
     def restorable(self):
-        """This represent the capacity for a Treasure to be restored after being overlapped.
+        """
+        This represent the capacity for a Treasure to be restored after being
+        overlapped.
 
         A treasure is not overlappable, therefor is not restorable.
 

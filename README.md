@@ -6,7 +6,7 @@
 [![Documentation Status](https://readthedocs.org/projects/pygamelib/badge/?version=latest)](https://pygamelib.readthedocs.io/en/latest/?badge=latest)
 [![CII Best Practices](https://bestpractices.coreinfrastructure.org/projects/2849/badge)](https://bestpractices.coreinfrastructure.org/projects/2849)
 [![CircleCI](https://circleci.com/gh/pygamelib/pygamelib.svg?style=svg)](https://circleci.com/gh/pygamelib/pygamelib)
-[![codecov](https://codecov.io/gh/arnauddupuis/pygamelib/branch/master/graph/badge.svg)](https://codecov.io/gh/arnauddupuis/pygamelib)
+[![codecov](https://codecov.io/gh/pygamelib/pygamelib/branch/master/graph/badge.svg)](https://codecov.io/gh/pygamelib/pygamelib)
 
 <p align="center">
   <img src="https://raw.githubusercontent.com/pygamelib/pygamelib/master/images/pygamelib-logo.png">

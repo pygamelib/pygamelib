@@ -1,5 +1,5 @@
 import pygamelib.gfx.core as gfx_core
-import pygamelib.base as pgl_base
+import pygamelib.base as base
 import pygamelib.board_items as pgl_board_items
 import pygamelib.constants as pgl_constants
 import pygamelib.engine as pgl_engine
@@ -194,8 +194,8 @@ class TestAnimation(unittest.TestCase):
         self.assertEqual(len(i.animation.frames), 2)
         # I shouldn't test that here but I'm tired of writting test!
         self.assertIsInstance(i.animation.next_frame(), gfx_core.Sprixel)
-        i.animation.frames[1] = pgl_base.Vector2D()
-        with self.assertRaises(pgl_base.PglInvalidTypeException):
+        i.animation.frames[1] = base.Vector2D()
+        with self.assertRaises(base.PglInvalidTypeException):
             i.animation.next_frame()
             i.animation.next_frame()
 
@@ -271,7 +271,7 @@ class TestAnimation(unittest.TestCase):
         self.assertEqual(a.dtanimate, 1.0)
         a.dtanimate = 1
         self.assertEqual(a.dtanimate, 1)
-        with self.assertRaises(pgl_base.PglInvalidTypeException):
+        with self.assertRaises(base.PglInvalidTypeException):
             a.dtanimate = "1.0"
 
     def test_serialization_with_string(self):
