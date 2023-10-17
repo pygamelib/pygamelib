@@ -21,7 +21,7 @@ class TestBase(unittest.TestCase):
         with self.assertRaises(NotImplementedError):
             a.serialize()
         with self.assertRaises(NotImplementedError):
-            a.load()
+            a.load({})
 
     def test_behavioral(self):
         a = actuators.Behavioral(None)
@@ -102,6 +102,8 @@ class TestBase(unittest.TestCase):
         al = actuators.UnidirectionalActuator.load(data)
         self.assertEqual(al.direction, constants.RIGHT)
         self.assertEqual(a.state, al.state)
+        a.pause()
+        self.assertEqual(constants.NO_DIR, a.next_move())
 
     def test_pathfinder_bfs(self):
         npc = board_items.NPC()
