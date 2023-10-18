@@ -1,5 +1,6 @@
 import pygamelib.base as base
 import pygamelib.gfx.core as core
+from pygamelib.constants import Direction
 import unittest
 
 
@@ -93,23 +94,23 @@ class TestBase(unittest.TestCase):
         v.column = 1.0
 
     def test_v2d_create(self):
-        v = base.Vector2D.from_direction(base.constants.NO_DIR, 1)
+        v = base.Vector2D.from_direction(Direction.NO_DIR, 1)
         self.assertEqual(v, base.Vector2D(0, 0))
-        v = base.Vector2D.from_direction(base.constants.UP, 1)
+        v = base.Vector2D.from_direction(Direction.UP, 1)
         self.assertEqual(v, base.Vector2D(-1, 0))
-        v = base.Vector2D.from_direction(base.constants.DOWN, 1)
+        v = base.Vector2D.from_direction(Direction.DOWN, 1)
         self.assertEqual(v, base.Vector2D(1, 0))
-        v = base.Vector2D.from_direction(base.constants.LEFT, 1)
+        v = base.Vector2D.from_direction(Direction.LEFT, 1)
         self.assertEqual(v, base.Vector2D(0, -1))
-        v = base.Vector2D.from_direction(base.constants.RIGHT, 1)
+        v = base.Vector2D.from_direction(Direction.RIGHT, 1)
         self.assertEqual(v, base.Vector2D(0, 1))
-        v = base.Vector2D.from_direction(base.constants.DRUP, 1)
+        v = base.Vector2D.from_direction(Direction.DRUP, 1)
         self.assertEqual(v, base.Vector2D(-1, 1))
-        v = base.Vector2D.from_direction(base.constants.DRDOWN, 1)
+        v = base.Vector2D.from_direction(Direction.DRDOWN, 1)
         self.assertEqual(v, base.Vector2D(1, 1))
-        v = base.Vector2D.from_direction(base.constants.DLUP, 1)
+        v = base.Vector2D.from_direction(Direction.DLUP, 1)
         self.assertEqual(v, base.Vector2D(-1, -1))
-        v = base.Vector2D.from_direction(base.constants.DLDOWN, 1)
+        v = base.Vector2D.from_direction(Direction.DLDOWN, 1)
         self.assertEqual(v, base.Vector2D(1, -1))
 
     def test_text(self):

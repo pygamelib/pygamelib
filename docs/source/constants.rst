@@ -9,19 +9,37 @@ General purpose:
 
 * PYGAMELIB_VERSION
 
-.. autoenum:: pygamelib.constants.SizeConstraint
-    :members:
-
 .. autoenum:: pygamelib.constants.Alignment
     :members:
 
-.. autoenum:: pygamelib.constants.Orientation
+.. autoenum:: pygamelib.constants.Algorithm
+    :members:
+
+.. autoenum:: pygamelib.constants.Direction
+    :members:
+
+.. autoenum:: pygamelib.constants.EngineConstant
+    :members:
+
+.. autoenum:: pygamelib.constants.EngineMode
     :members:
 
 .. autoenum:: pygamelib.constants.InputValidator
     :members:
 
-.. autoenum:: pygamelib.constants.Direction
+.. autoenum:: pygamelib.constants.Orientation
+    :members:
+
+.. autoenum:: pygamelib.constants.Permission
+    :members:
+
+.. autoenum:: pygamelib.constants.SizeConstraint
+    :members:
+
+.. autoenum:: pygamelib.constants.State
+    :members:
+
+.. autoenum:: pygamelib.constants.TextStyle
     :members:
 
 **The following constants are used in versions <= 1.3.0 and have been deprecated starting version 1.4.0.**
