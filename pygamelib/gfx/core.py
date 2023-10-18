@@ -13,7 +13,7 @@ __docformat__ = "restructuredtext"
    pygamelib.gfx.core.Font
 """
 from pygamelib import base
-from pygamelib import constants
+from pygamelib.constants import State
 from pygamelib.assets import graphics
 from pygamelib.functions import pgl_isinstance
 import random
@@ -1948,7 +1948,7 @@ class Animation(object):
         initial_index=None,
         parent=None,
     ):
-        self.state = constants.RUNNING
+        self.state = State.RUNNING
         self.display_time = display_time
         self.auto_replay = auto_replay
         self.parent = None
@@ -2052,16 +2052,16 @@ class Animation(object):
             )
 
     def start(self):
-        """Set the animation state to constants.RUNNING.
+        """Set the animation state to State.RUNNING.
 
-        If the animation state is not constants.RUNNING, animation's next_frame()
+        If the animation state is not State.RUNNING, animation's next_frame()
         function return the last frame returned.
 
         Example::
 
             item.animation.start()
         """
-        self.state = constants.RUNNING
+        self.state = State.RUNNING
 
     def pause(self):
         """Set the animation state to PAUSED.
@@ -2070,7 +2070,7 @@ class Animation(object):
 
             item.animation.pause()
         """
-        self.state = constants.PAUSED
+        self.state = State.PAUSED
 
     def stop(self):
         """Set the animation state to STOPPED.
@@ -2079,7 +2079,7 @@ class Animation(object):
 
             item.animation.stop()
         """
-        self.state = constants.STOPPED
+        self.state = State.STOPPED
 
     def add_frame(self, frame):
         """Add a frame to the animation.
@@ -2189,7 +2189,7 @@ class Animation(object):
         animation.
 
         That method takes care of automatically resetting the animation if the
-        last frame is reached if the state is constants.RUNNING.
+        last frame is reached if the state is State.RUNNING.
 
         If the the state is PAUSED it still update the parent.model
         and returning the current frame. It does NOT actually go to next frame.
@@ -2211,9 +2211,9 @@ class Animation(object):
             raise base.PglInvalidTypeException(
                 "The parent needs to be a sub class of BoardItem."
             )
-        if self.state == constants.STOPPED:
+        if self.state == State.STOPPED:
             return
-        elif self.state == constants.RUNNING:
+        elif self.state == State.RUNNING:
             self._frame_index += 1
             if self._frame_index >= len(self.frames):
                 if self.auto_replay:
@@ -2254,7 +2254,7 @@ class Animation(object):
 
             item.animation.play_all()
         """
-        if self.state == constants.PAUSED or self.state == constants.STOPPED:
+        if self.state == State.PAUSED or self.state == State.STOPPED:
             return False
         if self.refresh_screen is None or not callable(self.refresh_screen):
             raise base.PglInvalidTypeException(

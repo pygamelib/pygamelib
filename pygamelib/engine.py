@@ -21,7 +21,8 @@ The Board class is the base class for all levels.
    pygamelib.engine.Screen
 
 """
-from pygamelib import board_items, base, constants, actuators
+from pygamelib import board_items, base, actuators
+from pygamelib.constants import EngineConstant, EngineMode, State, Permission, Direction
 from pygamelib.assets import graphics
 from pygamelib.gfx import core, particles
 from pygamelib.functions import pgl_isinstance
@@ -1146,24 +1147,24 @@ class Board(base.PglBaseObject):
                             (
                                 isinstance(item, board_items.Player)
                                 and (
-                                    (dest_item.perm == constants.PLAYER_AUTHORIZED)
+                                    (dest_item.perm == Permission.PLAYER_AUTHORIZED)
                                     or (
                                         dest_item.perm
-                                        == constants.ALL_CHARACTERS_AUTHORIZED
+                                        == Permission.ALL_CHARACTERS_AUTHORIZED
                                     )
                                 )
                             )
                             or (
                                 isinstance(item, board_items.NPC)
                                 and (
-                                    (dest_item.perm == constants.NPC_AUTHORIZED)
+                                    (dest_item.perm == Permission.NPC_AUTHORIZED)
                                     or (
                                         dest_item.perm
-                                        == constants.ALL_CHARACTERS_AUTHORIZED
+                                        == Permission.ALL_CHARACTERS_AUTHORIZED
                                     )
                                 )
                             )
-                            or (dest_item.perm == constants.ALL_MOVABLE_AUTHORIZED)
+                            or (dest_item.perm == Permission.ALL_MOVABLE_AUTHORIZED)
                         ):
                             dest_item.activate()
                     # Now taking care of pickable objects
@@ -1201,7 +1202,8 @@ class Board(base.PglBaseObject):
         :param item: an item to move (it has to be a subclass of Movable)
         :type item: pygamelib.board_items.Movable
         :param direction: a direction from :ref:`constants-module`
-        :type direction: pygamelib.constants or :class:`~pygamelib.base.Vector2D`
+        :type direction: :py:enum:`~pygamelib.constants.Direction` or
+           :class:`~pygamelib.base.Vector2D`
         :param step: the number of steps to move the item.
         :type step: int
 
@@ -1213,7 +1215,7 @@ class Board(base.PglBaseObject):
 
         Example::
 
-            board.move(player,constants.UP,1)
+            board.move(player,Direction.UP,1)
 
         .. Important:: if the move is successful, an empty BoardItemVoid
             (see :class:`pygamelib.boards_item.BoardItemVoid`) will be put at the
@@ -1230,7 +1232,7 @@ class Board(base.PglBaseObject):
         if (
             self.parent is not None
             and isinstance(self.parent, Game)
-            and self.parent.mode == constants.MODE_RT
+            and self.parent.mode == EngineMode.MODE_REAL_TIME
             and isinstance(item, board_items.Movable)
             and item.can_move()
             and item.dtmove < item.movement_speed
@@ -1266,7 +1268,7 @@ class Board(base.PglBaseObject):
         #         "Board.move(item, direction, step): direction must be a Vector2D or"
         #         " a constant direction."
         #     )
-        if type(direction) is int:
+        if type(direction) is int or type(direction) is Direction:
             if type(step) is not int:
                 raise base.PglInvalidTypeException(
                     "Board.move(item, direction, step): step must be an int."
@@ -1319,18 +1321,18 @@ class Board(base.PglBaseObject):
                     (
                         isinstance(item, board_items.Player)
                         and (
-                            (dest_item.perm == constants.PLAYER_AUTHORIZED)
-                            or (dest_item.perm == constants.ALL_CHARACTERS_AUTHORIZED)
+                            (dest_item.perm == Permission.PLAYER_AUTHORIZED)
+                            or (dest_item.perm == Permission.ALL_CHARACTERS_AUTHORIZED)
                         )
                     )
                     or (
                         isinstance(item, board_items.NPC)
                         and (
-                            (dest_item.perm == constants.NPC_AUTHORIZED)
-                            or (dest_item.perm == constants.ALL_CHARACTERS_AUTHORIZED)
+                            (dest_item.perm == Permission.NPC_AUTHORIZED)
+                            or (dest_item.perm == Permission.ALL_CHARACTERS_AUTHORIZED)
                         )
                     )
-                    or (dest_item.perm == constants.ALL_MOVABLE_AUTHORIZED)
+                    or (dest_item.perm == Permission.ALL_MOVABLE_AUTHORIZED)
                 ):
                     dest_item.activate()
             # Now we check if the destination contains a pickable item.
@@ -1760,14 +1762,14 @@ class Game(base.PglBaseObject):
 
     def __init__(
         self,
-        name="Game",
-        player=None,
+        name: str = "Game",
+        player: "board_items.Player" = None,
         boards={},
         current_level=None,
         enable_partial_display=False,
         partial_display_viewport=None,
         partial_display_focus=None,
-        mode=constants.MODE_TBT,
+        mode=EngineMode.MODE_TURN_BY_TURN,
         user_update=None,
         input_lag=0.01,
         user_update_paused=None,
@@ -1792,15 +1794,15 @@ class Game(base.PglBaseObject):
            view when the board is displayed.
         :type partial_display_focus: :class:`~pygamelib.board_items.BoardItem`
         :param mode: The mode parameter configures the way the run() method is going to
-           behave. The default value is constants.MODE_TBT. TBT is short for "Turn By
-           Turn". In that mode, the Game object wait for an user input before looping.
+           behave. The default value is EngineMode.MODE_TURN_BY_TURN. In that mode,
+           the Game object wait for an user input before looping.
            Exactly like when you wait for user input with get_key(). The other possible
-           value is constants.MODE_RT. RT stands for "Real Time". In that mode, the Game
-           object waits for a minimal amount of time (0.01 i.e 100 FPS, configurable
-           through the input_lag parameter) in order to get the input from the user and
-           call the update function right away. This parameter is *only* useful if you
-           use Game.run().
-        :type mode: int
+           value is EngineMode.MODE_TURN_BY_TURN. RT stands for "Real Time". In that
+           mode, the Game object waits for a minimal amount of time (0.01 i.e 100 FPS,
+           configurable through the input_lag parameter) in order to get the input from
+           the user and call the update function right away. This parameter is *only*
+           useful if you use Game.run().
+        :type mode: :py:enum:`~pygamelib.constants.EngineMode`
         :param user_update: A reference to the main program update function. The update
            function is called for each new frame. It is called with 3 parameters: the
            game object, the user input (can be None) and the elapsed time since last
@@ -1822,7 +1824,7 @@ class Game(base.PglBaseObject):
         self._boards = boards
         self.current_level = current_level
         self.player = player
-        self.__state = constants.RUNNING
+        self.__state = State.RUNNING
         self.enable_partial_display = enable_partial_display
         self.partial_display_viewport = partial_display_viewport
         self.partial_display_focus = partial_display_focus
@@ -1842,7 +1844,7 @@ class Game(base.PglBaseObject):
         # self.enable_physic = enable_physic
         # # If physic is enabled we turn the mode to realtime (we need time integration)
         # if self.enable_physic:
-        #     self.mode = constants.MODE_RT
+        #     self.mode = EngineMode.MODE_REAL_TIME
         #     self.gravity = base.Vector2D(9.81, 0)
         # else:
         #     self.gravity = None
@@ -1851,7 +1853,7 @@ class Game(base.PglBaseObject):
         # In the case where user_update is defined, we cannot start the game on our own.
         # We need the user to start it first.
         if self.user_update is not None:
-            self.__state = constants.PAUSED
+            self.__state = State.PAUSED
         if user_update_paused is not None:
             self.user_update_paused = user_update_paused
         self.previous_time = time.time()
@@ -1862,9 +1864,9 @@ class Game(base.PglBaseObject):
         """Get/set the state of the game.
 
         :param value: The new state of the game (from the constants module).
-        :type value: int
+        :type value: :py:enum:`~pygamelib.constants.State`
         :return: The state of the game.
-        :rtype: int
+        :rtype: :py:enum:`~pygamelib.constants.State`
 
         The observers are notified of a change of state with the
         :boldblue:`pygamelib.engine.Game.state` event. The new state is passed as the
@@ -1875,10 +1877,10 @@ class Game(base.PglBaseObject):
     @state.setter
     def state(self, value):
         self.__state = value
-        if value == constants.PAUSED:
+        if value == State.PAUSED:
             if self.user_update_paused is None:
                 self.user_update_paused = self._fake_update_paused
-        elif value == constants.RUNNING:
+        elif value == State.RUNNING:
             self._set_run_function()
         self.notify(self, "pygamelib.engine.Game.state", value)
 
@@ -1959,16 +1961,16 @@ class Game(base.PglBaseObject):
                 "Game.run(): user_update must be callable."
             )
         # Auto start if game hasn't be started before
-        if self.state == constants.PAUSED:
+        if self.state == State.PAUSED:
             self.start()
         # Update the inkey timeout based on mode
         # This cannot be automatically tested as it means the main loop requires an user
         # input.
-        if self.mode == constants.MODE_TBT:  # pragma: no cover
+        if self.mode == EngineMode.MODE_TURN_BY_TURN:  # pragma: no cover
             self.input_lag = None
         self.previous_time = time.perf_counter()
         if self.player is None:
-            self.player = constants.NO_PLAYER
+            self.player = EngineConstant.NO_PLAYER
         # Now we check that we do have a current board. If not, it means that the user
         # wants to use the game object without any board.
         self._set_run_function()
@@ -1982,13 +1984,13 @@ class Game(base.PglBaseObject):
     # loop. Each crumble of performance is worth a little bit of extra code.
     def _run_with_board(self):
         # This runs until the game stops
-        while self.state != constants.STOPPED:
+        while self.state != State.STOPPED:
             # But we only update if the game is not paused
             in_key = self.terminal.inkey(timeout=self.input_lag)
             elapsed = time.perf_counter() - self.previous_time
             self.previous_time = time.perf_counter()
-            if self.state == constants.RUNNING:
-                if self.player != constants.NO_PLAYER:
+            if self.state == State.RUNNING:
+                if self.player != EngineConstant.NO_PLAYER:
                     self.player.dtmove += elapsed
                 # print(self.terminal.home, end="")
                 self.user_update(self, in_key, elapsed)
@@ -1996,7 +1998,7 @@ class Game(base.PglBaseObject):
                 self.actuate_npcs(self.current_level, elapsed)
                 self.actuate_projectiles(self.current_level, elapsed)
                 self.animate_items(self.current_level, elapsed)
-            elif self.state == constants.PAUSED:
+            elif self.state == State.PAUSED:
                 print(self.terminal.home, end="")
                 self.user_update_paused(self, in_key, elapsed)
                 print(self.terminal.clear_eos, end="")
@@ -2009,16 +2011,16 @@ class Game(base.PglBaseObject):
 
     def _run_without_board(self):
         # This runs until the game stops
-        while self.state != constants.STOPPED:
+        while self.state != State.STOPPED:
             in_key = self.terminal.inkey(timeout=self.input_lag)
             elapsed = time.perf_counter() - self.previous_time
             self.previous_time = time.perf_counter()
             # But we only update if the game is not paused
-            if self.state == constants.RUNNING:
+            if self.state == State.RUNNING:
                 print(self.terminal.home, end="")
                 self.user_update(self, in_key, elapsed)
                 print(self.terminal.clear_eos, end="")
-            elif self.state == constants.PAUSED:
+            elif self.state == State.PAUSED:
                 print(self.terminal.home, end="")
                 self.user_update_paused(self, in_key, elapsed)
                 print(self.terminal.clear_eos, end="")
@@ -2383,11 +2385,11 @@ class Game(base.PglBaseObject):
                     "undefined_player",
                     "Game.player is undefined. We cannot change level without a player."
                     " Please set player in your Game object: mygame.player = Player()"
-                    " or set mygame.player = constants.NO_PLAYER",
+                    " or set mygame.player = EngineConstant.NO_PLAYER",
                 )
             if level_number in self._boards.keys():
                 # If player is not None and not NO_PLAYER let's work
-                if self.player != constants.NO_PLAYER:
+                if self.player != EngineConstant.NO_PLAYER:
                     # If it's not already the case, taking ownership of player
                     if self.player.parent != self:
                         self.player.parent = self
@@ -2517,10 +2519,10 @@ class Game(base.PglBaseObject):
                         if npc.actuator is None:
                             npc.actuator = actuators.RandomActuator(
                                 moveset=[
-                                    constants.UP,
-                                    constants.DOWN,
-                                    constants.LEFT,
-                                    constants.RIGHT,
+                                    Direction.UP,
+                                    Direction.DOWN,
+                                    Direction.LEFT,
+                                    Direction.RIGHT,
                                 ],
                                 parent=npc,
                             )
@@ -2581,16 +2583,16 @@ class Game(base.PglBaseObject):
         .. note:: Since version 1.2.0 and the appearance of the realtime mode, we have
            to account for movement speed. This method does it.
         """
-        if self.state == constants.RUNNING:
+        if self.state == State.RUNNING:
             if type(level_number) is int:
                 if level_number in self._boards.keys():
                     self.screen.trigger_rendering()
                     for npc in self._boards[level_number]["npcs"]:
-                        if npc.actuator.state == constants.RUNNING:
+                        if npc.actuator.state == State.RUNNING:
                             # Account for movement speed
                             npc.dtmove += elapsed_time
                             if (
-                                self.mode == constants.MODE_RT
+                                self.mode == EngineMode.MODE_REAL_TIME
                                 and npc.dtmove < npc.movement_speed
                             ):
                                 continue
@@ -2687,7 +2689,7 @@ class Game(base.PglBaseObject):
                                 return
                         if projectile.actuator is None:
                             projectile.actuator = actuators.RandomActuator(
-                                moveset=[constants.RIGHT]
+                                moveset=[Direction.RIGHT]
                             )
                         if projectile.step is None:
                             projectile.step = 1
@@ -2765,7 +2767,7 @@ class Game(base.PglBaseObject):
             :meth:`pygamelib.board_items.Projectile.hit` method for more information on
             the projectile hit mechanic.
         """
-        if self.state == constants.RUNNING:
+        if self.state == State.RUNNING:
             if type(level_number) is int:
                 if level_number in self._boards.keys():
                     self.screen.trigger_rendering()
@@ -2786,11 +2788,11 @@ class Game(base.PglBaseObject):
                     pp = base.Vector2D()
 
                     for proj in self._boards[level_number]["projectiles"]:
-                        if proj.actuator.state == constants.RUNNING:
+                        if proj.actuator.state == State.RUNNING:
                             # Account for movement speed
                             proj.dtmove += elapsed_time
                             if (
-                                self.mode == constants.MODE_RT
+                                self.mode == EngineMode.MODE_REAL_TIME
                                 and proj.dtmove < proj.movement_speed
                             ):
                                 continue
@@ -2870,7 +2872,7 @@ class Game(base.PglBaseObject):
                                 #     self._boards[level_number][
                                 #         "board"
                                 #     ]._movables.discard(proj)
-                        elif proj.actuator.state == constants.STOPPED:
+                        elif proj.actuator.state == State.STOPPED:
                             self._boards[level_number]["projectiles"].remove(proj)
                             board.clear_cell(proj.pos[0], proj.pos[1], proj.pos[2])
                             # There is a possibility when a lot of projectiles are on
@@ -2928,7 +2930,7 @@ class Game(base.PglBaseObject):
             mygame.animate_items(1)
 
         """
-        if self.state == constants.RUNNING:
+        if self.state == State.RUNNING:
             if type(level_number) is int:
                 if level_number in self._boards.keys():
                     for item in (
@@ -2938,7 +2940,7 @@ class Game(base.PglBaseObject):
                         if item.animation is not None:
                             item.animation.dtanimate += elapsed_time
                             if (
-                                self.mode == constants.MODE_RT
+                                self.mode == EngineMode.MODE_REAL_TIME
                                 and item.animation.dtanimate
                                 < item.animation.display_time
                             ):
@@ -2981,7 +2983,7 @@ class Game(base.PglBaseObject):
             template of what to display.
 
         """
-        if self.player is None or self.player == constants.NO_PLAYER:
+        if self.player is None or self.player == EngineConstant.NO_PLAYER:
             return ""
         info = ""
         info += f" {self.player.name}"
@@ -2996,12 +2998,12 @@ class Game(base.PglBaseObject):
 
         Example::
 
-            mygame.move_player(constants.RIGHT,1)
+            mygame.move_player(Direction.RIGHT,1)
         """
         if (
-            self.state == constants.RUNNING
+            self.state == State.RUNNING
             and self.player is not None
-            and self.player != constants.NO_PLAYER
+            and self.player != EngineConstant.NO_PLAYER
         ):
             self._boards[self.current_level]["board"].move(self.player, direction, step)
             if isinstance(self.screen, Screen):
@@ -3017,8 +3019,8 @@ class Game(base.PglBaseObject):
         The partial display will be centered on the player (Game.player).
         Otherwise it will just call Game.current_board().display().
 
-        If the player is not set or is set to constants.NO_PLAYER partial display won't
-        activate automatically.
+        If the player is not set or is set to EngineConstant.NO_PLAYER partial display
+        won't activate automatically.
 
         Example::
 
@@ -3037,7 +3039,7 @@ class Game(base.PglBaseObject):
             and self.partial_display_viewport is not None
             and type(self.partial_display_viewport) is list
             and self.player is not None
-            and self.player != constants.NO_PLAYER
+            and self.player != EngineConstant.NO_PLAYER
         ):
             # display_around(self, object, p_row, p_col)
             self.current_board().display_around(
@@ -3257,7 +3259,7 @@ class Game(base.PglBaseObject):
 
             mygame.start()
         """
-        self.state = constants.RUNNING
+        self.state = State.RUNNING
         self.previous_time = time.perf_counter()
 
     def pause(self):
@@ -3267,7 +3269,7 @@ class Game(base.PglBaseObject):
 
             mygame.pause()
         """
-        self.state = constants.PAUSED
+        self.state = State.PAUSED
 
     def stop(self):
 
@@ -3277,28 +3279,28 @@ class Game(base.PglBaseObject):
 
             mygame.stop()
         """
-        self.state = constants.STOPPED
+        self.state = State.STOPPED
 
     @staticmethod
     def _string_to_constant(s):
         if type(s) is int:
             return s
         elif s == "UP":
-            return constants.UP
+            return Direction.UP
         elif s == "DOWN":
-            return constants.DOWN
+            return Direction.DOWN
         elif s == "RIGHT":
-            return constants.RIGHT
+            return Direction.RIGHT
         elif s == "LEFT":
-            return constants.LEFT
+            return Direction.LEFT
         elif s == "DRUP":
-            return constants.DRUP
+            return Direction.DRUP
         elif s == "DRDOWN":
-            return constants.DRDOWN
+            return Direction.DRDOWN
         elif s == "DLDOWN":
-            return constants.DLDOWN
+            return Direction.DLDOWN
         elif s == "DLUP":
-            return constants.DLUP
+            return Direction.DLUP
 
     @staticmethod
     def _ref2obj(ref):
