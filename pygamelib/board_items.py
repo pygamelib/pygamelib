@@ -33,7 +33,7 @@ __docformat__ = "restructuredtext"
 """
 from pygamelib import engine
 from pygamelib import base
-from pygamelib import constants
+from pygamelib.constants import Direction, Permission
 from pygamelib.gfx import core
 from pygamelib import actuators
 from pygamelib.functions import pgl_isinstance
@@ -949,7 +949,7 @@ class BoardComplexItem(BoardItem):
                     base.Text(
                         'Big boi detected!!!',
                         core.Color(255,0,0),
-                        style=constants.BOLD,
+                        style=TextStyle.BOLD,
                     ),
                     notifications.row,
                     notifications.column,
@@ -983,7 +983,7 @@ class BoardComplexItem(BoardItem):
                 # update_sprite() is called twice here.
                 item.sprite = s
                 item.update_sprite()
-                board.move(item, constants.RIGHT, 1)
+                board.move(item, Direction.RIGHT, 1)
                 time.sleep(0.2)
         """
         self._item_matrix = []
@@ -1292,7 +1292,7 @@ class Projectile(Movable):
     The Projectile constructor takes the following parameters:
 
     :param direction: A direction from the :ref:`constants-module` module
-    :type direction: int
+    :type direction: :py:enum:`~pygamelib.constants.Direction`
     :param range: The maximum range of the projectile in number of cells that can be
         crossed. When range is attained the hit_callback is called with a BoardItemVoid
         as a collision object.
@@ -1343,7 +1343,7 @@ class Projectile(Movable):
                                 # won't collide with other projectiles.
                                 collision_exclusions = [Projectile],
                             )
-        fireball.set_direction(constants.RIGHT)
+        fireball.set_direction(Direction.RIGHT)
         my_game.add_projectile(1, fireball,
                                my_game.player.pos[0], my_game.player.pos[1] + 1)
 
@@ -1353,7 +1353,7 @@ class Projectile(Movable):
     def __init__(
         self,
         name="projectile",
-        direction=constants.RIGHT,
+        direction=Direction.RIGHT,
         step=1,
         range=5,
         model="\U00002301",
@@ -1435,7 +1435,7 @@ class Projectile(Movable):
 
         Example::
 
-            fireball.add_directional_animation(constants.UP, constants.UP, animation)
+            fireball.add_directional_animation(Direction.UP, Direction.UP, animation)
         """
         if type(direction) is not int:
             raise base.PglInvalidTypeException(
@@ -1461,7 +1461,7 @@ class Projectile(Movable):
         Example::
 
             # No more animation for the UP direction
-            fireball.directional_animation(constants.UP)
+            fireball.directional_animation(Direction.UP)
         """
         if type(direction) is not int:
             raise base.PglInvalidTypeException(
@@ -1485,7 +1485,7 @@ class Projectile(Movable):
         Example::
 
             # No more animation for the UP direction
-            fireball.remove_directional_animation(constants.UP)
+            fireball.remove_directional_animation(Direction.UP)
         """
         if type(direction) is not int:
             raise base.PglInvalidTypeException(
@@ -1505,7 +1505,7 @@ class Projectile(Movable):
 
         Example::
 
-            fireball.add_directional_animation(constants.UP, upward_animation)
+            fireball.add_directional_animation(Direction.UP, upward_animation)
         """
         if type(direction) is not int:
             raise base.PglInvalidTypeException(
@@ -1528,7 +1528,7 @@ class Projectile(Movable):
 
         Example::
 
-            fireball.directional_model(constants.UP)
+            fireball.directional_model(Direction.UP)
         """
         if type(direction) is not int:
             raise base.PglInvalidTypeException(
@@ -1549,7 +1549,7 @@ class Projectile(Movable):
 
         Example::
 
-            fireball.directional_model(constants.UP)
+            fireball.directional_model(Direction.UP)
         """
         if type(direction) is not int:
             raise base.PglInvalidTypeException(
@@ -1571,7 +1571,7 @@ class Projectile(Movable):
 
         Example::
 
-            fireball.set_direction(constants.UP)
+            fireball.set_direction(Direction.UP)
         """
         if type(direction) is not int and not isinstance(direction, base.Vector2D):
             raise base.PglInvalidTypeException(
@@ -1727,7 +1727,7 @@ class Actionable(Immovable):
     :param perm: The permission that defines what types of items can actually
         activate the actionable. The permission has to be one of the
         permissions defined in :mod:`~pygamelib.constants`. By default it is set to
-        constants.PLAYER_AUTHORIZED.
+        Permission.PLAYER_AUTHORIZED.
     :type perm: :mod:`~pygamelib.constants`
 
     On top of these parameters Actionable accepts all parameters from
@@ -1751,7 +1751,7 @@ class Actionable(Immovable):
         self.action_parameters = []
         if action_parameters is not None:
             self.action_parameters = action_parameters
-        self.perm = constants.PLAYER_AUTHORIZED
+        self.perm = Permission.PLAYER_AUTHORIZED
         if perm is not None:
             self.perm = perm
 

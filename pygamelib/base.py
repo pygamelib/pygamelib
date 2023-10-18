@@ -1,4 +1,4 @@
-from pygamelib import constants
+from pygamelib.constants import Direction
 from pygamelib.functions import pgl_isinstance
 import math
 from colorama import Fore, Back, Style, init
@@ -1245,7 +1245,7 @@ class Vector2D(object):
                 print('We are not moving... at all...')
         """
         return round(
-            math.sqrt(self.row**2 + self.column**2), self.rounding_precision
+            math.sqrt(self.row ** 2 + self.column ** 2), self.rounding_precision
         )
 
     def unit(self):
@@ -1267,37 +1267,37 @@ class Vector2D(object):
         )
 
     @classmethod
-    def from_direction(cls, direction, step):
+    def from_direction(cls, direction: Direction, step):
         """Build and return a Vector2D from a direction.
 
         Directions are from the constants module.
 
         :param direction: A direction from the constants module.
-        :type direction: int
+        :type direction: :py:enum:`~pygamelib.constants.Direction`
         :param step: The number of cell to cross in one movement.
         :type step: int
 
         Example::
 
-            v2d_up = Vector2D.from_direction(constants.UP, 1)
+            v2d_up = Vector2D.from_direction(Direction.UP, 1)
         """
-        if direction == constants.NO_DIR:
+        if direction == Direction.NO_DIR:
             return cls(0, 0)
-        elif direction == constants.UP:
+        elif direction == Direction.UP:
             return cls(-step, 0)
-        elif direction == constants.DOWN:
+        elif direction == Direction.DOWN:
             return cls(+step, 0)
-        elif direction == constants.LEFT:
+        elif direction == Direction.LEFT:
             return cls(0, -step)
-        elif direction == constants.RIGHT:
+        elif direction == Direction.RIGHT:
             return cls(0, +step)
-        elif direction == constants.DRUP:
+        elif direction == Direction.DRUP:
             return cls(-step, +step)
-        elif direction == constants.DRDOWN:
+        elif direction == Direction.DRDOWN:
             return cls(+step, +step)
-        elif direction == constants.DLUP:
+        elif direction == Direction.DLUP:
             return cls(-step, -step)
-        elif direction == constants.DLDOWN:
+        elif direction == Direction.DLDOWN:
             return cls(+step, -step)
 
     def serialize(self):

@@ -60,6 +60,75 @@ ALGO_ASTAR = 90000101
 BOLD = "\x1b[1m"
 UNDERLINE = "\x1b[4m"
 
+# New constants
+
+
+class EngineConstant(enum.IntEnum):
+    """
+    A couple of constants that controls the behavior of the engine itself.
+    """
+
+    NO_PLAYER = 90000001
+
+
+class EngineMode(enum.IntEnum):
+    """
+    Constants that controls the mode of the engine. So far, it's a choice between real
+    time and turn by turn, but in the future there could be additional modes.
+    """
+
+    MODE_REAL_TIME = 90000002
+    MODE_TURN_BY_TURN = 90000003
+
+
+class Permission(enum.IntEnum):
+    """
+    Permission constants to separate what objects are allowed to interact with others.
+    Mostly used to separate NPCs from Players.
+    """
+
+    PLAYER_AUTHORIZED = 20000001
+    NPC_AUTHORIZED = 20000010
+    ALL_CHARACTERS_AUTHORIZED = 20000011
+    ALL_PLAYABLE_AUTHORIZED = ALL_CHARACTERS_AUTHORIZED
+    ALL_MOVABLE_AUTHORIZED = 20000100
+    NONE_AUTHORIZED = 20000101
+
+
+class State(enum.IntEnum):
+    """
+    A set of constants that describe the internal state of something. For example the,
+    state of the :class:`~pygamelib.engine.Game` engine that are used to process or not
+    some events.
+    """
+
+    RUNNING = 40000001
+    PAUSED = 40000010
+    STOPPED = 40000011
+
+
+class Algorithm(enum.IntEnum):
+    """
+    A set of constants to identify the different algorithms used in the library (when a
+    choice is possible). For now, it's only the path finding algorithm.
+    """
+
+    BFS = 90000100
+    ASTAR = 90000101
+
+
+class TextStyle(str, enum.Enum):
+    """
+    TextStyling is used to format characters or text. It is mostly used by
+    :class:`~pygamelib.base.Text`.
+    """
+
+    # def __str__(self):
+    #     return str(self.value)
+
+    BOLD = "\x1b[1m"
+    UNDERLINE = "\x1b[4m"
+
 
 class SizeConstraint(enum.IntEnum):
     """

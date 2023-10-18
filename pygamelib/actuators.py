@@ -15,10 +15,11 @@ __docformat__ = "restructuredtext"
 from typing import List, Optional, Tuple, Union, TYPE_CHECKING
 from pygamelib import board_items
 from pygamelib import base
-from pygamelib import constants
+from pygamelib.constants import Direction, State, Algorithm
 import random
 import collections
 from queue import PriorityQueue
+
 if TYPE_CHECKING:
     from pygamelib import engine
 
@@ -45,7 +46,7 @@ class Actuator(base.PglBaseObject):
         """
         super().__init__()
         self.type = None
-        self.state = constants.RUNNING
+        self.state = State.RUNNING
         self.parent = parent
 
     def start(self):
@@ -58,7 +59,7 @@ class Actuator(base.PglBaseObject):
 
             mygame.start()
         """
-        self.state = constants.RUNNING
+        self.state = State.RUNNING
 
     def pause(self):
         """Set the actuator state to PAUSED.
@@ -67,7 +68,7 @@ class Actuator(base.PglBaseObject):
 
             mygame.pause()
         """
-        self.state = constants.PAUSED
+        self.state = State.PAUSED
 
     def stop(self):
         """Set the actuator state to STOPPED.
@@ -76,7 +77,7 @@ class Actuator(base.PglBaseObject):
 
             mygame.stop()
         """
-        self.state = constants.STOPPED
+        self.state = State.STOPPED
 
     def next_move(self) -> Union[base.Vector2D, int]:
         """
@@ -160,9 +161,11 @@ class RandomActuator(Actuator):
     :type parent: pygamelib.board_items.BoardItem
     """
 
-    def __init__(self,
-                 moveset: Optional[List[Union[base.Vector2D, int]]] = None,
-                 parent: Optional["board_items.BoardItem"] = None):
+    def __init__(
+        self,
+        moveset: Optional[List[Union[base.Vector2D, int]]] = None,
+        parent: Optional["board_items.BoardItem"] = None,
+    ):
         # Note: the length of the type hint suggests
         # that it was time for a MoveSet or a Move class
         if moveset is None:
@@ -222,7 +225,7 @@ class RandomActuator(Actuator):
 
             random_actuator.next_move()
         """
-        if self.state == constants.RUNNING and self.moveset:
+        if self.state == State.RUNNING and self.moveset:
             ppav = None
             if isinstance(self.parent, board_items.Movable):
                 ppav = self.parent.position_as_vector()
@@ -243,7 +246,7 @@ class RandomActuator(Actuator):
 
             # return random.choice(self.moveset)
         else:
-            return constants.NO_DIR
+            return Direction.NO_DIR
 
     def serialize(self) -> dict:
         """Return a dictionary with all the attributes of this object.
@@ -290,9 +293,11 @@ class PathActuator(Actuator):
     :type parent: pygamelib.board_items.BoardItem
     """
 
-    def __init__(self,
-                 path: Optional[List[int]] = None,
-                 parent: Optional["board_items.BoardItem"] = None):
+    def __init__(
+        self,
+        path: Optional[List[int]] = None,
+        parent: Optional["board_items.BoardItem"] = None,
+    ):
         if path is None:
             path = []  # pragma: no cover
         super().__init__(parent)
@@ -308,20 +313,20 @@ class PathActuator(Actuator):
         index equal the length of path, the index should return back to 0.
 
         :return: The next movement
-        :rtype: int | :py:const:`pygamelib.constants.NO_DIR`
+        :rtype: int | :py:const:`pygamelib.constants.Direction.NO_DIR`
 
         Example::
 
             path_actuator.next_move()
         """
-        if self.state == constants.RUNNING:
+        if self.state == State.RUNNING:
             move = self.path[self.index]
             self.index += 1
             if self.index == len(self.path):
                 self.index = 0
             return move
         else:
-            return constants.NO_DIR
+            return Direction.NO_DIR
 
     def set_path(self, path: List[int]):
         """Defines a new path
@@ -333,7 +338,7 @@ class PathActuator(Actuator):
 
         Example::
 
-            path_actuator.set_path([constants.UP,constants.DOWN,constants.LEFT,constants.RIGHT])
+            path_actuator.set_path([Direction.UP,Direction.DOWN,Direction.LEFT,Direction.RIGHT])
         """
         self.path = path
         self.index = 0
@@ -393,38 +398,38 @@ class PatrolActuator(PathActuator):
         should be reversed before the next call.
 
         :return: The next movement
-        :rtype: int | :py:const:`pygamelib.constants.NO_DIR`
+        :rtype: int | :py:const:`pygamelib.constants.Direction.NO_DIR`
 
         Example::
 
             patrol_actuator.next_move()
         """
-        if self.state == constants.RUNNING:
+        if self.state == State.RUNNING:
             move = self.path[self.index]
             self.index += 1
             if self.index == len(self.path):
                 self.index = 0
                 self.path.reverse()
                 for i in range(0, len(self.path)):
-                    if self.path[i] == constants.UP:
-                        self.path[i] = constants.DOWN
-                    elif self.path[i] == constants.DOWN:
-                        self.path[i] = constants.UP
-                    elif self.path[i] == constants.LEFT:
-                        self.path[i] = constants.RIGHT
-                    elif self.path[i] == constants.RIGHT:
-                        self.path[i] = constants.LEFT
-                    elif self.path[i] == constants.DLDOWN:
-                        self.path[i] = constants.DRUP
-                    elif self.path[i] == constants.DLUP:
-                        self.path[i] = constants.DRDOWN
-                    elif self.path[i] == constants.DRDOWN:
-                        self.path[i] = constants.DLUP
-                    elif self.path[i] == constants.DRUP:
-                        self.path[i] = constants.DLDOWN
+                    if self.path[i] == Direction.UP:
+                        self.path[i] = Direction.DOWN
+                    elif self.path[i] == Direction.DOWN:
+                        self.path[i] = Direction.UP
+                    elif self.path[i] == Direction.LEFT:
+                        self.path[i] = Direction.RIGHT
+                    elif self.path[i] == Direction.RIGHT:
+                        self.path[i] = Direction.LEFT
+                    elif self.path[i] == Direction.DLDOWN:
+                        self.path[i] = Direction.DRUP
+                    elif self.path[i] == Direction.DLUP:
+                        self.path[i] = Direction.DRDOWN
+                    elif self.path[i] == Direction.DRDOWN:
+                        self.path[i] = Direction.DLUP
+                    elif self.path[i] == Direction.DRUP:
+                        self.path[i] = Direction.DLDOWN
             return move
         else:
-            return constants.NO_DIR
+            return Direction.NO_DIR
 
     def serialize(self) -> dict:
         """Return a dictionary with all the attributes of this object.
@@ -469,11 +474,13 @@ class UnidirectionalActuator(Actuator):
     :type parent: pygamelib.board_items.BoardItem
     """
 
-    def __init__(self,
-                 direction: int = constants.RIGHT,
-                 parent: Optional["board_items.BoardItem"] = None):
+    def __init__(
+        self,
+        direction: int = Direction.RIGHT,
+        parent: Optional["board_items.BoardItem"] = None,
+    ):
         if direction is None:
-            direction = constants.RIGHT
+            direction = Direction.RIGHT
         super().__init__(parent)
         self.direction = direction
 
@@ -484,15 +491,15 @@ class UnidirectionalActuator(Actuator):
         otherwise it returns NO_DIR from the :py:mod:`~pygamelib.constants` module.
 
         :return: The next movement
-        :rtype: int | :py:const:`pygamelib.constants.NO_DIR`
+        :rtype: int | :py:const:`pygamelib.Direction.NO_DIR`
 
         Example::
 
             unidirectional_actuator.next_move()
         """
-        if self.state == constants.RUNNING:
+        if self.state == State.RUNNING:
             return self.direction
-        return constants.NO_DIR
+        return Direction.NO_DIR
 
     def serialize(self) -> dict:
         """Return a dictionary with all the attributes of this object.
@@ -561,7 +568,7 @@ class PathFinder(Behavioral):
         actuated_object: Optional["board_items.BoardItem"] = None,
         circle_waypoints=True,
         parent: Optional["board_items.BoardItem"] = None,
-        algorithm=constants.ALGO_BFS,
+        algorithm=Algorithm.BFS,
     ):
         effective_parent = parent
         if actuated_object is not None and parent is None:
@@ -578,13 +585,14 @@ class PathFinder(Behavioral):
         self._waypoint_index = 0
         self.circle_waypoints = circle_waypoints
         self.algorithm = algorithm
-        if type(self.algorithm) is not int or (
-            self.algorithm != constants.ALGO_BFS
-            and self.algorithm != constants.ALGO_ASTAR
-        ):
+        if (
+            type(self.algorithm) is not int and type(self.algorithm) is not Algorithm
+        ) or (self.algorithm != Algorithm.BFS and self.algorithm != Algorithm.ASTAR):
+            # TODO: it would be better to have a method that return a list of
+            #      implemented algorithm and to check if self.algorithm is in that list.
             raise base.PglInvalidTypeException(
                 "In Actuator.PathFinder.__init__(..,algorithm) algorithm must be"
-                "either ALGO_BFS or ALGO_ASTAR."
+                "either Algorithm.BFS or Algorithm.ASTAR."
             )
 
     def set_destination(self, row: int = 0, column: int = 0):
@@ -657,7 +665,7 @@ class PathFinder(Behavioral):
                 "destination is not defined",
                 "PathFinder.destination has to be defined.",
             )
-        if self.algorithm == constants.ALGO_BFS:
+        if self.algorithm == Algorithm.BFS:
             return self.__find_path_bfs()
 
         return self.__find_path_astar()
@@ -796,14 +804,14 @@ class PathFinder(Behavioral):
                 seeker.actuator.set_destination(mygame.player.pos[0],mygame.player.pos[1])
                 # next_move() will call find_path() for us.
                 next_move = seeker.actuator.next_move()
-                if next_move == constants.NO_DIR:
+                if next_move == Direction.NO_DIR:
                     seeker.actuator.set_destination(mygame.player.pos[0],mygame.player.pos[1])
                 else:
                     mygame.current_board().move(seeker,next_move,1)
         """
         # If one of destination coordinate is None, return NO_DIR
         if self.destination[0] is None or self.destination[1] is None:
-            return constants.NO_DIR
+            return Direction.NO_DIR
 
         # If path is empty and actuated_object is not at destination,
         # try to find a path to destination
@@ -831,12 +839,12 @@ class PathFinder(Behavioral):
                     self.find_path()
                 else:
                     # If there are no more waypoints, then we return NO_DIR
-                    return constants.NO_DIR
+                    return Direction.NO_DIR
             else:
-                return constants.NO_DIR
+                return Direction.NO_DIR
 
         if len(self._current_path) == 0:
-            return constants.NO_DIR
+            return Direction.NO_DIR
 
         # Get the next position from the path
         next_position = self._current_path.pop(0)
@@ -847,7 +855,7 @@ class PathFinder(Behavioral):
             and next_position[1] == self.actuated_object.pos[1]
         ):
             if len(self._current_path) == 0:
-                return constants.NO_DIR
+                return Direction.NO_DIR
             next_position = self._current_path.pop(0)
 
         # print(f'Next position is: {next_position} and object position is
@@ -866,27 +874,27 @@ class PathFinder(Behavioral):
         #   numerous in case the user use a step higher than 1 in Board.move().
         #   The actuated object could end up going into a wall or out of bound.
         if dr == -1 and dc == 0:
-            return constants.DOWN
+            return Direction.DOWN
         elif dr == 1 and dc == 0:
-            return constants.UP
+            return Direction.UP
         elif dr == 0 and dc == 1:
-            return constants.LEFT
+            return Direction.LEFT
         elif dr == 0 and dc == -1:
-            return constants.RIGHT
+            return Direction.RIGHT
         elif dr == -1 and dc == -1:
-            return constants.DRDOWN
+            return Direction.DRDOWN
         elif dr == 1 and dc == -1:
-            return constants.DRUP
+            return Direction.DRUP
         elif dr == -1 and dc == 1:
-            return constants.DLDOWN
+            return Direction.DLDOWN
         elif dr == 1 and dc == 1:
-            return constants.DLUP
+            return Direction.DLUP
         elif dr > 1 or dr < -1 or dc > 1 or dc < -1:
             # If we are here it means that something is blocking the movement
             self.find_path()
             return self.next_move()
         else:
-            return constants.NO_DIR
+            return Direction.NO_DIR
 
     def add_waypoint(self, row: int, column: int):
         """Add a waypoint to the list of waypoints.

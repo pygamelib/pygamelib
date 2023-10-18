@@ -274,7 +274,7 @@ class Box(object):
         config: UiConfig = None,
         fill: bool = False,
         filling_sprixel: core.Sprixel = None,
-        title_alignment: int = constants.ALIGN_CENTER,
+        title_alignment: constants.Alignment = constants.Alignment.CENTER,
     ):
         """
         The box constructor takes the following parameters.
@@ -948,9 +948,8 @@ class MessageDialog(Dialog):
     anything that can be rendered on screen (i.e: posess a render_to_buffer(self, buffer
     , row, column, buffer_height, buffer_width) method).
 
-    Each line can be aligned separately using :py:const:`constants.ALIGN_RIGHT`,
-    :py:const:`constants.ALIGN_LEFT` or :py:const:`constants.ALIGN_CENTER`. Please see
-    :meth:`add_line`.
+    Each line can be aligned separately using one of the
+    :py:enum:`~pygamelib.constants.Alignment` constants. Please see :meth:`add_line`.
 
     It also implements the `show()` virtual method of :class:`Dialog`.
     This method is blocking and has its own event loop. It does not return anything.
@@ -976,7 +975,7 @@ class MessageDialog(Dialog):
         width: int = 20,
         height: int = None,
         adaptive_height: bool = True,
-        alignment: int = None,
+        alignment: constants.Alignment = None,
         title: str = None,
         config: UiConfig = None,
     ) -> None:
@@ -995,9 +994,9 @@ class MessageDialog(Dialog):
            to match the content size.
         :type adaptive_height: bool
         :param alignment: The alignment to apply to the data parameter. Please use the
-           constants.ALIGN_* constants. The default value is
-           :py:const:`constants.ALIGN_LEFT`
-        :type alignment: int
+           :py:enum:`~pygamelib.constants.Alignment` constants. The default value is
+           :py:const:`pygamelib.constants.Alignment.LEFT`
+        :type alignment: :py:enum:`~pygamelib.constants.Alignment`
         :param title: The short title of the dialog. Only used when the dialog is not
            borderless.
         :type title: str
@@ -1008,16 +1007,16 @@ class MessageDialog(Dialog):
 
             msg = MessageDialog(
                 [
-                    base.Text('HELP', core.Color(0,125,255), style=constants.BOLD),
-                    base.Text('----', core.Color(0,125,255), style=constants.BOLD),
+                    base.Text('HELP', core.Color(0,125,255), style=TextStyle.BOLD),
+                    base.Text('----', core.Color(0,125,255), style=TextStyle.BOLD),
                     '',
                 ],
                 20,
                 5,
                 True,
-                constants.ALIGN_CENTER,
+                Alignment.CENTER,
             )
-            msg.add_line('This is aligned on the right', constants.ALGIN_RIGHT)
+            msg.add_line('This is aligned on the right', Alignment.RIGHT)
             msg.add_line('This is aligned on the left')
             screen.place(msg, 10, 10)
             msg.show()
@@ -1025,7 +1024,7 @@ class MessageDialog(Dialog):
         """
         super().__init__(config=config)
         if alignment is None:
-            alignment = constants.ALIGN_LEFT
+            alignment = constants.Alignment.LEFT
         if adaptive_height is False and height is None:
             adaptive_height = True
         self.__cache = {"data": []}
@@ -1108,7 +1107,9 @@ class MessageDialog(Dialog):
             )
         self.config.game.screen.trigger_rendering()
 
-    def add_line(self, data, alignment=constants.ALIGN_LEFT) -> None:
+    def add_line(
+        self, data, alignment: constants.Alignment = constants.Alignment.LEFT
+    ) -> None:
         """
         Add a line to the message dialog.
 
@@ -1129,8 +1130,7 @@ class MessageDialog(Dialog):
         :param data: The data to add to the message dialog.
         :type data: various
         :param alignment: The alignment of the line to add.
-        :type alignment: :py:const:`constants.ALIGN_RIGHT` |
-           :py:const:`constants.ALIGN_LEFT` | :py:const:`constants.ALIGN_CENTER`
+        :type alignment: :py:enum:`~pygamelib.constants.Alignment`
 
         Example::
 
@@ -1139,9 +1139,10 @@ class MessageDialog(Dialog):
                     'This is centered and very red',
                     core.Color(255,0,0),
                 ),
-                constants.ALGIN_CENTER,
+                constants.Alignment.CENTER,
             )
         """
+        # TODO: Test that alignment is a constants.Alignment
         if (
             isinstance(data, core.Sprixel)
             or type(data) is str
@@ -1187,12 +1188,12 @@ class MessageDialog(Dialog):
             padding = 0
             alignment = self.__data[idx][1]
             data = self.__data[idx][0]
-            if alignment == constants.ALIGN_RIGHT:
+            if alignment == constants.Alignment.RIGHT:
                 if type(data) is str:
                     padding = self.__width - len(data) - 2
                 elif hasattr(data, "length"):
                     padding = self.__width - data.length - 2
-            elif alignment == constants.ALIGN_CENTER:
+            elif alignment == constants.Alignment.CENTER:
                 if type(data) is str:
                     padding = int((self.__width - len(data) - 2) / 2)
                 elif hasattr(data, "length"):
@@ -1277,7 +1278,7 @@ class LineInputDialog(Dialog):
         title=None,
         label="Input a value:",
         default="",
-        filter=constants.PRINTABLE_FILTER,
+        filter=constants.InputValidator.PRINTABLE_FILTER,
         config=None,
     ) -> None:
         """
@@ -1290,8 +1291,7 @@ class LineInputDialog(Dialog):
         :type default: str
         :param filter: Sets the type of accepted input. It comes from the
            :mod:`constants` module.
-        :type filter: :py:const:`constants.PRINTABLE_FILTER` |
-           :py:const:`constants.INTEGER_FILTER`
+        :type filter: :py:enum:`~pygamelib.constants.InputValidator`
         :param config: The configuration object.
         :type config: :class:`UiConfig`
 
@@ -1435,8 +1435,12 @@ class LineInputDialog(Dialog):
                     screen.trigger_rendering()
                     screen.update()
                 elif (
-                    self.__filter == constants.PRINTABLE_FILTER and inkey.isprintable()
-                ) or (self.__filter == constants.INTEGER_FILTER and inkey.isdigit()):
+                    self.__filter == constants.InputValidator.PRINTABLE_FILTER
+                    and inkey.isprintable()
+                ) or (
+                    self.__filter == constants.InputValidator.INTEGER_FILTER
+                    and inkey.isdigit()
+                ):
                     self.user_input += str(inkey)
                     screen.trigger_rendering()
                     screen.update()
@@ -1475,7 +1479,7 @@ class MultiLineInputDialog(Dialog):
             {
                 "label": "Input a value:",
                 "default": "",
-                "filter": constants.PRINTABLE_FILTER,
+                "filter": constants.InputValidator.PRINTABLE_FILTER,
             }
         ],
         title: str = None,
@@ -1498,8 +1502,7 @@ class MultiLineInputDialog(Dialog):
          * "default": A string that is going to pre-fill the input field.
          * "filter": A filter to configure the acceptable inputs.
 
-        The filters are coming from the constants module and can be either
-        :py:const:`constants.INTEGER_FILTER` or :py:const:`constants.PRINTABLE_FILTER`.
+        The filters needs to be a :py:enum:`~pygamelib.constants.InputValidator`.
 
         Example::
 
@@ -1507,17 +1510,17 @@ class MultiLineInputDialog(Dialog):
                 {
                     "label": "Enter the height of the new sprite:",
                     "default": "",
-                    "filter": constants.INTEGER_FILTER,
+                    "filter": constants.InputValidator.INTEGER_FILTER,
                 },
                 {
                     "label": "Enter the width of the new sprite:",
                     "default": "",
-                    "filter": constants.INTEGER_FILTER,
+                    "filter": constants.InputValidator.INTEGER_FILTER,
                 },
                 {
                     "label": "Enter the name of the new sprite:",
                     "default": f"Sprite {len(sprite_list)}",
-                    "filter": constants.PRINTABLE_FILTER,
+                    "filter": constants.InputValidator.PRINTABLE_FILTER,
                 },
             ]
             multi_input = MultiLineInput(fields, conf)
@@ -1682,7 +1685,7 @@ class MultiLineInputDialog(Dialog):
                 {
                     "label": "Input a value:",
                     "default": "",
-                    "filter": constants.PRINTABLE_FILTER,
+                    "filter": constants.InputValidator.PRINTABLE_FILTER,
                 }
             ]
 
@@ -1694,7 +1697,7 @@ class MultiLineInputDialog(Dialog):
                 {
                     "label": "Input a value:",
                     "default": "",
-                    "filter": constants.PRINTABLE_FILTER,
+                    "filter": constants.InputValidator.PRINTABLE_FILTER,
                     "user_input": "some input",
                 }
             ]
@@ -1731,11 +1734,11 @@ class MultiLineInputDialog(Dialog):
                     screen.update()
                 elif (
                     self.__fields[self.__current_field]["filter"]
-                    == constants.PRINTABLE_FILTER
+                    == constants.InputValidator.PRINTABLE_FILTER
                     and inkey.isprintable()
                 ) or (
                     self.__fields[self.__current_field]["filter"]
-                    == constants.INTEGER_FILTER
+                    == constants.InputValidator.INTEGER_FILTER
                     and inkey.isdigit()
                 ):
                     self.__fields[self.__current_field]["user_input"] += str(inkey)
@@ -2064,7 +2067,7 @@ class FileDialog(Dialog):
             txt = base.Text(i.name)
             if idx == self.__browsing_position:
                 txt.fg_color = core.Color(0, 255, 0)
-                txt.style = constants.BOLD
+                txt.style = constants.TextStyle.BOLD
                 self.__current_selection = i
                 if i.is_file():
                     # Can't be tested since the widget do not offer the ability to
@@ -2715,10 +2718,8 @@ class ColorPicker(object):
         """
         The constructor is really simple and takes only 2 arguments.
 
-        :param orientation: One of the 2 orientation constants
-           :py:const:`pygamelib.constants.ORIENTATION_HORIZONTAL` or
-           :py:const:`pygamelib.constants.ORIENTATION_VERTICAL`
-        :type orientation: int
+        :param orientation: One of the orientation constants.
+        :type orientation: :py:enum:`~pygamelib.constants.Orientation`
         :param config: The configuration object.
         :type config: :class:`UiConfig`
 
@@ -2728,12 +2729,12 @@ class ColorPicker(object):
 
         Example::
 
-            color_picker = ColorPicker(constants.ORIENTATION_HORIZONTAL, conf)
+            color_picker = ColorPicker(constants.Orientation.HORIZONTAL, conf)
             screen.place(color_picker, 10, 10)
             screen.update()
         """
         super().__init__()
-        self.__orientation = constants.ORIENTATION_HORIZONTAL
+        self.__orientation = constants.Orientation.HORIZONTAL
         if orientation is not None and type(orientation) is int:
             self.__orientation = orientation
         self._config = None
@@ -2947,7 +2948,7 @@ class ColorPickerDialog(Dialog):
         """
         super().__init__(config=config)
         self.__color_picker = ColorPicker(
-            orientation=constants.ORIENTATION_HORIZONTAL, config=config
+            orientation=constants.Orientation.HORIZONTAL, config=config
         )
         self.__title = title
         if self.__title is None:
