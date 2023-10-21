@@ -140,6 +140,7 @@ class BoardItem(base.PglBaseObject):
         self.type = "item"
         if item_type is not None:
             self.type = item_type
+        self.__position_vector = base.Vector2D()
         self.pos = [None, None, None]
         if (
             pos is not None
@@ -148,6 +149,8 @@ class BoardItem(base.PglBaseObject):
             and pos[1] is not None
         ):
             self.pos = pos
+            self.__position_vector.row = pos[0]
+            self.__position_vector.column = pos[1]
         # DEPRECATED
         # self.model = "*"
         self._particle_emitter = None
@@ -421,6 +424,8 @@ class BoardItem(base.PglBaseObject):
             self.__centroidcc.column = column + self.width / 2
             self.__heading.row = self.__centroidcc.row - pcr
             self.__heading.column = self.__centroidcc.column - pcc
+            self.__position_vector.row = row
+            self.__position_vector.column = column
         if self.particle_emitter is not None:
             self.particle_emitter.row = row
             self.particle_emitter.column = column
@@ -436,7 +441,8 @@ class BoardItem(base.PglBaseObject):
             gravity = Vector2D(9.81, 0)
             next_position = item.position_as_vector() + gravity.unit()
         """
-        return base.Vector2D(self.pos[0], self.pos[1])
+        # return base.Vector2D(self.pos[0], self.pos[1])
+        return self.__position_vector
 
     @property
     def row(self):
