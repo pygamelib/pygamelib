@@ -28,7 +28,7 @@ __docformat__ = "restructuredtext"
    pygamelib.gfx.ui.LineInput
 
 """
-from typing import Union, Optional, Set, List, TYPE_CHECKING
+from typing import Union, Optional, Set, List, Tuple, TYPE_CHECKING
 from pygamelib.assets import graphics
 from pygamelib.gfx import core
 from pygamelib import base, constants
@@ -5389,20 +5389,183 @@ class GridLayout(Layout):
 # NOTE: This is a placeholder for future PR.
 #       WHEN IMPLEMENTED IT NEEDS TO BE TESTED!
 #       The no cover pragma is only for the placeholder
-class FormLayout(GridLayout):  # pragma: no cover
+class FormLayout(Layout):  # pragma: no cover
     def __init__(self, parent: Optional[Widget] = None) -> None:
         super().__init__(parent)
         self.__current_row = -1
+        self.__rows = []
+        self.__min_label_with = 0
+        self.__max_label_with = 0
+        self.__min_widget_width = 0
+        self.__max_widget_width = 0
+        self.__longest_label = 0
 
-    def add_row(self, label: base.Text, widget: Widget) -> int:
-        # self.__current_row += 1
-        # TODO: Add it to the grid
-        pass
+    def add_row(self, label: base.Text, widget: Widget) -> bool:
+        if not isinstance(widget, Widget) or (
+            not isinstance(label, str) and not isinstance(label, base.Text)
+        ):
+            return False
+        if isinstance(label, str):
+            label = base.Text(label)
+        if label.length > self.__longest_label:
+            self.__longest_label = label.length
+        self.__rows.append([label, widget])
+        return True
 
-    def remove_row(self, row: int = None):
+    def insert_row(self, row: int, label: str | base.Text, widget: Widget) -> bool:
+        if not isinstance(widget, Widget) or (
+            not isinstance(label, str) and not isinstance(label, base.Text)
+        ):
+            return False
+        if row >= self.count_rows():
+            return self.add_row(label, widget)
+        if isinstance(label, str):
+            label = base.Text(label)
+        if label.length > self.__longest_label:
+            self.__longest_label = label.length
+        self.__rows = self.__rows[0:row] + [[label, widget]] + self.__rows[row:]
+        return True
+
+    def count_rows(self) -> int:
+        """
+        returns the number of rows in the form layout.
+        """
+        return len(self.__rows)
+
+    def remove_row(self, row: int = None) -> bool:
         # Remove row, if row is None remove the last row.
         # If row is a widget find the widget and remove it
-        pass
+        if row >= self.count_rows():
+            return False
+        self.__rows = self.__rows[0:row] + self.__rows[row + 1 :]
+        return True
+
+    def set_label(self, row: int, label: str | base.Text) -> None:
+        """
+        set the label to the row passed in parameter.
+        """
+        if row < self.count_rows() and (
+            isinstance(label, str) or isinstance(label, base.Text)
+        ):
+            # Text.text already takes care of segregating between str and Text objects.
+            self.__rows[row][0].text = label
+            if self.__rows[row][0].length > self.__longest_label:
+                self.__longest_label = self.__rows[row][0].length
+        # TODO: do we want to raise an exception if type is not correct
+
+    def set_widget(self, row: int, widget: Widget) -> None:
+        """
+        set the widget to the row passed in parameter.
+        """
+        if row < self.count_rows() and isinstance(widget, Widget):
+            self.__rows[row][1] = widget
+        # TODO: do we want to raise an exception if type is not correct
+
+    def take_row(self, row: int) -> Tuple[base.Text, Widget]:
+        """
+        Take a row from the layout and return the label and the widget. All layout's remaining rows are correctly renumbered.
+        """
+        if row >= self.count_rows():
+            return ()
+        (label, widget) = self.__rows[row]
+        self.__rows = self.__rows[0:row] + self.__rows[row + 1 :]
+        return (label, widget)
+
+    def render_to_buffer(
+        self,
+        buffer: "numpy.array",
+        row: int,
+        column: int,
+        buffer_height: int,
+        buffer_width: int,
+    ) -> None:
+        """Render the object from the display buffer to the frame buffer.
+
+        This method is automatically called by :func:`pygamelib.engine.Screen.render`.
+
+        :param buffer: A screen buffer to render the item into.
+        :type buffer: numpy.array
+        :param row: The row to render in.
+        :type row: int
+        :param column: The column to render in.
+        :type column: int
+        :param height: The total height of the display buffer.
+        :type height: int
+        :param width: The total width of the display buffer.
+        :type width: int
+
+        """
+        max_buffer_row = row + buffer_height
+        max_buffer_col = column + buffer_width
+        c_offset = r_offset = 0
+
+        # logging.debug(">>>> FormLayout: START rendering")
+
+        for r in range(0, self.count_rows()):
+            self.notify(
+                self,
+                "FormLayout.render_to_buffer",
+                f"rendering label at {row + r},{column}",
+            )
+            self.__rows[row][0].render_to_buffer(
+                buffer, row + r + self.spacing, column, buffer_height, buffer_width
+            )
+            self.__rows[row][1].render_to_buffer(
+                buffer,
+                row + r + self.spacing,
+                column + self.__longest_label,
+                buffer_height,
+                buffer_width,
+            )
+            # for c in range(0, self.count_columns()):
+            #     try:
+            #         w = self.__grid[(r, c)]
+            #         # Now resize the widget for the column width
+            #         # logging.debug(
+            #         #     f"GridLayout: at {r},{c} set geometry to "
+            #         #     f"{self.__rows_geometry[r]}x{self.__columns_geometry[c]}"
+            #         # )
+            #         w.width = self.__columns_geometry[c]
+            #         w.height = self.__rows_geometry[r]
+            #         # NOTE: When we add scrollable, this will need to be updated.
+            #         # particularly the culling. We'll need to keep culling but also to
+            #         # manage the scroll indicator.
+            #         # Culling will need to happen more intelligently and compute what is
+            #         # actually visible.
+            #         if (r + r_offset >= max_buffer_row) or (
+            #             c + c_offset >= max_buffer_col
+            #         ):
+            #             # Here we cull the widgets that are not visible.
+            #             continue
+            #         # w.render_to_buffer(
+            #         #     buffer,
+            #         #     row + r_offset,
+            #         #     column + c_offset,
+            #         #     buffer_height - r_offset,
+            #         #     buffer_width - c_offset,
+            #         # )
+            #         w.render_to_buffer(
+            #             buffer[
+            #                 row + r_offset : row + r_offset + self.__rows_geometry[r],
+            #                 column
+            #                 + c_offset : column
+            #                 + c_offset
+            #                 + self.__columns_geometry[c],
+            #             ],
+            #             0,
+            #             0,
+            #             self.__rows_geometry[r],
+            #             self.__columns_geometry[c],
+            #         )
+            #         w.store_screen_position(row + r_offset, column + c_offset)
+            #         c_offset += self.__columns_geometry[c] + self.__h_spacing
+            #     except KeyError:
+            #         # If there's nothing in that layout's cell we just skip to next cell
+            #         c_offset += self.__columns_geometry[c] + self.__h_spacing
+            # c_offset = 0
+            # r_offset += self.__rows_geometry[r] + self.__v_spacing
+
+        # logging.debug("FormLayout: DONE rendering <<<<")
 
 
 class Cursor(base.PglBaseObject):
