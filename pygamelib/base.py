@@ -70,7 +70,7 @@ class PglBaseObject(object):
         Like the object class, this class constructor takes no parameter.
         """
         super().__init__()
-        self._observers = []
+        self._observers= []
         self._screen_row = -1
         """The absolute row (or y) coordinate on the screen."""
         self._screen_column = -1
@@ -129,7 +129,7 @@ class PglBaseObject(object):
             return True
         return False
 
-    def notify(self, modifier=None, attribute: str = None, value: Any = None) -> None:
+    def notify(self, modifier=None, attribute: str = '', value: Any = None) -> None:
 
         """
         Notify all the observers that a change occurred.
@@ -374,7 +374,7 @@ class Text(PglBaseObject):
         return ret_data
 
     @classmethod
-    def load(cls, data: dict = None):
+    def load(cls, data: dict = {}):
         """Load data and create a new Text object out of it.
 
         .. versionadded:: 1.3.0
