@@ -129,7 +129,7 @@ class PglBaseObject(object):
             return True
         return False
 
-    def notify(self, modifier=None, attribute: str = '', value: Any = None) -> None:
+    def notify(self, modifier=None, attribute: str = None, value: Any = None) -> None:
 
         """
         Notify all the observers that a change occurred.
@@ -374,7 +374,7 @@ class Text(PglBaseObject):
         return ret_data
 
     @classmethod
-    def load(cls, data: dict = {}):
+    def load(cls, data: dict = None):
         """Load data and create a new Text object out of it.
 
         .. versionadded:: 1.3.0
