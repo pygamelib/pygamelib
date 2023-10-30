@@ -4633,6 +4633,8 @@ class Layout(base.PglBaseObject):
 
     """
 
+    # TODO: Add a remove_widget(w) method
+
     def __init__(self, parent: Optional[Widget] = None) -> None:
         """
         The Layout constructor takes the following parameters.
@@ -4950,6 +4952,8 @@ class BoxLayout(Layout):
             parent_widget.layout.add_widget(child_widget1)
             # That's it!
         """
+        # TODO: Make sure that the widget's size_constraint is overwritten with the
+        #       layout's one.
         if isinstance(w, Widget):
             self.__widgets.append(w)
             w.parent = self
@@ -5334,6 +5338,7 @@ class GridLayout(Layout):
 
         # logging.debug(">>>> GridLayout: START rendering")
 
+        # TODO: We are not culling the rows & columns that are not visible anymore!
         for r in range(0, self.count_rows()):
             for c in range(0, self.count_columns()):
                 try:
@@ -5463,7 +5468,8 @@ class FormLayout(Layout):  # pragma: no cover
 
     def take_row(self, row: int) -> Tuple[base.Text, Widget]:
         """
-        Take a row from the layout and return the label and the widget. All layout's remaining rows are correctly renumbered.
+        Take a row from the layout and return the label and the widget. All layout's
+        remaining rows are correctly renumbered.
         """
         if row >= self.count_rows():
             return ()
