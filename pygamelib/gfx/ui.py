@@ -37,7 +37,7 @@ from pathlib import Path
 
 import time
 
-# import logging
+import logging
 
 if TYPE_CHECKING:  # pragma: no cover
     import numpy
@@ -5505,23 +5505,40 @@ class FormLayout(Layout):  # pragma: no cover
         max_buffer_col = column + buffer_width
         c_offset = r_offset = 0
 
-        # logging.debug(">>>> FormLayout: START rendering")
+        logging.debug(">>>> FormLayout: START rendering")
+        logging.debug(
+            "FormLayout.render_to_buffer: "
+            f"rendering FormLayout at {row},{column} ({self.count_rows()} rows) "
+            f"buffer_height={buffer_height} buffer_width={buffer_width}"
+        )
 
         for r in range(0, self.count_rows()):
-            self.notify(
-                self,
-                "FormLayout.render_to_buffer",
-                f"rendering label at {row + r},{column}",
+            r_offset += self.spacing
+            logging.debug(
+                f"FormLayout.render_to_buffer rendering label at {row + r + r_offset},{column}",
             )
-            self.__rows[row][0].render_to_buffer(
-                buffer, row + r + self.spacing, column, buffer_height, buffer_width
+            logging.debug(f"     r={r} label={self.__rows[r][0]}")
+            self.__rows[r][0].bg_color = self.parent.ui_config.widget_bg_color
+            self.__rows[r][0].render_to_buffer(
+                buffer, row + r + r_offset, column, buffer_height, buffer_width
             )
-            self.__rows[row][1].render_to_buffer(
-                buffer,
-                row + r + self.spacing,
-                column + self.__longest_label,
-                buffer_height,
-                buffer_width,
+            logging.debug(
+                f"FormLayout.render_to_buffer rendering widget at {row + r + r_offset},{column + self.__longest_label + 1}",
+            )
+            self.__rows[r][1].width = buffer_width - self.__longest_label - 1
+            logging.debug(
+                f"FormLayout.render_to_buffer calculated widget width={buffer_width - self.__longest_label - 1} widget.width={self.__rows[r][1].width}",
+            )
+            self.__rows[r][1].render_to_buffer(
+                # TODO: we'll need to add the real row geometry and not just 1
+                buffer[
+                    row + r + r_offset : row + r + r_offset + 1,
+                    column + self.__longest_label + 1 :,
+                ],
+                0,
+                0,
+                1,
+                buffer_width - (self.__longest_label + 1),
             )
             # for c in range(0, self.count_columns()):
             #     try:
@@ -5571,7 +5588,7 @@ class FormLayout(Layout):  # pragma: no cover
             # c_offset = 0
             # r_offset += self.__rows_geometry[r] + self.__v_spacing
 
-        # logging.debug("FormLayout: DONE rendering <<<<")
+        logging.debug("FormLayout: DONE rendering <<<<")
 
 
 class Cursor(base.PglBaseObject):
