@@ -5501,8 +5501,8 @@ class FormLayout(Layout):  # pragma: no cover
         :type width: int
 
         """
-        max_buffer_row = row + buffer_height
-        max_buffer_col = column + buffer_width
+        # max_buffer_row = row + buffer_height
+        # max_buffer_col = column + buffer_width
         c_offset = r_offset = 0
 
         logging.debug(">>>> FormLayout: START rendering")
@@ -5514,32 +5514,45 @@ class FormLayout(Layout):  # pragma: no cover
 
         for r in range(0, self.count_rows()):
             r_offset += self.spacing
+            # TODO: Something is off  here because when I add code this code to prevent
+            #       rendering lines that are off the buffer, it seems to drop line earlier
+            #       that it should. And it seems linked to the position on screen.
+            if row + r + r_offset >= row + buffer_height:
+                break
+            # Squash dot notation (I really hope it doesn't improve perfs anymore)
+            label: str = self.__rows[r][0]
+            widget: Widget = self.__rows[r][1]
             logging.debug(
-                f"FormLayout.render_to_buffer rendering label at {row + r + r_offset},{column}",
+                f"FormLayout.render_to_buffer rendering label at {row + r + r_offset},"
+                f"{column}",
             )
-            logging.debug(f"     r={r} label={self.__rows[r][0]}")
-            self.__rows[r][0].bg_color = self.parent.ui_config.widget_bg_color
-            self.__rows[r][0].render_to_buffer(
+            logging.debug(f"     r={r} label={label}")
+            label.bg_color = self.parent.ui_config.widget_bg_color
+            label.render_to_buffer(
                 buffer, row + r + r_offset, column, buffer_height, buffer_width
             )
             logging.debug(
-                f"FormLayout.render_to_buffer rendering widget at {row + r + r_offset},{column + self.__longest_label + 1}",
+                "FormLayout.render_to_buffer rendering widget at "
+                f"{row + r + r_offset},{column + self.__longest_label + 1}",
             )
-            self.__rows[r][1].width = buffer_width - self.__longest_label - 1
+            widget.width = buffer_width - self.__longest_label - 1
             logging.debug(
-                f"FormLayout.render_to_buffer calculated widget width={buffer_width - self.__longest_label - 1} widget.width={self.__rows[r][1].width}",
+                "FormLayout.render_to_buffer calculated widget width="
+                f"{buffer_width - self.__longest_label - 1} widget.width="
+                f"{widget.width}",
             )
-            self.__rows[r][1].render_to_buffer(
+            widget.render_to_buffer(
                 # TODO: we'll need to add the real row geometry and not just 1
                 buffer[
-                    row + r + r_offset : row + r + r_offset + 1,
+                    row + r + r_offset : row + r + r_offset + widget.height,
                     column + self.__longest_label + 1 :,
                 ],
                 0,
                 0,
-                1,
+                widget.height,
                 buffer_width - (self.__longest_label + 1),
             )
+            r_offset += widget.height
             # for c in range(0, self.count_columns()):
             #     try:
             #         w = self.__grid[(r, c)]
@@ -5553,8 +5566,8 @@ class FormLayout(Layout):  # pragma: no cover
             #         # NOTE: When we add scrollable, this will need to be updated.
             #         # particularly the culling. We'll need to keep culling but also to
             #         # manage the scroll indicator.
-            #         # Culling will need to happen more intelligently and compute what is
-            #         # actually visible.
+            #         # Culling will need to happen more intelligently and compute what
+            #         # is actually visible.
             #         if (r + r_offset >= max_buffer_row) or (
             #             c + c_offset >= max_buffer_col
             #         ):
@@ -5583,7 +5596,8 @@ class FormLayout(Layout):  # pragma: no cover
             #         w.store_screen_position(row + r_offset, column + c_offset)
             #         c_offset += self.__columns_geometry[c] + self.__h_spacing
             #     except KeyError:
-            #         # If there's nothing in that layout's cell we just skip to next cell
+            #         # If there's nothing in that layout's cell we just skip
+            #         # to next cell
             #         c_offset += self.__columns_geometry[c] + self.__h_spacing
             # c_offset = 0
             # r_offset += self.__rows_geometry[r] + self.__v_spacing
