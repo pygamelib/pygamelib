@@ -4018,9 +4018,9 @@ class MenuBar(object):
                 self.__current_index >= 0
                 and self.__entries[self.__current_index % len(self.__entries)].selected
             ):
-                self.__entries[
-                    self.__current_index % len(self.__entries)
-                ].selected = False
+                self.__entries[self.__current_index % len(self.__entries)].selected = (
+                    False
+                )
             self.__current_index = value
             if (
                 self.__current_index >= 0
@@ -4028,9 +4028,9 @@ class MenuBar(object):
                     self.__current_index % len(self.__entries)
                 ].selected
             ):
-                self.__entries[
-                    self.__current_index % len(self.__entries)
-                ].selected = True
+                self.__entries[self.__current_index % len(self.__entries)].selected = (
+                    True
+                )
         else:
             raise base.PglInvalidTypeException(
                 "Menu.current_index = value: value needs to be an int."
@@ -4556,7 +4556,6 @@ class Widget(base.PglBaseObject):
 
     @property
     def focus(self) -> bool:
-
         """
         This property get/set the focus property. It is a boolean.
 
@@ -5437,10 +5436,10 @@ class FormLayout(Layout):  # pragma: no cover
         """
         return len(self.__rows)
 
-    def remove_row(self, row: int = None) -> bool:
+    def remove_row(self, row: Optional[int] = None) -> bool:
         # Remove row, if row is None remove the last row.
         # If row is a widget find the widget and remove it
-        if row >= self.count_rows():
+        if row is None or row >= self.count_rows():
             return False
         self.__rows = self.__rows[0:row] + self.__rows[row + 1 :]
         return True
@@ -5501,48 +5500,58 @@ class FormLayout(Layout):  # pragma: no cover
         :type width: int
 
         """
-        # max_buffer_row = row + buffer_height
-        # max_buffer_col = column + buffer_width
         c_offset = r_offset = 0
 
-        logging.debug(">>>> FormLayout: START rendering")
-        logging.debug(
-            "FormLayout.render_to_buffer: "
-            f"rendering FormLayout at {row},{column} ({self.count_rows()} rows) "
-            f"buffer_height={buffer_height} buffer_width={buffer_width}"
-        )
-
+        # logging.debug(">>>> FormLayout: START rendering")
+        # logging.debug(
+        #     "FormLayout.render_to_buffer: "
+        #     f"rendering FormLayout at {row},{column} ({self.count_rows()} rows) "
+        #     f"buffer_height={buffer_height} buffer_width={buffer_width}"
+        # )
         for r in range(0, self.count_rows()):
             r_offset += self.spacing
-            # TODO: Something is off  here because when I add code this code to prevent
-            #       rendering lines that are off the buffer, it seems to drop line earlier
-            #       that it should. And it seems linked to the position on screen.
+            # Culling rows that are not
             if row + r + r_offset >= row + buffer_height:
+                # logging.debug(f"  FormLayout.render_to_buffer BREAK at row {r}")
                 break
             # Squash dot notation (I really hope it doesn't improve perfs anymore)
-            label: str = self.__rows[r][0]
+            label: base.Text = self.__rows[r][0]
             widget: Widget = self.__rows[r][1]
-            logging.debug(
-                f"FormLayout.render_to_buffer rendering label at {row + r + r_offset},"
-                f"{column}",
-            )
-            logging.debug(f"     r={r} label={label}")
+            # Making sure that the label is the same color as the widget.
             label.bg_color = self.parent.ui_config.widget_bg_color
+            # logging.debug(
+            #     f"  FormLayout.render_to_buffer rendering label at row + r + r_offset: "
+            #     f"{row} + {r} + {r_offset} = {row + r + r_offset},"
+            #     f"{column}",
+            # )
+            # logging.debug(f"     r={r} label={label}")
             label.render_to_buffer(
-                buffer, row + r + r_offset, column, buffer_height, buffer_width
+                buffer[
+                    row + r + r_offset : row + r + r_offset + widget.height,
+                    column : column + self.__longest_label + 1,
+                ],
+                0,
+                0,
+                widget.height,  # Label can use the same height as the widget
+                self.__longest_label + 1,
             )
-            logging.debug(
-                "FormLayout.render_to_buffer rendering widget at "
-                f"{row + r + r_offset},{column + self.__longest_label + 1}",
-            )
+            # logging.debug(
+            #     "  FormLayout.render_to_buffer rendering widget at "
+            #     f"{row + r + r_offset},{column + self.__longest_label + 1}",
+            # )
             widget.width = buffer_width - self.__longest_label - 1
-            logging.debug(
-                "FormLayout.render_to_buffer calculated widget width="
-                f"{buffer_width - self.__longest_label - 1} widget.width="
-                f"{widget.width}",
-            )
+            # logging.debug(
+            #     "  FormLayout.render_to_buffer calculated widget width="
+            #     f"{buffer_width - self.__longest_label - 1} widget.width="
+            #     f"{widget.width}",
+            # )
+            # logging.debug(
+            #     "  FormLayout.render_to_buffer widget is rendered between row: "
+            #     f"{row + r + r_offset} and {row + r + r_offset + widget.height}",
+            # )
             widget.render_to_buffer(
                 # TODO: we'll need to add the real row geometry and not just 1
+                #       => looks done to me
                 buffer[
                     row + r + r_offset : row + r + r_offset + widget.height,
                     column + self.__longest_label + 1 :,
@@ -5553,56 +5562,8 @@ class FormLayout(Layout):  # pragma: no cover
                 buffer_width - (self.__longest_label + 1),
             )
             r_offset += widget.height
-            # for c in range(0, self.count_columns()):
-            #     try:
-            #         w = self.__grid[(r, c)]
-            #         # Now resize the widget for the column width
-            #         # logging.debug(
-            #         #     f"GridLayout: at {r},{c} set geometry to "
-            #         #     f"{self.__rows_geometry[r]}x{self.__columns_geometry[c]}"
-            #         # )
-            #         w.width = self.__columns_geometry[c]
-            #         w.height = self.__rows_geometry[r]
-            #         # NOTE: When we add scrollable, this will need to be updated.
-            #         # particularly the culling. We'll need to keep culling but also to
-            #         # manage the scroll indicator.
-            #         # Culling will need to happen more intelligently and compute what
-            #         # is actually visible.
-            #         if (r + r_offset >= max_buffer_row) or (
-            #             c + c_offset >= max_buffer_col
-            #         ):
-            #             # Here we cull the widgets that are not visible.
-            #             continue
-            #         # w.render_to_buffer(
-            #         #     buffer,
-            #         #     row + r_offset,
-            #         #     column + c_offset,
-            #         #     buffer_height - r_offset,
-            #         #     buffer_width - c_offset,
-            #         # )
-            #         w.render_to_buffer(
-            #             buffer[
-            #                 row + r_offset : row + r_offset + self.__rows_geometry[r],
-            #                 column
-            #                 + c_offset : column
-            #                 + c_offset
-            #                 + self.__columns_geometry[c],
-            #             ],
-            #             0,
-            #             0,
-            #             self.__rows_geometry[r],
-            #             self.__columns_geometry[c],
-            #         )
-            #         w.store_screen_position(row + r_offset, column + c_offset)
-            #         c_offset += self.__columns_geometry[c] + self.__h_spacing
-            #     except KeyError:
-            #         # If there's nothing in that layout's cell we just skip
-            #         # to next cell
-            #         c_offset += self.__columns_geometry[c] + self.__h_spacing
-            # c_offset = 0
-            # r_offset += self.__rows_geometry[r] + self.__v_spacing
 
-        logging.debug("FormLayout: DONE rendering <<<<")
+        # logging.debug("FormLayout: DONE rendering <<<<")
 
 
 class Cursor(base.PglBaseObject):

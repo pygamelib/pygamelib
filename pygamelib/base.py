@@ -638,6 +638,7 @@ class Text(PglBaseObject):
                 idx = 0
                 # FIXME: this can be optimized by switching the for to a
                 # FIXME: range(0, min(column + idx, buffer_width)) <- not idx but len()
+
                 for char in line:
                     if column + idx >= buffer_width:
                         break
@@ -1245,7 +1246,7 @@ class Vector2D(object):
                 print('We are not moving... at all...')
         """
         return round(
-            math.sqrt(self.row ** 2 + self.column ** 2), self.rounding_precision
+            math.sqrt(self.row**2 + self.column**2), self.rounding_precision
         )
 
     def unit(self):
