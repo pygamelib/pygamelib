@@ -28,7 +28,7 @@ __docformat__ = "restructuredtext"
    pygamelib.gfx.ui.LineInput
 
 """
-from typing import Union, Optional, Set, List, Tuple, TYPE_CHECKING
+from typing import Union, Optional, Any, Set, List, Tuple, TYPE_CHECKING
 from pygamelib.assets import graphics
 from pygamelib.gfx import core
 from pygamelib import base, constants
@@ -37,7 +37,7 @@ from pathlib import Path
 
 import time
 
-import logging
+# import logging
 
 if TYPE_CHECKING:  # pragma: no cover
     import numpy
@@ -133,7 +133,7 @@ class UiConfig(object):
         fg_color_not_selected: core.Color = core.Color(255, 255, 255),
         bg_color_menu_not_selected: core.Color = core.Color(128, 128, 128),
         border_fg_color: core.Color = core.Color(255, 255, 255),
-        border_bg_color: core.Color = None,
+        border_bg_color: Optional[core.Color] = None,
         borderless_dialog: bool = True,
         widget_bg_color: core.Color = core.Color(0, 128, 128),
         input_fg_color: core.Color = core.Color(255, 255, 255),
@@ -157,12 +157,12 @@ class UiConfig(object):
         self.bg_color: core.Color = bg_color
         self.fg_color_inactive: core.Color = fg_color_inactive
         self.bg_color_selected: core.Color = bg_color_selected
-        self.bg_color_not_selected: core.Color = bg_color_not_selected
+        self.bg_color_not_selected: Optional[core.Color] = bg_color_not_selected
         self.fg_color_selected: core.Color = fg_color_selected
         self.fg_color_not_selected: core.Color = fg_color_not_selected
         self.bg_color_menu_not_selected: core.Color = bg_color_menu_not_selected
         self.border_fg_color: core.Color = border_fg_color
-        self.border_bg_color: core.Color = border_bg_color
+        self.border_bg_color: Optional[core.Color] = border_bg_color
         self.borderless_dialog = borderless_dialog
         self.widget_bg_color: core.Color = widget_bg_color
         self.input_fg_color: core.Color = input_fg_color
@@ -270,10 +270,10 @@ class Box(object):
         self,
         width: int,
         height: int,
-        title: str = "",
-        config: UiConfig = None,
+        title: Union[str, base.Text] = "",
+        config: Optional[UiConfig] = None,
         fill: bool = False,
-        filling_sprixel: core.Sprixel = None,
+        filling_sprixel: Optional[core.Sprixel] = None,
         title_alignment: constants.Alignment = constants.Alignment.CENTER,
     ):
         """
@@ -285,7 +285,8 @@ class Box(object):
         :type height: int
         :param title: The title of the box (encased in the top border).
         :type title: str | :class:`~base.Text`
-        :param config: The configuration object.
+        :param config: The configuration object. If it is None, this class will attempt
+            to acquire a UiConfig instance through :py:meth:`UiConfig.instance()`.
         :type config: :class:`UiConfig`
         :param fill: A tag to tell the box object to fill its inside (or not).
         :type fill: bool
@@ -312,6 +313,8 @@ class Box(object):
         self.__title = title
         self.__fill = fill
         self.__filling_sprixel = filling_sprixel
+        if config is None:
+            config = UiConfig.instance()
         self.__config = config
         self._cache = {}
         self.__title_alignment = title_alignment
@@ -511,12 +514,12 @@ class ProgressBar(object):
 
     def __init__(
         self,
-        value=0,
-        maximum=100,
-        width=20,
+        value: int = 0,
+        maximum: int = 100,
+        width: int = 20,
         progress_marker=graphics.GeometricShapes.BLACK_RECTANGLE,
-        empty_marker=" ",
-        config=None,
+        empty_marker: Union[str, core.Sprixel] = " ",
+        config: Optional[UiConfig] = None,
     ):
         """
         :param value: The initial value parameter. It represents the progression.
@@ -533,7 +536,8 @@ class ProgressBar(object):
            marker when the bar should be empty (when the value is too low to fill the
            bar for example). Please see below.
         :type empty_marker: :class:`pygamelib.gfx.core.Sprixel`
-        :param config: The configuration object.
+        :param config: The configuration object. If None, this class will try to
+            acquire a UiConfig object through :py:meth:`UiConfig.instance()`.
         :type config: :class:`UiConfig`
 
         Here is a representation of were the progress and empty markers are used.
@@ -565,6 +569,8 @@ class ProgressBar(object):
         self.__width = width
         self.__progress_marker = progress_marker
         self.__empty_marker = empty_marker
+        if config is None:
+            config = UiConfig.instance()
         self.__config = config
         self._cache = {}
         self._build_cache()
@@ -971,13 +977,13 @@ class MessageDialog(Dialog):
 
     def __init__(
         self,
-        data: list = None,
+        data: Optional[list] = None,
         width: int = 20,
-        height: int = None,
+        height: Optional[int] = None,
         adaptive_height: bool = True,
-        alignment: constants.Alignment = None,
-        title: str = None,
-        config: UiConfig = None,
+        alignment: Optional[constants.Alignment] = None,
+        title: Optional[str] = None,
+        config: Optional[UiConfig] = None,
     ) -> None:
         """
         :param data: A list of data to display inside the MessageDialog. Elements in
@@ -1027,7 +1033,7 @@ class MessageDialog(Dialog):
             alignment = constants.Alignment.LEFT
         if adaptive_height is False and height is None:
             adaptive_height = True
-        self.__cache = {"data": []}
+        self.__cache = {"data": [], "border": None}
         self.__width = width
         self.__height = height
         self.__adaptive_height = adaptive_height
@@ -1045,7 +1051,7 @@ class MessageDialog(Dialog):
             raise base.PglInvalidTypeException("MessageDialog: title must be a str.")
 
     def _build_cache(self) -> None:
-        self.__cache = {"data": []}
+        self.__cache = {"data": [], "border": None}
         height = self.__height
         if height is None:
             height = len(self.__data)
@@ -1076,7 +1082,7 @@ class MessageDialog(Dialog):
                 h += 2
             return len(self.__data) + h
         else:
-            return self.__height
+            return self.__height  # type: ignore
 
     @height.setter
     def height(self, value: int):
@@ -1093,7 +1099,7 @@ class MessageDialog(Dialog):
         """
         Get and set the title of the dialog, it has to be a str.
         """
-        return self.__title
+        return self.__title  # type: ignore
 
     @title.setter
     def title(self, value) -> None:
@@ -1221,7 +1227,7 @@ class MessageDialog(Dialog):
                     buffer_width,
                 )
 
-    def show(self) -> None:  # pragma: no cover
+    def show(self) -> Any:  # pragma: no cover
         """
         Show the dialog and execute the event loop.
         Until this method returns, all keyboards event are processed by the local event
@@ -1275,11 +1281,13 @@ class LineInputDialog(Dialog):
 
     def __init__(
         self,
-        title=None,
-        label="Input a value:",
-        default="",
-        filter=constants.InputValidator.PRINTABLE_FILTER,
-        config=None,
+        title: Union[str, base.Text, None] = None,
+        label: Union[str, base.Text, None] = "Input a value:",
+        default: Union[str, base.Text, None] = "",
+        filter: Union[
+            constants.InputValidator, None
+        ] = constants.InputValidator.PRINTABLE_FILTER,
+        config: Union[UiConfig, None] = None,
     ) -> None:
         """
         :param title: The short title of the dialog. Only used when the dialog is not
@@ -1338,7 +1346,7 @@ class LineInputDialog(Dialog):
         """
         Get and set the label of the dialog, it has to be a str or :class:`base.Text`.
         """
-        return self.__label
+        return self.__label  # type: ignore
 
     @label.setter
     def label(self, value) -> None:
@@ -1357,7 +1365,7 @@ class LineInputDialog(Dialog):
         """
         Get and set the title of the dialog, it has to be a str.
         """
-        return self.__title
+        return self.__title  # type: ignore
 
     @title.setter
     def title(self, value) -> None:
@@ -1651,7 +1659,7 @@ class MultiLineInputDialog(Dialog):
             )
             t = base.Text(
                 f"> {field['user_input']}"
-                f"{' '*(max_text_width-len(field['user_input'])-2)}"
+                f"{' ' * (max_text_width - len(field['user_input']) - 2)}"
             )
             if fidx == self.__current_field:
                 t.fg_color = core.Color(0, 255, 0)
@@ -3374,10 +3382,10 @@ class Menu(object):
 
     def __init__(
         self,
-        title: base.Text = None,
-        entries: list = None,
-        padding: int = 1,
-        config: UiConfig = None,
+        title: Union[base.Text, None] = None,
+        entries: Union[list, None] = None,
+        padding: Union[int, None] = 1,
+        config: Union[UiConfig, None] = None,
     ) -> None:
         """
         The constructor takes the following parameters.
@@ -3872,7 +3880,10 @@ class MenuBar(object):
     """
 
     def __init__(
-        self, entries: list = None, spacing: int = 2, config: UiConfig = None
+        self,
+        entries: Union[list, None] = None,
+        spacing: int = 2,
+        config: Union[UiConfig, None] = None,
     ) -> None:
         """
         The constructor takes the following parameters.
@@ -4258,9 +4269,9 @@ class Widget(base.PglBaseObject):
         minimum_height: int = 0,
         maximum_width: int = 20,
         maximum_height: int = 10,
-        layout: Optional["Layout"] = None,
-        bg_color: Optional[core.Color] = None,
-        config: Optional[UiConfig] = None,
+        layout: Union["Layout", None] = None,
+        bg_color: Union[core.Color, None] = None,
+        config: Union[UiConfig, None] = None,
     ) -> None:
         """
         :param width: The width of the widget.
@@ -5416,7 +5427,9 @@ class FormLayout(Layout):  # pragma: no cover
         self.__rows.append([label, widget])
         return True
 
-    def insert_row(self, row: int, label: str | base.Text, widget: Widget) -> bool:
+    def insert_row(
+        self, row: int, label: Union[str, base.Text], widget: Widget
+    ) -> bool:
         if not isinstance(widget, Widget) or (
             not isinstance(label, str) and not isinstance(label, base.Text)
         ):
@@ -5444,7 +5457,7 @@ class FormLayout(Layout):  # pragma: no cover
         self.__rows = self.__rows[0:row] + self.__rows[row + 1 :]
         return True
 
-    def set_label(self, row: int, label: str | base.Text) -> None:
+    def set_label(self, row: int, label: Union[str, base.Text]) -> None:
         """
         set the label to the row passed in parameter.
         """
@@ -5500,31 +5513,17 @@ class FormLayout(Layout):  # pragma: no cover
         :type width: int
 
         """
-        c_offset = r_offset = 0
-
-        # logging.debug(">>>> FormLayout: START rendering")
-        # logging.debug(
-        #     "FormLayout.render_to_buffer: "
-        #     f"rendering FormLayout at {row},{column} ({self.count_rows()} rows) "
-        #     f"buffer_height={buffer_height} buffer_width={buffer_width}"
-        # )
+        r_offset = 0
         for r in range(0, self.count_rows()):
             r_offset += self.spacing
             # Culling rows that are not
             if row + r + r_offset >= row + buffer_height:
-                # logging.debug(f"  FormLayout.render_to_buffer BREAK at row {r}")
                 break
             # Squash dot notation (I really hope it doesn't improve perfs anymore)
             label: base.Text = self.__rows[r][0]
             widget: Widget = self.__rows[r][1]
             # Making sure that the label is the same color as the widget.
             label.bg_color = self.parent.ui_config.widget_bg_color
-            # logging.debug(
-            #     f"  FormLayout.render_to_buffer rendering label at row + r + r_offset: "
-            #     f"{row} + {r} + {r_offset} = {row + r + r_offset},"
-            #     f"{column}",
-            # )
-            # logging.debug(f"     r={r} label={label}")
             label.render_to_buffer(
                 buffer[
                     row + r + r_offset : row + r + r_offset + widget.height,
@@ -5535,20 +5534,7 @@ class FormLayout(Layout):  # pragma: no cover
                 widget.height,  # Label can use the same height as the widget
                 self.__longest_label + 1,
             )
-            # logging.debug(
-            #     "  FormLayout.render_to_buffer rendering widget at "
-            #     f"{row + r + r_offset},{column + self.__longest_label + 1}",
-            # )
             widget.width = buffer_width - self.__longest_label - 1
-            # logging.debug(
-            #     "  FormLayout.render_to_buffer calculated widget width="
-            #     f"{buffer_width - self.__longest_label - 1} widget.width="
-            #     f"{widget.width}",
-            # )
-            # logging.debug(
-            #     "  FormLayout.render_to_buffer widget is rendered between row: "
-            #     f"{row + r + r_offset} and {row + r + r_offset + widget.height}",
-            # )
             widget.render_to_buffer(
                 # TODO: we'll need to add the real row geometry and not just 1
                 #       => looks done to me
@@ -5562,8 +5548,6 @@ class FormLayout(Layout):  # pragma: no cover
                 buffer_width - (self.__longest_label + 1),
             )
             r_offset += widget.height
-
-        # logging.debug("FormLayout: DONE rendering <<<<")
 
 
 class Cursor(base.PglBaseObject):
