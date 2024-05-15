@@ -141,9 +141,11 @@ class UiConfig(object):
     ):
         super().__init__()
         if game is None:
-            raise base.PglInvalidTypeException(
-                "UiConfig: the 'game' parameter cannot be None."
-            )
+            exec("from pygamelib.engine import Game")
+            game = eval("Game.instance()")
+            # raise base.PglInvalidTypeException(
+            #     "UiConfig: the 'game' parameter cannot be None."
+            # )
         self.game = game
         self.box_vertical_border = box_vertical_border
         self.box_horizontal_border = box_horizontal_border
