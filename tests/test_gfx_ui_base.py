@@ -24,8 +24,9 @@ class TestBase(unittest.TestCase):
         self.game.screen = engine.Screen(50, 50)
 
     def test_uiconfig(self):
-        with self.assertRaises(base.PglInvalidTypeException):
-            ui.UiConfig()
+        conf_init = ui.UiConfig()
+        self.assertIsInstance(conf_init, ui.UiConfig)
+        self.assertIsInstance(conf_init.game, engine.Game)
         conf = ui.UiConfig.instance(game=self.game)
         self.assertIsInstance(conf, ui.UiConfig)
 
@@ -46,6 +47,10 @@ class TestBase(unittest.TestCase):
             d.show()
 
     def test_box(self):
+        b = ui.Box(
+            20, 10, "test box", None, True, core.Sprixel(" "), constants.ALIGN_LEFT
+        )
+        self.assertIsInstance(b.config, ui.UiConfig)
         conf = ui.UiConfig.instance(game=self.game)
         conf.borderless_dialog = False
         b = ui.Box(
