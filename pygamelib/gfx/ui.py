@@ -1793,7 +1793,7 @@ class FileDialog(Dialog):
         filter: str = "*",
         config: UiConfig = None,
     ) -> None:
-        """
+        r"""
 
         :param path: The path to start in. This path is made absolute by the
            constructor.
@@ -4698,7 +4698,9 @@ class Layout(base.PglBaseObject):
         This property is purely virtual and needs to be implemented in the inheriting
         class.
 
-        It must return the total width of the Layout.
+        It must return the total width of the Layout. This means the total width that
+        the layout would take in an infinite amount of space available on screen. Its
+        real width is constrained by the widget that is hosting the layout.
 
         """
         raise NotImplementedError(
@@ -4714,7 +4716,9 @@ class Layout(base.PglBaseObject):
         This property is purely virtual and needs to be implemented in the inheriting
         class.
 
-        It must return the total height of the Layout.
+        It must return the total height of the Layout. This means the total height that
+        the layout would take in an infinite amount of space available on screen. Its
+        real height is constrained by the widget that is hosting the layout.
 
         """
         raise NotImplementedError(
@@ -5401,10 +5405,7 @@ class GridLayout(Layout):
         # logging.debug("GridLayout: DONE rendering <<<<")
 
 
-# NOTE: This is a placeholder for future PR.
-#       WHEN IMPLEMENTED IT NEEDS TO BE TESTED!
-#       The no cover pragma is only for the placeholder
-class FormLayout(Layout):  # pragma: no cover
+class FormLayout(Layout):
     def __init__(self, parent: Optional[Widget] = None) -> None:
         super().__init__(parent)
         self.__current_row = -1
@@ -5414,22 +5415,47 @@ class FormLayout(Layout):  # pragma: no cover
         self.__min_widget_width = 0
         self.__max_widget_width = 0
         self.__longest_label = 0
+        self.__longest_widget = 0
+        self.__tallest_widget = 0
+
+    def __build_size_cache(self, label: base.Text, widget: Widget) -> None:
+        # Update the longest dimensions of widgets and labels.
+        if label.length > self.__longest_label:
+            self.__longest_label = label.length
+        if widget.height > self.__tallest_widget:
+            self.__tallest_widget = widget.height
+        if widget.width > self.__longest_widget:
+            self.__longest_widget = widget.width
+
+    def __adjust_size_cache(self):
+        # Completely rebuild the size cache (usually after a row is removed)
+        self.__longest_label = 0
+        self.__longest_widget = 0
+        self.__tallest_widget = 0
+        for label, widget in self.__rows:
+            self.__build_size_cache(label, widget)
 
     def add_row(self, label: base.Text, widget: Widget) -> bool:
+        r"""
+        Adds a row to the layout with the given label and widget.
+        """
         if not isinstance(widget, Widget) or (
             not isinstance(label, str) and not isinstance(label, base.Text)
         ):
             return False
         if isinstance(label, str):
             label = base.Text(label)
-        if label.length > self.__longest_label:
-            self.__longest_label = label.length
+        self.__build_size_cache(label, widget)
         self.__rows.append([label, widget])
         return True
 
     def insert_row(
         self, row: int, label: Union[str, base.Text], widget: Widget
     ) -> bool:
+        r"""
+        Inserts a row at the specified position in the layout with the given label and
+        widget.
+        """
         if not isinstance(widget, Widget) or (
             not isinstance(label, str) and not isinstance(label, base.Text)
         ):
@@ -5438,8 +5464,7 @@ class FormLayout(Layout):  # pragma: no cover
             return self.add_row(label, widget)
         if isinstance(label, str):
             label = base.Text(label)
-        if label.length > self.__longest_label:
-            self.__longest_label = label.length
+        self.__build_size_cache(label, widget)
         self.__rows = self.__rows[0:row] + [[label, widget]] + self.__rows[row:]
         return True
 
@@ -5449,12 +5474,36 @@ class FormLayout(Layout):  # pragma: no cover
         """
         return len(self.__rows)
 
+    def count(self) -> int:
+        r"""
+        Returns the number of widgets in the form layout. Since there is exactly one
+        widget per row, this method is equivalent to :py:meth:`count_rows`.
+        """
+        return self.count_rows()
+
+    def widgets(self) -> List[Widget]:
+        r"""
+        :return: A list of widgets
+        :rtype: List[Widget]
+
+        Returns a list of widgets that are contained in the FormLayout.
+        """
+        return [w for (l, w) in self.__rows]
+
     def remove_row(self, row: Optional[int] = None) -> bool:
+        r"""
+        Removes the specified row from the layout. If no row is specified, removes the
+        last row.
+        """
         # Remove row, if row is None remove the last row.
-        # If row is a widget find the widget and remove it
-        if row is None or row >= self.count_rows():
+        # If row is a widget find the widget and remove it => Nope that's super counter
+        # intuitive
+        if row is None:
+            row = len(self.__rows) - 1
+        if row >= self.count_rows():
             return False
         self.__rows = self.__rows[0:row] + self.__rows[row + 1 :]
+        self.__adjust_size_cache()
         return True
 
     def set_label(self, row: int, label: Union[str, base.Text]) -> None:
@@ -5476,17 +5525,37 @@ class FormLayout(Layout):  # pragma: no cover
         """
         if row < self.count_rows() and isinstance(widget, Widget):
             self.__rows[row][1] = widget
+            if widget.height > self.__tallest_widget:
+                self.__tallest_widget = widget.height
+            if widget.width > self.__longest_widget:
+                self.__longest_widget = widget.width
         # TODO: do we want to raise an exception if type is not correct
+
+    def get_row(self, row: int) -> Tuple[base.Text, Widget]:
+        r"""
+        Return the required row as a tuple of a label and a widget.
+        If the specified row does not exist either because row is not an int or the int
+        is bigger or smaller than the number or rows, the last row is returned.
+
+        :param row: The row number to get.
+        :type row: int
+        """
+        if not isinstance(row, int) or row < 0 or row >= len(self.__rows):
+            row = len(self.__rows) - 1
+        return (self.__rows[row][0], self.__rows[row][1])
 
     def take_row(self, row: int) -> Tuple[base.Text, Widget]:
         """
         Take a row from the layout and return the label and the widget. All layout's
         remaining rows are correctly renumbered.
+        If the specified row does not exist either because row is not an int or the int
+        is bigger or smaller than the number or rows, the last row is returned.
         """
-        if row >= self.count_rows():
-            return ()
+        if not isinstance(row, int) or row < 0 or row >= len(self.__rows):
+            row = len(self.__rows) - 1
         (label, widget) = self.__rows[row]
         self.__rows = self.__rows[0:row] + self.__rows[row + 1 :]
+        self.__adjust_size_cache()
         return (label, widget)
 
     def render_to_buffer(
@@ -5523,7 +5592,8 @@ class FormLayout(Layout):  # pragma: no cover
             label: base.Text = self.__rows[r][0]
             widget: Widget = self.__rows[r][1]
             # Making sure that the label is the same color as the widget.
-            label.bg_color = self.parent.ui_config.widget_bg_color
+            if isinstance(self.parent, Widget):
+                label.bg_color = self.parent.ui_config.widget_bg_color
             label.render_to_buffer(
                 buffer[
                     row + r + r_offset : row + r + r_offset + widget.height,
