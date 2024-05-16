@@ -3,15 +3,13 @@ jobs:
   build:
     working_directory: ~/pygamelib
     docker:
-      # - image: circleci/python:3.9
-      - image: cimg/python:3.9
+      - image: circleci/python:3.9
         environment:
           PIPENV_VENV_IN_PROJECT: true
     steps:
       - checkout
       - run: sudo chown -R circleci:circleci /usr/local/bin
-      - run: python -m site
-      - run: sudo chown -R circleci:circleci `python -m site --user-site`
+      - run: sudo chown -R circleci:circleci /usr/local/lib/python3.9/site-packages
       - run: sudo apt -y install curl bash
       - restore_cache:
           key: python39-{{ .Branch }}-{{ checksum "Pipfile.lock" }}
