@@ -10,6 +10,7 @@ jobs:
     steps:
       - checkout
       - run: sudo chown -R circleci:circleci /usr/local/bin
+      - run: python -m site
       - run: sudo chown -R circleci:circleci `python -m site --user-site`
       - run: sudo apt -y install curl bash
       - restore_cache:
