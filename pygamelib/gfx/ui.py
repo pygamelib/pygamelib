@@ -209,9 +209,11 @@ class Dialog(object):
         :type config: :class:`UiConfig`.
         """
         super().__init__()
-        if config is None or not isinstance(config, UiConfig):
+        if config is None:
+            config = UiConfig.instance()
+        if not isinstance(config, UiConfig):
             raise base.PglInvalidTypeException(
-                "The config parameter cannot be None and needs to be a UiConfig object."
+                "The config parameter needs to be a UiConfig object."
             )
         setattr(self, "_config", config)
         setattr(self, "_user_input", "")
@@ -2745,7 +2747,7 @@ class ColorPicker(object):
         """
         super().__init__()
         self.__orientation = constants.Orientation.HORIZONTAL
-        if orientation is not None and type(orientation) is int:
+        if orientation is not None and isinstance(orientation, constants.Orientation):
             self.__orientation = orientation
         self._config = None
         if isinstance(config, UiConfig):
