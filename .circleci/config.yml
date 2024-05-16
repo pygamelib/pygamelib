@@ -3,7 +3,8 @@ jobs:
   build:
     working_directory: ~/pygamelib
     docker:
-      - image: circleci/python:3.9
+      # - image: circleci/python:3.9
+      - image: cimg/python:3.9
         environment:
           PIPENV_VENV_IN_PROJECT: true
     steps:
