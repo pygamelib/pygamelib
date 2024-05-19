@@ -192,6 +192,50 @@ class TestFormLayout(unittest.TestCase):
         self.assertEqual(l.text, "Test 3")
         self.assertEqual(w, widget)
 
+    def test_layout_geometry(self):
+        layout = FormLayout()
+        layout.spacing = 0
+        widget = Widget(20, 10)
+        widget2 = Widget(20, 20)
+        label1 = Text("Test 1")
+        label2 = Text("Test 2")
+        self.assertTrue(layout.add_row(label1, widget))
+        self.assertTrue(layout.add_row(label2, widget2))
+        self.assertEqual(layout.width, widget.width + label1.length)
+        self.assertEqual(layout.height, widget.height + widget2.height)
+        layout.spacing = 1
+        self.assertEqual(layout.height, widget.height + widget2.height + layout.spacing)
+        layout.spacing = 5
+        self.assertEqual(layout.height, widget.height + widget2.height + layout.spacing)
+        self.assertTrue(layout.add_row(label1, widget))
+        layout.spacing = 1
+        self.assertEqual(
+            layout.height, widget.height * 2 + widget2.height + layout.spacing * 2
+        )
+
+    def test_add_widget(self):
+        layout = FormLayout()
+        widget = Widget()
+        widget2 = Widget()
+        self.assertTrue(layout.add_row(Text("Test 1"), widget))
+        self.assertTrue(layout.add_row(Text("Test 2"), widget))
+        self.assertTrue(layout.add_row(Text("Test 3"), widget))
+        self.assertTrue(layout.add_row(Text("Test 4"), widget))
+        self.assertTrue(layout.add_widget(widget2))
+        self.assertEqual(layout.get_row(layout.count() - 1)[1], widget2)
+
+        self.assertFalse(layout.add_widget("Bork"))
+
+    def test_row_wrapping(self):
+        layout = FormLayout()
+        widget1 = Widget(20, 10)
+        widget2 = Widget(20, 20)
+        layout.add_row(Text("Test 1"), widget1)
+        layout.add_row(Text("Test 2"), widget2)
+        self.assertFalse(layout.wrap_rows)
+        layout.wrap_rows = True
+        self.assertTrue(layout.wrap_rows)
+
     # test the rendering loop
     def test_render_loop(self):
         layout = FormLayout(parent=Widget(30, 30))
@@ -204,12 +248,32 @@ class TestFormLayout(unittest.TestCase):
             layout.render_to_buffer(self.game.screen.buffer, 0, 0, 30, 30)
         )
 
-        # self.assertEqual(widget1.screen_row, 0)
-        # self.assertEqual(widget1.screen_column, layout.get_row(0)[0].length)
-        # self.assertEqual(widget2.screen_row, 10)
-        # self.assertEqual(widget2.screen_column, layout.get_row(0)[0].length)
-        # self.assertEqual(layout.width, 20)
-        # self.assertEqual(layout.height, 30)
+        self.assertEqual(widget1.screen_column, widget2.screen_column)
+        self.assertEqual(widget1.screen_row, 0)
+        self.assertEqual(widget1.screen_column, layout.get_row(0)[0].length + 1)
+        self.assertEqual(widget2.screen_row, 11)
+        self.assertEqual(widget2.screen_column, layout.get_row(0)[0].length + 1)
+        self.assertEqual(layout.width, 26)
+        self.assertEqual(layout.height, 30)
+
+        # Test widget culling by giving a smaller area to render into
+        self.assertIsNone(
+            layout.render_to_buffer(self.game.screen.buffer, 0, 0, 10, 10)
+        )
+
+        # Now test everything again with row wrapping
+        layout.wrap_rows = True
+        self.assertIsNone(
+            layout.render_to_buffer(self.game.screen.buffer, 0, 0, 30, 30)
+        )
+
+        self.assertEqual(widget1.screen_column, widget2.screen_column)
+        self.assertEqual(widget1.screen_row, 1)
+        self.assertEqual(widget1.screen_column, 0)
+        self.assertEqual(widget2.screen_row, 13)
+        self.assertEqual(widget2.screen_column, 0)
+        self.assertEqual(layout.width, 20)
+        self.assertEqual(layout.height, 30)
 
         # Test widget culling by giving a smaller area to render into
         self.assertIsNone(

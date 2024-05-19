@@ -5410,17 +5410,15 @@ class GridLayout(Layout):
 
 
 class FormLayout(Layout):
-    def __init__(self, parent: Optional[Widget] = None) -> None:
+    def __init__(
+        self, parent: Optional[Widget] = None, wrap_rows: bool = False
+    ) -> None:
         super().__init__(parent)
-        self.__current_row = -1
         self.__rows = []
-        self.__min_label_with = 0
-        self.__max_label_with = 0
-        self.__min_widget_width = 0
-        self.__max_widget_width = 0
         self.__longest_label = 0
         self.__longest_widget = 0
         self.__tallest_widget = 0
+        self.__wrap_rows = wrap_rows
 
     def __build_size_cache(self, label: base.Text, widget: Widget) -> None:
         # Update the longest dimensions of widgets and labels.
@@ -5439,9 +5437,74 @@ class FormLayout(Layout):
         for label, widget in self.__rows:
             self.__build_size_cache(label, widget)
 
-    def add_row(self, label: base.Text, widget: Widget) -> bool:
+    @property
+    def wrap_rows(self) -> bool:
+        """
+        A property to control row wrapping. If sets to True, the labels will be rendered
+        on one row and the widget on the next.
+        Otherwise, the label and the widget will be rendered on the same row
+        """
+        return self.__wrap_rows
+
+    @wrap_rows.setter
+    def wrap_rows(self, should_wrap: bool) -> None:
+        if isinstance(should_wrap, bool):
+            self.__wrap_rows = should_wrap
+
+    @property
+    def width(self) -> int:
+        """
+        Get the layout's width. The FormLayout uses spacing only for vertical spacing.
+        Therefor, it is not included in the width of the layout.
+
+        Returns an int.
+
+        This is a read-only property.
+        """
+        if self.wrap_rows:
+            return max(self.__longest_label, self.__longest_widget)
+        return self.__longest_label + self.__longest_widget
+
+    @property
+    def height(self) -> int:
+        """
+        Get the layout's height (including spacing).
+
+        Returns an int.
+
+        This is a read-only property.
+        """
+        tmp_height = 0
+        for row in self.__rows:
+            tmp_height += row[1].height + self.spacing
+        tmp_height -= self.spacing
+        return tmp_height
+
+    def add_widget(self, w: Widget) -> bool:
+        """
+        Add a widget to the layout, this method is an alias to:
+        `form_layout.add_row(base.Text(""), w)`
+
+        It will add a row with an empty label and the given widget.
+
+        :param w: The widget to add.
+        :type w: :class:`Widget`
+        :return: A boolean, True is the widget was added, False otherwise.
+        :rtype: bool
+
+        """
+        return self.add_row(base.Text(""), w)
+
+    def add_row(self, label: Union[str, base.Text], widget: Widget) -> bool:
         r"""
         Adds a row to the layout with the given label and widget.
+
+        :param label: The label of the row to add.
+        :type label: :class:`~base.Text` | str
+        :param widget: The widget to add.
+        :type widget: :class:`Widget`
+        :return: A boolean, True is the row was added, False otherwise.
+        :rtype: bool
         """
         if not isinstance(widget, Widget) or (
             not isinstance(label, str) and not isinstance(label, base.Text)
@@ -5459,6 +5522,15 @@ class FormLayout(Layout):
         r"""
         Inserts a row at the specified position in the layout with the given label and
         widget.
+
+        :param row: The index at which the row should be inserted.
+        :type row: int
+        :param label: The label of the row to add.
+        :type label: :class:`~base.Text` | str
+        :param widget: The widget to add.
+        :type widget: :class:`Widget`
+        :return: A boolean, True is the row was added, False otherwise.
+        :rtype: bool
         """
         if not isinstance(widget, Widget) or (
             not isinstance(label, str) and not isinstance(label, base.Text)
@@ -5587,41 +5659,88 @@ class FormLayout(Layout):
 
         """
         r_offset = 0
-        for r in range(0, self.count_rows()):
-            r_offset += self.spacing
-            # Culling rows that are not
-            if row + r + r_offset >= row + buffer_height:
-                break
-            # Squash dot notation (I really hope it doesn't improve perfs anymore)
-            label: base.Text = self.__rows[r][0]
-            widget: Widget = self.__rows[r][1]
-            # Making sure that the label is the same color as the widget.
-            if isinstance(self.parent, Widget):
-                label.bg_color = self.parent.ui_config.widget_bg_color
-            label.render_to_buffer(
-                buffer[
-                    row + r + r_offset : row + r + r_offset + widget.height,
-                    column : column + self.__longest_label + 1,
-                ],
-                0,
-                0,
-                widget.height,  # Label can use the same height as the widget
-                self.__longest_label + 1,
-            )
-            widget.width = buffer_width - self.__longest_label - 1
-            widget.render_to_buffer(
-                # TODO: we'll need to add the real row geometry and not just 1
-                #       => looks done to me
-                buffer[
-                    row + r + r_offset : row + r + r_offset + widget.height,
-                    column + self.__longest_label + 1 :,
-                ],
-                0,
-                0,
-                widget.height,
-                buffer_width - (self.__longest_label + 1),
-            )
-            r_offset += widget.height
+        # Since this method is called most of the frames, we need to make it efficient
+        # therefor, we are checking for row wrapping before the loop even if it means
+        # duplicate some code.
+        if self.wrap_rows:
+            for r in range(0, self.count_rows()):
+                r_offset += self.spacing
+                # Culling rows that are not
+                if row + r + r_offset >= row + buffer_height:
+                    break
+                # Squash dot notation (I really hope it doesn't improve perfs anymore)
+                label: base.Text = self.__rows[r][0]
+                widget: Widget = self.__rows[r][1]
+                # Making sure that the label is the same color as the widget.
+                if isinstance(self.parent, Widget):
+                    label.bg_color = self.parent.ui_config.widget_bg_color
+                label.render_to_buffer(
+                    buffer[
+                        row + r + r_offset : row + r + r_offset + widget.height,
+                        column:,
+                    ],
+                    0,
+                    0,
+                    1,  # TODO: We need to use the actual label height here!
+                    buffer_width,
+                )
+                label.store_screen_position(row + r + r_offset, column)
+                r_offset += 1
+                widget.width = buffer_width - 1
+                widget.render_to_buffer(
+                    # TODO: we'll need to add the real row geometry and not just 1
+                    #       => looks done to me
+                    buffer[
+                        row + r + r_offset : row + r + r_offset + widget.height,
+                        column:,
+                    ],
+                    0,
+                    0,
+                    widget.height,
+                    buffer_width,
+                )
+                widget.store_screen_position(row + r + r_offset, column)
+                r_offset += widget.height
+        else:
+            for r in range(0, self.count_rows()):
+                r_offset += self.spacing
+                # Culling rows that are not
+                if row + r + r_offset >= row + buffer_height:
+                    break
+                # Squash dot notation (I really hope it doesn't improve perfs anymore)
+                label: base.Text = self.__rows[r][0]
+                widget: Widget = self.__rows[r][1]
+                # Making sure that the label is the same color as the widget.
+                if isinstance(self.parent, Widget):
+                    label.bg_color = self.parent.ui_config.widget_bg_color
+                label.render_to_buffer(
+                    buffer[
+                        row + r + r_offset : row + r + r_offset + widget.height,
+                        column : column + self.__longest_label + 1,
+                    ],
+                    0,
+                    0,
+                    widget.height,  # Label can use the same height as the widget
+                    self.__longest_label + 1,
+                )
+                label.store_screen_position(row + r + r_offset, column)
+                widget.width = buffer_width - self.__longest_label - 1
+                widget.render_to_buffer(
+                    # TODO: we'll need to add the real row geometry and not just 1
+                    #       => looks done to me
+                    buffer[
+                        row + r + r_offset : row + r + r_offset + widget.height,
+                        column + self.__longest_label + 1 :,
+                    ],
+                    0,
+                    0,
+                    widget.height,
+                    buffer_width - (self.__longest_label + 1),
+                )
+                widget.store_screen_position(
+                    row + r + r_offset, column + self.__longest_label + 1
+                )
+                r_offset += widget.height
 
 
 class Cursor(base.PglBaseObject):
