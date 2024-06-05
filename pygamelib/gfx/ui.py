@@ -31,7 +31,7 @@ __docformat__ = "restructuredtext"
 from typing import Union, Optional, Set, List, TYPE_CHECKING
 from pygamelib.assets import graphics
 from pygamelib.gfx import core
-from pygamelib import base, constants
+from pygamelib import base, constants, engine
 from pygamelib import functions
 from pathlib import Path
 
@@ -115,7 +115,7 @@ class UiConfig(object):
 
     def __init__(
         self,
-        game=base.Game,
+        game: engine.Game = None,
         box_vertical_border: str = graphics.BoxDrawings.LIGHT_VERTICAL,
         box_horizontal_border: str = graphics.BoxDrawings.LIGHT_HORIZONTAL,
         box_top_left_corner: str = graphics.BoxDrawings.LIGHT_ARC_DOWN_AND_RIGHT,
@@ -145,14 +145,14 @@ class UiConfig(object):
                 "UiConfig: the 'game' parameter cannot be None."
             )
         self.game = game
-        self.box_vertical_border = box_vertical_border
-        self.box_horizontal_border = box_horizontal_border
-        self.box_top_left_corner = box_top_left_corner
-        self.box_top_right_corner = box_top_right_corner
-        self.box_bottom_left_corner = box_bottom_left_corner
-        self.box_bottom_right_corner = box_bottom_right_corner
-        self.box_vertical_and_right = box_vertical_and_right
-        self.box_vertical_and_left = box_vertical_and_left
+        self.box_vertical_border: str = box_vertical_border
+        self.box_horizontal_border: str = box_horizontal_border
+        self.box_top_left_corner: str = box_top_left_corner
+        self.box_top_right_corner: str = box_top_right_corner
+        self.box_bottom_left_corner: str = box_bottom_left_corner
+        self.box_bottom_right_corner: str = box_bottom_right_corner
+        self.box_vertical_and_right: str = box_vertical_and_right
+        self.box_vertical_and_left: str = box_vertical_and_left
         self.fg_color: core.Color = fg_color
         self.bg_color: core.Color = bg_color
         self.fg_color_inactive: core.Color = fg_color_inactive
@@ -163,7 +163,7 @@ class UiConfig(object):
         self.bg_color_menu_not_selected: core.Color = bg_color_menu_not_selected
         self.border_fg_color: core.Color = border_fg_color
         self.border_bg_color: core.Color = border_bg_color
-        self.borderless_dialog = borderless_dialog
+        self.borderless_dialog: bool = borderless_dialog
         self.widget_bg_color: core.Color = widget_bg_color
         self.input_fg_color: core.Color = input_fg_color
         self.input_bg_color: core.Color = input_bg_color
@@ -270,7 +270,7 @@ class Box(object):
         self,
         width: int,
         height: int,
-        title: str = "",
+        title: Union[str, 'base.Text'],
         config: UiConfig = None,
         fill: bool = False,
         filling_sprixel: core.Sprixel = None,
@@ -428,7 +428,7 @@ class Box(object):
             )
 
     def render_to_buffer(
-        self, buffer: numpy.array, row: int, column: int, buffer_height: int, buffer_width: int
+        self, buffer: "numpy.array", row: int, column: int, buffer_height: int, buffer_width: int
     ) -> None:
         """Render the box from the display buffer to the frame buffer.
 
@@ -515,7 +515,7 @@ class ProgressBar(object):
         maximum: int = 100,
         width: int = 20,
         progress_marker: 'graphics.GeometricShapes' = graphics.GeometricShapes.BLACK_RECTANGLE,
-        empty_marker: str = " ",
+        empty_marker: Union[str, 'core.Sprixel'] = None,
         config: 'UiConfig' = None,
     ) -> None:
         """
@@ -686,7 +686,7 @@ class ProgressBar(object):
             )
         self.__config.game.screen.trigger_rendering()
 
-    def render_to_buffer(self, buffer: numpy.array, row: int, column: int, buffer_height: int, buffer_width: int) -> None:
+    def render_to_buffer(self, buffer: "numpy.array", row: int, column: int, buffer_height: int, buffer_width: int) -> None:
         """Render the object from the display buffer to the frame buffer.
 
         This method is automatically called by :func:`pygamelib.engine.Screen.render`.
@@ -731,7 +731,7 @@ class ProgressDialog(Dialog):
         maximum: int = 100,
         width: int = 20,
         progress_marker: 'core.Sprixel' = graphics.GeometricShapes.BLACK_RECTANGLE,
-        empty_marker: str = " ",
+        empty_marker: Union[str, 'core.Sprixel'] = None,
         adaptive_width: bool = True,
         destroy_on_complete: bool = True,
         config: 'UiConfig'= None,
@@ -760,7 +760,7 @@ class ProgressDialog(Dialog):
         :type adaptive_width: bool
         :param destroy_on_complete: If True, the dialog will remove itself from the
            screen when complete (i.e: when value == maximum)
-        :type destroy_on_complete:
+        :type destroy_on_complete: bool
         :param config: The configuration object.
         :type config: :class:`UiConfig`
 
@@ -876,7 +876,7 @@ class ProgressDialog(Dialog):
             )
         self.config.game.screen.trigger_rendering()
 
-    def render_to_buffer(self, buffer: numpy.array, row: int, column: int, buffer_height: int, buffer_width: int) -> None:
+    def render_to_buffer(self, buffer: "numpy.array", row: int, column: int, buffer_height: int, buffer_width: int) -> None:
         """Render the object from the display buffer to the frame buffer.
 
         This method is automatically called by :func:`pygamelib.engine.Screen.render`.
@@ -899,7 +899,7 @@ class ProgressDialog(Dialog):
         if not self.config.borderless_dialog:
             offset = 1
             # We need to account for the borders in the box size
-            box = Box(self.__width + 2, 4, config=self.config)
+            box = Box(self.__width + 2, 4, title="", config=self.config)
             box.render_to_buffer(buffer, row, column, buffer_height, buffer_width)
         lbl = core.Sprite.from_text(self._cache["label"])
 
@@ -1030,6 +1030,7 @@ class MessageDialog(Dialog):
         self.__cache = {"data": []}
         self.__width = width
         self.__height = height
+        self.__title = title
         self.__adaptive_height = adaptive_height
         self.__data = list()
         if data is not None:
@@ -1060,6 +1061,7 @@ class MessageDialog(Dialog):
             self.__cache["border"] = Box(
                 self.__width,
                 height + 2,
+                title=self.title,
                 config=self.config,
                 fill=True,
                 filling_sprixel=core.Sprixel(" ", bg_color=self.config.bg_color),
@@ -1158,7 +1160,7 @@ class MessageDialog(Dialog):
             )
 
     def render_to_buffer(
-        self, buffer, row, column, buffer_height, buffer_width
+        self, buffer: "numpy.array", row: int, column: int, buffer_height: int, buffer_width: int
     ) -> None:
         """Render the object from the display buffer to the frame buffer.
 
@@ -1372,7 +1374,7 @@ class LineInputDialog(Dialog):
         self.config.game.screen.trigger_rendering()
 
     def render_to_buffer(
-        self, buffer: numpy.array, row: int, column: int, buffer_height: int, buffer_width: int
+        self, buffer: "numpy.array", row: int, column: int, buffer_height: int, buffer_width: int
     ) -> None:
         """Render the object from the display buffer to the frame buffer.
 
@@ -2476,7 +2478,7 @@ class GridSelector(object):
             if i == self.__current_choice % len(self.__cache):
                 border_fg_color = self._config.border_fg_color
                 self._config.border_fg_color = core.Color(0, 255, 0)
-                sel = Box(self.__cache[i].length + 2, 3, config=self._config)
+                sel = Box(self.__cache[i].length + 2, 3, title="", config=self._config)
                 sel.render_to_buffer(
                     buffer,
                     row + row_offset - 1,
@@ -2895,7 +2897,7 @@ class ColorPicker(object):
             buffer[row][column + offset] = ":"
             offset += 2
             if idx == self.__selection:
-                sel = Box(len(col_str) + 2, 3, config=self._config)
+                sel = Box(len(col_str) + 2, 3, title="", config=self._config)
                 sel.render_to_buffer(
                     buffer, row - 1, column + offset - 1, buffer_height, buffer_width
                 )
