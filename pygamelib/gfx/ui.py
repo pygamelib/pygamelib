@@ -1319,7 +1319,7 @@ class LineInputDialog(Dialog):
         """
         super().__init__(config=config)
         self.__title = title
-        self.__label = label
+        self.__label = base.Text("")
         self.__default = default
         self.__filter = filter
         if self.__title is None:
@@ -1329,9 +1329,7 @@ class LineInputDialog(Dialog):
             self.__title = self.__title.text
         elif not (type(title) is str or isinstance(self.__title, base.Text)):
             raise base.PglInvalidTypeException("LineInputDialog: title must be a str.")
-        if self.__label is None or not (
-            isinstance(self.__label, base.Text) or type(self.__label) is str
-        ):
+        if label is None or not (isinstance(label, base.Text) or type(label) is str):
             raise base.PglInvalidTypeException(
                 "LineInputDialog: label must be a str or pygamelib.base.Text."
             )
@@ -1341,8 +1339,10 @@ class LineInputDialog(Dialog):
             raise base.PglInvalidTypeException(
                 "LineInputDialog: default must be a str."
             )
-        if type(self.__label) is str:
-            self.__label = base.Text(self.__label)
+        if type(label) is str:
+            self.__label.text = label
+        elif isinstance(label, base.Text):
+            self.__label = label
         self.user_input = self.__default
 
     @property
@@ -4523,7 +4523,7 @@ class Widget(base.PglBaseObject):
         self.screen_column = data
 
     @property
-    def layout(self) -> "Layout":
+    def layout(self) -> Union["Layout", None]:
         """
         This property get/set the layout of the widget. You can then add sub widgets to
         the layout.
@@ -5410,9 +5410,31 @@ class GridLayout(Layout):
 
 
 class FormLayout(Layout):
+    """
+    .. versionadded:: 1.4.0
+
+    The FormLayout is a layout to organize the widgets like they would be on a form.
+    This means a label associated to a widget (for example a label like "Name"
+    associated to a :class:`LineInput` widget).
+    """
+
     def __init__(
         self, parent: Optional[Widget] = None, wrap_rows: bool = False
     ) -> None:
+        """
+        :param parent: The parent widget of this layout.
+        :type parent: :class:`Widget`
+        :param wrap_rows: By default, widgets are displayed on the same line as the
+           label. If wrap_rows is True, the widget will be displayed bellow the label.
+        :type wrap_rows: bool
+
+        Example::
+
+            w = ui.Widget(60, 20, 60, 30)
+            w.layout = ui.FormLayout()
+            w.layout.spacing = 0
+            w.layout.add_row("First name", LineInput("John Doe"))
+        """
         super().__init__(parent)
         self.__rows = []
         self.__longest_label = 0
@@ -5442,7 +5464,7 @@ class FormLayout(Layout):
         """
         A property to control row wrapping. If sets to True, the labels will be rendered
         on one row and the widget on the next.
-        Otherwise, the label and the widget will be rendered on the same row
+        Otherwise, the label and the widget will be rendered on the same row.
         """
         return self.__wrap_rows
 
@@ -5450,6 +5472,11 @@ class FormLayout(Layout):
     def wrap_rows(self, should_wrap: bool) -> None:
         if isinstance(should_wrap, bool):
             self.__wrap_rows = should_wrap
+            self.notify(
+                self,
+                "pygamelib.gfx.ui.FormLayout.wrap_rows:changed",
+                should_wrap,
+            )
 
     @property
     def width(self) -> int:
@@ -5514,6 +5541,13 @@ class FormLayout(Layout):
             label = base.Text(label)
         self.__build_size_cache(label, widget)
         self.__rows.append([label, widget])
+        widget.parent = self
+        widget.attach(self)
+        self.notify(
+            self,
+            "pygamelib.gfx.ui.FormLayout.row:inserted",
+            {"row": len(self.__rows) - 1, "label": label, "widget": widget},
+        )
         return True
 
     def insert_row(
@@ -5542,6 +5576,13 @@ class FormLayout(Layout):
             label = base.Text(label)
         self.__build_size_cache(label, widget)
         self.__rows = self.__rows[0:row] + [[label, widget]] + self.__rows[row:]
+        widget.parent = self
+        widget.attach(self)
+        self.notify(
+            self,
+            "pygamelib.gfx.ui.FormLayout.row:inserted",
+            {"row": row, "label": label, "widget": widget},
+        )
         return True
 
     def count_rows(self) -> int:
@@ -5578,8 +5619,10 @@ class FormLayout(Layout):
             row = len(self.__rows) - 1
         if row >= self.count_rows():
             return False
+        self.__rows[row][1].detach(self)
         self.__rows = self.__rows[0:row] + self.__rows[row + 1 :]
         self.__adjust_size_cache()
+        self.notify(self, "pygamelib.gfx.ui.FormLayout.row:removed", row)
         return True
 
     def set_label(self, row: int, label: Union[str, base.Text]) -> None:
@@ -5632,6 +5675,8 @@ class FormLayout(Layout):
         (label, widget) = self.__rows[row]
         self.__rows = self.__rows[0:row] + self.__rows[row + 1 :]
         self.__adjust_size_cache()
+        widget.detach(self)
+        self.notify(self, "pygamelib.gfx.ui.FormLayout.row:removed", row)
         return (label, widget)
 
     def render_to_buffer(
