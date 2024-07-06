@@ -7,7 +7,7 @@ try:
 except ImportError:
     print("Please install pipenv first. See: https://github.com/pypa/pipenv")
 
-with open("README.md", "r") as fh:
+with open("README.md", "r", encoding="utf-8") as fh:
     long_description = fh.read()
 
 # Compatibility layer between Pipenv and Pip requirements.txt
