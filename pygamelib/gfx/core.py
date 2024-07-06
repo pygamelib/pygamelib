@@ -1276,7 +1276,7 @@ class Sprite(base.PglBaseObject):
         if default_sprixel is None:
             default_sprixel = Sprixel(" ", None, None)
         new_sprite = cls(default_sprixel=default_sprixel)
-        with open(filename, "r") as sprite_file:
+        with open(filename, "r", encoding="utf-8") as sprite_file:
             zero = sprite_file.tell()
             line = sprite_file.readline()
             parser_mode = 0
@@ -1803,7 +1803,7 @@ class SpriteCollection(UserDict):
 
             sprites_village1 = SpriteCollection.load_json_file('gfx/village1.spr')
         """
-        with open(filename) as sprites_file:
+        with open(filename, "r", encoding="utf-8") as sprites_file:
             sprites_data = json.load(sprites_file)
             return SpriteCollection.load(sprites_data)
 
@@ -1838,7 +1838,7 @@ class SpriteCollection(UserDict):
 
             sprites_village1.to_json_file('gfx/village1.spr')
         """
-        with open(filename, "w") as file:
+        with open(filename, "w", encoding="utf-8") as file:
             json.dump(self.serialize(), file)
 
     def add(self, sprite):
@@ -2491,7 +2491,7 @@ class Font:
                 break
         # This will throw a FileNotFoundError if the font is not present.
         self.__sprite_collection = SpriteCollection.load_json_file(glyphs_path)
-        with open(config_path) as config_file:
+        with open(config_path, "r", encoding="utf-8") as config_file:
             self.__config = json.load(config_file)
         self.__config["fg_color"] = Color.load(self.__config["fg_color"])
         self.__config["bg_color"] = Color.load(self.__config["bg_color"])
