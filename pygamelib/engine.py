@@ -2144,7 +2144,7 @@ class Game(base.PglBaseObject):
         if section not in self._configuration_internals:
             self._configuration_internals[section] = {}
 
-        with open(filename) as config_file:
+        with open(filename, "r", encoding="utf-8") as config_file:
             config_content = json.load(config_file)
             if section not in self._configuration.keys():
                 self._configuration[section] = config_content
@@ -2227,7 +2227,7 @@ class Game(base.PglBaseObject):
         mode = "w"
         if append:
             mode = "a"
-        with open(filename, mode) as file:
+        with open(filename, mode, encoding="utf-8") as file:
             json.dump(self._configuration[section], file)
 
     def add_board(self, level_number: int, board: Board) -> None:
@@ -3100,7 +3100,7 @@ class Game(base.PglBaseObject):
             game.change_level( 1 )
         """
         data = dict()
-        with open(filename, "r") as f:
+        with open(filename, "r", encoding="utf-8") as f:
             data = json.load(f)
         local_board = None
         if "data_version" in data.keys() and data["data_version"] >= 2:
@@ -3247,7 +3247,7 @@ class Game(base.PglBaseObject):
             for o in self.object_library:
                 data["library"].append(o.serialize())
 
-        with open(filename, "w") as f:
+        with open(filename, "w", encoding="utf-8") as f:
             json.dump(data, f)
 
     def start(self):
