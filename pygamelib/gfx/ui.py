@@ -28,7 +28,7 @@ __docformat__ = "restructuredtext"
    pygamelib.gfx.ui.LineInput
 
 """
-from typing import Union, Optional, Set, List, TYPE_CHECKING
+from typing import Union, Optional, Any, Set, List, Tuple, TYPE_CHECKING
 from pygamelib.assets import graphics
 from pygamelib.gfx import core
 from pygamelib import base, constants
@@ -133,7 +133,7 @@ class UiConfig(object):
         fg_color_not_selected: core.Color = core.Color(255, 255, 255),
         bg_color_menu_not_selected: core.Color = core.Color(128, 128, 128),
         border_fg_color: core.Color = core.Color(255, 255, 255),
-        border_bg_color: core.Color = None,
+        border_bg_color: Optional[core.Color] = None,
         borderless_dialog: bool = True,
         widget_bg_color: core.Color = core.Color(0, 128, 128),
         input_fg_color: core.Color = core.Color(255, 255, 255),
@@ -141,9 +141,11 @@ class UiConfig(object):
     ):
         super().__init__()
         if game is None:
-            raise base.PglInvalidTypeException(
-                "UiConfig: the 'game' parameter cannot be None."
-            )
+            exec("from pygamelib.engine import Game")
+            game = eval("Game.instance()")
+            # raise base.PglInvalidTypeException(
+            #     "UiConfig: the 'game' parameter cannot be None."
+            # )
         self.game = game
         self.box_vertical_border = box_vertical_border
         self.box_horizontal_border = box_horizontal_border
@@ -157,12 +159,12 @@ class UiConfig(object):
         self.bg_color: core.Color = bg_color
         self.fg_color_inactive: core.Color = fg_color_inactive
         self.bg_color_selected: core.Color = bg_color_selected
-        self.bg_color_not_selected: core.Color = bg_color_not_selected
+        self.bg_color_not_selected: Optional[core.Color] = bg_color_not_selected
         self.fg_color_selected: core.Color = fg_color_selected
         self.fg_color_not_selected: core.Color = fg_color_not_selected
         self.bg_color_menu_not_selected: core.Color = bg_color_menu_not_selected
         self.border_fg_color: core.Color = border_fg_color
-        self.border_bg_color: core.Color = border_bg_color
+        self.border_bg_color: Optional[core.Color] = border_bg_color
         self.borderless_dialog = borderless_dialog
         self.widget_bg_color: core.Color = widget_bg_color
         self.input_fg_color: core.Color = input_fg_color
@@ -207,9 +209,11 @@ class Dialog(object):
         :type config: :class:`UiConfig`.
         """
         super().__init__()
-        if config is None or not isinstance(config, UiConfig):
+        if config is None:
+            config = UiConfig.instance()
+        if not isinstance(config, UiConfig):
             raise base.PglInvalidTypeException(
-                "The config parameter cannot be None and needs to be a UiConfig object."
+                "The config parameter needs to be a UiConfig object."
             )
         setattr(self, "_config", config)
         setattr(self, "_user_input", "")
@@ -270,10 +274,10 @@ class Box(object):
         self,
         width: int,
         height: int,
-        title: str = "",
-        config: UiConfig = None,
+        title: Union[str, base.Text] = "",
+        config: Optional[UiConfig] = None,
         fill: bool = False,
-        filling_sprixel: core.Sprixel = None,
+        filling_sprixel: Optional[core.Sprixel] = None,
         title_alignment: constants.Alignment = constants.Alignment.CENTER,
     ):
         """
@@ -285,7 +289,8 @@ class Box(object):
         :type height: int
         :param title: The title of the box (encased in the top border).
         :type title: str | :class:`~base.Text`
-        :param config: The configuration object.
+        :param config: The configuration object. If it is None, this class will attempt
+            to acquire a UiConfig instance through :py:meth:`UiConfig.instance()`.
         :type config: :class:`UiConfig`
         :param fill: A tag to tell the box object to fill its inside (or not).
         :type fill: bool
@@ -312,6 +317,8 @@ class Box(object):
         self.__title = title
         self.__fill = fill
         self.__filling_sprixel = filling_sprixel
+        if config is None:
+            config = UiConfig.instance()
         self.__config = config
         self._cache = {}
         self.__title_alignment = title_alignment
@@ -511,12 +518,12 @@ class ProgressBar(object):
 
     def __init__(
         self,
-        value=0,
-        maximum=100,
-        width=20,
+        value: int = 0,
+        maximum: int = 100,
+        width: int = 20,
         progress_marker=graphics.GeometricShapes.BLACK_RECTANGLE,
-        empty_marker=" ",
-        config=None,
+        empty_marker: Union[str, core.Sprixel] = " ",
+        config: Optional[UiConfig] = None,
     ):
         """
         :param value: The initial value parameter. It represents the progression.
@@ -533,7 +540,8 @@ class ProgressBar(object):
            marker when the bar should be empty (when the value is too low to fill the
            bar for example). Please see below.
         :type empty_marker: :class:`pygamelib.gfx.core.Sprixel`
-        :param config: The configuration object.
+        :param config: The configuration object. If None, this class will try to
+            acquire a UiConfig object through :py:meth:`UiConfig.instance()`.
         :type config: :class:`UiConfig`
 
         Here is a representation of were the progress and empty markers are used.
@@ -565,6 +573,8 @@ class ProgressBar(object):
         self.__width = width
         self.__progress_marker = progress_marker
         self.__empty_marker = empty_marker
+        if config is None:
+            config = UiConfig.instance()
         self.__config = config
         self._cache = {}
         self._build_cache()
@@ -971,13 +981,13 @@ class MessageDialog(Dialog):
 
     def __init__(
         self,
-        data: list = None,
+        data: Optional[list] = None,
         width: int = 20,
-        height: int = None,
+        height: Optional[int] = None,
         adaptive_height: bool = True,
-        alignment: constants.Alignment = None,
-        title: str = None,
-        config: UiConfig = None,
+        alignment: Optional[constants.Alignment] = None,
+        title: Optional[str] = None,
+        config: Optional[UiConfig] = None,
     ) -> None:
         """
         :param data: A list of data to display inside the MessageDialog. Elements in
@@ -1027,7 +1037,7 @@ class MessageDialog(Dialog):
             alignment = constants.Alignment.LEFT
         if adaptive_height is False and height is None:
             adaptive_height = True
-        self.__cache = {"data": []}
+        self.__cache = {"data": [], "border": None}
         self.__width = width
         self.__height = height
         self.__adaptive_height = adaptive_height
@@ -1045,7 +1055,7 @@ class MessageDialog(Dialog):
             raise base.PglInvalidTypeException("MessageDialog: title must be a str.")
 
     def _build_cache(self) -> None:
-        self.__cache = {"data": []}
+        self.__cache = {"data": [], "border": None}
         height = self.__height
         if height is None:
             height = len(self.__data)
@@ -1076,7 +1086,7 @@ class MessageDialog(Dialog):
                 h += 2
             return len(self.__data) + h
         else:
-            return self.__height
+            return self.__height  # type: ignore
 
     @height.setter
     def height(self, value: int):
@@ -1093,7 +1103,7 @@ class MessageDialog(Dialog):
         """
         Get and set the title of the dialog, it has to be a str.
         """
-        return self.__title
+        return self.__title  # type: ignore
 
     @title.setter
     def title(self, value) -> None:
@@ -1221,7 +1231,7 @@ class MessageDialog(Dialog):
                     buffer_width,
                 )
 
-    def show(self) -> None:  # pragma: no cover
+    def show(self) -> Any:  # pragma: no cover
         """
         Show the dialog and execute the event loop.
         Until this method returns, all keyboards event are processed by the local event
@@ -1275,11 +1285,13 @@ class LineInputDialog(Dialog):
 
     def __init__(
         self,
-        title=None,
-        label="Input a value:",
-        default="",
-        filter=constants.InputValidator.PRINTABLE_FILTER,
-        config=None,
+        title: Union[str, base.Text, None] = None,
+        label: Union[str, base.Text, None] = "Input a value:",
+        default: Union[str, base.Text, None] = "",
+        filter: Union[
+            constants.InputValidator, None
+        ] = constants.InputValidator.PRINTABLE_FILTER,
+        config: Union[UiConfig, None] = None,
     ) -> None:
         """
         :param title: The short title of the dialog. Only used when the dialog is not
@@ -1307,7 +1319,7 @@ class LineInputDialog(Dialog):
         """
         super().__init__(config=config)
         self.__title = title
-        self.__label = label
+        self.__label = base.Text("")
         self.__default = default
         self.__filter = filter
         if self.__title is None:
@@ -1317,9 +1329,7 @@ class LineInputDialog(Dialog):
             self.__title = self.__title.text
         elif not (type(title) is str or isinstance(self.__title, base.Text)):
             raise base.PglInvalidTypeException("LineInputDialog: title must be a str.")
-        if self.__label is None or not (
-            isinstance(self.__label, base.Text) or type(self.__label) is str
-        ):
+        if label is None or not (isinstance(label, base.Text) or type(label) is str):
             raise base.PglInvalidTypeException(
                 "LineInputDialog: label must be a str or pygamelib.base.Text."
             )
@@ -1329,8 +1339,10 @@ class LineInputDialog(Dialog):
             raise base.PglInvalidTypeException(
                 "LineInputDialog: default must be a str."
             )
-        if type(self.__label) is str:
-            self.__label = base.Text(self.__label)
+        if type(label) is str:
+            self.__label.text = label
+        elif isinstance(label, base.Text):
+            self.__label = label
         self.user_input = self.__default
 
     @property
@@ -1338,7 +1350,7 @@ class LineInputDialog(Dialog):
         """
         Get and set the label of the dialog, it has to be a str or :class:`base.Text`.
         """
-        return self.__label
+        return self.__label  # type: ignore
 
     @label.setter
     def label(self, value) -> None:
@@ -1357,7 +1369,7 @@ class LineInputDialog(Dialog):
         """
         Get and set the title of the dialog, it has to be a str.
         """
-        return self.__title
+        return self.__title  # type: ignore
 
     @title.setter
     def title(self, value) -> None:
@@ -1651,7 +1663,7 @@ class MultiLineInputDialog(Dialog):
             )
             t = base.Text(
                 f"> {field['user_input']}"
-                f"{' '*(max_text_width-len(field['user_input'])-2)}"
+                f"{' ' * (max_text_width - len(field['user_input']) - 2)}"
             )
             if fidx == self.__current_field:
                 t.fg_color = core.Color(0, 255, 0)
@@ -1785,7 +1797,7 @@ class FileDialog(Dialog):
         filter: str = "*",
         config: UiConfig = None,
     ) -> None:
-        """
+        r"""
 
         :param path: The path to start in. This path is made absolute by the
            constructor.
@@ -2735,7 +2747,7 @@ class ColorPicker(object):
         """
         super().__init__()
         self.__orientation = constants.Orientation.HORIZONTAL
-        if orientation is not None and type(orientation) is int:
+        if orientation is not None and isinstance(orientation, constants.Orientation):
             self.__orientation = orientation
         self._config = None
         if isinstance(config, UiConfig):
@@ -3374,10 +3386,10 @@ class Menu(object):
 
     def __init__(
         self,
-        title: base.Text = None,
-        entries: list = None,
-        padding: int = 1,
-        config: UiConfig = None,
+        title: Union[base.Text, None] = None,
+        entries: Union[list, None] = None,
+        padding: Union[int, None] = 1,
+        config: Union[UiConfig, None] = None,
     ) -> None:
         """
         The constructor takes the following parameters.
@@ -3872,7 +3884,10 @@ class MenuBar(object):
     """
 
     def __init__(
-        self, entries: list = None, spacing: int = 2, config: UiConfig = None
+        self,
+        entries: Union[list, None] = None,
+        spacing: int = 2,
+        config: Union[UiConfig, None] = None,
     ) -> None:
         """
         The constructor takes the following parameters.
@@ -4018,9 +4033,9 @@ class MenuBar(object):
                 self.__current_index >= 0
                 and self.__entries[self.__current_index % len(self.__entries)].selected
             ):
-                self.__entries[
-                    self.__current_index % len(self.__entries)
-                ].selected = False
+                self.__entries[self.__current_index % len(self.__entries)].selected = (
+                    False
+                )
             self.__current_index = value
             if (
                 self.__current_index >= 0
@@ -4028,9 +4043,9 @@ class MenuBar(object):
                     self.__current_index % len(self.__entries)
                 ].selected
             ):
-                self.__entries[
-                    self.__current_index % len(self.__entries)
-                ].selected = True
+                self.__entries[self.__current_index % len(self.__entries)].selected = (
+                    True
+                )
         else:
             raise base.PglInvalidTypeException(
                 "Menu.current_index = value: value needs to be an int."
@@ -4258,9 +4273,9 @@ class Widget(base.PglBaseObject):
         minimum_height: int = 0,
         maximum_width: int = 20,
         maximum_height: int = 10,
-        layout: Optional["Layout"] = None,
-        bg_color: Optional[core.Color] = None,
-        config: Optional[UiConfig] = None,
+        layout: Union["Layout", None] = None,
+        bg_color: Union[core.Color, None] = None,
+        config: Union[UiConfig, None] = None,
     ) -> None:
         """
         :param width: The width of the widget.
@@ -4508,7 +4523,7 @@ class Widget(base.PglBaseObject):
         self.screen_column = data
 
     @property
-    def layout(self) -> "Layout":
+    def layout(self) -> Union["Layout", None]:
         """
         This property get/set the layout of the widget. You can then add sub widgets to
         the layout.
@@ -4556,7 +4571,6 @@ class Widget(base.PglBaseObject):
 
     @property
     def focus(self) -> bool:
-
         """
         This property get/set the focus property. It is a boolean.
 
@@ -4633,6 +4647,8 @@ class Layout(base.PglBaseObject):
 
     """
 
+    # TODO: Add a remove_widget(w) method
+
     def __init__(self, parent: Optional[Widget] = None) -> None:
         """
         The Layout constructor takes the following parameters.
@@ -4686,7 +4702,9 @@ class Layout(base.PglBaseObject):
         This property is purely virtual and needs to be implemented in the inheriting
         class.
 
-        It must return the total width of the Layout.
+        It must return the total width of the Layout. This means the total width that
+        the layout would take in an infinite amount of space available on screen. Its
+        real width is constrained by the widget that is hosting the layout.
 
         """
         raise NotImplementedError(
@@ -4702,7 +4720,9 @@ class Layout(base.PglBaseObject):
         This property is purely virtual and needs to be implemented in the inheriting
         class.
 
-        It must return the total height of the Layout.
+        It must return the total height of the Layout. This means the total height that
+        the layout would take in an infinite amount of space available on screen. Its
+        real height is constrained by the widget that is hosting the layout.
 
         """
         raise NotImplementedError(
@@ -4950,6 +4970,8 @@ class BoxLayout(Layout):
             parent_widget.layout.add_widget(child_widget1)
             # That's it!
         """
+        # TODO: Make sure that the widget's size_constraint is overwritten with the
+        #       layout's one.
         if isinstance(w, Widget):
             self.__widgets.append(w)
             w.parent = self
@@ -5334,6 +5356,7 @@ class GridLayout(Layout):
 
         # logging.debug(">>>> GridLayout: START rendering")
 
+        # TODO: We are not culling the rows & columns that are not visible anymore!
         for r in range(0, self.count_rows()):
             for c in range(0, self.count_columns()):
                 try:
@@ -5386,23 +5409,383 @@ class GridLayout(Layout):
         # logging.debug("GridLayout: DONE rendering <<<<")
 
 
-# NOTE: This is a placeholder for future PR.
-#       WHEN IMPLEMENTED IT NEEDS TO BE TESTED!
-#       The no cover pragma is only for the placeholder
-class FormLayout(GridLayout):  # pragma: no cover
-    def __init__(self, parent: Optional[Widget] = None) -> None:
+class FormLayout(Layout):
+    """
+    .. versionadded:: 1.4.0
+
+    The FormLayout is a layout to organize the widgets like they would be on a form.
+    This means a label associated to a widget (for example a label like "Name"
+    associated to a :class:`LineInput` widget).
+    """
+
+    def __init__(
+        self, parent: Optional[Widget] = None, wrap_rows: bool = False
+    ) -> None:
+        """
+        :param parent: The parent widget of this layout.
+        :type parent: :class:`Widget`
+        :param wrap_rows: By default, widgets are displayed on the same line as the
+           label. If wrap_rows is True, the widget will be displayed bellow the label.
+        :type wrap_rows: bool
+
+        Example::
+
+            w = ui.Widget(60, 20, 60, 30)
+            w.layout = ui.FormLayout()
+            w.layout.spacing = 0
+            w.layout.add_row("First name", LineInput("John Doe"))
+        """
         super().__init__(parent)
-        self.__current_row = -1
+        self.__rows = []
+        self.__longest_label = 0
+        self.__longest_widget = 0
+        self.__tallest_widget = 0
+        self.__wrap_rows = wrap_rows
 
-    def add_row(self, label: base.Text, widget: Widget) -> int:
-        # self.__current_row += 1
-        # TODO: Add it to the grid
-        pass
+    def __build_size_cache(self, label: base.Text, widget: Widget) -> None:
+        # Update the longest dimensions of widgets and labels.
+        if label.length > self.__longest_label:
+            self.__longest_label = label.length
+        if widget.height > self.__tallest_widget:
+            self.__tallest_widget = widget.height
+        if widget.width > self.__longest_widget:
+            self.__longest_widget = widget.width
 
-    def remove_row(self, row: int = None):
+    def __adjust_size_cache(self):
+        # Completely rebuild the size cache (usually after a row is removed)
+        self.__longest_label = 0
+        self.__longest_widget = 0
+        self.__tallest_widget = 0
+        for label, widget in self.__rows:
+            self.__build_size_cache(label, widget)
+
+    @property
+    def wrap_rows(self) -> bool:
+        """
+        A property to control row wrapping. If sets to True, the labels will be rendered
+        on one row and the widget on the next.
+        Otherwise, the label and the widget will be rendered on the same row.
+        """
+        return self.__wrap_rows
+
+    @wrap_rows.setter
+    def wrap_rows(self, should_wrap: bool) -> None:
+        if isinstance(should_wrap, bool):
+            self.__wrap_rows = should_wrap
+            self.notify(
+                self,
+                "pygamelib.gfx.ui.FormLayout.wrap_rows:changed",
+                should_wrap,
+            )
+
+    @property
+    def width(self) -> int:
+        """
+        Get the layout's width. The FormLayout uses spacing only for vertical spacing.
+        Therefor, it is not included in the width of the layout.
+
+        Returns an int.
+
+        This is a read-only property.
+        """
+        if self.wrap_rows:
+            return max(self.__longest_label, self.__longest_widget)
+        return self.__longest_label + self.__longest_widget
+
+    @property
+    def height(self) -> int:
+        """
+        Get the layout's height (including spacing).
+
+        Returns an int.
+
+        This is a read-only property.
+        """
+        tmp_height = 0
+        for row in self.__rows:
+            tmp_height += row[1].height + self.spacing
+        tmp_height -= self.spacing
+        return tmp_height
+
+    def add_widget(self, w: Widget) -> bool:
+        """
+        Add a widget to the layout, this method is an alias to:
+        `form_layout.add_row(base.Text(""), w)`
+
+        It will add a row with an empty label and the given widget.
+
+        :param w: The widget to add.
+        :type w: :class:`Widget`
+        :return: A boolean, True is the widget was added, False otherwise.
+        :rtype: bool
+
+        """
+        return self.add_row(base.Text(""), w)
+
+    def add_row(self, label: Union[str, base.Text], widget: Widget) -> bool:
+        r"""
+        Adds a row to the layout with the given label and widget.
+
+        :param label: The label of the row to add.
+        :type label: :class:`~base.Text` | str
+        :param widget: The widget to add.
+        :type widget: :class:`Widget`
+        :return: A boolean, True is the row was added, False otherwise.
+        :rtype: bool
+        """
+        if not isinstance(widget, Widget) or (
+            not isinstance(label, str) and not isinstance(label, base.Text)
+        ):
+            return False
+        if isinstance(label, str):
+            label = base.Text(label)
+        self.__build_size_cache(label, widget)
+        self.__rows.append([label, widget])
+        widget.parent = self
+        widget.attach(self)
+        self.notify(
+            self,
+            "pygamelib.gfx.ui.FormLayout.row:inserted",
+            {"row": len(self.__rows) - 1, "label": label, "widget": widget},
+        )
+        return True
+
+    def insert_row(
+        self, row: int, label: Union[str, base.Text], widget: Widget
+    ) -> bool:
+        r"""
+        Inserts a row at the specified position in the layout with the given label and
+        widget.
+
+        :param row: The index at which the row should be inserted.
+        :type row: int
+        :param label: The label of the row to add.
+        :type label: :class:`~base.Text` | str
+        :param widget: The widget to add.
+        :type widget: :class:`Widget`
+        :return: A boolean, True is the row was added, False otherwise.
+        :rtype: bool
+        """
+        if not isinstance(widget, Widget) or (
+            not isinstance(label, str) and not isinstance(label, base.Text)
+        ):
+            return False
+        if row >= self.count_rows():
+            return self.add_row(label, widget)
+        if isinstance(label, str):
+            label = base.Text(label)
+        self.__build_size_cache(label, widget)
+        self.__rows = self.__rows[0:row] + [[label, widget]] + self.__rows[row:]
+        widget.parent = self
+        widget.attach(self)
+        self.notify(
+            self,
+            "pygamelib.gfx.ui.FormLayout.row:inserted",
+            {"row": row, "label": label, "widget": widget},
+        )
+        return True
+
+    def count_rows(self) -> int:
+        """
+        returns the number of rows in the form layout.
+        """
+        return len(self.__rows)
+
+    def count(self) -> int:
+        r"""
+        Returns the number of widgets in the form layout. Since there is exactly one
+        widget per row, this method is equivalent to :py:meth:`count_rows`.
+        """
+        return self.count_rows()
+
+    def widgets(self) -> List[Widget]:
+        r"""
+        :return: A list of widgets
+        :rtype: List[Widget]
+
+        Returns a list of widgets that are contained in the FormLayout.
+        """
+        return [w for (l, w) in self.__rows]
+
+    def remove_row(self, row: Optional[int] = None) -> bool:
+        r"""
+        Removes the specified row from the layout. If no row is specified, removes the
+        last row.
+        """
         # Remove row, if row is None remove the last row.
-        # If row is a widget find the widget and remove it
-        pass
+        # If row is a widget find the widget and remove it => Nope that's super counter
+        # intuitive
+        if row is None:
+            row = len(self.__rows) - 1
+        if row >= self.count_rows():
+            return False
+        self.__rows[row][1].detach(self)
+        self.__rows = self.__rows[0:row] + self.__rows[row + 1 :]
+        self.__adjust_size_cache()
+        self.notify(self, "pygamelib.gfx.ui.FormLayout.row:removed", row)
+        return True
+
+    def set_label(self, row: int, label: Union[str, base.Text]) -> None:
+        """
+        set the label to the row passed in parameter.
+        """
+        if row < self.count_rows() and (
+            isinstance(label, str) or isinstance(label, base.Text)
+        ):
+            # Text.text already takes care of segregating between str and Text objects.
+            self.__rows[row][0].text = label
+            if self.__rows[row][0].length > self.__longest_label:
+                self.__longest_label = self.__rows[row][0].length
+        # TODO: do we want to raise an exception if type is not correct
+
+    def set_widget(self, row: int, widget: Widget) -> None:
+        """
+        set the widget to the row passed in parameter.
+        """
+        if row < self.count_rows() and isinstance(widget, Widget):
+            self.__rows[row][1] = widget
+            if widget.height > self.__tallest_widget:
+                self.__tallest_widget = widget.height
+            if widget.width > self.__longest_widget:
+                self.__longest_widget = widget.width
+        # TODO: do we want to raise an exception if type is not correct
+
+    def get_row(self, row: int) -> Tuple[base.Text, Widget]:
+        r"""
+        Return the required row as a tuple of a label and a widget.
+        If the specified row does not exist either because row is not an int or the int
+        is bigger or smaller than the number or rows, the last row is returned.
+
+        :param row: The row number to get.
+        :type row: int
+        """
+        if not isinstance(row, int) or row < 0 or row >= len(self.__rows):
+            row = len(self.__rows) - 1
+        return (self.__rows[row][0], self.__rows[row][1])
+
+    def take_row(self, row: int) -> Tuple[base.Text, Widget]:
+        """
+        Take a row from the layout and return the label and the widget. All layout's
+        remaining rows are correctly renumbered.
+        If the specified row does not exist either because row is not an int or the int
+        is bigger or smaller than the number or rows, the last row is returned.
+        """
+        if not isinstance(row, int) or row < 0 or row >= len(self.__rows):
+            row = len(self.__rows) - 1
+        (label, widget) = self.__rows[row]
+        self.__rows = self.__rows[0:row] + self.__rows[row + 1 :]
+        self.__adjust_size_cache()
+        widget.detach(self)
+        self.notify(self, "pygamelib.gfx.ui.FormLayout.row:removed", row)
+        return (label, widget)
+
+    def render_to_buffer(
+        self,
+        buffer: "numpy.array",
+        row: int,
+        column: int,
+        buffer_height: int,
+        buffer_width: int,
+    ) -> None:
+        """Render the object from the display buffer to the frame buffer.
+
+        This method is automatically called by :func:`pygamelib.engine.Screen.render`.
+
+        :param buffer: A screen buffer to render the item into.
+        :type buffer: numpy.array
+        :param row: The row to render in.
+        :type row: int
+        :param column: The column to render in.
+        :type column: int
+        :param height: The total height of the display buffer.
+        :type height: int
+        :param width: The total width of the display buffer.
+        :type width: int
+
+        """
+        r_offset = 0
+        # Since this method is called most of the frames, we need to make it efficient
+        # therefor, we are checking for row wrapping before the loop even if it means
+        # duplicate some code.
+        if self.wrap_rows:
+            for r in range(0, self.count_rows()):
+                r_offset += self.spacing
+                # Culling rows that are not
+                if row + r + r_offset >= row + buffer_height:
+                    break
+                # Squash dot notation (I really hope it doesn't improve perfs anymore)
+                label: base.Text = self.__rows[r][0]
+                widget: Widget = self.__rows[r][1]
+                # Making sure that the label is the same color as the widget.
+                if isinstance(self.parent, Widget):
+                    label.bg_color = self.parent.ui_config.widget_bg_color
+                label.render_to_buffer(
+                    buffer[
+                        row + r + r_offset : row + r + r_offset + widget.height,
+                        column:,
+                    ],
+                    0,
+                    0,
+                    1,  # TODO: We need to use the actual label height here!
+                    buffer_width,
+                )
+                label.store_screen_position(row + r + r_offset, column)
+                r_offset += 1
+                widget.width = buffer_width - 1
+                widget.render_to_buffer(
+                    # TODO: we'll need to add the real row geometry and not just 1
+                    #       => looks done to me
+                    buffer[
+                        row + r + r_offset : row + r + r_offset + widget.height,
+                        column:,
+                    ],
+                    0,
+                    0,
+                    widget.height,
+                    buffer_width,
+                )
+                widget.store_screen_position(row + r + r_offset, column)
+                r_offset += widget.height
+        else:
+            for r in range(0, self.count_rows()):
+                r_offset += self.spacing
+                # Culling rows that are not
+                if row + r + r_offset >= row + buffer_height:
+                    break
+                # Squash dot notation (I really hope it doesn't improve perfs anymore)
+                label: base.Text = self.__rows[r][0]
+                widget: Widget = self.__rows[r][1]
+                # Making sure that the label is the same color as the widget.
+                if isinstance(self.parent, Widget):
+                    label.bg_color = self.parent.ui_config.widget_bg_color
+                label.render_to_buffer(
+                    buffer[
+                        row + r + r_offset : row + r + r_offset + widget.height,
+                        column : column + self.__longest_label + 1,
+                    ],
+                    0,
+                    0,
+                    widget.height,  # Label can use the same height as the widget
+                    self.__longest_label + 1,
+                )
+                label.store_screen_position(row + r + r_offset, column)
+                widget.width = buffer_width - self.__longest_label - 1
+                widget.render_to_buffer(
+                    # TODO: we'll need to add the real row geometry and not just 1
+                    #       => looks done to me
+                    buffer[
+                        row + r + r_offset : row + r + r_offset + widget.height,
+                        column + self.__longest_label + 1 :,
+                    ],
+                    0,
+                    0,
+                    widget.height,
+                    buffer_width - (self.__longest_label + 1),
+                )
+                widget.store_screen_position(
+                    row + r + r_offset, column + self.__longest_label + 1
+                )
+                r_offset += widget.height
 
 
 class Cursor(base.PglBaseObject):

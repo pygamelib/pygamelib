@@ -24,18 +24,21 @@ class TestBase(unittest.TestCase):
         self.game.screen = engine.Screen(50, 50)
 
     def test_uiconfig(self):
-        with self.assertRaises(base.PglInvalidTypeException):
-            ui.UiConfig()
+        conf_init = ui.UiConfig()
+        self.assertIsInstance(conf_init, ui.UiConfig)
+        self.assertIsInstance(conf_init.game, engine.Game)
         conf = ui.UiConfig.instance(game=self.game)
         self.assertIsInstance(conf, ui.UiConfig)
 
     def test_dialog(self):
-        with self.assertRaises(base.PglInvalidTypeException):
-            ui.Dialog()
+        d = ui.Dialog()
+        self.assertIsInstance(d.config, ui.UiConfig)
         d = ui.Dialog(config=ui.UiConfig.instance())
         self.assertIsInstance(d, ui.Dialog)
         d.config = ui.UiConfig.instance()
         self.assertIsInstance(d.config, ui.UiConfig)
+        with self.assertRaises(base.PglInvalidTypeException):
+            ui.Dialog(config="bork")
         with self.assertRaises(base.PglInvalidTypeException):
             d.config = "bork"
         with self.assertRaises(base.PglInvalidTypeException):
@@ -46,6 +49,10 @@ class TestBase(unittest.TestCase):
             d.show()
 
     def test_box(self):
+        b = ui.Box(
+            20, 10, "test box", None, True, core.Sprixel(" "), constants.ALIGN_LEFT
+        )
+        self.assertIsInstance(b.config, ui.UiConfig)
         conf = ui.UiConfig.instance(game=self.game)
         conf.borderless_dialog = False
         b = ui.Box(
@@ -116,6 +123,17 @@ class TestBase(unittest.TestCase):
         pb.value = 20
         self.game.screen.force_update()
         self.game.screen.force_update()
+
+        pb = ui.ProgressBar(
+            0,
+            100,
+            20,
+            core.Sprixel("="),
+            core.Sprixel("-"),
+            None,
+        )
+        self.assertIsInstance(pb.config, ui.UiConfig)
+
         pb = ui.ProgressBar(
             0,
             100,
@@ -218,6 +236,8 @@ class TestBase(unittest.TestCase):
             ui.LineInputDialog(123, "123", config=conf)
         with self.assertRaises(base.PglInvalidTypeException):
             ui.LineInputDialog(default=12, config=conf)
+        ld = ui.LineInputDialog("title", base.Text("test line input"), config=conf)
+        self.assertEqual(ld.label.text, "test line input")
         ld = ui.LineInputDialog("title", "test line input", config=conf)
         self.assertEqual(ld.label.text, "test line input")
         self.assertEqual(ld.title, "title")
@@ -423,6 +443,8 @@ class TestBase(unittest.TestCase):
         with self.assertRaises(base.PglInvalidTypeException):
             cpd.title = 42
         cpd.set_color(core.Color(1, 2, 3))
+        cp = ui.ColorPicker(config=conf, orientation=constants.Orientation.VERTICAL)
+        self.assertEqual(cp._ColorPicker__orientation, constants.Orientation.VERTICAL)
         cd = ui.ColorPicker(config=conf)
         self.assertEqual(cd.selection, 0)
         cd.selection = 1

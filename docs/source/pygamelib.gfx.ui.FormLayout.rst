@@ -22,14 +22,17 @@ FormLayout
       ~FormLayout.add_widget
       ~FormLayout.attach
       ~FormLayout.count
-      ~FormLayout.count_columns
       ~FormLayout.count_rows
       ~FormLayout.detach
       ~FormLayout.handle_notification
+      ~FormLayout.insert_row
       ~FormLayout.notify
       ~FormLayout.remove_row
       ~FormLayout.render_to_buffer
+      ~FormLayout.set_label
+      ~FormLayout.set_widget
       ~FormLayout.store_screen_position
+      ~FormLayout.take_row
       ~FormLayout.widgets
    
    
@@ -40,15 +43,11 @@ FormLayout
 
    .. autosummary::
    
-      ~FormLayout.column_minimum_width
       ~FormLayout.height
-      ~FormLayout.horizontal_spacing
       ~FormLayout.parent
-      ~FormLayout.row_minimum_height
       ~FormLayout.screen_column
       ~FormLayout.screen_row
       ~FormLayout.spacing
-      ~FormLayout.vertical_spacing
       ~FormLayout.width
    
    
