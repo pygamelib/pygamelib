@@ -236,6 +236,8 @@ class TestBase(unittest.TestCase):
             ui.LineInputDialog(123, "123", config=conf)
         with self.assertRaises(base.PglInvalidTypeException):
             ui.LineInputDialog(default=12, config=conf)
+        ld = ui.LineInputDialog("title", base.Text("test line input"), config=conf)
+        self.assertEqual(ld.label.text, "test line input")
         ld = ui.LineInputDialog("title", "test line input", config=conf)
         self.assertEqual(ld.label.text, "test line input")
         self.assertEqual(ld.title, "title")
