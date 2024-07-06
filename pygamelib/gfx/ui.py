@@ -31,7 +31,7 @@ __docformat__ = "restructuredtext"
 from typing import Union, Optional, Set, List, TYPE_CHECKING
 from pygamelib.assets import graphics
 from pygamelib.gfx import core
-from pygamelib import base, constants
+from pygamelib import base, constants, engine
 from pygamelib import functions
 from pathlib import Path
 
@@ -115,44 +115,44 @@ class UiConfig(object):
 
     def __init__(
         self,
-        game=None,
-        box_vertical_border=graphics.BoxDrawings.LIGHT_VERTICAL,
-        box_horizontal_border=graphics.BoxDrawings.LIGHT_HORIZONTAL,
-        box_top_left_corner=graphics.BoxDrawings.LIGHT_ARC_DOWN_AND_RIGHT,
-        box_top_right_corner=graphics.BoxDrawings.LIGHT_ARC_DOWN_AND_LEFT,
-        box_bottom_left_corner=graphics.BoxDrawings.LIGHT_ARC_UP_AND_RIGHT,
-        box_bottom_right_corner=graphics.BoxDrawings.LIGHT_ARC_UP_AND_LEFT,
-        box_vertical_and_right=graphics.BoxDrawings.LIGHT_VERTICAL_AND_RIGHT,
-        box_vertical_and_left=graphics.BoxDrawings.LIGHT_VERTICAL_AND_LEFT,
+        game: engine.Game = None,
+        box_vertical_border: str = graphics.BoxDrawings.LIGHT_VERTICAL,
+        box_horizontal_border: str = graphics.BoxDrawings.LIGHT_HORIZONTAL,
+        box_top_left_corner: str = graphics.BoxDrawings.LIGHT_ARC_DOWN_AND_RIGHT,
+        box_top_right_corner: str = graphics.BoxDrawings.LIGHT_ARC_DOWN_AND_LEFT,
+        box_bottom_left_corner: str = graphics.BoxDrawings.LIGHT_ARC_UP_AND_RIGHT,
+        box_bottom_right_corner: str = graphics.BoxDrawings.LIGHT_ARC_UP_AND_LEFT,
+        box_vertical_and_right: str = graphics.BoxDrawings.LIGHT_VERTICAL_AND_RIGHT,
+        box_vertical_and_left: str = graphics.BoxDrawings.LIGHT_VERTICAL_AND_LEFT,
         fg_color: core.Color = core.Color(255, 255, 255),
         bg_color: core.Color = core.Color(0, 128, 128),
         fg_color_inactive: core.Color = core.Color(128, 128, 128),
         bg_color_selected: core.Color = core.Color(128, 128, 128),
-        bg_color_not_selected=None,
+        bg_color_not_selected: Optional[core.Color] = None,
         fg_color_selected: core.Color = core.Color(0, 255, 0),
         fg_color_not_selected: core.Color = core.Color(255, 255, 255),
         bg_color_menu_not_selected: core.Color = core.Color(128, 128, 128),
         border_fg_color: core.Color = core.Color(255, 255, 255),
-        border_bg_color: core.Color = None,
+        border_bg_color: Optional[core.Color] = None,
         borderless_dialog: bool = True,
         widget_bg_color: core.Color = core.Color(0, 128, 128),
         input_fg_color: core.Color = core.Color(255, 255, 255),
         input_bg_color: core.Color = core.Color(163, 163, 163),
-    ):
+    ) -> None:
         super().__init__()
         if game is None:
             raise base.PglInvalidTypeException(
                 "UiConfig: the 'game' parameter cannot be None."
             )
         self.game = game
-        self.box_vertical_border = box_vertical_border
-        self.box_horizontal_border = box_horizontal_border
-        self.box_top_left_corner = box_top_left_corner
-        self.box_top_right_corner = box_top_right_corner
-        self.box_bottom_left_corner = box_bottom_left_corner
-        self.box_bottom_right_corner = box_bottom_right_corner
-        self.box_vertical_and_right = box_vertical_and_right
-        self.box_vertical_and_left = box_vertical_and_left
+        self.box_vertical_border: str = box_vertical_border
+        self.box_horizontal_border: str = box_horizontal_border
+        self.box_top_left_corner: str = box_top_left_corner
+        self.box_top_right_corner: str = box_top_right_corner
+        self.box_bottom_left_corner: str = box_bottom_left_corner
+        self.box_bottom_right_corner: str = box_bottom_right_corner
+        self.box_vertical_and_right: str = box_vertical_and_right
+        self.box_vertical_and_left: str = box_vertical_and_left
         self.fg_color: core.Color = fg_color
         self.bg_color: core.Color = bg_color
         self.fg_color_inactive: core.Color = fg_color_inactive
@@ -163,13 +163,13 @@ class UiConfig(object):
         self.bg_color_menu_not_selected: core.Color = bg_color_menu_not_selected
         self.border_fg_color: core.Color = border_fg_color
         self.border_bg_color: core.Color = border_bg_color
-        self.borderless_dialog = borderless_dialog
+        self.borderless_dialog: bool = borderless_dialog
         self.widget_bg_color: core.Color = widget_bg_color
         self.input_fg_color: core.Color = input_fg_color
         self.input_bg_color: core.Color = input_bg_color
 
     @classmethod
-    def instance(cls, *args, **kwargs):
+    def instance(cls, *args, **kwargs) -> 'UiConfig':
         """Returns the instance of the UiConfig object
 
         Creates an UiConfig object on first call an then returns the same instance
@@ -199,7 +199,7 @@ class Dialog(object):
     inputs.
     """
 
-    def __init__(self, config=None) -> None:
+    def __init__(self, config: UiConfig) -> None:
         """
         This constructor takes only one parameter.
 
@@ -215,14 +215,14 @@ class Dialog(object):
         setattr(self, "_user_input", "")
 
     @property
-    def config(self):
+    def config(self) -> UiConfig:
         """
         Get and set the config object (:class:`UiConfig`).
         """
         return self._config
 
     @config.setter
-    def config(self, value):
+    def config(self, value: UiConfig) -> None:
         if isinstance(value, UiConfig):
             self._config = value
         else:
@@ -231,14 +231,14 @@ class Dialog(object):
             )
 
     @property
-    def user_input(self):
+    def user_input(self) -> str:
         """
         Facility to store and retrieve the user input.
         """
         return self._user_input
 
     @user_input.setter
-    def user_input(self, value):
+    def user_input(self, value: str) -> None:
         if type(value) is str:
             self._user_input = value
         else:
@@ -246,10 +246,10 @@ class Dialog(object):
                 "Dialog.user_input = value: value needs to be a str."
             )
 
-    def _store_position(self, row, column):
+    def _store_position(self, row: int, column: int) -> None:
         self._position = [row, column]
 
-    def show(self):  # pragma: no cover
+    def show(self) -> None:  # pragma: no cover
         """
         This is a virtual method, calling it directly will only raise a
         NotImplementedError. Each class that inheritate Dialog needs to implement
@@ -270,7 +270,7 @@ class Box(object):
         self,
         width: int,
         height: int,
-        title: str = "",
+        title: Union[str, 'base.Text'],
         config: UiConfig = None,
         fill: bool = False,
         filling_sprixel: core.Sprixel = None,
@@ -377,14 +377,14 @@ class Box(object):
             )
 
     @property
-    def title(self):
+    def title(self) -> Union[str, base.Text]:
         """
         Get and set the title, only accepts str or :class:`~base.Text`.
         """
         return self.__title
 
     @title.setter
-    def title(self, value) -> None:
+    def title(self, value: Union[str, base.Text]) -> None:
         if isinstance(value, base.Text) or type(value) is str:
             self.__title = value
             self._build_cache()
@@ -428,7 +428,7 @@ class Box(object):
             )
 
     def render_to_buffer(
-        self, buffer, row, column, buffer_height, buffer_width
+        self, buffer: "numpy.array", row: int, column: int, buffer_height: int, buffer_width: int
     ) -> None:
         """Render the box from the display buffer to the frame buffer.
 
@@ -446,11 +446,11 @@ class Box(object):
         :type width: int
 
         """
-        vert_sprix = self._cache["dialog_vertical_border"]
-        horiz_sprix = self._cache["dialog_horizontal_border"]
+        vert_sprix: core.Sprixel = self._cache["dialog_vertical_border"]
+        horiz_sprix: core.Sprixel = self._cache["dialog_horizontal_border"]
         buffer[row][column] = self._cache["top_right_corner"]
-        self_width = self.__width
-        self_height = self.__height
+        self_width: int = self.__width
+        self_height: int = self.__height
         if column + self.__width >= buffer_width:
             self.__width = buffer_width - column
         if row + self.__height >= buffer_height:
@@ -475,7 +475,7 @@ class Box(object):
                 buffer_height,
                 buffer_width,
             )
-            cs = (
+            cs: int = (
                 column
                 + 1
                 + int(self.__width / 2 - 1 - len(self._cache["title"].text) / 2)
@@ -511,13 +511,13 @@ class ProgressBar(object):
 
     def __init__(
         self,
-        value=0,
-        maximum=100,
-        width=20,
-        progress_marker=graphics.GeometricShapes.BLACK_RECTANGLE,
-        empty_marker=" ",
-        config=None,
-    ):
+        value: int = 0,
+        maximum: int = 100,
+        width: int = 20,
+        progress_marker: 'graphics.GeometricShapes' = graphics.GeometricShapes.BLACK_RECTANGLE,
+        empty_marker: Union[str, 'core.Sprixel'] = None,
+        config: 'UiConfig' = None,
+    ) -> None:
         """
         :param value: The initial value parameter. It represents the progression.
         :type value: int
@@ -569,7 +569,7 @@ class ProgressBar(object):
         self._cache = {}
         self._build_cache()
 
-    def _build_cache(self):
+    def _build_cache(self) -> None:
         if isinstance(self.__empty_marker, core.Sprixel):
             self._cache["pb_empty"] = self.__empty_marker
         else:
@@ -584,14 +584,14 @@ class ProgressBar(object):
             )
 
     @property
-    def config(self):
+    def config(self) -> 'UiConfig':
         """
         Get and set the config object (:class:`UiConfig`).
         """
         return self.__config
 
     @config.setter
-    def config(self, value):
+    def config(self, value: 'UiConfig') -> None:
         if isinstance(value, UiConfig):
             self.__config = value
             self._build_cache()
@@ -601,7 +601,7 @@ class ProgressBar(object):
             )
 
     @property
-    def progress_marker(self):
+    def progress_marker(self) -> Union['core.Sprixel', str]:
         """
         Get and set the progress marker, preferrably a :class:`~core.Sprixel` but could
         be a str.
@@ -609,7 +609,7 @@ class ProgressBar(object):
         return self.__progress_marker
 
     @progress_marker.setter
-    def progress_marker(self, value):
+    def progress_marker(self, value: Union['core.Sprixel', str, base.Text]) -> None:
         if isinstance(value, core.Sprixel):
             self.__progress_marker = value
             self._cache["pb_progress"] = value
@@ -627,7 +627,7 @@ class ProgressBar(object):
         self.__config.game.screen.trigger_rendering()
 
     @property
-    def empty_marker(self):
+    def empty_marker(self) -> Union['core.Sprixel', str]:
         """
         Get and set the empty marker, preferrably a :class:`~core.Sprixel` but could
         be a str.
@@ -635,7 +635,7 @@ class ProgressBar(object):
         return self.__progress_marker
 
     @empty_marker.setter
-    def empty_marker(self, value):
+    def empty_marker(self, value: Union['core.Sprixel', str, base.Text]) -> None:
         if isinstance(value, core.Sprixel):
             self.__empty_marker = value
             self._cache["pb_empty"] = value
@@ -653,14 +653,14 @@ class ProgressBar(object):
         self.__config.game.screen.trigger_rendering()
 
     @property
-    def value(self):
+    def value(self) -> int:
         """
         Get and set the current progress value, it has to be an int.
         """
         return self.__value
 
     @value.setter
-    def value(self, value):
+    def value(self, value: int) -> None:
         if type(value) is int:
             self.__value = value
         else:
@@ -670,14 +670,14 @@ class ProgressBar(object):
         self.__config.game.screen.trigger_rendering()
 
     @property
-    def maximum(self):
+    def maximum(self) -> int:
         """
         Get and set the maximum possible progress, it has to be an int.
         """
         return self.__maximum
 
     @maximum.setter
-    def maximum(self, value):
+    def maximum(self, value: int) -> None:
         if type(value) is int:
             self.__maximum = value
         else:
@@ -686,7 +686,7 @@ class ProgressBar(object):
             )
         self.__config.game.screen.trigger_rendering()
 
-    def render_to_buffer(self, buffer, row, column, buffer_height, buffer_width):
+    def render_to_buffer(self, buffer: "numpy.array", row: int, column: int, buffer_height: int, buffer_width: int) -> None:
         """Render the object from the display buffer to the frame buffer.
 
         This method is automatically called by :func:`pygamelib.engine.Screen.render`.
@@ -726,16 +726,16 @@ class ProgressDialog(Dialog):
 
     def __init__(
         self,
-        label=base.Text("Progress dialog"),
-        value=0,
-        maximum=100,
-        width=20,
-        progress_marker=graphics.GeometricShapes.BLACK_RECTANGLE,
-        empty_marker=" ",
-        adaptive_width=True,
-        destroy_on_complete=True,
-        config=None,
-    ):
+        label: Union[str, 'base.Text'] = base.Text("Progress dialog"),
+        value: int = 0,
+        maximum: int = 100,
+        width: int = 20,
+        progress_marker: 'core.Sprixel' = graphics.GeometricShapes.BLACK_RECTANGLE,
+        empty_marker: Union[str, 'core.Sprixel'] = None,
+        adaptive_width: bool = True,
+        destroy_on_complete: bool = True,
+        config: 'UiConfig'= None,
+    ) -> None:
         """
         The constructor accepts the following parameters.
 
@@ -760,7 +760,7 @@ class ProgressDialog(Dialog):
         :type adaptive_width: bool
         :param destroy_on_complete: If True, the dialog will remove itself from the
            screen when complete (i.e: when value == maximum)
-        :type destroy_on_complete:
+        :type destroy_on_complete: bool
         :param config: The configuration object.
         :type config: :class:`UiConfig`
 
@@ -794,7 +794,7 @@ class ProgressDialog(Dialog):
         self._cache = {}
         self._build_cache()
 
-    def _build_cache(self):
+    def _build_cache(self) -> None:
         if isinstance(self.__label, base.Text):
             self._cache["label"] = self.__label
         else:
@@ -818,14 +818,14 @@ class ProgressDialog(Dialog):
             )
 
     @property
-    def label(self):
+    def label(self) -> Union[str, 'base.Text']:
         """
         Get and set the label of the dialog, it has to be a str or :class:`base.Text`.
         """
         return self.__label
 
     @label.setter
-    def label(self, value):
+    def label(self, value: Union[str, 'base.Text']) -> None:
         if isinstance(value, base.Text):
             self.__label = value.text
             self._cache["label"] = value
@@ -841,14 +841,14 @@ class ProgressDialog(Dialog):
         self.config.game.screen.trigger_rendering()
 
     @property
-    def value(self):
+    def value(self) -> int:
         """
         Get and set the current progress value, it has to be an int.
         """
         return self.__value
 
     @value.setter
-    def value(self, val):
+    def value(self, val: int) -> None:
         if type(val) is int:
             self.__value = val
             self._cache["pb"].value = self.__value
@@ -859,14 +859,14 @@ class ProgressDialog(Dialog):
         self.config.game.screen.trigger_rendering()
 
     @property
-    def maximum(self):
+    def maximum(self) -> int:
         """
         Get and set the maximum possible progress, it has to be an int.
         """
         return self.__maximum
 
     @maximum.setter
-    def maximum(self, value):
+    def maximum(self, value: int) -> None:
         if type(value) is int:
             self.__maximum = value
             self._build_cache()
@@ -876,7 +876,7 @@ class ProgressDialog(Dialog):
             )
         self.config.game.screen.trigger_rendering()
 
-    def render_to_buffer(self, buffer, row, column, buffer_height, buffer_width):
+    def render_to_buffer(self, buffer: "numpy.array", row: int, column: int, buffer_height: int, buffer_width: int) -> None:
         """Render the object from the display buffer to the frame buffer.
 
         This method is automatically called by :func:`pygamelib.engine.Screen.render`.
@@ -899,7 +899,7 @@ class ProgressDialog(Dialog):
         if not self.config.borderless_dialog:
             offset = 1
             # We need to account for the borders in the box size
-            box = Box(self.__width + 2, 4, config=self.config)
+            box = Box(self.__width + 2, 4, title="", config=self.config)
             box.render_to_buffer(buffer, row, column, buffer_height, buffer_width)
         lbl = core.Sprite.from_text(self._cache["label"])
 
@@ -917,7 +917,7 @@ class ProgressDialog(Dialog):
         if self.destroy_on_complete and self.__value == self.__maximum:
             self.__destroy = True
 
-    def show(self):  # pragma: no cover
+    def show(self) -> None:  # pragma: no cover
         """
         The show method does nothing in the ProgressDialog. It is a notable exception
         and the only dialog widget in the UI module to do that.
@@ -1030,6 +1030,7 @@ class MessageDialog(Dialog):
         self.__cache = {"data": []}
         self.__width = width
         self.__height = height
+        self.__title = title
         self.__adaptive_height = adaptive_height
         self.__data = list()
         if data is not None:
@@ -1060,6 +1061,7 @@ class MessageDialog(Dialog):
             self.__cache["border"] = Box(
                 self.__width,
                 height + 2,
+                title=self.title,
                 config=self.config,
                 fill=True,
                 filling_sprixel=core.Sprixel(" ", bg_color=self.config.bg_color),
@@ -1079,7 +1081,7 @@ class MessageDialog(Dialog):
             return self.__height
 
     @height.setter
-    def height(self, value: int):
+    def height(self, value: int) -> None:
         if type(value) is int:
             self.__height = value
         else:
@@ -1096,7 +1098,7 @@ class MessageDialog(Dialog):
         return self.__title
 
     @title.setter
-    def title(self, value) -> None:
+    def title(self, value: str) -> None:
         if isinstance(value, base.Text):
             self.__title = value.text
         elif type(value) is str:
@@ -1158,7 +1160,7 @@ class MessageDialog(Dialog):
             )
 
     def render_to_buffer(
-        self, buffer, row, column, buffer_height, buffer_width
+        self, buffer: "numpy.array", row: int, column: int, buffer_height: int, buffer_width: int
     ) -> None:
         """Render the object from the display buffer to the frame buffer.
 
@@ -1275,11 +1277,11 @@ class LineInputDialog(Dialog):
 
     def __init__(
         self,
-        title=None,
-        label="Input a value:",
-        default="",
-        filter=constants.InputValidator.PRINTABLE_FILTER,
-        config=None,
+        title: str = None,
+        label: Union[str, 'base.Text'] ="Input a value:",
+        default: str = "",
+        filter: constants.InputValidator = constants.InputValidator.PRINTABLE_FILTER,
+        config: UiConfig = None,
     ) -> None:
         """
         :param title: The short title of the dialog. Only used when the dialog is not
@@ -1341,7 +1343,7 @@ class LineInputDialog(Dialog):
         return self.__label
 
     @label.setter
-    def label(self, value) -> None:
+    def label(self, value: Union[str, 'base.Text']) -> None:
         if isinstance(value, base.Text):
             self.__label = value
         elif type(value) is str:
@@ -1360,7 +1362,7 @@ class LineInputDialog(Dialog):
         return self.__title
 
     @title.setter
-    def title(self, value) -> None:
+    def title(self, value: str) -> None:
         if isinstance(value, base.Text):
             self.__title = value.text
         elif type(value) is str:
@@ -1372,7 +1374,7 @@ class LineInputDialog(Dialog):
         self.config.game.screen.trigger_rendering()
 
     def render_to_buffer(
-        self, buffer, row, column, buffer_height, buffer_width
+        self, buffer: "numpy.array", row: int, column: int, buffer_height: int, buffer_width: int
     ) -> None:
         """Render the object from the display buffer to the frame buffer.
 
@@ -1406,7 +1408,7 @@ class LineInputDialog(Dialog):
             buffer, row + 1 + offset, column + offset, buffer_height, buffer_width
         )
 
-    def show(self):  # pragma: no cover
+    def show(self) -> str:  # pragma: no cover
         """
         Show the dialog and execute the event loop.
         Until this method returns, all keyboards event are processed by the local event
@@ -2476,7 +2478,7 @@ class GridSelector(object):
             if i == self.__current_choice % len(self.__cache):
                 border_fg_color = self._config.border_fg_color
                 self._config.border_fg_color = core.Color(0, 255, 0)
-                sel = Box(self.__cache[i].length + 2, 3, config=self._config)
+                sel = Box(self.__cache[i].length + 2, 3, title="", config=self._config)
                 sel.render_to_buffer(
                     buffer,
                     row + row_offset - 1,
@@ -2895,7 +2897,7 @@ class ColorPicker(object):
             buffer[row][column + offset] = ":"
             offset += 2
             if idx == self.__selection:
-                sel = Box(len(col_str) + 2, 3, config=self._config)
+                sel = Box(len(col_str) + 2, 3, title="", config=self._config)
                 sel.render_to_buffer(
                     buffer, row - 1, column + offset - 1, buffer_height, buffer_width
                 )

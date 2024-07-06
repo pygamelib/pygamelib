@@ -31,7 +31,7 @@ class TestBase(unittest.TestCase):
 
     def test_dialog(self):
         with self.assertRaises(base.PglInvalidTypeException):
-            ui.Dialog()
+            ui.Dialog(config=ui.UiConfig)
         d = ui.Dialog(config=ui.UiConfig.instance())
         self.assertIsInstance(d, ui.Dialog)
         d.config = ui.UiConfig.instance()
