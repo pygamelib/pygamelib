@@ -5,7 +5,7 @@ from colorama import Fore, Back, Style, init
 from blessed import Terminal
 
 # import time
-from typing import Any
+from typing import Any, Optional
 
 __docformat__ = "restructuredtext"
 """
@@ -129,8 +129,12 @@ class PglBaseObject(object):
             return True
         return False
 
-    def notify(self, modifier=None, attribute: str = None, value: Any = None) -> None:
-
+    def notify(
+        self,
+        modifier: Optional["PglBaseObject"] = None,
+        attribute: Optional[str] = None,
+        value: Optional[Any] = None,
+    ) -> None:
         """
         Notify all the observers that a change occurred.
 
@@ -164,7 +168,6 @@ class PglBaseObject(object):
             self._observers.append(cache)
 
     def attach(self, observer):
-
         """
         Attach an observer to this instance. It means that until it is detached, it will
         be notified every time that a notification is issued (usually on changes).
@@ -193,7 +196,6 @@ class PglBaseObject(object):
             return True
 
     def detach(self, observer):
-
         """
         Detach an observer from this instance.
         If observer is not in the list this returns False.
@@ -374,7 +376,7 @@ class Text(PglBaseObject):
         return ret_data
 
     @classmethod
-    def load(cls, data: dict = None):
+    def load(cls, data: dict):
         """Load data and create a new Text object out of it.
 
         .. versionadded:: 1.3.0
@@ -638,6 +640,7 @@ class Text(PglBaseObject):
                 idx = 0
                 # FIXME: this can be optimized by switching the for to a
                 # FIXME: range(0, min(column + idx, buffer_width)) <- not idx but len()
+
                 for char in line:
                     if column + idx >= buffer_width:
                         break
@@ -1244,9 +1247,7 @@ class Vector2D(object):
             if speed.length() == 0.0:
                 print('We are not moving... at all...')
         """
-        return round(
-            math.sqrt(self.row ** 2 + self.column ** 2), self.rounding_precision
-        )
+        return round(math.sqrt(self.row**2 + self.column**2), self.rounding_precision)
 
     def unit(self):
         """Returns a normalized unit vector.

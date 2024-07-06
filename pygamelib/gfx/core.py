@@ -165,7 +165,7 @@ class Color(base.PglBaseObject):
 
             color = Color.from_ansi()
         """
-        if re.search("\[4[01234567]{1}m", string):
+        if re.search(r"\[4[01234567]{1}m", string):
             # Here we deal with legacy colors,
             if "[40m" in string:
                 return cls(0, 0, 0)
@@ -184,7 +184,7 @@ class Color(base.PglBaseObject):
             elif "[47m" in string:
                 return cls(255, 255, 255)
         else:
-            match = re.findall(".*\[[34]8;2;(\d+);(\d+);(\d+)m.*", string)
+            match = re.findall(r".*\[[34]8;2;(\d+);(\d+);(\d+)m.*", string)
             if len(match) > 0:
                 return Color(int(match[0][0]), int(match[0][1]), int(match[0][2]))
         return None
@@ -306,7 +306,7 @@ class Color(base.PglBaseObject):
         if data is None or data == "":
             return
         elif type(data) is str and (
-            ("[38;" in data or "[48;" in data) or re.search("\[4[01234567]{1}m", data)
+            ("[38;" in data or "[48;" in data) or re.search(r"\[4[01234567]{1}m", data)
         ):
             # This is for backward compatibility with 1.2.X
             return cls.from_ansi(data)
@@ -342,7 +342,6 @@ class Color(base.PglBaseObject):
 
 
 class Sprixel(base.PglBaseObject):
-
     """
     A sprixel is the representation of 1 cell of the sprite or one cell on the Board.
     It is not really a pixel but it is the closest notion we'll have.

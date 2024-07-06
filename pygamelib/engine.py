@@ -1491,7 +1491,7 @@ class Board(base.PglBaseObject):
             retvals = []
             for item in self._movables:
                 counter = 0
-                for (arg_key, arg_value) in kwargs.items():
+                for arg_key, arg_value in kwargs.items():
                     if arg_value in getattr(item, arg_key):
                         counter += 1
                 if counter == len(kwargs):
@@ -1525,7 +1525,7 @@ class Board(base.PglBaseObject):
             retvals = []
             for item in self._immovables:
                 counter = 0
-                for (arg_key, arg_value) in kwargs.items():
+                for arg_key, arg_value in kwargs.items():
                     if arg_value in getattr(item, arg_key):
                         counter += 1
                 if counter == len(kwargs):
@@ -1557,9 +1557,9 @@ class Board(base.PglBaseObject):
         data["ui_border_bottom"] = self.ui_border_bottom
         data["ui_board_void_cell"] = self.ui_board_void_cell
         if self.ui_board_void_cell_sprixel is not None:
-            data[
-                "ui_board_void_cell_sprixel"
-            ] = self.ui_board_void_cell_sprixel.serialize()
+            data["ui_board_void_cell_sprixel"] = (
+                self.ui_board_void_cell_sprixel.serialize()
+            )
         else:
             data["ui_board_void_cell_sprixel"] = core.Sprixel(
                 self.ui_board_void_cell
@@ -2803,7 +2803,7 @@ class Game(base.PglBaseObject):
                                     # Build a unit movement vector
                                     umv = base.Vector2D.from_direction(
                                         umv,
-                                        1
+                                        1,
                                         # proj.actuator.next_move(), 1
                                     )
                                 # Build a movement vector
@@ -3272,7 +3272,6 @@ class Game(base.PglBaseObject):
         self.state = State.PAUSED
 
     def stop(self):
-
         """Set the game engine state to STOPPED.
 
         Example::
@@ -4687,7 +4686,7 @@ class Screen(base.PglBaseObject):
             return self._display_buffer[row][column]
 
     def display_line(self, *text, end="\n", file=sys.stdout, flush=False):
-        """
+        r"""
 
         A wrapper to Python's print() builtin function except it will always add an
         ANSI sequence to clear the end of the line. Making it more suitable to use in
