@@ -31,7 +31,7 @@ __docformat__ = "restructuredtext"
 from typing import Union, Optional, Set, List, TYPE_CHECKING
 from pygamelib.assets import graphics
 from pygamelib.gfx import core
-from pygamelib import base, constants, engine
+from pygamelib import base, constants
 from pygamelib import functions
 from pathlib import Path
 
