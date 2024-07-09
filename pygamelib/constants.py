@@ -4,7 +4,7 @@ Documentation is located in docs/source/constants.rst
 """
 
 # Main version
-PYGAMELIB_VERSION = "1.3.0"
+PYGAMELIB_VERSION = "1.3.1"
 
 # Directions
 NO_DIR = 10000000

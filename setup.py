@@ -13,9 +13,10 @@ with open("README.md", "r") as fh:
 # Compatibility layer between Pipenv and Pip requirements.txt
 # See https://github.com/pypa/pipenv/issues/209
 pipfile = Project(chdir=False).parsed_pipfile
-requirements_path = convert_deps_to_pip(pipfile["packages"])
+requirements = convert_deps_to_pip(pipfile["packages"])
 
-INSTALL_PACKAGES = open(requirements_path).read().splitlines()
+INSTALL_PACKAGES = list(requirements.values())
+
 
 setuptools.setup(
     name="pygamelib",
@@ -28,6 +29,8 @@ setuptools.setup(
     install_requires=INSTALL_PACKAGES,
     url="https://www.pygamelib.org",
     packages=setuptools.find_packages(),
+    include_package_data=True,
+    zip_safe=False,
     scripts=["pgl-editor.py", "pgl-board-tester.py", "pgl-sprite-editor.py"],
     keywords=["game", "development", "beginner", "console", "terminal"],
     classifiers=[
