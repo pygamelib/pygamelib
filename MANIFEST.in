@@ -1,0 +1,3 @@
+include pygamelib/assets/fonts/*/config.json
+include pygamelib/assets/fonts/*/glyphs.spr
+include pygamelib/assets/fonts/*/Readme.md
