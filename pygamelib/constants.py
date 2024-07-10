@@ -9,7 +9,7 @@ Starting with version 1.4.0, all constants must be an Enum.
 """
 
 # Main version
-PYGAMELIB_VERSION = "1.3.0"
+PYGAMELIB_VERSION = "1.3.1"
 
 # Directions
 NO_DIR = 10000000
