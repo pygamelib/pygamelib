@@ -169,7 +169,7 @@ class UiConfig(object):
         self.input_bg_color: core.Color = input_bg_color
 
     @classmethod
-    def instance(cls, *args, **kwargs) -> 'UiConfig':
+    def instance(cls, *args, **kwargs) -> "UiConfig":
         """Returns the instance of the UiConfig object
 
         Creates an UiConfig object on first call an then returns the same instance
@@ -270,7 +270,7 @@ class Box(object):
         self,
         width: int,
         height: int,
-        title: Union[str, 'base.Text'],
+        title: Union[str, "base.Text"],
         config: UiConfig = None,
         fill: bool = False,
         filling_sprixel: core.Sprixel = None,
@@ -428,7 +428,12 @@ class Box(object):
             )
 
     def render_to_buffer(
-        self, buffer: "numpy.array", row: int, column: int, buffer_height: int, buffer_width: int
+        self,
+        buffer: "numpy.array",
+        row: int,
+        column: int,
+        buffer_height: int,
+        buffer_width: int,
     ) -> None:
         """Render the box from the display buffer to the frame buffer.
 
@@ -514,9 +519,9 @@ class ProgressBar(object):
         value: int = 0,
         maximum: int = 100,
         width: int = 20,
-        progress_marker: 'graphics.GeometricShapes' = graphics.GeometricShapes.BLACK_RECTANGLE,
-        empty_marker: Union[str, 'core.Sprixel'] = None,
-        config: 'UiConfig' = None,
+        progress_marker: "graphics.GeometricShapes" = graphics.GeometricShapes.BLACK_RECTANGLE,
+        empty_marker: Union[str, "core.Sprixel"] = None,
+        config: "UiConfig" = None,
     ) -> None:
         """
         :param value: The initial value parameter. It represents the progression.
@@ -584,14 +589,14 @@ class ProgressBar(object):
             )
 
     @property
-    def config(self) -> 'UiConfig':
+    def config(self) -> "UiConfig":
         """
         Get and set the config object (:class:`UiConfig`).
         """
         return self.__config
 
     @config.setter
-    def config(self, value: 'UiConfig') -> None:
+    def config(self, value: "UiConfig") -> None:
         if isinstance(value, UiConfig):
             self.__config = value
             self._build_cache()
@@ -601,7 +606,7 @@ class ProgressBar(object):
             )
 
     @property
-    def progress_marker(self) -> Union['core.Sprixel', str]:
+    def progress_marker(self) -> Union["core.Sprixel", str]:
         """
         Get and set the progress marker, preferrably a :class:`~core.Sprixel` but could
         be a str.
@@ -609,7 +614,7 @@ class ProgressBar(object):
         return self.__progress_marker
 
     @progress_marker.setter
-    def progress_marker(self, value: Union['core.Sprixel', str, base.Text]) -> None:
+    def progress_marker(self, value: Union["core.Sprixel", str, base.Text]) -> None:
         if isinstance(value, core.Sprixel):
             self.__progress_marker = value
             self._cache["pb_progress"] = value
@@ -627,7 +632,7 @@ class ProgressBar(object):
         self.__config.game.screen.trigger_rendering()
 
     @property
-    def empty_marker(self) -> Union['core.Sprixel', str]:
+    def empty_marker(self) -> Union["core.Sprixel", str]:
         """
         Get and set the empty marker, preferrably a :class:`~core.Sprixel` but could
         be a str.
@@ -635,7 +640,7 @@ class ProgressBar(object):
         return self.__progress_marker
 
     @empty_marker.setter
-    def empty_marker(self, value: Union['core.Sprixel', str, base.Text]) -> None:
+    def empty_marker(self, value: Union["core.Sprixel", str, base.Text]) -> None:
         if isinstance(value, core.Sprixel):
             self.__empty_marker = value
             self._cache["pb_empty"] = value
@@ -686,7 +691,14 @@ class ProgressBar(object):
             )
         self.__config.game.screen.trigger_rendering()
 
-    def render_to_buffer(self, buffer: "numpy.array", row: int, column: int, buffer_height: int, buffer_width: int) -> None:
+    def render_to_buffer(
+        self,
+        buffer: "numpy.array",
+        row: int,
+        column: int,
+        buffer_height: int,
+        buffer_width: int,
+    ) -> None:
         """Render the object from the display buffer to the frame buffer.
 
         This method is automatically called by :func:`pygamelib.engine.Screen.render`.
@@ -726,15 +738,15 @@ class ProgressDialog(Dialog):
 
     def __init__(
         self,
-        label: Union[str, 'base.Text'] = base.Text("Progress dialog"),
+        label: Union[str, "base.Text"] = base.Text("Progress dialog"),
         value: int = 0,
         maximum: int = 100,
         width: int = 20,
-        progress_marker: 'core.Sprixel' = graphics.GeometricShapes.BLACK_RECTANGLE,
-        empty_marker: Union[str, 'core.Sprixel'] = None,
+        progress_marker: "core.Sprixel" = graphics.GeometricShapes.BLACK_RECTANGLE,
+        empty_marker: Union[str, "core.Sprixel"] = None,
         adaptive_width: bool = True,
         destroy_on_complete: bool = True,
-        config: 'UiConfig'= None,
+        config: "UiConfig" = None,
     ) -> None:
         """
         The constructor accepts the following parameters.
@@ -818,14 +830,14 @@ class ProgressDialog(Dialog):
             )
 
     @property
-    def label(self) -> Union[str, 'base.Text']:
+    def label(self) -> Union[str, "base.Text"]:
         """
         Get and set the label of the dialog, it has to be a str or :class:`base.Text`.
         """
         return self.__label
 
     @label.setter
-    def label(self, value: Union[str, 'base.Text']) -> None:
+    def label(self, value: Union[str, "base.Text"]) -> None:
         if isinstance(value, base.Text):
             self.__label = value.text
             self._cache["label"] = value
@@ -876,7 +888,14 @@ class ProgressDialog(Dialog):
             )
         self.config.game.screen.trigger_rendering()
 
-    def render_to_buffer(self, buffer: "numpy.array", row: int, column: int, buffer_height: int, buffer_width: int) -> None:
+    def render_to_buffer(
+        self,
+        buffer: "numpy.array",
+        row: int,
+        column: int,
+        buffer_height: int,
+        buffer_width: int,
+    ) -> None:
         """Render the object from the display buffer to the frame buffer.
 
         This method is automatically called by :func:`pygamelib.engine.Screen.render`.
@@ -1160,7 +1179,12 @@ class MessageDialog(Dialog):
             )
 
     def render_to_buffer(
-        self, buffer: "numpy.array", row: int, column: int, buffer_height: int, buffer_width: int
+        self,
+        buffer: "numpy.array",
+        row: int,
+        column: int,
+        buffer_height: int,
+        buffer_width: int,
     ) -> None:
         """Render the object from the display buffer to the frame buffer.
 
@@ -1278,7 +1302,7 @@ class LineInputDialog(Dialog):
     def __init__(
         self,
         title: str = None,
-        label: Union[str, 'base.Text'] ="Input a value:",
+        label: Union[str, "base.Text"] = "Input a value:",
         default: str = "",
         filter: constants.InputValidator = constants.InputValidator.PRINTABLE_FILTER,
         config: UiConfig = None,
@@ -1343,7 +1367,7 @@ class LineInputDialog(Dialog):
         return self.__label
 
     @label.setter
-    def label(self, value: Union[str, 'base.Text']) -> None:
+    def label(self, value: Union[str, "base.Text"]) -> None:
         if isinstance(value, base.Text):
             self.__label = value
         elif type(value) is str:
@@ -1374,7 +1398,12 @@ class LineInputDialog(Dialog):
         self.config.game.screen.trigger_rendering()
 
     def render_to_buffer(
-        self, buffer: "numpy.array", row: int, column: int, buffer_height: int, buffer_width: int
+        self,
+        buffer: "numpy.array",
+        row: int,
+        column: int,
+        buffer_height: int,
+        buffer_width: int,
     ) -> None:
         """Render the object from the display buffer to the frame buffer.
 
@@ -4020,9 +4049,9 @@ class MenuBar(object):
                 self.__current_index >= 0
                 and self.__entries[self.__current_index % len(self.__entries)].selected
             ):
-                self.__entries[
-                    self.__current_index % len(self.__entries)
-                ].selected = False
+                self.__entries[self.__current_index % len(self.__entries)].selected = (
+                    False
+                )
             self.__current_index = value
             if (
                 self.__current_index >= 0
@@ -4030,9 +4059,9 @@ class MenuBar(object):
                     self.__current_index % len(self.__entries)
                 ].selected
             ):
-                self.__entries[
-                    self.__current_index % len(self.__entries)
-                ].selected = True
+                self.__entries[self.__current_index % len(self.__entries)].selected = (
+                    True
+                )
         else:
             raise base.PglInvalidTypeException(
                 "Menu.current_index = value: value needs to be an int."
@@ -4558,7 +4587,6 @@ class Widget(base.PglBaseObject):
 
     @property
     def focus(self) -> bool:
-
         """
         This property get/set the focus property. It is a boolean.
 
