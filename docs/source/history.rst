@@ -3,6 +3,17 @@
 Release notes
 =============
 
+1.3.1 (2024-07-13)
+------------------
+
+This is a bugfix release.
+
+⬆️ Main updates
+^^^^^^^^^^^^^^^
+
+ * Update all dependencies (fixes security issues and bugs with some of them).
+ * Fix an issue whith the fonts: the configuration file and sprite sheet were not part of the package.
+
 1.3.0 (2022-10-07)
 ------------------
 
