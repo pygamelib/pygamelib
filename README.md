@@ -17,7 +17,7 @@ A (not so) small library for terminal based game development.
 
 ## Preemptive warning
 
-Version updates always bare the possibility of bringing some breaking changes together with new features and improvements. We try to limit these but when they do occur they are documented [on the wiki](https://github.com/pygamelib/pygamelib/wiki#migration-notes).
+Version updates always bear the possibility of bringing some breaking changes together with new features and improvements. We try to limit these but when they do occur they are documented [on the wiki](https://github.com/pygamelib/pygamelib/wiki#migration-notes).
 
 ## Introduction
 
@@ -36,7 +36,7 @@ Here is a quick view of what can currently be achieved with that library:
 
 Have a look at the [examples/](examples/suparex/) directory to see how most of these games have been done!
 
-If you want a quick peak at the new features in the most recent version, have a look at this:
+If you want a quick peek at the new features in the most recent version, have a look at this:
 
 [![Watch the video](https://img.youtube.com/vi/AyzSMH5msU4/hqdefault.jpg)](https://youtu.be/AyzSMH5msU4)
 
