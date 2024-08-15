@@ -1,16 +1,19 @@
+from typing import Union, Optional, Any, Set, List, Tuple, TYPE_CHECKING
 from copy import deepcopy, copy
 
 from pygamelib.gfx import core
 
 # import pygamelib.board_items as board_items
-import pygamelib.assets.graphics as graphics
-import pygamelib.base as base
+from pygamelib.assets import graphics
+from pygamelib import base
 
 # from dataclasses import dataclass
 
 import time
 import random
 import math
+
+import logging
 
 __docformat__ = "restructuredtext"
 
@@ -1341,6 +1344,7 @@ class ColorParticle(Particle):
             self.stop_color = core.Color(0, 0, 0)
         elif stop_color is None and start_color is not None:
             self.stop_color = self.start_color
+        # TODO: replace the deepcopy with self.start_color.copy()
         self.sprixel.fg_color = deepcopy(self.start_color)
 
     def update(self):
@@ -1514,6 +1518,131 @@ class ColorPartitionParticle(PartitionParticle):
         return p
 
 
+class SprixelParticle(Particle):
+    """
+    This class is an extension of :class:`~pygamelib.gfx.particles.Particle`. It adds
+    the possibility to gradually go from a starting color to an end color over time.
+    It is linked with the lifespan of the particle.
+    """
+
+    __color_cache = {}
+
+    def __init__(
+        self,
+        row: int = 0,
+        column: int = 0,
+        velocity: Optional[base.Vector2D] = None,
+        lifespan: Optional[int] = None,
+        sprixel: Optional[ParticleSprixel] = None,
+        stop_color: Optional[core.Color] = None,
+    ) -> None:
+        """
+        The constructor takes the following parameters.
+
+        :param row: The initial row position of the particle on the screen.
+        :type row: int
+        :param column: The initial column position of the particle on the screen.
+        :type column: int
+        :param velocity: The initial velocity of the particle.
+        :type velocity: :class:`~pygamelib.base.Vector2D`
+        :param lifespan: The particle lifespan in number of movements/turns. A particle
+           with a lifespan of 3 will move for 3 turns before being finished.
+        :type lifespan: int
+        :param sprixel: The sprixel that represent the particle when drawn on screen.
+        :type sprixel: :class:`~pygamelib.gfx.core.Sprixel`
+        :param start_color: The color of the particle at the beginning of its lifespan.
+        :type start_color: :class:`~pygamelib.gfx.core.Color`
+        :param stop_color: The color of the particle at the end of its lifespan.
+        :type stop_color: :class:`~pygamelib.gfx.core.Color`
+
+        Example::
+
+            single_particle = ColorParticle(
+                row=5,
+                column=5,
+                velocity=base.Vector2D(-0.5, 0.0),
+                lifespan=10,
+                start_color=core.Color(255, 0, 0),
+                stop_color=core.Color(0, 255, 0),
+            )
+        """
+        super().__init__(
+            row=row,
+            column=column,
+            velocity=velocity,
+            lifespan=lifespan,
+            sprixel=sprixel,
+        )
+        self.stop_color = stop_color
+        if stop_color is None:
+            self.stop_color = core.Color(0, 0, 0)
+        self.__sprixel_initial_fg_color = self.sprixel.fg_color.copy()
+        self.__sprixel_initial_bg_color = self.sprixel.bg_color.copy()
+
+    def update(self):
+        super().update()
+        lp = self.lifespan if self.lifespan >= 0 else 0
+        coeff = 1 - (lp / self._initial_lifespan)
+        # Creating index keys for the colors independently of fg/bg
+        color_key_fg = (
+            f"{coeff}{self.__sprixel_initial_fg_color.r}"
+            f"{self.__sprixel_initial_fg_color.g}"
+            f"{self.__sprixel_initial_fg_color.b}"
+        )
+        color_key_bg = (
+            f"{coeff}{self.__sprixel_initial_fg_color.r}"
+            f"{self.__sprixel_initial_fg_color.g}"
+            f"{self.__sprixel_initial_fg_color.b}"
+        )
+        # Checking if the foreground color is in the cache, if not add it.
+        if color_key_fg not in ColorParticle.__color_cache.keys():
+            ColorParticle.__color_cache[color_key_fg] = (
+                self.__sprixel_initial_fg_color.blend(self.stop_color, coeff)
+            )
+        self.sprixel.bg_color = ColorParticle.__color_cache[color_key_fg]
+        # Checking if the background color is in the cache, if not add it.
+        if color_key_bg not in ColorParticle.__color_cache.keys():
+            ColorParticle.__color_cache[color_key_bg] = (
+                self.__sprixel_initial_bg_color.blend(self.stop_color, coeff)
+            )
+        self.sprixel.bg_color = ColorParticle.__color_cache[color_key_bg]
+
+    def serialize(self):
+        """Serialize a ColorParticle into a dictionary.
+
+        :returns: The class as a  dictionary
+        :rtype: dict
+
+        Example::
+
+            json.dump( particle.serialize() )
+        """
+        ret_dict = super().serialize()
+        ret_dict["start_color"] = self.start_color.serialize()
+        ret_dict["stop_color"] = self.stop_color.serialize()
+
+        return ret_dict
+
+    @classmethod
+    def load(cls, data):
+        """Load a ColorParticle from a dictionary.
+
+        :param data: The dictionary to load from
+        :type data: dict
+        :returns: The loaded ColorParticle
+        :rtype: :class:`~pygamelib.gfx.particles.ColorParticle`
+
+        Example::
+
+            particle = ColorParticle.load( json.load( open("particle.json") ) )
+        """
+        p = super().load(data)
+        p.start_color = core.Color.load(data["start_color"])
+        p.stop_color = core.Color.load(data["stop_color"])
+        p.sprixel.fg_color = deepcopy(p.start_color)
+        return p
+
+
 # Emitters
 
 
@@ -1634,12 +1763,14 @@ class EmitterProperties:
             # It is better to let the board item that serialize the particle emitter to
             # take care of it.
             "parent": None,
-            "particle_velocity": self.particle_velocity.serialize()
-            if self.particle_velocity
-            else None,
-            "particle_acceleration": self.particle_acceleration.serialize()
-            if self.particle_acceleration
-            else None,
+            "particle_velocity": (
+                self.particle_velocity.serialize() if self.particle_velocity else None
+            ),
+            "particle_acceleration": (
+                self.particle_acceleration.serialize()
+                if self.particle_acceleration
+                else None
+            ),
             "particle_lifespan": self.particle_lifespan,
             "radius": self.radius,
             "particle": self.particle,
@@ -1676,12 +1807,16 @@ class EmitterProperties:
             emit_rate=data["emit_rate"],
             lifespan=data["lifespan"],
             parent=None,
-            particle_velocity=base.Vector2D.load(data["particle_velocity"])
-            if data["particle_velocity"]
-            else None,
-            particle_acceleration=base.Vector2D.load(data["particle_acceleration"])
-            if data["particle_acceleration"]
-            else None,
+            particle_velocity=(
+                base.Vector2D.load(data["particle_velocity"])
+                if data["particle_velocity"]
+                else None
+            ),
+            particle_acceleration=(
+                base.Vector2D.load(data["particle_acceleration"])
+                if data["particle_acceleration"]
+                else None
+            ),
             particle_lifespan=data["particle_lifespan"],
             radius=data["radius"],
             particle=None,
@@ -2349,3 +2484,129 @@ class CircleEmitter(ParticleEmitter):
             if self.lifespan is not None:
                 self.lifespan -= 1
             self.__last_emit = time.time()
+
+
+class SpriteEmitter(ParticleEmitter):
+    """
+    The CircleEmitter differs from the :class:`ParticleEmitter` in only one thing: it
+    emits its particle in a circular shape, like this:
+
+    .. image:: circle_emitter_example.gif
+       :alt: menu
+       :align: center
+
+    Aside from that specificity it's exactly the same as a regular particle emitter.
+    """
+
+    def __init__(
+        self,
+        sprite: core.Sprite,
+        emitter_properties: Optional[EmitterProperties] = None,
+    ) -> None:
+        """The CircleEmitter takes the same parameters than the :class:`ParticleEmitter`
+        and make use of EmitterProperties.radius.
+
+        The radius is used as the initial distance from the center of the circle (i.e
+        the emitter's position).
+        """
+        if emitter_properties is None:
+            emitter_properties = EmitterProperties()
+        super().__init__(emitter_properties)
+        self.radius = emitter_properties.radius
+        self.__last_emit = time.time()
+        self.__initial_sprite = sprite
+        st = time.perf_counter()
+        # self.particle_pool.resize(
+        #     max(
+        #         round(
+        #             sprite.width
+        #             * sprite.height
+        #             * self.particle_lifespan
+        #             * self.emit_number
+        #         ),
+        #         sprite.width * sprite.height * self.emit_number * 2,
+        #     )
+        # )
+        self.particle_pool.resize(sprite.width * sprite.height * self.emit_number * 2)
+        logging.debug(
+            f"  SpriteEmitter.__init__(): particle pool size: {self.particle_pool.size}"
+        )
+        logging.debug(
+            f"  SpriteEmitter.__init__(): pool resize time: {time.perf_counter() - st}"
+        )
+
+        # self.__active = True
+
+    def emit(self, amount: Optional[int] = None):
+        st = time.perf_counter()
+        logging.debug("===========>> Starting emit cycle")
+        if (
+            self.active
+            and (self.lifespan is not None and self.lifespan > 0)
+            and time.time() - self.__last_emit >= self.emit_rate
+        ):
+            if amount is None:
+                amount = self.emit_number
+            particles = self.particle_pool.get_particles(
+                self.__initial_sprite.width * self.__initial_sprite.height
+            )
+            center_x = self.x + round(self.__initial_sprite.width / 2)
+            center_y = self.y + round(self.__initial_sprite.height / 2)
+            # Poor attempt at optimization: test outside the loop.
+            if callable(self.particle):
+                pidx = 0
+                i = 0
+                for p in self.particle_pool.get_particles(amount):
+                    theta = 2.0 * math.pi * i / (amount - 1)
+                    x = self.x + self.radius * 2 * math.cos(theta)
+                    y = self.y + self.radius * math.sin(theta)
+                    p.reset(
+                        row=y,
+                        column=x,
+                        velocity=base.Vector2D(y - self.y, x - self.x),
+                        lifespan=self.particle_lifespan,
+                    )
+                    i += 1
+            else:
+                logging.debug(f"  Emitter at {self.y},{self.x}")
+                pidx = 0
+                for sp_x in range(self.__initial_sprite.width):
+                    for sp_y in range(self.__initial_sprite.height):
+                        p = particles[pidx]
+                        y = self.y + sp_y
+                        x = self.x + sp_x
+                        p.reset(
+                            row=y,
+                            column=x,
+                            # velocity=base.Vector2D(sp_y, sp_x),
+                            velocity=base.Vector2D(sp_y - center_y, sp_x - center_x),
+                            lifespan=self.particle_lifespan,
+                        )
+                        p.sprixel = self.__initial_sprite.sprixel(sp_y, sp_x)
+                        logging.debug(
+                            f"        Placing particle {p.sprixel} at {y},{x}"
+                        )
+                        if self.variance > 0.0:
+                            p.velocity *= random.uniform(0.1, self.variance)
+                        pidx += 1
+
+                # i = 0
+                # for p in self.particle_pool.get_particles(amount):
+                #     theta = 2.0 * math.pi * i / (amount - 1)
+                #     # the 2 coefficient is to account for console's characters being
+                #     # twice higher than larger.
+                #     x = self.x + self.radius * 2 * math.cos(theta)
+                #     y = self.y + self.radius * math.sin(theta)
+                #     p.reset(
+                #         row=y,
+                #         column=x,
+                #         velocity=base.Vector2D(y - self.y, x - self.x),
+                #         lifespan=self.particle_lifespan,
+                #     )
+                #     if self.variance > 0.0:
+                #         p.velocity *= random.uniform(0.1, self.variance)
+                #     i += 1
+            if self.lifespan is not None:
+                self.lifespan -= 1
+            self.__last_emit = time.time()
+            logging.debug(f"Emit cycle done in {time.perf_counter()-st} <<===========")
