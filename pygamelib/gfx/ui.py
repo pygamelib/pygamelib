@@ -2203,7 +2203,19 @@ class FileDialog(Dialog):
         return self.__path
 
 
-class GridSelector(object):
+#   TODO
+#     Problem summary/missing feature:
+#       The GridSelector is a widget from the pygamelib.gfx.ui module that was created before the introduction of the Widget system. It now needs to be a part of that new system.
+
+#      Expected behavior:
+#       Quite simply, the GridSelector needs to inherit from Widget.
+
+#      Work to do:
+#       Make sure that the pygamelib.gfx.ui.GridSelector inherits from pygamelib.gfx.ui.Widget and implement all the required behavior.
+#       Use pygamelib.gfx.ui.LineInput as a reference implementation for the transformation of GridSelector.
+
+
+class GridSelector(Widget): 
     """
     The GridSelector is a widget that present a list of elements as a grid to the user.
 
@@ -2219,9 +2231,13 @@ class GridSelector(object):
     def __init__(
         self,
         choices: list = None,
-        max_height: int = None,
-        max_width: int = None,
-        config: UiConfig = None,
+        width: int = 0,
+        height: int = 0,
+        minimum_width: int = 0,
+        minimum_height: int = 0,
+        maximum_height: int = None,
+        maximum_width: int = None,
+        config: Optional[UiConfig] = None,
     ) -> None:
         """
         :param choices: A list of choices to present to the user. The elements of the
@@ -2241,22 +2257,24 @@ class GridSelector(object):
             screen.place(grid_selector, 10, 10)
             screen.update()
         """
-        super().__init__()
+        if config is None:
+            config = UiConfig.instance()
+        super().__init__(
+            width=width,
+            height=height,
+            minimum_height=minimum_height,
+            minimum_width=minimum_width,
+            maximum_height=maximum_height,
+            maximum_width=maximum_width,
+            bg_color=config.import_bg_color,
+            config=config
+        )
         self.__choices = []
-        if choices is not None and type(choices) is list:
-            self.__choices = choices
-        self.__max_height = 5
-        if max_height is not None and type(max_height) is int:
-            self.__max_height = max_height
-        self.__max_width = 10
-        if max_width is not None and type(max_width) is int:
-            self.__max_width = max_width
-        self._config = config
         self.__current_choice = 0
         self.__current_page = 0
         self.__cache = []
         self._build_cache()
-        self.__items_per_page = int(self.__max_height / 2 * self.__max_width / 2)
+        self.__items_per_page = int(self.__maximum_height / 2 * self.__maximum_width / 2)
         # config.game.log(f"items per page={self.__items_per_page}")
 
     def _build_cache(self):
@@ -2298,42 +2316,6 @@ class GridSelector(object):
             raise base.PglInvalidTypeException(
                 "GridSelector.choices = value: 'value' must be a list. "
                 f"'{value}' is not a list"
-            )
-
-    @property
-    def max_height(self) -> int:
-        """
-        Get and set the maximum height of the grid selector, it needs to be an int.
-        """
-        return self.__max_height
-
-    @max_height.setter
-    def max_height(self, value):
-        if type(value) is int:
-            self.__max_height = value
-            self._build_cache()
-        else:
-            raise base.PglInvalidTypeException(
-                "GridSelector.max_height = value: 'value' must be an int. "
-                f"'{value}' is not an int"
-            )
-
-    @property
-    def max_width(self) -> int:
-        """
-        Get and set the maximum width of the grid selector, it needs to be an int.
-        """
-        return self.__max_width
-
-    @max_width.setter
-    def max_width(self, value):
-        if type(value) is int:
-            self.__max_width = value
-            self._build_cache()
-        else:
-            raise base.PglInvalidTypeException(
-                "GridSelector.max_width = value: 'value' must be an int. "
-                f"'{value}' is not an int"
             )
 
     @property
