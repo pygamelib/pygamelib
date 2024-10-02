@@ -4,6 +4,7 @@ __docformat__ = "restructuredtext"
    :toctree: .
 
    pygamelib.gfx.ui.UiConfig
+   pygamelib.gfx.ui.Widget
    pygamelib.gfx.ui.Dialog
    pygamelib.gfx.ui.Box
    pygamelib.gfx.ui.ProgressBar
@@ -19,7 +20,6 @@ __docformat__ = "restructuredtext"
    pygamelib.gfx.ui.MenuBar
    pygamelib.gfx.ui.Menu
    pygamelib.gfx.ui.MenuAction
-   pygamelib.gfx.ui.Widget
    pygamelib.gfx.ui.Layout
    pygamelib.gfx.ui.BoxLayout
    pygamelib.gfx.ui.GridLayout
@@ -2600,25 +2600,34 @@ class GridSelector(Widget):
         height: int = 0,
         minimum_width: int = 0,
         minimum_height: int = 0,
-        maximum_height: int = None,
-        maximum_width: int = None,
+        maximum_width: int = 5,
+        maximum_height: int = 10,
         config: Optional[UiConfig] = None,
     ) -> None:
         """
         :param choices: A list of choices to present to the user. The elements of the
            list needs to be str or :class:`~pygamelib.gfx.core.Sprixel`.
         :type choices: list
-        :param max_height: The maximum height of the grid selector.
-        :type max_height: int
-        :param max_width: The maximum width of the grid selector.
-        :type max_width: int
+        :param minimum_width: The minimum width of the GridSelector.
+        :type minimum_width: int
+        :param minimum_height: The minimum height of the GridSelector.
+        :type minimum_height: int
+        :param maximum_width: The maximum width of the GridSelector.
+        :type maximum_width: int
+        :param maximum_height: The maximum height of the GridSelector.
+        :type maximum_height: int
         :param config: The configuration object.
         :type config: :class:`UiConfig`
 
         Example::
 
             choices = ["@","#","$","%","&","*","[","]"]
-            grid_selector = GridSelector(choices, 10, 30, conf)
+            grid_selector = GridSelector(
+                choices,
+                maximum_width=30,
+                maximum_height=10,
+                config=conf
+                )
             screen.place(grid_selector, 10, 10)
             screen.update()
         """
@@ -2627,19 +2636,21 @@ class GridSelector(Widget):
         super().__init__(
             width=width,
             height=height,
-            minimum_height=minimum_height,
             minimum_width=minimum_width,
-            maximum_height=maximum_height,
+            minimum_height=minimum_height,
             maximum_width=maximum_width,
-            bg_color=config.import_bg_color,
+            maximum_height=maximum_height,
+            bg_color=config.input_bg_color,
             config=config
         )
         self.__choices = []
+        if choices is not None and type(choices) is list:
+            self.__choices = choices
         self.__current_choice = 0
         self.__current_page = 0
         self.__cache = []
         self._build_cache()
-        self.__items_per_page = int(self.__maximum_height / 2 * self.__maximum_width / 2)
+        self.__items_per_page = int(self.maximum_height / 2 * self.maximum_width / 2)
         # config.game.log(f"items per page={self.__items_per_page}")
 
     def _build_cache(self):
@@ -2658,7 +2669,7 @@ class GridSelector(Widget):
                     "GridSelector: the choices must be strings or Sprixels."
                 )
             self.__cache.append(s)
-        self.__items_per_page = int(self.__max_height / 2 * self.__max_width / 2)
+        self.__items_per_page = int(self.maximum_height / 2 * self.maximum_width / 2)
 
     @property
     def choices(self) -> int:
@@ -2822,8 +2833,8 @@ class GridSelector(Widget):
         #       is not cleared when re-rendered (the coordinates calculation is probably
         #       wrong somewhere).
         buffer[row][column] = " "
-        self.__max_width = functions.clamp(self.__max_width, 0, buffer_width - 2)
-        self.__max_height = functions.clamp(self.__max_height, 0, buffer_height - 2)
+        self.__maximum_width = functions.clamp(self.__maximum_width, 0, buffer_width - 2)
+        self.__maximum_height = functions.clamp(self.__maximum_height, 0, buffer_height - 2)
         crow = 1
         ccol = 1
         col_offset = 1
@@ -2891,8 +2902,12 @@ class GridSelectorDialog(Dialog):
     def __init__(
         self,
         choices: list = None,
-        max_height: int = None,
-        max_width: int = None,
+        width: int = 0,
+        height: int = 0,
+        minimum_width: int = 0,
+        minimum_height: int = 0,
+        maximum_width: int = 5,
+        maximum_height: int = 10,
         title: str = None,
         config: UiConfig = None,
     ) -> None:
@@ -2900,17 +2915,25 @@ class GridSelectorDialog(Dialog):
         :param choices: A list of choices to present to the user. The elements of the
            list needs to be str or :class:`~pygamelib.gfx.core.Sprixel`.
         :type choices: list
-        :param max_height: The maximum height of the grid selector.
-        :type max_height: int
-        :param max_width: The maximum width of the grid selector.
-        :type max_width: int
+        :param minimum_width: The minimum width of the GridSelector.
+        :type minimum_width: int
+        :param minimum_height: The minimum height of the GridSelector.
+        :type minimum_height: int
+        :param maximum_width: The maximum width of the GridSelector.
+        :type maximum_width: int
+        :param maximum_height: The maximum height of the GridSelector.
+        :type maximum_height: int
         :param config: The configuration object.
         :type config: :class:`UiConfig`
 
         Example::
 
             choices = ["@","#","$","%","&","*","[","]"]
-            grid_dialog = GridSelector(choices, 10, 30, conf)
+            grid_dialog = GridSelector(
+                choices=choices,
+                maximum_width=30,
+                maximum_height=10,
+                config=conf)
             screen.place(grid_dialog, 10, 10)
             grid_dialog.show()
         """
@@ -2918,10 +2941,10 @@ class GridSelectorDialog(Dialog):
         self.__grid_selector = None
         if not config.borderless_dialog:
             self.__grid_selector = GridSelector(
-                choices, max_height - 3, max_width - 4, config
+                choices, width, height, minimum_width, minimum_height, maximum_width - 4, maximum_height - 3, config
             )
         else:
-            self.__grid_selector = GridSelector(choices, max_height, max_width, config)
+            self.__grid_selector = GridSelector(choices, width, height, minimum_width, minimum_height, maximum_width - 4, maximum_height - 3, config)
         self.__title = ""
         if title is not None and type(title) is str:
             self.__title = title
