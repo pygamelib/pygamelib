@@ -2578,19 +2578,7 @@ class FileDialog(Dialog):
             inkey = term.inkey(timeout=0.1)
         screen.delete(self._position[0], self._position[1])
         return self.__path
-
-
-#   TODO
-#     Problem summary/missing feature:
-#       The GridSelector is a widget from the pygamelib.gfx.ui module that was created before the introduction of the Widget system. It now needs to be a part of that new system.
-
-#      Expected behavior:
-#       Quite simply, the GridSelector needs to inherit from Widget.
-
-#      Work to do:
-#       Make sure that the pygamelib.gfx.ui.GridSelector inherits from pygamelib.gfx.ui.Widget and implement all the required behavior.
-#       Use pygamelib.gfx.ui.LineInput as a reference implementation for the transformation of GridSelector.
-
+    
 
 class GridSelector(Widget): 
     """
