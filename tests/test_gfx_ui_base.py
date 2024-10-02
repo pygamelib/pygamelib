@@ -348,16 +348,16 @@ class TestBase(unittest.TestCase):
 
     def test_gridselector(self):
         conf = ui.UiConfig.instance(game=self.game)
-        gd = ui.GridSelectorDialog(["a", "b", "c", "##"], 10, 20, "test", config=conf)
+        gd = ui.GridSelectorDialog(["a", "b", "c", "##"], maximum_height=10, maximum_width=20, title="test", config=conf)
         self.assertEqual(gd.grid_selector.current_page, 0)
         gd.grid_selector.current_page = 1
         self.assertEqual(gd.grid_selector.current_page, 0)
         with self.assertRaises(base.PglInvalidTypeException):
             ui.GridSelectorDialog(
                 ["a", "b", base.Text("c"), "##"],
-                10,
-                20,
-                "test",
+                maximum_height=10,
+                maximum_width=20,
+                title="test",
                 config=conf,
             )
 
@@ -375,14 +375,14 @@ class TestBase(unittest.TestCase):
         self.assertEqual(len(gd.grid_selector.choices), 3)
         with self.assertRaises(base.PglInvalidTypeException):
             gd.grid_selector.choices = "42"
-        gd.grid_selector.max_height = 20
-        self.assertEqual(gd.grid_selector.max_height, 20)
+        gd.grid_selector.maximum_height = 20
+        self.assertEqual(gd.grid_selector.maximum_height, 20)
         with self.assertRaises(base.PglInvalidTypeException):
-            gd.grid_selector.max_height = "42"
-        gd.grid_selector.max_width = 20
-        self.assertEqual(gd.grid_selector.max_width, 20)
+            gd.grid_selector.maximum_height = "42"
+        gd.grid_selector.maximum_width = 20
+        self.assertEqual(gd.grid_selector.maximum_width, 20)
         with self.assertRaises(base.PglInvalidTypeException):
-            gd.grid_selector.max_width = "42"
+            gd.grid_selector.maximum_width = "42"
         self.assertEqual(gd.grid_selector.current_choice, 0)
         gd.grid_selector.current_choice = 1
         self.assertEqual(gd.grid_selector.current_choice, 1)
@@ -398,8 +398,8 @@ class TestBase(unittest.TestCase):
         self.assertEqual(gd.grid_selector.current_choice, 2)
         gd.grid_selector.cursor_left()
         self.assertEqual(gd.grid_selector.current_choice, 1)
-        gd.grid_selector.max_width = 3
-        gd.grid_selector.max_height = 3
+        gd.grid_selector.maximum_width = 3
+        gd.grid_selector.maxium_height = 3
         gd.grid_selector.page_down()
         self.assertEqual(gd.grid_selector.current_page, 1)
         gd.grid_selector.page_up()
@@ -412,7 +412,7 @@ class TestBase(unittest.TestCase):
 
         conf.borderless_dialog = not conf.borderless_dialog
         self.assertIsInstance(
-            ui.GridSelectorDialog(["a", "b", "c", "##"], 10, 20, "test", config=conf),
+            ui.GridSelectorDialog(["a", "b", "c", "##"], maximum_height=10, maximum_width=20, title="test", config=conf),
             ui.GridSelectorDialog,
         )
         conf.borderless_dialog = not conf.borderless_dialog
