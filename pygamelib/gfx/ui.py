@@ -46,6 +46,147 @@ if TYPE_CHECKING:  # pragma: no cover
 # processed)
 
 
+class UiConfig(object):
+    """A configuration object for the UI module. TEST
+
+    This object's purpose is to configure the look and feel of the UI widgets.
+    It does nothing by itself.
+
+    :param game: The game object.
+    :type game: :class:`~pygamelib.engine.Game`
+    :param box_vertical_border: The vertical border of a box.
+    :type box_vertical_border: str
+    :param box_horizontal_border: The horizontal border of a box.
+    :type box_horizontal_border: str
+    :param box_top_left_corner: The top left corner of a box.
+    :type box_top_left_corner: str
+    :param box_top_right_corner: The top right corner of a box.
+    :type box_top_right_corner: str
+    :param box_bottom_left_corner: The bottom left corner of a box.
+    :type box_bottom_left_corner: str
+    :param box_bottom_right_corner: The bottom right corner of a box.
+    :type box_bottom_right_corner: str
+    :param box_vertical_and_right: The left junction between two boxes.
+    :type box_vertical_and_right: str
+    :param box_vertical_and_left: The right junction between two boxes.
+    :type box_vertical_and_left: str
+    :param fg_color: The foreground color (for text and content).
+    :type fg_color: :class:`~pygamelib.gfx.core.Color`
+    :param bg_color: The background color (for text and content).
+    :type bg_color: :class:`~pygamelib.gfx.core.Color`
+    :param fg_color_inactive: The foreground color for inactive items like menu entries.
+    :type fg_color_inactive: :class:`~pygamelib.gfx.core.Color`
+    :param bg_color_selected: The background color (for selected text and content).
+    :type bg_color_selected: :class:`~pygamelib.gfx.core.Color`
+    :param bg_color_not_selected: The background color (for non selected text and
+       content).
+    :type bg_color_not_selected: :class:`~pygamelib.gfx.core.Color`
+    :param fg_color_selected: The foreground color (for selected text and content).
+    :type fg_color_selected: :class:`~pygamelib.gfx.core.Color`
+    :param fg_color_not_selected: The foreground color (for non selected text and
+       content).
+    :type fg_color_not_selected: :class:`~pygamelib.gfx.core.Color`
+    :param bg_color_menu_not_selected: The menu background color (for expanded menu
+       items).
+    :type bg_color_menu_not_selected: :class:`~pygamelib.gfx.core.Color`
+    :param border_fg_color: The foreground color (for borders).
+    :type border_fg_color: :class:`~pygamelib.gfx.core.Color`
+    :param border_bg_color: The background color (for borders).
+    :type border_bg_color: :class:`~pygamelib.gfx.core.Color`
+    :param borderless_dialog: Is the dialog borderless or not.
+    :type borderless_dialog: bool
+    :param widget_bg_color: The background color of a widget.
+    :type widget_bg_color: :class:`~pygamelib.gfx.core.Color`
+    :param input_fg_color: The foreground color (i.e the text color) of a LineInput
+       widget.
+    :type input_fg_color: :class:`~pygamelib.gfx.core.Color`
+    :param input_bg_color: The background color of a LineInput widget.
+    :type input_bg_color: :class:`~pygamelib.gfx.core.Color`
+
+    Example::
+
+        config_ui_red = UiConfig(
+            fg_color=Color(255,0,0),
+            border_fg_color=Color(255,0,0)
+        )
+    """
+
+    __instance = None
+
+    def __init__(
+        self,
+        game=None,
+        box_vertical_border=graphics.BoxDrawings.LIGHT_VERTICAL,
+        box_horizontal_border=graphics.BoxDrawings.LIGHT_HORIZONTAL,
+        box_top_left_corner=graphics.BoxDrawings.LIGHT_ARC_DOWN_AND_RIGHT,
+        box_top_right_corner=graphics.BoxDrawings.LIGHT_ARC_DOWN_AND_LEFT,
+        box_bottom_left_corner=graphics.BoxDrawings.LIGHT_ARC_UP_AND_RIGHT,
+        box_bottom_right_corner=graphics.BoxDrawings.LIGHT_ARC_UP_AND_LEFT,
+        box_vertical_and_right=graphics.BoxDrawings.LIGHT_VERTICAL_AND_RIGHT,
+        box_vertical_and_left=graphics.BoxDrawings.LIGHT_VERTICAL_AND_LEFT,
+        fg_color: core.Color = core.Color(255, 255, 255),
+        bg_color: core.Color = core.Color(0, 128, 128),
+        fg_color_inactive: core.Color = core.Color(128, 128, 128),
+        bg_color_selected: core.Color = core.Color(128, 128, 128),
+        bg_color_not_selected=None,
+        fg_color_selected: core.Color = core.Color(0, 255, 0),
+        fg_color_not_selected: core.Color = core.Color(255, 255, 255),
+        bg_color_menu_not_selected: core.Color = core.Color(128, 128, 128),
+        border_fg_color: core.Color = core.Color(255, 255, 255),
+        border_bg_color: Optional[core.Color] = None,
+        borderless_dialog: bool = True,
+        widget_bg_color: core.Color = core.Color(0, 128, 128),
+        input_fg_color: core.Color = core.Color(255, 255, 255),
+        input_bg_color: core.Color = core.Color(163, 163, 163),
+    ):
+        super().__init__()
+        if game is None:
+            exec("from pygamelib.engine import Game")
+            game = eval("Game.instance()")
+            # raise base.PglInvalidTypeException(
+            #     "UiConfig: the 'game' parameter cannot be None."
+            # )
+        self.game = game
+        self.box_vertical_border = box_vertical_border
+        self.box_horizontal_border = box_horizontal_border
+        self.box_top_left_corner = box_top_left_corner
+        self.box_top_right_corner = box_top_right_corner
+        self.box_bottom_left_corner = box_bottom_left_corner
+        self.box_bottom_right_corner = box_bottom_right_corner
+        self.box_vertical_and_right = box_vertical_and_right
+        self.box_vertical_and_left = box_vertical_and_left
+        self.fg_color: core.Color = fg_color
+        self.bg_color: core.Color = bg_color
+        self.fg_color_inactive: core.Color = fg_color_inactive
+        self.bg_color_selected: core.Color = bg_color_selected
+        self.bg_color_not_selected: Optional[core.Color] = bg_color_not_selected
+        self.fg_color_selected: core.Color = fg_color_selected
+        self.fg_color_not_selected: core.Color = fg_color_not_selected
+        self.bg_color_menu_not_selected: core.Color = bg_color_menu_not_selected
+        self.border_fg_color: core.Color = border_fg_color
+        self.border_bg_color: Optional[core.Color] = border_bg_color
+        self.borderless_dialog = borderless_dialog
+        self.widget_bg_color: core.Color = widget_bg_color
+        self.input_fg_color: core.Color = input_fg_color
+        self.input_bg_color: core.Color = input_bg_color
+
+    @classmethod
+    def instance(cls, *args, **kwargs):
+        """Returns the instance of the UiConfig object
+
+        Creates an UiConfig object on first call an then returns the same instance
+        on further calls.
+        Useful for a default configuration. It accepts all the parameters from the
+        constructor.
+
+        :return: Instance of UiConfig object
+
+        """
+        if cls.__instance is None:
+            cls.__instance = cls(*args, **kwargs)
+        return cls.__instance
+    
+
 class Widget(base.PglBaseObject):
     # Base class does not do anything by itself aside from enforcing geometry and
     # sending resize events.
@@ -421,147 +562,6 @@ class Widget(base.PglBaseObject):
                 min(self.__height, buffer_height),
                 min(self.__width, buffer_width),
             )
-
-
-class UiConfig(object):
-    """A configuration object for the UI module. TEST
-
-    This object's purpose is to configure the look and feel of the UI widgets.
-    It does nothing by itself.
-
-    :param game: The game object.
-    :type game: :class:`~pygamelib.engine.Game`
-    :param box_vertical_border: The vertical border of a box.
-    :type box_vertical_border: str
-    :param box_horizontal_border: The horizontal border of a box.
-    :type box_horizontal_border: str
-    :param box_top_left_corner: The top left corner of a box.
-    :type box_top_left_corner: str
-    :param box_top_right_corner: The top right corner of a box.
-    :type box_top_right_corner: str
-    :param box_bottom_left_corner: The bottom left corner of a box.
-    :type box_bottom_left_corner: str
-    :param box_bottom_right_corner: The bottom right corner of a box.
-    :type box_bottom_right_corner: str
-    :param box_vertical_and_right: The left junction between two boxes.
-    :type box_vertical_and_right: str
-    :param box_vertical_and_left: The right junction between two boxes.
-    :type box_vertical_and_left: str
-    :param fg_color: The foreground color (for text and content).
-    :type fg_color: :class:`~pygamelib.gfx.core.Color`
-    :param bg_color: The background color (for text and content).
-    :type bg_color: :class:`~pygamelib.gfx.core.Color`
-    :param fg_color_inactive: The foreground color for inactive items like menu entries.
-    :type fg_color_inactive: :class:`~pygamelib.gfx.core.Color`
-    :param bg_color_selected: The background color (for selected text and content).
-    :type bg_color_selected: :class:`~pygamelib.gfx.core.Color`
-    :param bg_color_not_selected: The background color (for non selected text and
-       content).
-    :type bg_color_not_selected: :class:`~pygamelib.gfx.core.Color`
-    :param fg_color_selected: The foreground color (for selected text and content).
-    :type fg_color_selected: :class:`~pygamelib.gfx.core.Color`
-    :param fg_color_not_selected: The foreground color (for non selected text and
-       content).
-    :type fg_color_not_selected: :class:`~pygamelib.gfx.core.Color`
-    :param bg_color_menu_not_selected: The menu background color (for expanded menu
-       items).
-    :type bg_color_menu_not_selected: :class:`~pygamelib.gfx.core.Color`
-    :param border_fg_color: The foreground color (for borders).
-    :type border_fg_color: :class:`~pygamelib.gfx.core.Color`
-    :param border_bg_color: The background color (for borders).
-    :type border_bg_color: :class:`~pygamelib.gfx.core.Color`
-    :param borderless_dialog: Is the dialog borderless or not.
-    :type borderless_dialog: bool
-    :param widget_bg_color: The background color of a widget.
-    :type widget_bg_color: :class:`~pygamelib.gfx.core.Color`
-    :param input_fg_color: The foreground color (i.e the text color) of a LineInput
-       widget.
-    :type input_fg_color: :class:`~pygamelib.gfx.core.Color`
-    :param input_bg_color: The background color of a LineInput widget.
-    :type input_bg_color: :class:`~pygamelib.gfx.core.Color`
-
-    Example::
-
-        config_ui_red = UiConfig(
-            fg_color=Color(255,0,0),
-            border_fg_color=Color(255,0,0)
-        )
-    """
-
-    __instance = None
-
-    def __init__(
-        self,
-        game=None,
-        box_vertical_border=graphics.BoxDrawings.LIGHT_VERTICAL,
-        box_horizontal_border=graphics.BoxDrawings.LIGHT_HORIZONTAL,
-        box_top_left_corner=graphics.BoxDrawings.LIGHT_ARC_DOWN_AND_RIGHT,
-        box_top_right_corner=graphics.BoxDrawings.LIGHT_ARC_DOWN_AND_LEFT,
-        box_bottom_left_corner=graphics.BoxDrawings.LIGHT_ARC_UP_AND_RIGHT,
-        box_bottom_right_corner=graphics.BoxDrawings.LIGHT_ARC_UP_AND_LEFT,
-        box_vertical_and_right=graphics.BoxDrawings.LIGHT_VERTICAL_AND_RIGHT,
-        box_vertical_and_left=graphics.BoxDrawings.LIGHT_VERTICAL_AND_LEFT,
-        fg_color: core.Color = core.Color(255, 255, 255),
-        bg_color: core.Color = core.Color(0, 128, 128),
-        fg_color_inactive: core.Color = core.Color(128, 128, 128),
-        bg_color_selected: core.Color = core.Color(128, 128, 128),
-        bg_color_not_selected=None,
-        fg_color_selected: core.Color = core.Color(0, 255, 0),
-        fg_color_not_selected: core.Color = core.Color(255, 255, 255),
-        bg_color_menu_not_selected: core.Color = core.Color(128, 128, 128),
-        border_fg_color: core.Color = core.Color(255, 255, 255),
-        border_bg_color: Optional[core.Color] = None,
-        borderless_dialog: bool = True,
-        widget_bg_color: core.Color = core.Color(0, 128, 128),
-        input_fg_color: core.Color = core.Color(255, 255, 255),
-        input_bg_color: core.Color = core.Color(163, 163, 163),
-    ):
-        super().__init__()
-        if game is None:
-            exec("from pygamelib.engine import Game")
-            game = eval("Game.instance()")
-            # raise base.PglInvalidTypeException(
-            #     "UiConfig: the 'game' parameter cannot be None."
-            # )
-        self.game = game
-        self.box_vertical_border = box_vertical_border
-        self.box_horizontal_border = box_horizontal_border
-        self.box_top_left_corner = box_top_left_corner
-        self.box_top_right_corner = box_top_right_corner
-        self.box_bottom_left_corner = box_bottom_left_corner
-        self.box_bottom_right_corner = box_bottom_right_corner
-        self.box_vertical_and_right = box_vertical_and_right
-        self.box_vertical_and_left = box_vertical_and_left
-        self.fg_color: core.Color = fg_color
-        self.bg_color: core.Color = bg_color
-        self.fg_color_inactive: core.Color = fg_color_inactive
-        self.bg_color_selected: core.Color = bg_color_selected
-        self.bg_color_not_selected: Optional[core.Color] = bg_color_not_selected
-        self.fg_color_selected: core.Color = fg_color_selected
-        self.fg_color_not_selected: core.Color = fg_color_not_selected
-        self.bg_color_menu_not_selected: core.Color = bg_color_menu_not_selected
-        self.border_fg_color: core.Color = border_fg_color
-        self.border_bg_color: Optional[core.Color] = border_bg_color
-        self.borderless_dialog = borderless_dialog
-        self.widget_bg_color: core.Color = widget_bg_color
-        self.input_fg_color: core.Color = input_fg_color
-        self.input_bg_color: core.Color = input_bg_color
-
-    @classmethod
-    def instance(cls, *args, **kwargs):
-        """Returns the instance of the UiConfig object
-
-        Creates an UiConfig object on first call an then returns the same instance
-        on further calls.
-        Useful for a default configuration. It accepts all the parameters from the
-        constructor.
-
-        :return: Instance of UiConfig object
-
-        """
-        if cls.__instance is None:
-            cls.__instance = cls(*args, **kwargs)
-        return cls.__instance
 
 
 class Dialog(object):
