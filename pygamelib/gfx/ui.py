@@ -2578,9 +2578,9 @@ class FileDialog(Dialog):
             inkey = term.inkey(timeout=0.1)
         screen.delete(self._position[0], self._position[1])
         return self.__path
-    
 
-class GridSelector(Widget): 
+
+class GridSelector(Widget):
     """
     The GridSelector is a widget that present a list of elements as a grid to the user.
 
