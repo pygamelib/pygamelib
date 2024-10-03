@@ -382,7 +382,7 @@ class TestBase(unittest.TestCase):
         gd.grid_selector.maximum_width = 20
         self.assertEqual(gd.grid_selector.maximum_width, 20)
         gd.grid_selector.maximum_width = "42"
-        self.assertRaises(gd.grid_selector.maximum_width, 20)  # #Tests to ensure that improper assignment fails silently as in Widget class
+        self.assertEqual(gd.grid_selector.maximum_width, 20)  # #Tests to ensure that improper assignment fails silently as in Widget class
         self.assertEqual(gd.grid_selector.current_choice, 0)
         gd.grid_selector.current_choice = 1
         self.assertEqual(gd.grid_selector.current_choice, 1)
