@@ -185,7 +185,7 @@ class UiConfig(object):
         if cls.__instance is None:
             cls.__instance = cls(*args, **kwargs)
         return cls.__instance
-    
+
 
 class Widget(base.PglBaseObject):
     # Base class does not do anything by itself aside from enforcing geometry and
@@ -337,6 +337,12 @@ class Widget(base.PglBaseObject):
                 self.notify(
                     self, "pygamelib.gfx.ui.Widget.resizeEvent:width", self.__width
                 )
+        else:
+            self.notify(
+                self,
+                "pygamelib.gfx.ui.Widget.resizeEvent:error",
+                f"{type(self).__name__}.width must be an int, '{data}' is a {type(data).__name__}, not an int",
+            )
 
     @property
     def height(self) -> int:
@@ -374,6 +380,12 @@ class Widget(base.PglBaseObject):
                 # logging.debug(
                 #     f"     *** Widget ({id(self)}): height set to {self.__height}"
                 # )
+        else:
+            self.notify(
+                self,
+                "pygamelib.gfx.ui.Widget.resizeEvent:error",
+                f"{type(self).__name__}.height must be an int, '{data}' is a {type(data).__name__}, not an int",
+            )
 
     @property
     def maximum_width(self) -> int:
@@ -389,6 +401,12 @@ class Widget(base.PglBaseObject):
             self.__maximum_width = data
             if data < self.__width:
                 self.__width = data
+        else:
+            self.notify(
+                self,
+                "pygamelib.gfx.ui.Widget.resizeEvent:error",
+                f"{type(self).__name__}.maximum_width must be an int, '{data}' is a {type(data).__name__}, not an int",
+            )
 
     @property
     def maximum_height(self) -> int:
@@ -404,6 +422,12 @@ class Widget(base.PglBaseObject):
             self.__maximum_height = data
             if data < self.__height:
                 self.__height = data
+        else:
+            self.notify(
+                self,
+                "pygamelib.gfx.ui.Widget.resizeEvent:error",
+                f"{type(self).__name__}.maximum_height must be an int, '{data}' is a {type(data).__name__}, not an int",
+            )
 
     @property
     def minimum_width(self) -> int:
@@ -419,6 +443,12 @@ class Widget(base.PglBaseObject):
             self.__minimum_width = data
             if self.__width < data:
                 self.__width = data
+        else:
+            self.notify(
+                self,
+                "pygamelib.gfx.ui.Widget.resizeEvent:error",
+                f"{type(self).__name__}.minimum_width must be an int, '{data}' is a {type(data).__name__}, not an int",
+            )
 
     @property
     def minimum_height(self) -> int:
@@ -432,6 +462,12 @@ class Widget(base.PglBaseObject):
     def minimum_height(self, data: int) -> None:
         if isinstance(data, int):
             self.__minimum_height = data
+        else:
+            self.notify(
+                self,
+                "pygamelib.gfx.ui.Widget.resizeEvent:error",
+                f"{type(self).__name__}.minimum_height must be an int, '{data}' is a {type(data).__name__}, not an int",
+            )
 
     @property
     def y(self) -> int:
@@ -2641,7 +2677,7 @@ class GridSelector(Widget):
             maximum_width=maximum_width,
             maximum_height=maximum_height,
             bg_color=config.input_bg_color,
-            config=config
+            config=config,
         )
         self.__choices = []
         if choices is not None and type(choices) is list:
@@ -2650,7 +2686,9 @@ class GridSelector(Widget):
         self.__current_page = 0
         self.__cache = []
         self._build_cache()
-        self.__items_per_page = int(self.maximum_height / 2 * self.maximum_width / 2)
+        self.__items_per_page = max(
+            int(self.maximum_height / 2 * self.maximum_width / 2), 1
+        )  # set floor of 1 to avoid ZeroDivisionError
         # config.game.log(f"items per page={self.__items_per_page}")
 
     def _build_cache(self):
@@ -2754,13 +2792,13 @@ class GridSelector(Widget):
         """
         Move the selection cursor one row up.
         """
-        self.current_choice -= round(self.max_width / 2)
+        self.current_choice -= round(self.maximum_width / 2)
 
     def cursor_down(self) -> None:
         """
         Move the selection cursor one row down.
         """
-        self.current_choice += round(self.max_width / 2)
+        self.current_choice += round(self.maximum_width / 2)
 
     def cursor_left(self) -> None:
         """
@@ -2833,8 +2871,12 @@ class GridSelector(Widget):
         #       is not cleared when re-rendered (the coordinates calculation is probably
         #       wrong somewhere).
         buffer[row][column] = " "
-        self.__maximum_width = functions.clamp(self.__maximum_width, 0, buffer_width - 2)
-        self.__maximum_height = functions.clamp(self.__maximum_height, 0, buffer_height - 2)
+        self.__maximum_width = functions.clamp(
+            self.__maximum_width, 0, buffer_width - 2
+        )
+        self.__maximum_height = functions.clamp(
+            self.__maximum_height, 0, buffer_height - 2
+        )
         crow = 1
         ccol = 1
         col_offset = 1
@@ -2937,14 +2979,32 @@ class GridSelectorDialog(Dialog):
             screen.place(grid_dialog, 10, 10)
             grid_dialog.show()
         """
+        if config is None:
+            config = UiConfig.instance()
         super().__init__(config=config)
         self.__grid_selector = None
         if not config.borderless_dialog:
             self.__grid_selector = GridSelector(
-                choices, width, height, minimum_width, minimum_height, maximum_width - 4, maximum_height - 3, config
+                choices,
+                width,
+                height,
+                minimum_width,
+                minimum_height,
+                maximum_width - 4,
+                maximum_height - 3,
+                config,
             )
         else:
-            self.__grid_selector = GridSelector(choices, width, height, minimum_width, minimum_height, maximum_width - 4, maximum_height - 3, config)
+            self.__grid_selector = GridSelector(
+                choices,
+                width,
+                height,
+                minimum_width,
+                minimum_height,
+                maximum_width - 4,
+                maximum_height - 3,
+                config,
+            )
         self.__title = ""
         if title is not None and type(title) is str:
             self.__title = title
@@ -3075,7 +3135,7 @@ class GridSelectorDialog(Dialog):
             # TODO: It looks like there is a bug in the pagination.
             gs = self.__grid_selector
             # Pages are numbered from 0.
-            pagination = f"{gs.current_page+1}/{gs.nb_pages()}"
+            pagination = f"{gs.current_page + 1}/{gs.nb_pages()}"
             lp = len(pagination)
             for c in range(0, lp):
                 buffer[row + self.__grid_selector.max_height + 2][
@@ -4618,8 +4678,6 @@ class MenuBar(object):
     #                 break
     #         inkey = term.inkey(timeout=0.05)
     #     screen.force_update()
-
-
 
 
 class Layout(base.PglBaseObject):
