@@ -3200,8 +3200,8 @@ class GridSelectorDialog(Dialog):
             offset = 1
             # We need to account for the borders in the box size
             box = Box(
-                self.__grid_selector.max_width + 4,
-                self.__grid_selector.max_height + 3,
+                self.__grid_selector.maximum_width + 4,
+                self.__grid_selector.maximum_height + 3,
                 self.__title,
                 self.config,
                 True,
@@ -3214,8 +3214,8 @@ class GridSelectorDialog(Dialog):
             pagination = f"{gs.current_page + 1}/{gs.nb_pages()}"
             lp = len(pagination)
             for c in range(0, lp):
-                buffer[row + self.__grid_selector.max_height + 2][
-                    column + self.__grid_selector.max_width + 2 - lp + c
+                buffer[row + self.__grid_selector.maximum_height + 2][
+                    column + self.__grid_selector.maximum_width + 2 - lp + c
                 ] = pagination[c]
         self.__grid_selector.render_to_buffer(
             buffer, row + offset, column + offset, buffer_height, buffer_width
