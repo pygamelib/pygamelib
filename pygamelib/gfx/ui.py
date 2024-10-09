@@ -401,6 +401,11 @@ class Widget(base.PglBaseObject):
             self.__maximum_width = data
             if data < self.__width:
                 self.__width = data
+            self.notify(
+                self,
+                "pygamelib.gfx.ui.Widget.resizeEvent:maximum_width",
+                self.__maximum_width,
+            )
         else:
             self.notify(
                 self,
@@ -422,6 +427,11 @@ class Widget(base.PglBaseObject):
             self.__maximum_height = data
             if data < self.__height:
                 self.__height = data
+            self.notify(
+                self,
+                "pygamelib.gfx.ui.Widget.resizeEvent:maximum_height",
+                self.__maximum_height,
+            )
         else:
             self.notify(
                 self,
@@ -443,6 +453,11 @@ class Widget(base.PglBaseObject):
             self.__minimum_width = data
             if self.__width < data:
                 self.__width = data
+            self.notify(
+                self,
+                "pygamelib.gfx.ui.Widget.resizeEvent:minimum_width",
+                self.__minimum_width,
+            )
         else:
             self.notify(
                 self,
@@ -462,6 +477,13 @@ class Widget(base.PglBaseObject):
     def minimum_height(self, data: int) -> None:
         if isinstance(data, int):
             self.__minimum_height = data
+            if self.__height < data:
+                self.__height = data
+            self.notify(
+                self,
+                "pygamelib.gfx.ui.Widget.resizeEvent:minimum_height",
+                self.__minimum_height,
+            )
         else:
             self.notify(
                 self,
@@ -2710,6 +2732,60 @@ class GridSelector(Widget):
         self.__items_per_page = int(self.maximum_height / 2 * self.maximum_width / 2)
 
     @property
+    def maximum_width(self) -> int: #overwriting so I can call build_cache() on size changes
+        """
+        This property get/set the maximum width of the widget. This property is used
+        when changing the size constraints and the width property.
+        """
+        return self._Widget__maximum_width
+
+    @maximum_width.setter
+    def maximum_width(self, data: int) -> None:
+        if isinstance(data, int):
+            self._Widget__maximum_width = data
+            if data < self._Widget__width:
+                self._Widget__width = data
+            self.notify(
+                self,
+                "pygamelib.gfx.ui.Widget.resizeEvent:maximum_width",
+                self._Widget__maximum_width,
+            )
+            self._build_cache()
+        else:
+            self.notify(
+                self,
+                "pygamelib.gfx.ui.Widget.resizeEvent:error",
+                f"{type(self).__name__}.maximum_width must be an int, '{data}' is a {type(data).__name__}, not an int",
+            )
+
+    @property
+    def maximum_height(self) -> int: #overwriting so I can call build_cache() on size changes
+        """
+        This property get/set the maximum height of the widget. This property is used
+        when changing the size constraints and the height property.
+        """
+        return self._Widget__maximum_height
+
+    @maximum_height.setter
+    def maximum_height(self, data: int) -> None:
+        if isinstance(data, int):
+            self._Widget__maximum_height = data
+            if data < self._Widget__height:
+                self._Widget__height = data 
+            self.notify(
+                self,
+                "pygamelib.gfx.ui.Widget.resizeEvent:maximum_height",
+                self._Widget__maximum_height,
+            )
+            self._build_cache()
+        else:
+            self.notify(
+                self,
+                "pygamelib.gfx.ui.Widget.resizeEvent:error",
+                f"{type(self).__name__}.maximum_height must be an int, '{data}' is a {type(data).__name__}, not an int",
+            )
+
+    @property
     def choices(self) -> int:
         """
         Get and set the list of choices, it has to be a list of
@@ -2871,11 +2947,11 @@ class GridSelector(Widget):
         #       is not cleared when re-rendered (the coordinates calculation is probably
         #       wrong somewhere).
         buffer[row][column] = " "
-        self.__maximum_width = functions.clamp(
-            self.__maximum_width, 0, buffer_width - 2
+        self.maximum_width = functions.clamp(
+            self.maximum_width, 0, buffer_width - 2
         )
-        self.__maximum_height = functions.clamp(
-            self.__maximum_height, 0, buffer_height - 2
+        self.maximum_height = functions.clamp(
+            self.maximum_height, 0, buffer_height - 2
         )
         crow = 1
         ccol = 1
@@ -2886,9 +2962,9 @@ class GridSelector(Widget):
             buffer[row + row_offset][column + col_offset] = self.__cache[i]
             # if i == self.__current_choice % len(self.__choices):
             if i == self.__current_choice % len(self.__cache):
-                border_fg_color = self._config.border_fg_color
-                self._config.border_fg_color = core.Color(0, 255, 0)
-                sel = Box(self.__cache[i].length + 2, 3, config=self._config)
+                border_fg_color = self.ui_config.border_fg_color
+                self.ui_config.border_fg_color = core.Color(0, 255, 0)
+                sel = Box(self.__cache[i].length + 2, 3, config=self.ui_config)
                 sel.render_to_buffer(
                     buffer,
                     row + row_offset - 1,
@@ -2896,7 +2972,7 @@ class GridSelector(Widget):
                     buffer_height,
                     buffer_width,
                 )
-                self._config.border_fg_color = border_fg_color
+                self.ui_config.border_fg_color = border_fg_color
             # This cannot be covered yet because no character with a length > 1 is built
             # into the cache. This needs to be removed when support for characters with
             # length > 1.
@@ -2905,7 +2981,7 @@ class GridSelector(Widget):
                 col_offset += 1
             col_offset += self.__cache[i].length + 1
             ccol += 1
-            if col_offset > self.__max_width:
+            if col_offset > self.maximum_width:
                 crow += 1
                 row_offset += 2
                 ccol = 1
@@ -2913,7 +2989,7 @@ class GridSelector(Widget):
             if (
                 row + row_offset >= buffer_height
                 or column + col_offset >= buffer_width
-                or row_offset > self.__max_height
+                or row_offset > self.maximum_height
                 or i >= start + self.__items_per_page
             ):
                 break
