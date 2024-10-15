@@ -341,7 +341,8 @@ class Widget(base.PglBaseObject):
             self.notify(
                 self,
                 "pygamelib.gfx.ui.Widget.resizeEvent:error",
-                f"{type(self).__name__}.width must be an int, '{data}' is a {type(data).__name__}, not an int",
+                f"{type(self).__name__}.width must be an int, "
+                f"'{data}' is a {type(data).__name__}, not an int",
             )
 
     @property
@@ -384,7 +385,8 @@ class Widget(base.PglBaseObject):
             self.notify(
                 self,
                 "pygamelib.gfx.ui.Widget.resizeEvent:error",
-                f"{type(self).__name__}.height must be an int, '{data}' is a {type(data).__name__}, not an int",
+                f"{type(self).__name__}.height must be an int, "
+                f"'{data}' is a {type(data).__name__}, not an int",
             )
 
     @property
@@ -410,7 +412,8 @@ class Widget(base.PglBaseObject):
             self.notify(
                 self,
                 "pygamelib.gfx.ui.Widget.resizeEvent:error",
-                f"{type(self).__name__}.maximum_width must be an int, '{data}' is a {type(data).__name__}, not an int",
+                f"{type(self).__name__}.maximum_width must be an int, "
+                f"'{data}' is a {type(data).__name__}, not an int",
             )
 
     @property
@@ -436,7 +439,8 @@ class Widget(base.PglBaseObject):
             self.notify(
                 self,
                 "pygamelib.gfx.ui.Widget.resizeEvent:error",
-                f"{type(self).__name__}.maximum_height must be an int, '{data}' is a {type(data).__name__}, not an int",
+                f"{type(self).__name__}.maximum_height must be an int, "
+                f"'{data}' is a {type(data).__name__}, not an int",
             )
 
     @property
@@ -462,7 +466,8 @@ class Widget(base.PglBaseObject):
             self.notify(
                 self,
                 "pygamelib.gfx.ui.Widget.resizeEvent:error",
-                f"{type(self).__name__}.minimum_width must be an int, '{data}' is a {type(data).__name__}, not an int",
+                f"{type(self).__name__}.minimum_width must be an int, "
+                f"'{data}' is a {type(data).__name__}, not an int",
             )
 
     @property
@@ -488,7 +493,8 @@ class Widget(base.PglBaseObject):
             self.notify(
                 self,
                 "pygamelib.gfx.ui.Widget.resizeEvent:error",
-                f"{type(self).__name__}.minimum_height must be an int, '{data}' is a {type(data).__name__}, not an int",
+                f"{type(self).__name__}.minimum_height must be an int, "
+                f"'{data}' is a {type(data).__name__}, not an int",
             )
 
     @property
@@ -2732,7 +2738,8 @@ class GridSelector(Widget):
         self.__items_per_page = int(self.maximum_height / 2 * self.maximum_width / 2)
 
     @property
-    def maximum_width(self) -> int: #overwriting so I can call build_cache() on size changes
+    def maximum_width(self) -> int:  # #overwriting so build_cache()
+        #                              #can be called on size changes
         """
         This property get/set the maximum width of the widget. This property is used
         when changing the size constraints and the width property.
@@ -2755,11 +2762,13 @@ class GridSelector(Widget):
             self.notify(
                 self,
                 "pygamelib.gfx.ui.Widget.resizeEvent:error",
-                f"{type(self).__name__}.maximum_width must be an int, '{data}' is a {type(data).__name__}, not an int",
+                f"""{type(self).__name__}.maximum_width must be an int,
+                 '{data}' is a {type(data).__name__}, not an int""",
             )
 
     @property
-    def maximum_height(self) -> int: #overwriting so I can call build_cache() on size changes
+    def maximum_height(self) -> int:  # #overwriting so build_cache()
+        #                              #can be called on size changes
         """
         This property get/set the maximum height of the widget. This property is used
         when changing the size constraints and the height property.
@@ -2771,7 +2780,7 @@ class GridSelector(Widget):
         if isinstance(data, int):
             self._Widget__maximum_height = data
             if data < self._Widget__height:
-                self._Widget__height = data 
+                self._Widget__height = data
             self.notify(
                 self,
                 "pygamelib.gfx.ui.Widget.resizeEvent:maximum_height",
@@ -2782,7 +2791,8 @@ class GridSelector(Widget):
             self.notify(
                 self,
                 "pygamelib.gfx.ui.Widget.resizeEvent:error",
-                f"{type(self).__name__}.maximum_height must be an int, '{data}' is a {type(data).__name__}, not an int",
+                f"""{type(self).__name__}.maximum_height must be an int,
+                 '{data}' is a {type(data).__name__}, not an int""",
             )
 
     @property
