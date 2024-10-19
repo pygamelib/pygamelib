@@ -2705,7 +2705,7 @@ class GridSelector(Widget):
             minimum_width = maximum_width
         if minimum_height is None:
             minimum_height = maximum_height
-        
+
         super().__init__(
             width=width,
             height=height,
