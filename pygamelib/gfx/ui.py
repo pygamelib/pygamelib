@@ -2660,10 +2660,10 @@ class GridSelector(Widget):
     def __init__(
         self,
         choices: list = None,
-        width: int = 0,
-        height: int = 0,
-        minimum_width: int = 0,
-        minimum_height: int = 0,
+        width: int = None,
+        height: int = None,
+        minimum_width: int = None,
+        minimum_height: int = None,
         maximum_width: int = 5,
         maximum_height: int = 10,
         config: Optional[UiConfig] = None,
@@ -2697,6 +2697,15 @@ class GridSelector(Widget):
         """
         if config is None:
             config = UiConfig.instance()
+        if width is None:
+            width = maximum_width
+        if height is None:
+            height = maximum_height
+        if minimum_width is None:
+            minimum_width = maximum_width
+        if minimum_height is None:
+            minimum_height = maximum_height
+        
         super().__init__(
             width=width,
             height=height,
@@ -3030,10 +3039,10 @@ class GridSelectorDialog(Dialog):
     def __init__(
         self,
         choices: list = None,
-        width: int = 0,
-        height: int = 0,
-        minimum_width: int = 0,
-        minimum_height: int = 0,
+        width: int = None,
+        height: int = None,
+        minimum_width: int = None,
+        minimum_height: int = None,
         maximum_width: int = 5,
         maximum_height: int = 10,
         title: str = None,
@@ -3067,6 +3076,14 @@ class GridSelectorDialog(Dialog):
         """
         if config is None:
             config = UiConfig.instance()
+        if width is None:
+            width = maximum_width
+        if height is None:
+            height = maximum_height
+        if minimum_width is None:
+            minimum_width = maximum_width
+        if minimum_height is None:
+            minimum_height = maximum_height
         super().__init__(config=config)
         self.__grid_selector = None
         if not config.borderless_dialog:
