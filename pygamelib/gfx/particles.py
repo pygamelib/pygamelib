@@ -1542,131 +1542,6 @@ class ColorPartitionParticle(PartitionParticle):
         return p
 
 
-class SprixelParticle(Particle):
-    """
-    This class is an extension of :class:`~pygamelib.gfx.particles.Particle`. It adds
-    the possibility to gradually go from a starting color to an end color over time.
-    It is linked with the lifespan of the particle.
-    """
-
-    __color_cache = {}
-
-    def __init__(
-        self,
-        row: int = 0,
-        column: int = 0,
-        velocity: Optional[base.Vector2D] = None,
-        lifespan: Optional[int] = None,
-        sprixel: Optional[ParticleSprixel] = None,
-        stop_color: Optional[core.Color] = None,
-    ) -> None:
-        """
-        The constructor takes the following parameters.
-
-        :param row: The initial row position of the particle on the screen.
-        :type row: int
-        :param column: The initial column position of the particle on the screen.
-        :type column: int
-        :param velocity: The initial velocity of the particle.
-        :type velocity: :class:`~pygamelib.base.Vector2D`
-        :param lifespan: The particle lifespan in number of movements/turns. A particle
-           with a lifespan of 3 will move for 3 turns before being finished.
-        :type lifespan: int
-        :param sprixel: The sprixel that represent the particle when drawn on screen.
-        :type sprixel: :class:`~pygamelib.gfx.core.Sprixel`
-        :param start_color: The color of the particle at the beginning of its lifespan.
-        :type start_color: :class:`~pygamelib.gfx.core.Color`
-        :param stop_color: The color of the particle at the end of its lifespan.
-        :type stop_color: :class:`~pygamelib.gfx.core.Color`
-
-        Example::
-
-            single_particle = ColorParticle(
-                row=5,
-                column=5,
-                velocity=base.Vector2D(-0.5, 0.0),
-                lifespan=10,
-                start_color=core.Color(255, 0, 0),
-                stop_color=core.Color(0, 255, 0),
-            )
-        """
-        super().__init__(
-            row=row,
-            column=column,
-            velocity=velocity,
-            lifespan=lifespan,
-            sprixel=sprixel,
-        )
-        self.stop_color = stop_color
-        if stop_color is None:
-            self.stop_color = core.Color(0, 0, 0)
-        self.__sprixel_initial_fg_color = self.sprixel.fg_color.copy()
-        self.__sprixel_initial_bg_color = self.sprixel.bg_color.copy()
-
-    def update(self):
-        super().update()
-        lp = self.lifespan if self.lifespan >= 0 else 0
-        coeff = 1 - (lp / self._initial_lifespan)
-        # Creating index keys for the colors independently of fg/bg
-        color_key_fg = (
-            f"{coeff}{self.__sprixel_initial_fg_color.r}"
-            f"{self.__sprixel_initial_fg_color.g}"
-            f"{self.__sprixel_initial_fg_color.b}"
-        )
-        color_key_bg = (
-            f"{coeff}{self.__sprixel_initial_fg_color.r}"
-            f"{self.__sprixel_initial_fg_color.g}"
-            f"{self.__sprixel_initial_fg_color.b}"
-        )
-        # Checking if the foreground color is in the cache, if not add it.
-        if color_key_fg not in ColorParticle.__color_cache.keys():
-            ColorParticle.__color_cache[color_key_fg] = (
-                self.__sprixel_initial_fg_color.blend(self.stop_color, coeff)
-            )
-        self.sprixel.bg_color = ColorParticle.__color_cache[color_key_fg]
-        # Checking if the background color is in the cache, if not add it.
-        if color_key_bg not in ColorParticle.__color_cache.keys():
-            ColorParticle.__color_cache[color_key_bg] = (
-                self.__sprixel_initial_bg_color.blend(self.stop_color, coeff)
-            )
-        self.sprixel.bg_color = ColorParticle.__color_cache[color_key_bg]
-
-    def serialize(self):
-        """Serialize a ColorParticle into a dictionary.
-
-        :returns: The class as a  dictionary
-        :rtype: dict
-
-        Example::
-
-            json.dump( particle.serialize() )
-        """
-        ret_dict = super().serialize()
-        ret_dict["start_color"] = self.start_color.serialize()
-        ret_dict["stop_color"] = self.stop_color.serialize()
-
-        return ret_dict
-
-    @classmethod
-    def load(cls, data):
-        """Load a ColorParticle from a dictionary.
-
-        :param data: The dictionary to load from
-        :type data: dict
-        :returns: The loaded ColorParticle
-        :rtype: :class:`~pygamelib.gfx.particles.ColorParticle`
-
-        Example::
-
-            particle = ColorParticle.load( json.load( open("particle.json") ) )
-        """
-        p = super().load(data)
-        p.start_color = core.Color.load(data["start_color"])
-        p.stop_color = core.Color.load(data["stop_color"])
-        p.sprixel.fg_color = deepcopy(p.start_color)
-        return p
-
-
 # Emitters
 
 
@@ -2516,11 +2391,16 @@ class CircleEmitter(ParticleEmitter):
 
 class SpriteEmitter(ParticleEmitter):
     """
-    The CircleEmitter differs from the :class:`ParticleEmitter` in only one thing: it
-    emits its particle in a circular shape, like this:
+    The SpriteEmitter differs from all the other particle emitters in one (crucial
+    thing: it takes a sprite as a constructor parameter and is then going to emit
+    particles using the sprixels in said sprite. It is mainly thought as an easy mean
+    to explode you player in a million pieces but I'm sure you will find other
+    use-cases!
 
-    .. image:: circle_emitter_example.gif
-       :alt: menu
+    It goes a bit like this:
+
+    .. image:: sprite_emitter_example.gif
+       :alt: explosion!
        :align: center
 
     Aside from that specificity it's exactly the same as a regular particle emitter.
@@ -2532,12 +2412,20 @@ class SpriteEmitter(ParticleEmitter):
         emitter_properties: Optional[EmitterProperties] = None,
     ) -> None:
         """The CircleEmitter takes the same parameters than the :class:`ParticleEmitter`
-        and make use of EmitterProperties.radius.
-
-        The radius is not used for the moment. It could be used to limit the emission
-        radius but for this first version it is not. Please use the issue reporter to
+        plus the additional sprite parameter.
 
         Contrary to other particle emitters, the SpriteEmitter does NOT start active.
+
+        :param sprite: The sprite used to initialize the particle emitter.
+        :type sprite: :class:`~pygamelib.gfx.core.Sprite`
+        :param emitter_properties: The properties of the particle emitter.
+        :type emitter_properties: :class:`EmitterProperties`
+
+        There are multiple examples of how to use a particle emitter in the pygamelib
+        but
+        `pyscii-bird
+        <https://github.com/pygamelib/pyscii-bird/blob/main/pyscii-bird.py#L361>`__
+        is a particularly amusing example of the sprite emitter specifically.
         """
         if emitter_properties is None:
             emitter_properties = EmitterProperties()
@@ -2567,8 +2455,6 @@ class SpriteEmitter(ParticleEmitter):
             particles = self.particle_pool.get_particles(
                 self.__initial_sprite.width * self.__initial_sprite.height
             )
-            center_x = self.x + round(self.__initial_sprite.width / 2)
-            center_y = self.y + round(self.__initial_sprite.height / 2)
             # Poor attempt at optimization: test outside the loop.
             if callable(self.particle):
                 pidx = 0
