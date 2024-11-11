@@ -2713,7 +2713,7 @@ class GridSelector(Widget):
             minimum_height=minimum_height,
             maximum_width=maximum_width,
             maximum_height=maximum_height,
-            bg_color=config.input_bg_color,
+            bg_color=config.bg_color,
             config=config,
         )
         self.__choices = []
@@ -2722,6 +2722,12 @@ class GridSelector(Widget):
         self.__current_choice = 0
         self.__current_page = 0
         self.__cache = []
+        self.__CACHE_ATTRBIUTES = [
+            "pygamelib.gfx.ui.Widget.resizeEvent:maximum_width",
+            "pygamelib.gfx.ui.Widget.resizeEvent:minimum_width",
+            "pygamelib.gfx.ui.Widget.resizeEvent:maximum_height",
+            "pygamelib.gfx.ui.Widget.resizeEvent:minimum_height",
+        ]  # sets the attributes that trigger a cache update
         self._build_cache()
         self.__items_per_page = max(
             int(self.maximum_height / 2 * self.maximum_width / 2), 1
@@ -2746,63 +2752,10 @@ class GridSelector(Widget):
             self.__cache.append(s)
         self.__items_per_page = int(self.maximum_height / 2 * self.maximum_width / 2)
 
-    @property
-    def maximum_width(self) -> int:  # #overwriting so build_cache()
-        #                              #can be called on size changes
-        """
-        This property get/set the maximum width of the widget. This property is used
-        when changing the size constraints and the width property.
-        """
-        return self._Widget__maximum_width
-
-    @maximum_width.setter
-    def maximum_width(self, data: int) -> None:
-        if isinstance(data, int):
-            self._Widget__maximum_width = data
-            if data < self._Widget__width:
-                self._Widget__width = data
-            self.notify(
-                self,
-                "pygamelib.gfx.ui.Widget.resizeEvent:maximum_width",
-                self._Widget__maximum_width,
-            )
-            self._build_cache()
-        else:
-            self.notify(
-                self,
-                "pygamelib.gfx.ui.Widget.resizeEvent:error",
-                f"""{type(self).__name__}.maximum_width must be an int,
-                 '{data}' is a {type(data).__name__}, not an int""",
-            )
-
-    @property
-    def maximum_height(self) -> int:  # #overwriting so build_cache()
-        #                              #can be called on size changes
-        """
-        This property get/set the maximum height of the widget. This property is used
-        when changing the size constraints and the height property.
-        """
-        return self._Widget__maximum_height
-
-    @maximum_height.setter
-    def maximum_height(self, data: int) -> None:
-        if isinstance(data, int):
-            self._Widget__maximum_height = data
-            if data < self._Widget__height:
-                self._Widget__height = data
-            self.notify(
-                self,
-                "pygamelib.gfx.ui.Widget.resizeEvent:maximum_height",
-                self._Widget__maximum_height,
-            )
-            self._build_cache()
-        else:
-            self.notify(
-                self,
-                "pygamelib.gfx.ui.Widget.resizeEvent:error",
-                f"""{type(self).__name__}.maximum_height must be an int,
-                 '{data}' is a {type(data).__name__}, not an int""",
-            )
+    def handle_notification(self, subject, attribute=None, value=None):
+        if subject == self:
+            if attribute in self.__CACHE_ATTRBIUTES:
+                self._build_cache()
 
     @property
     def choices(self) -> int:
@@ -2966,12 +2919,8 @@ class GridSelector(Widget):
         #       is not cleared when re-rendered (the coordinates calculation is probably
         #       wrong somewhere).
         buffer[row][column] = " "
-        self.maximum_width = functions.clamp(
-            self.maximum_width, 0, buffer_width - 2
-        )
-        self.maximum_height = functions.clamp(
-            self.maximum_height, 0, buffer_height - 2
-        )
+        self.maximum_width = functions.clamp(self.maximum_width, 0, buffer_width - 2)
+        self.maximum_height = functions.clamp(self.maximum_height, 0, buffer_height - 2)
         crow = 1
         ccol = 1
         col_offset = 1
