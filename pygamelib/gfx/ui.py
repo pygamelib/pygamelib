@@ -278,9 +278,11 @@ class Widget(base.PglBaseObject):
 
     def post_processing(self, attribute):
         """
-        This virtual method allows for subclasses to perform their own operations when a specific attribute is changed
+        This virtual method allows for subclasses to perform their own operations when
+        a specific attribute is changed
 
-        :param attribute: The attribute that has changed. This is a string containing the name of the changed attribute
+        :param attribute: The attribute that has changed. This is a string containing
+        the name of the changed attribute
         :type attribute: str
         """
         pass
