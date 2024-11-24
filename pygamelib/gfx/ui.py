@@ -276,6 +276,15 @@ class Widget(base.PglBaseObject):
         self.__size_constraint = constants.SizeConstraint.DEFAULT_SIZE
         self.__focus = False
 
+    def post_processing(self, attribute):
+        """
+        This virtual method allows for subclasses to perform their own operations when a specific attribute is changed
+
+        :param attribute: The attribute that has changed. This is a string containing the name of the changed attribute
+        :type attribute: str
+        """
+        pass
+
     @property
     def children(self) -> Set["Widget"]:
         """
@@ -297,6 +306,7 @@ class Widget(base.PglBaseObject):
     def parent(self, data: Union["Widget", "Layout", None] = None):
         if isinstance(data, Widget) or isinstance(data, Layout) or data is None:
             self.__parent = data
+            self.post_processing("parent")
 
     @property
     def bg_color(self) -> core.Color:
@@ -315,6 +325,7 @@ class Widget(base.PglBaseObject):
             self.__bg_color = data
             self.__default_bg_sprixel.bg_color = data
             self.notify(self, "pygamelib.gfx.ui.Widget.bg_color:changed", data)
+            self.post_processing("bg_color")
 
     @property
     def width(self) -> int:
@@ -337,6 +348,7 @@ class Widget(base.PglBaseObject):
                 self.notify(
                     self, "pygamelib.gfx.ui.Widget.resizeEvent:width", self.__width
                 )
+                self.post_processing("width")
         else:
             self.notify(
                 self,
@@ -381,6 +393,7 @@ class Widget(base.PglBaseObject):
                 # logging.debug(
                 #     f"     *** Widget ({id(self)}): height set to {self.__height}"
                 # )
+                self.post_processing("height")
         else:
             self.notify(
                 self,
@@ -404,10 +417,11 @@ class Widget(base.PglBaseObject):
             if data < self.__width:
                 self.__width = data
             self.notify(
-                self,
+                None,
                 "pygamelib.gfx.ui.Widget.resizeEvent:maximum_width",
                 self.__maximum_width,
             )
+            self.post_processing("maximum_width")
         else:
             self.notify(
                 self,
@@ -435,6 +449,7 @@ class Widget(base.PglBaseObject):
                 "pygamelib.gfx.ui.Widget.resizeEvent:maximum_height",
                 self.__maximum_height,
             )
+            self.post_processing("maximum_height")
         else:
             self.notify(
                 self,
@@ -462,6 +477,7 @@ class Widget(base.PglBaseObject):
                 "pygamelib.gfx.ui.Widget.resizeEvent:minimum_width",
                 self.__minimum_width,
             )
+            self.post_processing("minimum_width")
         else:
             self.notify(
                 self,
@@ -489,6 +505,7 @@ class Widget(base.PglBaseObject):
                 "pygamelib.gfx.ui.Widget.resizeEvent:minimum_height",
                 self.__minimum_height,
             )
+            self.post_processing("minimum_height")
         else:
             self.notify(
                 self,
@@ -509,6 +526,7 @@ class Widget(base.PglBaseObject):
     @y.setter
     def y(self, data: int) -> None:
         self.screen_row = data
+        self.post_processing("y")
 
     @property
     def x(self) -> int:
@@ -522,6 +540,7 @@ class Widget(base.PglBaseObject):
     @x.setter
     def x(self, data: int) -> None:
         self.screen_column = data
+        self.post_processing("x")
 
     @property
     def layout(self) -> Union["Layout", None]:
@@ -544,6 +563,7 @@ class Widget(base.PglBaseObject):
             if self.__layout.parent != self:
                 self.__layout.parent = self
             self.notify(self, "pygamelib.gfx.ui.Widget.layout:changed", data)
+            self.post_processing("layout")
         else:
             raise base.PglInvalidTypeException(
                 "Widget.layout = some_layout: the value given to Widget.layout (here: "
@@ -569,6 +589,7 @@ class Widget(base.PglBaseObject):
             elif data == constants.SizeConstraint.MAXIMUM_SIZE:
                 self.__width = self.__maximum_width
                 self.__height = self.__maximum_height
+            self.post_processing("size_constraint")
 
     @property
     def focus(self) -> bool:
@@ -585,6 +606,7 @@ class Widget(base.PglBaseObject):
     def focus(self, data: bool):
         if isinstance(data, bool):
             self.__focus = data
+            self.post_processing("focus")
 
     def render_to_buffer(
         self,
@@ -2723,10 +2745,10 @@ class GridSelector(Widget):
         self.__current_page = 0
         self.__cache = []
         self.__CACHE_ATTRBIUTES = [
-            "pygamelib.gfx.ui.Widget.resizeEvent:maximum_width",
-            "pygamelib.gfx.ui.Widget.resizeEvent:minimum_width",
-            "pygamelib.gfx.ui.Widget.resizeEvent:maximum_height",
-            "pygamelib.gfx.ui.Widget.resizeEvent:minimum_height",
+            "maximum_width",
+            "minimum_width",
+            "maximum_height",
+            "minimum_height",
         ]  # sets the attributes that trigger a cache update
         self._build_cache()
         self.__items_per_page = max(
@@ -2752,10 +2774,9 @@ class GridSelector(Widget):
             self.__cache.append(s)
         self.__items_per_page = int(self.maximum_height / 2 * self.maximum_width / 2)
 
-    def handle_notification(self, subject, attribute=None, value=None):
-        if subject == self:
-            if attribute in self.__CACHE_ATTRBIUTES:
-                self._build_cache()
+    def post_processing(self, attribute):
+        if attribute in self.__CACHE_ATTRBIUTES:
+            self._build_cache()
 
     @property
     def choices(self) -> int:
