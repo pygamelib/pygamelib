@@ -347,6 +347,8 @@ class TestBase(unittest.TestCase):
         # self.assertIsNone(fd._build_file_cache())
 
     def test_gridselector(self):
+        gd = ui.GridSelectorDialog()
+        self.assertEqual(gd.config, ui.UiConfig.instance())
         conf = ui.UiConfig.instance(game=self.game)
         gd = ui.GridSelectorDialog(
             ["a", "b", "c", "##"],
