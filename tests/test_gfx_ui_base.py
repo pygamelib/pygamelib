@@ -349,8 +349,11 @@ class TestBase(unittest.TestCase):
     def test_gridselector(self):
         gd = ui.GridSelectorDialog()
         self.assertEqual(gd.config, ui.UiConfig.instance())
-        self.assertEqual(gd.grid_selector.height, gd.grid_selector.maximum_height)
-        self.assertEqual(gd.grid_selector.width, gd.grid_selector.maximum_width)
+        grid_selector = ui.GridSelector()
+        self.assertEqual(grid_selector.height, grid_selector.maximum_height)
+        self.assertEqual(grid_selector.width, grid_selector.maximum_width)
+        self.assertEqual(grid_selector.minimum_height, grid_selector.maximum_height)
+        self.assertEqual(grid_selector.minimum_width, grid_selector.maximum_width)
 
         conf = ui.UiConfig.instance(game=self.game)
         gd = ui.GridSelectorDialog(
