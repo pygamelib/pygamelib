@@ -4,6 +4,7 @@ __docformat__ = "restructuredtext"
    :toctree: .
 
    pygamelib.gfx.ui.UiConfig
+   pygamelib.gfx.ui.Widget
    pygamelib.gfx.ui.Dialog
    pygamelib.gfx.ui.Box
    pygamelib.gfx.ui.ProgressBar
@@ -19,7 +20,6 @@ __docformat__ = "restructuredtext"
    pygamelib.gfx.ui.MenuBar
    pygamelib.gfx.ui.Menu
    pygamelib.gfx.ui.MenuAction
-   pygamelib.gfx.ui.Widget
    pygamelib.gfx.ui.Layout
    pygamelib.gfx.ui.BoxLayout
    pygamelib.gfx.ui.GridLayout
@@ -185,6 +185,471 @@ class UiConfig(object):
         if cls.__instance is None:
             cls.__instance = cls(*args, **kwargs)
         return cls.__instance
+
+
+class Widget(base.PglBaseObject):
+    # Base class does not do anything by itself aside from enforcing geometry and
+    # sending resize events.
+    # TODO: When we had widget visibility (show(), hide(), is_visible)
+    """
+    .. versionadded:: 1.4.0
+
+    The Widget object is the base for all UI elements (or should be). By itself it does
+    not do anything functionally useful. What it does however, is taking care of the
+    geometry logic.
+
+    It enforces the geometry constraints and takes care of sending resize events
+    messages.
+    """
+
+    def __init__(
+        self,
+        width: int = 0,
+        height: int = 0,
+        minimum_width: int = 0,
+        minimum_height: int = 0,
+        maximum_width: int = 20,
+        maximum_height: int = 10,
+        layout: Union["Layout", None] = None,
+        bg_color: Union[core.Color, None] = None,
+        config: Union[UiConfig, None] = None,
+    ) -> None:
+        """
+        :param width: The width of the widget.
+        :type width: int
+        :param height: The height of the widget.
+        :type height: int
+        :param minimum_width: The minimum_width of the widget.
+        :type minimum_width: int
+        :param minimum_height: The minimum_height of the widget.
+        :type minimum_height: int
+        :param maximum_width: The maximum_width of the widget.
+        :type maximum_width: int
+        :param maximum_height: The maximum_height of the widget.
+        :type maximum_height: int
+        :param layout: The layout of the widget.
+        :type layout: :class:`Layout`
+        :param bg_color: The default background color of the widget. This property
+           overrides the `widget_bg_color` from the :class:`UiConfig` class (in case
+           you want to create a specific widget with a different background color than
+           the default one).
+        :type bg_color: :class:`~pygamelib.gfx.core.Color`
+        :param config: The configuration object.
+        :type config: :class:`UiConfig`
+
+        Example::
+
+            my_widget = Widget(6, 3, minimum_width=6, minimum_height=3)
+            my_widget.bg_color = Color(255, 255, 255)
+            screen.place(my_widget, 5, 2)
+        """
+        super().__init__()
+        self.__children_widgets: Set["Widget"] = set()
+        self.__parent: Union["Widget", "Layout", None] = None
+        self.__width: int = width
+        self.__height: int = height
+        self.__maximum_width: int = maximum_width
+        if self.__maximum_width < self.__width:
+            self.__maximum_width = self.__width
+        self.__maximum_height: int = maximum_height
+        if self.__height > self.__maximum_height:
+            self.__maximum_height = self.__height
+
+        self.__minimum_width: int = minimum_width
+        self.__minimum_height: int = minimum_height
+        if width < minimum_width:
+            self.__width = minimum_width
+        if self.__height < self.__minimum_height:
+            self.__height = self.__minimum_height
+        self.ui_config = config
+        if config is None:
+            self.ui_config = UiConfig.instance()
+        self.__default_bg_sprixel = core.Sprixel(" ", self.ui_config.widget_bg_color)
+        self.__layout = None
+        if isinstance(layout, Layout):
+            self.__layout = layout
+            self.__layout.parent = self
+        self.__bg_color = None
+        if isinstance(bg_color, core.Color):
+            self.__bg_color = bg_color
+            self.__default_bg_sprixel.bg_color = bg_color
+        self.__size_constraint = constants.SizeConstraint.DEFAULT_SIZE
+        self.__focus = False
+
+    def post_processing(self, attribute):
+        """
+        This virtual method allows for subclasses to perform their own operations when
+        a specific attribute is changed
+
+        :param attribute: The attribute that has changed. This is a string containing
+        the name of the changed attribute
+        :type attribute: str
+        """
+        pass
+
+    @property
+    def children(self) -> Set["Widget"]:
+        """
+        This read only property property returns the list of children widgets.
+        """
+        if self.__layout is None:
+            return self.__children_widgets
+        else:
+            return self.__layout.widgets()
+
+    @property
+    def parent(self) -> Union["Widget", None]:
+        """
+        This property get/set the parent widget of the widget.
+        """
+        return self.__parent
+
+    @parent.setter
+    def parent(self, data: Union["Widget", "Layout", None] = None):
+        if isinstance(data, Widget) or isinstance(data, Layout) or data is None:
+            self.__parent = data
+            self.post_processing("parent")
+
+    @property
+    def bg_color(self) -> core.Color:
+        """
+        This property get/set the background color of the widget.
+
+        When the color is changed the
+        :boldblue:`pygamelib.gfx.ui.Widget.bg_color:changed` event is sent to the
+        observers.
+        """
+        return self.__bg_color
+
+    @bg_color.setter
+    def bg_color(self, data: core.Color) -> None:
+        if isinstance(data, core.Color) and self.__bg_color != data:
+            self.__bg_color = data
+            self.__default_bg_sprixel.bg_color = data
+            self.notify(self, "pygamelib.gfx.ui.Widget.bg_color:changed", data)
+            self.post_processing("bg_color")
+
+    @property
+    def width(self) -> int:
+        """
+        This property get/set the width of the widget. This property respects the
+        boundaries set by the `maximum_width` and `minimum_width` properties.
+
+        When the width is changed the
+        :boldblue:`pygamelib.gfx.ui.Widget.resizeEvent:width` event is sent to the
+        observers.
+        """
+        return self.__width
+
+    @width.setter
+    def width(self, data: int) -> None:
+        if isinstance(data, int):
+            data = functions.clamp(data, self.__minimum_width, self.__maximum_width)
+            if self.__width != data:
+                self.__width = data
+                self.notify(
+                    self, "pygamelib.gfx.ui.Widget.resizeEvent:width", self.__width
+                )
+                self.post_processing("width")
+        else:
+            self.notify(
+                self,
+                "pygamelib.gfx.ui.Widget.resizeEvent:error",
+                f"{type(self).__name__}.width must be an int, "
+                f"'{data}' is a {type(data).__name__}, not an int",
+            )
+
+    @property
+    def height(self) -> int:
+        """
+        This property get/set the height of the widget. This property respects the
+        boundaries set by the `maximum_height` and `minimum_height` properties.
+
+        When the height is changed the
+        :boldblue:`pygamelib.gfx.ui.Widget.resizeEvent:height` event is sent to the
+        observers.
+        """
+        return self.__height
+
+    @height.setter
+    def height(self, data: int) -> None:
+        # if (
+        #     isinstance(data, int)
+        #     and data >= self.__minimum_height
+        #     and data <= self.__maximum_height
+        # ):
+        #     self.__height = data
+        #     self.notify(self, "pygamelib.gfx.ui.Widget.resizeEvent:height", data)
+        # logging.debug(
+        #     f"     *** Widget ({id(self)}): height setter data={data} current height="
+        #     f"{self.__height}"
+        # )
+        if isinstance(data, int):
+            data = functions.clamp(data, self.__minimum_height, self.__maximum_height)
+            # logging.debug(f"     *** Widget ({id(self)}): height CLAMPED data={data}")
+            if data != self.__height:
+                self.__height = data
+                self.notify(
+                    self, "pygamelib.gfx.ui.Widget.resizeEvent:height", self.__height
+                )
+                # logging.debug(
+                #     f"     *** Widget ({id(self)}): height set to {self.__height}"
+                # )
+                self.post_processing("height")
+        else:
+            self.notify(
+                self,
+                "pygamelib.gfx.ui.Widget.resizeEvent:error",
+                f"{type(self).__name__}.height must be an int, "
+                f"'{data}' is a {type(data).__name__}, not an int",
+            )
+
+    @property
+    def maximum_width(self) -> int:
+        """
+        This property get/set the maximum width of the widget. This property is used
+        when changing the size constraints and the width property.
+        """
+        return self.__maximum_width
+
+    @maximum_width.setter
+    def maximum_width(self, data: int) -> None:
+        if isinstance(data, int):
+            self.__maximum_width = data
+            if data < self.__width:
+                self.__width = data
+            self.notify(
+                None,
+                "pygamelib.gfx.ui.Widget.resizeEvent:maximum_width",
+                self.__maximum_width,
+            )
+            self.post_processing("maximum_width")
+        else:
+            self.notify(
+                self,
+                "pygamelib.gfx.ui.Widget.resizeEvent:error",
+                f"{type(self).__name__}.maximum_width must be an int, "
+                f"'{data}' is a {type(data).__name__}, not an int",
+            )
+
+    @property
+    def maximum_height(self) -> int:
+        """
+        This property get/set the maximum height of the widget. This property is used
+        when changing the size constraints and the height property.
+        """
+        return self.__maximum_height
+
+    @maximum_height.setter
+    def maximum_height(self, data: int) -> None:
+        if isinstance(data, int):
+            self.__maximum_height = data
+            if data < self.__height:
+                self.__height = data
+            self.notify(
+                self,
+                "pygamelib.gfx.ui.Widget.resizeEvent:maximum_height",
+                self.__maximum_height,
+            )
+            self.post_processing("maximum_height")
+        else:
+            self.notify(
+                self,
+                "pygamelib.gfx.ui.Widget.resizeEvent:error",
+                f"{type(self).__name__}.maximum_height must be an int, "
+                f"'{data}' is a {type(data).__name__}, not an int",
+            )
+
+    @property
+    def minimum_width(self) -> int:
+        """
+        This property get/set the minimum width of the widget. This property is used
+        when changing the size constraints and the width property.
+        """
+        return self.__minimum_width
+
+    @minimum_width.setter
+    def minimum_width(self, data: int) -> None:
+        if isinstance(data, int):
+            self.__minimum_width = data
+            if self.__width < data:
+                self.__width = data
+            self.notify(
+                self,
+                "pygamelib.gfx.ui.Widget.resizeEvent:minimum_width",
+                self.__minimum_width,
+            )
+            self.post_processing("minimum_width")
+        else:
+            self.notify(
+                self,
+                "pygamelib.gfx.ui.Widget.resizeEvent:error",
+                f"{type(self).__name__}.minimum_width must be an int, "
+                f"'{data}' is a {type(data).__name__}, not an int",
+            )
+
+    @property
+    def minimum_height(self) -> int:
+        """
+        This property get/set the minimum height of the widget. This property is used
+        when changing the size constraints and the height property.
+        """
+        return self.__minimum_height
+
+    @minimum_height.setter
+    def minimum_height(self, data: int) -> None:
+        if isinstance(data, int):
+            self.__minimum_height = data
+            if self.__height < data:
+                self.__height = data
+            self.notify(
+                self,
+                "pygamelib.gfx.ui.Widget.resizeEvent:minimum_height",
+                self.__minimum_height,
+            )
+            self.post_processing("minimum_height")
+        else:
+            self.notify(
+                self,
+                "pygamelib.gfx.ui.Widget.resizeEvent:error",
+                f"{type(self).__name__}.minimum_height must be an int, "
+                f"'{data}' is a {type(data).__name__}, not an int",
+            )
+
+    @property
+    def y(self) -> int:
+        """
+        This property get/set the y position of the widget on screen. Since a Widget is
+        a :class:`~pygamelib.base.PglBaseObject` this is an alias for the
+        `screen_row` property.
+        """
+        return self.screen_row
+
+    @y.setter
+    def y(self, data: int) -> None:
+        self.screen_row = data
+        self.post_processing("y")
+
+    @property
+    def x(self) -> int:
+        """
+        This property get/set the x position of the widget on screen. Since a Widget is
+        a :class:`~pygamelib.base.PglBaseObject` this is an alias for the
+        `screen_column` property.
+        """
+        return self.screen_column
+
+    @x.setter
+    def x(self, data: int) -> None:
+        self.screen_column = data
+        self.post_processing("x")
+
+    @property
+    def layout(self) -> Union["Layout", None]:
+        """
+        This property get/set the layout of the widget. You can then add sub widgets to
+        the layout.
+
+        This must be a :class:`Layout` or a class that inherits from it.
+
+        When the layout is changed the
+        :boldblue:`pygamelib.gfx.ui.Widget.layout:changed` event is sent to the
+        observers.
+        """
+        return self.__layout
+
+    @layout.setter
+    def layout(self, data: "Layout") -> None:
+        if isinstance(data, Layout):
+            self.__layout = data
+            if self.__layout.parent != self:
+                self.__layout.parent = self
+            self.notify(self, "pygamelib.gfx.ui.Widget.layout:changed", data)
+            self.post_processing("layout")
+        else:
+            raise base.PglInvalidTypeException(
+                "Widget.layout = some_layout: the value given to Widget.layout (here: "
+                "some_layout) must be a pygamelib.gfx.ui.Layout object (or a class that"
+                f" inherits from Layout). {type(data)} is not a supported type."
+            )
+
+    @property
+    def size_constraint(self) -> constants.SizeConstraint:
+        """
+        This property get/set the size constraints of the widget. Changing the size
+        constraints immediately resize the widget.
+        """
+        return self.__size_constraint
+
+    @size_constraint.setter
+    def size_constraint(self, data: constants.SizeConstraint) -> None:
+        if isinstance(data, constants.SizeConstraint):
+            self.__size_constraint = data
+            if data == constants.SizeConstraint.MINIMUM_SIZE:
+                self.__width = self.__minimum_width
+                self.__height = self.__minimum_height
+            elif data == constants.SizeConstraint.MAXIMUM_SIZE:
+                self.__width = self.__maximum_width
+                self.__height = self.__maximum_height
+            self.post_processing("size_constraint")
+
+    @property
+    def focus(self) -> bool:
+        """
+        This property get/set the focus property. It is a boolean.
+
+        At the moment it is mostly an informational property, to tell the programmer and
+        potentially the Widget user (i.e: the class inheriting from Widget) about its
+        own state.
+        """
+        return self.__focus
+
+    @focus.setter
+    def focus(self, data: bool):
+        if isinstance(data, bool):
+            self.__focus = data
+            self.post_processing("focus")
+
+    def render_to_buffer(
+        self,
+        buffer: "numpy.array",
+        row: int,
+        column: int,
+        buffer_height: int,
+        buffer_width: int,
+    ) -> None:
+        """Render the object from the display buffer to the frame buffer.
+
+        This method is automatically called by :func:`pygamelib.engine.Screen.render`.
+
+        :param buffer: A screen buffer to render the item into.
+        :type buffer: numpy.array
+        :param row: The row to render in.
+        :type row: int
+        :param column: The column to render in.
+        :type column: int
+        :param height: The total height of the display buffer.
+        :type height: int
+        :param width: The total width of the display buffer.
+        :type width: int
+
+        """
+        # logging.debug(
+        #     f"     +++ Widget ({id(self)}): rendering at {row},{column} with buffer "
+        #     f"geometry {buffer_height}x{buffer_width} my geometry {self.__height}x"
+        #     f"{self.__width}"
+        # )
+        for r in range(row, min(row + self.__height, row + buffer_height)):
+            for c in range(column, min(column + self.__width, column + buffer_width)):
+                buffer[r][c] = self.__default_bg_sprixel
+        if self.__layout is not None:
+            self.__layout.render_to_buffer(
+                buffer,
+                row,
+                column,
+                min(self.__height, buffer_height),
+                min(self.__width, buffer_width),
+            )
 
 
 class Dialog(object):
@@ -2203,7 +2668,7 @@ class FileDialog(Dialog):
         return self.__path
 
 
-class GridSelector(object):
+class GridSelector(Widget):
     """
     The GridSelector is a widget that present a list of elements as a grid to the user.
 
@@ -2219,44 +2684,78 @@ class GridSelector(object):
     def __init__(
         self,
         choices: list = None,
-        max_height: int = None,
-        max_width: int = None,
-        config: UiConfig = None,
+        width: int = None,
+        height: int = None,
+        minimum_width: int = None,
+        minimum_height: int = None,
+        maximum_width: int = 5,
+        maximum_height: int = 10,
+        config: Optional[UiConfig] = None,
     ) -> None:
         """
         :param choices: A list of choices to present to the user. The elements of the
            list needs to be str or :class:`~pygamelib.gfx.core.Sprixel`.
         :type choices: list
-        :param max_height: The maximum height of the grid selector.
-        :type max_height: int
-        :param max_width: The maximum width of the grid selector.
-        :type max_width: int
+        :param minimum_width: The minimum width of the GridSelector.
+        :type minimum_width: int
+        :param minimum_height: The minimum height of the GridSelector.
+        :type minimum_height: int
+        :param maximum_width: The maximum width of the GridSelector.
+        :type maximum_width: int
+        :param maximum_height: The maximum height of the GridSelector.
+        :type maximum_height: int
         :param config: The configuration object.
         :type config: :class:`UiConfig`
 
         Example::
 
             choices = ["@","#","$","%","&","*","[","]"]
-            grid_selector = GridSelector(choices, 10, 30, conf)
+            grid_selector = GridSelector(
+                choices,
+                maximum_width=30,
+                maximum_height=10,
+                config=conf
+                )
             screen.place(grid_selector, 10, 10)
             screen.update()
         """
-        super().__init__()
+        if config is None:
+            config = UiConfig.instance()
+        if width is None:
+            width = maximum_width
+        if height is None:
+            height = maximum_height
+        if minimum_width is None:
+            minimum_width = maximum_width
+        if minimum_height is None:
+            minimum_height = maximum_height
+
+        super().__init__(
+            width=width,
+            height=height,
+            minimum_width=minimum_width,
+            minimum_height=minimum_height,
+            maximum_width=maximum_width,
+            maximum_height=maximum_height,
+            bg_color=config.bg_color,
+            config=config,
+        )
         self.__choices = []
         if choices is not None and type(choices) is list:
             self.__choices = choices
-        self.__max_height = 5
-        if max_height is not None and type(max_height) is int:
-            self.__max_height = max_height
-        self.__max_width = 10
-        if max_width is not None and type(max_width) is int:
-            self.__max_width = max_width
-        self._config = config
         self.__current_choice = 0
         self.__current_page = 0
         self.__cache = []
+        self.__CACHE_ATTRBIUTES = [
+            "maximum_width",
+            "minimum_width",
+            "maximum_height",
+            "minimum_height",
+        ]  # sets the attributes that trigger a cache update
         self._build_cache()
-        self.__items_per_page = int(self.__max_height / 2 * self.__max_width / 2)
+        self.__items_per_page = max(
+            int(self.maximum_height / 2 * self.maximum_width / 2), 1
+        )  # set floor of 1 to avoid ZeroDivisionError
         # config.game.log(f"items per page={self.__items_per_page}")
 
     def _build_cache(self):
@@ -2275,7 +2774,11 @@ class GridSelector(object):
                     "GridSelector: the choices must be strings or Sprixels."
                 )
             self.__cache.append(s)
-        self.__items_per_page = int(self.__max_height / 2 * self.__max_width / 2)
+        self.__items_per_page = int(self.maximum_height / 2 * self.maximum_width / 2)
+
+    def post_processing(self, attribute):
+        if attribute in self.__CACHE_ATTRBIUTES:
+            self._build_cache()
 
     @property
     def choices(self) -> int:
@@ -2298,42 +2801,6 @@ class GridSelector(object):
             raise base.PglInvalidTypeException(
                 "GridSelector.choices = value: 'value' must be a list. "
                 f"'{value}' is not a list"
-            )
-
-    @property
-    def max_height(self) -> int:
-        """
-        Get and set the maximum height of the grid selector, it needs to be an int.
-        """
-        return self.__max_height
-
-    @max_height.setter
-    def max_height(self, value):
-        if type(value) is int:
-            self.__max_height = value
-            self._build_cache()
-        else:
-            raise base.PglInvalidTypeException(
-                "GridSelector.max_height = value: 'value' must be an int. "
-                f"'{value}' is not an int"
-            )
-
-    @property
-    def max_width(self) -> int:
-        """
-        Get and set the maximum width of the grid selector, it needs to be an int.
-        """
-        return self.__max_width
-
-    @max_width.setter
-    def max_width(self, value):
-        if type(value) is int:
-            self.__max_width = value
-            self._build_cache()
-        else:
-            raise base.PglInvalidTypeException(
-                "GridSelector.max_width = value: 'value' must be an int. "
-                f"'{value}' is not an int"
             )
 
     @property
@@ -2396,13 +2863,13 @@ class GridSelector(object):
         """
         Move the selection cursor one row up.
         """
-        self.current_choice -= round(self.max_width / 2)
+        self.current_choice -= round(self.maximum_width / 2)
 
     def cursor_down(self) -> None:
         """
         Move the selection cursor one row down.
         """
-        self.current_choice += round(self.max_width / 2)
+        self.current_choice += round(self.maximum_width / 2)
 
     def cursor_left(self) -> None:
         """
@@ -2475,8 +2942,8 @@ class GridSelector(object):
         #       is not cleared when re-rendered (the coordinates calculation is probably
         #       wrong somewhere).
         buffer[row][column] = " "
-        self.__max_width = functions.clamp(self.__max_width, 0, buffer_width - 2)
-        self.__max_height = functions.clamp(self.__max_height, 0, buffer_height - 2)
+        self.maximum_width = functions.clamp(self.maximum_width, 0, buffer_width - 2)
+        self.maximum_height = functions.clamp(self.maximum_height, 0, buffer_height - 2)
         crow = 1
         ccol = 1
         col_offset = 1
@@ -2486,9 +2953,9 @@ class GridSelector(object):
             buffer[row + row_offset][column + col_offset] = self.__cache[i]
             # if i == self.__current_choice % len(self.__choices):
             if i == self.__current_choice % len(self.__cache):
-                border_fg_color = self._config.border_fg_color
-                self._config.border_fg_color = core.Color(0, 255, 0)
-                sel = Box(self.__cache[i].length + 2, 3, config=self._config)
+                border_fg_color = self.ui_config.border_fg_color
+                self.ui_config.border_fg_color = core.Color(0, 255, 0)
+                sel = Box(self.__cache[i].length + 2, 3, config=self.ui_config)
                 sel.render_to_buffer(
                     buffer,
                     row + row_offset - 1,
@@ -2496,7 +2963,7 @@ class GridSelector(object):
                     buffer_height,
                     buffer_width,
                 )
-                self._config.border_fg_color = border_fg_color
+                self.ui_config.border_fg_color = border_fg_color
             # This cannot be covered yet because no character with a length > 1 is built
             # into the cache. This needs to be removed when support for characters with
             # length > 1.
@@ -2505,7 +2972,7 @@ class GridSelector(object):
                 col_offset += 1
             col_offset += self.__cache[i].length + 1
             ccol += 1
-            if col_offset > self.__max_width:
+            if col_offset > self.maximum_width:
                 crow += 1
                 row_offset += 2
                 ccol = 1
@@ -2513,7 +2980,7 @@ class GridSelector(object):
             if (
                 row + row_offset >= buffer_height
                 or column + col_offset >= buffer_width
-                or row_offset > self.__max_height
+                or row_offset > self.maximum_height
                 or i >= start + self.__items_per_page
             ):
                 break
@@ -2544,8 +3011,12 @@ class GridSelectorDialog(Dialog):
     def __init__(
         self,
         choices: list = None,
-        max_height: int = None,
-        max_width: int = None,
+        width: int = None,
+        height: int = None,
+        minimum_width: int = None,
+        minimum_height: int = None,
+        maximum_width: int = 5,
+        maximum_height: int = 10,
         title: str = None,
         config: UiConfig = None,
     ) -> None:
@@ -2553,28 +3024,62 @@ class GridSelectorDialog(Dialog):
         :param choices: A list of choices to present to the user. The elements of the
            list needs to be str or :class:`~pygamelib.gfx.core.Sprixel`.
         :type choices: list
-        :param max_height: The maximum height of the grid selector.
-        :type max_height: int
-        :param max_width: The maximum width of the grid selector.
-        :type max_width: int
+        :param minimum_width: The minimum width of the GridSelector.
+        :type minimum_width: int
+        :param minimum_height: The minimum height of the GridSelector.
+        :type minimum_height: int
+        :param maximum_width: The maximum width of the GridSelector.
+        :type maximum_width: int
+        :param maximum_height: The maximum height of the GridSelector.
+        :type maximum_height: int
         :param config: The configuration object.
         :type config: :class:`UiConfig`
 
         Example::
 
             choices = ["@","#","$","%","&","*","[","]"]
-            grid_dialog = GridSelector(choices, 10, 30, conf)
+            grid_dialog = GridSelector(
+                choices=choices,
+                maximum_width=30,
+                maximum_height=10,
+                config=conf)
             screen.place(grid_dialog, 10, 10)
             grid_dialog.show()
         """
+        if config is None:
+            config = UiConfig.instance()
+        if width is None:
+            width = maximum_width
+        if height is None:
+            height = maximum_height
+        if minimum_width is None:
+            minimum_width = maximum_width
+        if minimum_height is None:
+            minimum_height = maximum_height
         super().__init__(config=config)
         self.__grid_selector = None
         if not config.borderless_dialog:
             self.__grid_selector = GridSelector(
-                choices, max_height - 3, max_width - 4, config
+                choices,
+                width,
+                height,
+                minimum_width,
+                minimum_height,
+                maximum_width - 4,
+                maximum_height - 3,
+                config,
             )
         else:
-            self.__grid_selector = GridSelector(choices, max_height, max_width, config)
+            self.__grid_selector = GridSelector(
+                choices,
+                width,
+                height,
+                minimum_width,
+                minimum_height,
+                maximum_width - 4,
+                maximum_height - 3,
+                config,
+            )
         self.__title = ""
         if title is not None and type(title) is str:
             self.__title = title
@@ -2694,8 +3199,8 @@ class GridSelectorDialog(Dialog):
             offset = 1
             # We need to account for the borders in the box size
             box = Box(
-                self.__grid_selector.max_width + 4,
-                self.__grid_selector.max_height + 3,
+                self.__grid_selector.maximum_width + 4,
+                self.__grid_selector.maximum_height + 3,
                 self.__title,
                 self.config,
                 True,
@@ -2705,11 +3210,11 @@ class GridSelectorDialog(Dialog):
             # TODO: It looks like there is a bug in the pagination.
             gs = self.__grid_selector
             # Pages are numbered from 0.
-            pagination = f"{gs.current_page+1}/{gs.nb_pages()}"
+            pagination = f"{gs.current_page + 1}/{gs.nb_pages()}"
             lp = len(pagination)
             for c in range(0, lp):
-                buffer[row + self.__grid_selector.max_height + 2][
-                    column + self.__grid_selector.max_width + 2 - lp + c
+                buffer[row + self.__grid_selector.maximum_height + 2][
+                    column + self.__grid_selector.maximum_width + 2 - lp + c
                 ] = pagination[c]
         self.__grid_selector.render_to_buffer(
             buffer, row + offset, column + offset, buffer_height, buffer_width
@@ -4248,383 +4753,6 @@ class MenuBar(object):
     #                 break
     #         inkey = term.inkey(timeout=0.05)
     #     screen.force_update()
-
-
-class Widget(base.PglBaseObject):
-    # Base class does not do anything by itself aside from enforcing geometry and
-    # sending resize events.
-    # TODO: When we had widget visibility (show(), hide(), is_visible)
-    """
-    .. versionadded:: 1.4.0
-
-    The Widget object is the base for all UI elements (or should be). By itself it does
-    not do anything functionally useful. What it does however, is taking care of the
-    geometry logic.
-
-    It enforces the geometry constraints and takes care of sending resize events
-    messages.
-    """
-
-    def __init__(
-        self,
-        width: int = 0,
-        height: int = 0,
-        minimum_width: int = 0,
-        minimum_height: int = 0,
-        maximum_width: int = 20,
-        maximum_height: int = 10,
-        layout: Union["Layout", None] = None,
-        bg_color: Union[core.Color, None] = None,
-        config: Union[UiConfig, None] = None,
-    ) -> None:
-        """
-        :param width: The width of the widget.
-        :type width: int
-        :param height: The height of the widget.
-        :type height: int
-        :param minimum_width: The minimum_width of the widget.
-        :type minimum_width: int
-        :param minimum_height: The minimum_height of the widget.
-        :type minimum_height: int
-        :param maximum_width: The maximum_width of the widget.
-        :type maximum_width: int
-        :param maximum_height: The maximum_height of the widget.
-        :type maximum_height: int
-        :param layout: The layout of the widget.
-        :type layout: :class:`Layout`
-        :param bg_color: The default background color of the widget. This property
-           overrides the `widget_bg_color` from the :class:`UiConfig` class (in case
-           you want to create a specific widget with a different background color than
-           the default one).
-        :type bg_color: :class:`~pygamelib.gfx.core.Color`
-        :param config: The configuration object.
-        :type config: :class:`UiConfig`
-
-        Example::
-
-            my_widget = Widget(6, 3, minimum_width=6, minimum_height=3)
-            my_widget.bg_color = Color(255, 255, 255)
-            screen.place(my_widget, 5, 2)
-        """
-        super().__init__()
-        self.__children_widgets: Set["Widget"] = set()
-        self.__parent: Union["Widget", "Layout", None] = None
-        self.__width: int = width
-        self.__height: int = height
-        self.__maximum_width: int = maximum_width
-        if self.__maximum_width < self.__width:
-            self.__maximum_width = self.__width
-        self.__maximum_height: int = maximum_height
-        if self.__height > self.__maximum_height:
-            self.__maximum_height = self.__height
-
-        self.__minimum_width: int = minimum_width
-        self.__minimum_height: int = minimum_height
-        if width < minimum_width:
-            self.__width = minimum_width
-        if self.__height < self.__minimum_height:
-            self.__height = self.__minimum_height
-        self.ui_config = config
-        if config is None:
-            self.ui_config = UiConfig.instance()
-        self.__default_bg_sprixel = core.Sprixel(" ", self.ui_config.widget_bg_color)
-        self.__layout = None
-        if isinstance(layout, Layout):
-            self.__layout = layout
-            self.__layout.parent = self
-        self.__bg_color = None
-        if isinstance(bg_color, core.Color):
-            self.__bg_color = bg_color
-            self.__default_bg_sprixel.bg_color = bg_color
-        self.__size_constraint = constants.SizeConstraint.DEFAULT_SIZE
-        self.__focus = False
-
-    @property
-    def children(self) -> Set["Widget"]:
-        """
-        This read only property property returns the list of children widgets.
-        """
-        if self.__layout is None:
-            return self.__children_widgets
-        else:
-            return self.__layout.widgets()
-
-    @property
-    def parent(self) -> Union["Widget", None]:
-        """
-        This property get/set the parent widget of the widget.
-        """
-        return self.__parent
-
-    @parent.setter
-    def parent(self, data: Union["Widget", "Layout", None] = None):
-        if isinstance(data, Widget) or isinstance(data, Layout) or data is None:
-            self.__parent = data
-
-    @property
-    def bg_color(self) -> core.Color:
-        """
-        This property get/set the background color of the widget.
-
-        When the color is changed the
-        :boldblue:`pygamelib.gfx.ui.Widget.bg_color:changed` event is sent to the
-        observers.
-        """
-        return self.__bg_color
-
-    @bg_color.setter
-    def bg_color(self, data: core.Color) -> None:
-        if isinstance(data, core.Color) and self.__bg_color != data:
-            self.__bg_color = data
-            self.__default_bg_sprixel.bg_color = data
-            self.notify(self, "pygamelib.gfx.ui.Widget.bg_color:changed", data)
-
-    @property
-    def width(self) -> int:
-        """
-        This property get/set the width of the widget. This property respects the
-        boundaries set by the `maximum_width` and `minimum_width` properties.
-
-        When the width is changed the
-        :boldblue:`pygamelib.gfx.ui.Widget.resizeEvent:width` event is sent to the
-        observers.
-        """
-        return self.__width
-
-    @width.setter
-    def width(self, data: int) -> None:
-        if isinstance(data, int):
-            data = functions.clamp(data, self.__minimum_width, self.__maximum_width)
-            if self.__width != data:
-                self.__width = data
-                self.notify(
-                    self, "pygamelib.gfx.ui.Widget.resizeEvent:width", self.__width
-                )
-
-    @property
-    def height(self) -> int:
-        """
-        This property get/set the height of the widget. This property respects the
-        boundaries set by the `maximum_height` and `minimum_height` properties.
-
-        When the height is changed the
-        :boldblue:`pygamelib.gfx.ui.Widget.resizeEvent:height` event is sent to the
-        observers.
-        """
-        return self.__height
-
-    @height.setter
-    def height(self, data: int) -> None:
-        # if (
-        #     isinstance(data, int)
-        #     and data >= self.__minimum_height
-        #     and data <= self.__maximum_height
-        # ):
-        #     self.__height = data
-        #     self.notify(self, "pygamelib.gfx.ui.Widget.resizeEvent:height", data)
-        # logging.debug(
-        #     f"     *** Widget ({id(self)}): height setter data={data} current height="
-        #     f"{self.__height}"
-        # )
-        if isinstance(data, int):
-            data = functions.clamp(data, self.__minimum_height, self.__maximum_height)
-            # logging.debug(f"     *** Widget ({id(self)}): height CLAMPED data={data}")
-            if data != self.__height:
-                self.__height = data
-                self.notify(
-                    self, "pygamelib.gfx.ui.Widget.resizeEvent:height", self.__height
-                )
-                # logging.debug(
-                #     f"     *** Widget ({id(self)}): height set to {self.__height}"
-                # )
-
-    @property
-    def maximum_width(self) -> int:
-        """
-        This property get/set the maximum width of the widget. This property is used
-        when changing the size constraints and the width property.
-        """
-        return self.__maximum_width
-
-    @maximum_width.setter
-    def maximum_width(self, data: int) -> None:
-        if isinstance(data, int):
-            self.__maximum_width = data
-            if data < self.__width:
-                self.__width = data
-
-    @property
-    def maximum_height(self) -> int:
-        """
-        This property get/set the maximum height of the widget. This property is used
-        when changing the size constraints and the height property.
-        """
-        return self.__maximum_height
-
-    @maximum_height.setter
-    def maximum_height(self, data: int) -> None:
-        if isinstance(data, int):
-            self.__maximum_height = data
-            if data < self.__height:
-                self.__height = data
-
-    @property
-    def minimum_width(self) -> int:
-        """
-        This property get/set the minimum width of the widget. This property is used
-        when changing the size constraints and the width property.
-        """
-        return self.__minimum_width
-
-    @minimum_width.setter
-    def minimum_width(self, data: int) -> None:
-        if isinstance(data, int):
-            self.__minimum_width = data
-            if self.__width < data:
-                self.__width = data
-
-    @property
-    def minimum_height(self) -> int:
-        """
-        This property get/set the minimum height of the widget. This property is used
-        when changing the size constraints and the height property.
-        """
-        return self.__minimum_height
-
-    @minimum_height.setter
-    def minimum_height(self, data: int) -> None:
-        if isinstance(data, int):
-            self.__minimum_height = data
-
-    @property
-    def y(self) -> int:
-        """
-        This property get/set the y position of the widget on screen. Since a Widget is
-        a :class:`~pygamelib.base.PglBaseObject` this is an alias for the
-        `screen_row` property.
-        """
-        return self.screen_row
-
-    @y.setter
-    def y(self, data: int) -> None:
-        self.screen_row = data
-
-    @property
-    def x(self) -> int:
-        """
-        This property get/set the x position of the widget on screen. Since a Widget is
-        a :class:`~pygamelib.base.PglBaseObject` this is an alias for the
-        `screen_column` property.
-        """
-        return self.screen_column
-
-    @x.setter
-    def x(self, data: int) -> None:
-        self.screen_column = data
-
-    @property
-    def layout(self) -> Union["Layout", None]:
-        """
-        This property get/set the layout of the widget. You can then add sub widgets to
-        the layout.
-
-        This must be a :class:`Layout` or a class that inherits from it.
-
-        When the layout is changed the
-        :boldblue:`pygamelib.gfx.ui.Widget.layout:changed` event is sent to the
-        observers.
-        """
-        return self.__layout
-
-    @layout.setter
-    def layout(self, data: "Layout") -> None:
-        if isinstance(data, Layout):
-            self.__layout = data
-            if self.__layout.parent != self:
-                self.__layout.parent = self
-            self.notify(self, "pygamelib.gfx.ui.Widget.layout:changed", data)
-        else:
-            raise base.PglInvalidTypeException(
-                "Widget.layout = some_layout: the value given to Widget.layout (here: "
-                "some_layout) must be a pygamelib.gfx.ui.Layout object (or a class that"
-                f" inherits from Layout). {type(data)} is not a supported type."
-            )
-
-    @property
-    def size_constraint(self) -> constants.SizeConstraint:
-        """
-        This property get/set the size constraints of the widget. Changing the size
-        constraints immediately resize the widget.
-        """
-        return self.__size_constraint
-
-    @size_constraint.setter
-    def size_constraint(self, data: constants.SizeConstraint) -> None:
-        if isinstance(data, constants.SizeConstraint):
-            self.__size_constraint = data
-            if data == constants.SizeConstraint.MINIMUM_SIZE:
-                self.__width = self.__minimum_width
-                self.__height = self.__minimum_height
-            elif data == constants.SizeConstraint.MAXIMUM_SIZE:
-                self.__width = self.__maximum_width
-                self.__height = self.__maximum_height
-
-    @property
-    def focus(self) -> bool:
-        """
-        This property get/set the focus property. It is a boolean.
-
-        At the moment it is mostly an informational property, to tell the programmer and
-        potentially the Widget user (i.e: the class inheriting from Widget) about its
-        own state.
-        """
-        return self.__focus
-
-    @focus.setter
-    def focus(self, data: bool):
-        if isinstance(data, bool):
-            self.__focus = data
-
-    def render_to_buffer(
-        self,
-        buffer: "numpy.array",
-        row: int,
-        column: int,
-        buffer_height: int,
-        buffer_width: int,
-    ) -> None:
-        """Render the object from the display buffer to the frame buffer.
-
-        This method is automatically called by :func:`pygamelib.engine.Screen.render`.
-
-        :param buffer: A screen buffer to render the item into.
-        :type buffer: numpy.array
-        :param row: The row to render in.
-        :type row: int
-        :param column: The column to render in.
-        :type column: int
-        :param height: The total height of the display buffer.
-        :type height: int
-        :param width: The total width of the display buffer.
-        :type width: int
-
-        """
-        # logging.debug(
-        #     f"     +++ Widget ({id(self)}): rendering at {row},{column} with buffer "
-        #     f"geometry {buffer_height}x{buffer_width} my geometry {self.__height}x"
-        #     f"{self.__width}"
-        # )
-        for r in range(row, min(row + self.__height, row + buffer_height)):
-            for c in range(column, min(column + self.__width, column + buffer_width)):
-                buffer[r][c] = self.__default_bg_sprixel
-        if self.__layout is not None:
-            self.__layout.render_to_buffer(
-                buffer,
-                row,
-                column,
-                min(self.__height, buffer_height),
-                min(self.__width, buffer_width),
-            )
 
 
 class Layout(base.PglBaseObject):
