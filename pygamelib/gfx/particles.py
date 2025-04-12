@@ -45,6 +45,7 @@ ParticlePool, as well as all type of particles and particle emitters.
    pygamelib.gfx.particles.PartitionParticle
    pygamelib.gfx.particles.RandomColorParticle
    pygamelib.gfx.particles.RandomColorPartitionParticle
+   pygamelib.gfx.particles.SpriteEmitter
 
 """
 
@@ -2391,7 +2392,7 @@ class CircleEmitter(ParticleEmitter):
 
 class SpriteEmitter(ParticleEmitter):
     """
-    The SpriteEmitter differs from all the other particle emitters in one (crucial
+    The SpriteEmitter differs from all the other particle emitters in one (crucial)
     thing: it takes a sprite as a constructor parameter and is then going to emit
     particles using the sprixels in said sprite. It is mainly thought as an easy mean
     to explode you player in a million pieces but I'm sure you will find other
@@ -2403,7 +2404,8 @@ class SpriteEmitter(ParticleEmitter):
        :alt: explosion!
        :align: center
 
-    Aside from that specificity it's exactly the same as a regular particle emitter.
+
+    Aside from that specificity, it's exactly the same as a regular particle emitter.
     """
 
     def __init__(
@@ -2411,10 +2413,8 @@ class SpriteEmitter(ParticleEmitter):
         sprite: core.Sprite,
         emitter_properties: Optional[EmitterProperties] = None,
     ) -> None:
-        """The CircleEmitter takes the same parameters than the :class:`ParticleEmitter`
+        """The SpriteEmitter takes the same parameters than the :class:`ParticleEmitter`
         plus the additional sprite parameter.
-
-        Contrary to other particle emitters, the SpriteEmitter does NOT start active.
 
         :param sprite: The sprite used to initialize the particle emitter.
         :type sprite: :class:`~pygamelib.gfx.core.Sprite`
@@ -2434,7 +2434,6 @@ class SpriteEmitter(ParticleEmitter):
         # self.radius = emitter_properties.radius
         self.__last_emit = time.time()
         self.__initial_sprite = sprite
-        st = time.perf_counter()
         # The particle pool size's formula is slightly different to account for the
         # (allegedly) specific use case of that emitter (I hope that I'm right...)
         self.particle_pool.resize(
@@ -2445,6 +2444,25 @@ class SpriteEmitter(ParticleEmitter):
         )
 
     def emit(self, amount: Optional[int] = None):
+        """Emit the particles.
+
+        Please note that the SpriteEmitter does not use the `amount` parameter because
+        this emitter emits as many particles as there are :class:`~core.Sprixel` in the
+        :class:`core.Sprite`.
+
+        The emitter will still request particles from the particle pool. This in turn
+        will trigger the recycling of dead particles if needed.
+
+        Calling this method faster than the configured emit_rate is not going to emit
+        more particles. An emitter cannot emit particles faster than its emit_rate.
+
+        :param amount: The amount (number) of particles to be emitted (unused here).
+        :type amount: int
+
+        Example::
+
+            my_sprite_emitter.emit()
+        """
         if (
             self.active
             and (self.lifespan is not None and self.lifespan > 0)
@@ -2455,11 +2473,10 @@ class SpriteEmitter(ParticleEmitter):
             particles = self.particle_pool.get_particles(
                 self.__initial_sprite.width * self.__initial_sprite.height
             )
-            # Poor attempt at optimization: test outside the loop.
-            if callable(self.particle):
-                pidx = 0
-                i = 0
-                for p in self.particle_pool.get_particles(amount):
+            pidx = 0
+            for sp_x in range(self.__initial_sprite.width):
+                for sp_y in range(self.__initial_sprite.height):
+                    p = particles[pidx]
                     y = self.y + sp_y
                     x = self.x + sp_x
                     p.reset(
@@ -2470,26 +2487,10 @@ class SpriteEmitter(ParticleEmitter):
                         ),
                         lifespan=self.particle_lifespan,
                     )
-                    i += 1
-            else:
-                pidx = 0
-                for sp_x in range(self.__initial_sprite.width):
-                    for sp_y in range(self.__initial_sprite.height):
-                        p = particles[pidx]
-                        y = self.y + sp_y
-                        x = self.x + sp_x
-                        p.reset(
-                            row=y,
-                            column=x,
-                            velocity=base.Vector2D(
-                                random.uniform(-1, 1), random.uniform(-2, 2)
-                            ),
-                            lifespan=self.particle_lifespan,
-                        )
-                        p.sprixel = self.__initial_sprite.sprixel(sp_y, sp_x)
-                        if self.variance > 0.0:
-                            p.velocity *= random.uniform(0.1, self.variance)
-                        pidx += 1
+                    p.sprixel = self.__initial_sprite.sprixel(sp_y, sp_x)
+                    if self.variance > 0.0:
+                        p.velocity *= random.uniform(0.1, self.variance)
+                    pidx += 1
             if self.lifespan is not None:
                 self.lifespan -= 1
             self.__last_emit = time.time()
