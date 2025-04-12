@@ -9,6 +9,16 @@ import time
 # Therefor tests cases are just covering the current state.
 
 
+def create_sprite(h: int, w: int) -> core.Sprite:
+    new_sprite = core.Sprite(size=[w, h])
+    for r in range(0, h):
+        for c in range(0, w):
+            new_sprite.set_sprixel(
+                r, c, particles.ParticleSprixel(" ", core.Color.random())
+            )
+    return new_sprite
+
+
 class TestBase(unittest.TestCase):
     def test_particle(self):
         p = particles.Particle(
@@ -333,6 +343,68 @@ class TestBase(unittest.TestCase):
         self.assertEqual(pe.serialize(), pe2.serialize())
         self.assertEqual(pe2.emit_number, 99)
         self.assertEqual(pe2.emit_rate, 0.5)
+
+    def test_sprite_emitter(self):
+        emt_props = particles.EmitterProperties(
+            0,  # Position is not important as it will be updated by the
+            0,  # ParticleEmitter.render_to_buffer method.
+            lifespan=1,
+            variance=0.3,
+            emit_number=100,
+            emit_rate=0.05,
+            particle=particles.ColorPartitionParticle(
+                start_color=core.Color(45, 151, 227),
+                stop_color=core.Color(7, 2, 40),
+            ),
+            particle_lifespan=5.0,
+            particle_velocity=base.Vector2D(0.5, 0.5),
+            radius=0.4,
+        )
+        # NOTE: For future maintainers, I scratched my head as to why the number of
+        #       particles was different when omitting the emitter properties and
+        #       obviously it is because emit_number and particle_lifespan are different.
+        (sprite_height, sprite_width) = (2, 4)
+        test_sprite = create_sprite(sprite_height, sprite_width)
+        emt = particles.SpriteEmitter(test_sprite, emt_props)
+        self.assertEqual(emt.active, True)
+        time.sleep(0.1)
+        emt.emit()
+        emt.update()
+        print(
+            f"Test 1, # of active particles: {emt.particle_pool.count_active_particles()}"
+        )
+        self.assertEqual(
+            emt.particle_pool.count_active_particles(), sprite_height * sprite_width
+        )
+        time.sleep(0.1)
+        emt.emit(2)
+        emt.update()
+        print(
+            f"Test 2, # of active particles: {emt.particle_pool.count_active_particles()}"
+        )
+        self.assertEqual(
+            emt.particle_pool.count_active_particles(), sprite_height * sprite_width
+        )
+        emt = particles.SpriteEmitter(test_sprite)
+        self.assertEqual(emt.active, True)
+        time.sleep(0.1)
+        emt.emit()
+        emt.update()
+        print(
+            f"Test 3, # of active particles: {emt.particle_pool.count_active_particles()}"
+        )
+        self.assertEqual(
+            emt.particle_pool.count_active_particles(), sprite_height * sprite_width
+        )
+        time.sleep(2)
+        emt.emit(2)
+        emt.update()
+        print(
+            f"Test 4, # of active particles: {emt.particle_pool.count_active_particles()}"
+        )
+        self.assertEqual(
+            emt.particle_pool.count_active_particles(), sprite_height * sprite_width
+        )
 
 
 if __name__ == "__main__":
