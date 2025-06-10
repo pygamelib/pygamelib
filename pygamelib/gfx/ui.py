@@ -141,8 +141,9 @@ class UiConfig(object):
     ):
         super().__init__()
         if game is None:
-            exec("from pygamelib.engine import Game")
-            game = eval("Game.instance()")
+            namespace = {}
+            exec("from pygamelib.engine import Game", namespace)
+            game = eval("Game.instance()", namespace)
             # raise base.PglInvalidTypeException(
             #     "UiConfig: the 'game' parameter cannot be None."
             # )
