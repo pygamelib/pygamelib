@@ -1112,8 +1112,9 @@ class BoardComplexItem(BoardItem):
         else:
             data["null_sprixel"] = None
         itm = cls(**data)
-        exec("import pygamelib")
-        itm.base_item_type = eval(f"{obj}")
+        namespace = {}
+        exec("import pygamelib", namespace)
+        itm.base_item_type = eval(f"{obj}", namespace)
         return itm
 
 
@@ -2044,8 +2045,9 @@ class ComplexPlayer(Player, BoardComplexItem):
         else:
             data["null_sprixel"] = None
         itm = cls(**data)
-        exec("import pygamelib")
-        itm.base_item_type = eval(f"{obj}")
+        namespace = {}
+        exec("import pygamelib", namespace)
+        itm.base_item_type = eval(f"{obj}", namespace)
         return itm
 
 
@@ -2285,8 +2287,9 @@ class ComplexNPC(NPC, BoardComplexItem):
         else:
             data["null_sprixel"] = None
         itm = cls(**data)
-        exec("import pygamelib")
-        itm.base_item_type = eval(f"{obj}")
+        namespace = {}
+        exec("import pygamelib", namespace)
+        itm.base_item_type = eval(f"{obj}", namespace)
         if "actuator" in data.keys() and data["actuator"]["type"] in dir(actuators):
             act = eval(f"actuators.{data['actuator']['type']}")
             itm.actuator = act.load(data["actuator"])
@@ -2373,8 +2376,9 @@ class TextItem(BoardComplexItem):
         if "text" in data.keys():
             data["text"] = base.Text.load(data["text"])
         itm = cls(**data)
-        exec("import pygamelib")
-        itm.base_item_type = eval(f"{obj}")
+        namespace = {}
+        exec("import pygamelib", namespace)
+        itm.base_item_type = eval(f"{obj}", namespace)
         return itm
 
     @property
@@ -2531,8 +2535,9 @@ class ComplexWall(Wall, BoardComplexItem):
         else:
             data["null_sprixel"] = None
         itm = cls(**data)
-        exec("import pygamelib")
-        itm.base_item_type = eval(f"{obj}")
+        namespace = {}
+        exec("import pygamelib", namespace)
+        itm.base_item_type = eval(f"{obj}", namespace)
         return itm
 
 
@@ -2738,8 +2743,9 @@ class ComplexTreasure(Treasure, BoardComplexItem):
         else:
             data["null_sprixel"] = None
         itm = cls(**data)
-        exec("import pygamelib")
-        itm.base_item_type = eval(f"{obj}")
+        namespace = {}
+        exec("import pygamelib", namespace)
+        itm.base_item_type = eval(f"{obj}", namespace)
         return itm
 
 
@@ -2852,8 +2858,9 @@ class ComplexDoor(Door, BoardComplexItem):
         else:
             data["null_sprixel"] = None
         itm = cls(**data)
-        exec("import pygamelib")
-        itm.base_item_type = eval(f"{obj}")
+        namespace = {}
+        exec("import pygamelib", namespace)
+        itm.base_item_type = eval(f"{obj}", namespace)
         return itm
 
 
@@ -2949,8 +2956,9 @@ class Tile(BoardComplexItem, GenericStructure):
         else:
             data["null_sprixel"] = None
         itm = cls(**data)
-        exec("import pygamelib")
-        itm.base_item_type = eval(f"{obj}")
+        namespace = {}
+        exec("import pygamelib", namespace)
+        itm.base_item_type = eval(f"{obj}", namespace)
         return itm
 
 

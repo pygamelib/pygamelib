@@ -393,12 +393,13 @@ class Text(PglBaseObject):
             title = base.Text.load( previous_title.serialize() )
         """
         font = None
+        namespace = {}
         # For circle dependencies issue I have to eval the import only here.
         # Now: why exec() and eval()? Good question!
-        exec("from pygamelib.gfx import core")
-        color_class = eval("core.Color")
+        exec("from pygamelib.gfx import core", namespace)
+        color_class = eval("core.Color", namespace)
         if "font_name" in data.keys() and data["font_name"] is not None:
-            font_class = eval("core.Font")
+            font_class = eval("core.Font", namespace)
             font = font_class(data["font_name"])
         obj = cls(
             data["text"],

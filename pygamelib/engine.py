@@ -1664,8 +1664,9 @@ class Board(base.PglBaseObject):
         # This means that the module is in the path of course.
         else:
             try:
-                exec(f"import {obj_full_str.split('.')[0]}")
-                bi = eval(f"{obj_full_str}")
+                namespace = {}
+                exec(f"import {obj_full_str.split('.')[0]}", namespace)
+                bi = eval(f"{obj_full_str}", namespace)
                 item = bi.load(data)
             except Exception as e:
                 raise e
