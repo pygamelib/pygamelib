@@ -8,15 +8,12 @@ from pygamelib.gfx import core
 # import pygamelib.board_items as board_items
 from pygamelib.assets import graphics
 from pygamelib import base
-from pygamelib.functions import clamp
 
 # from dataclasses import dataclass
 
 import time
 import random
 import math
-
-import logging
 
 __docformat__ = "restructuredtext"
 
