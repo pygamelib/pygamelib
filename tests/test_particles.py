@@ -360,9 +360,6 @@ class TestBase(unittest.TestCase):
             particle_velocity=base.Vector2D(0.5, 0.5),
             radius=0.4,
         )
-        # NOTE: For future maintainers, I scratched my head as to why the number of
-        #       particles was different when omitting the emitter properties and
-        #       obviously it is because emit_number and particle_lifespan are different.
         (sprite_height, sprite_width) = (2, 4)
         test_sprite = create_sprite(sprite_height, sprite_width)
         emt = particles.SpriteEmitter(test_sprite, emt_props)
@@ -370,18 +367,12 @@ class TestBase(unittest.TestCase):
         time.sleep(0.1)
         emt.emit()
         emt.update()
-        print(
-            f"Test 1, # of active particles: {emt.particle_pool.count_active_particles()}"
-        )
         self.assertEqual(
             emt.particle_pool.count_active_particles(), sprite_height * sprite_width
         )
         time.sleep(0.1)
         emt.emit(2)
         emt.update()
-        print(
-            f"Test 2, # of active particles: {emt.particle_pool.count_active_particles()}"
-        )
         self.assertEqual(
             emt.particle_pool.count_active_particles(), sprite_height * sprite_width
         )
@@ -390,20 +381,18 @@ class TestBase(unittest.TestCase):
         time.sleep(0.1)
         emt.emit()
         emt.update()
-        print(
-            f"Test 3, # of active particles: {emt.particle_pool.count_active_particles()}"
-        )
         self.assertEqual(
             emt.particle_pool.count_active_particles(), sprite_height * sprite_width
         )
-        time.sleep(2)
+        time.sleep(0.1)
         emt.emit(2)
         emt.update()
-        print(
-            f"Test 4, # of active particles: {emt.particle_pool.count_active_particles()}"
-        )
+        # We expect twice the amount of particles because the emitter is not configured
+        # to emit only once. So it's going to emit sprite_height*sprite_width particles
+        # and since we have only update once, the first batch of particle is still alive
+        # in the pool.
         self.assertEqual(
-            emt.particle_pool.count_active_particles(), sprite_height * sprite_width
+            emt.particle_pool.count_active_particles(), sprite_height * sprite_width * 2
         )
 
 
