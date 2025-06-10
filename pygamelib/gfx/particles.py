@@ -1,4 +1,6 @@
-from typing import Union, Optional, Any, Set, List, Tuple, TYPE_CHECKING
+from typing import Optional
+
+# from typing import Union, Optional, Any, Set, List, Tuple, TYPE_CHECKING
 from copy import deepcopy, copy
 
 from pygamelib.gfx import core
