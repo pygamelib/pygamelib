@@ -2406,6 +2406,10 @@ class SpriteEmitter(ParticleEmitter):
 
 
     Aside from that specificity, it's exactly the same as a regular particle emitter.
+
+    .. important:: In case it is not clear enough: SpriteEmitter.emit(amount) does not
+       care about the amount variable. It will **always** emit an amount of particles
+       equal to sprite's width * sprite's height.
     """
 
     def __init__(
@@ -2426,6 +2430,10 @@ class SpriteEmitter(ParticleEmitter):
         `pyscii-bird
         <https://github.com/pygamelib/pyscii-bird/blob/main/pyscii-bird.py#L361>`__
         is a particularly amusing example of the sprite emitter specifically.
+
+        .. warning:: If the intended effect is to be a one time explosion or fallout,
+           do not forget to set the particle emitter lifespan to 1. Or else it will emit
+           multiple times.
         """
         if emitter_properties is None:
             emitter_properties = EmitterProperties()
