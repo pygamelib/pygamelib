@@ -117,3 +117,4 @@ test-*
 
 # PyCharm
 .idea/
+.qodo

@@ -1,30 +1,57 @@
-from pygamelib.gfx.core import Sprite, Sprixel, Color
+from pygamelib.gfx.core import Sprite, Sprixel, Color, SpriteCollection
 from pygamelib.engine import Game
 from pygamelib.board_items import Player
-from pygamelib import constants
+from pygamelib import constants, base
+from pygamelib.functions import clamp
 from pygamelib.assets import graphics
 from pygamelib.gfx.particles import (
     ParticleEmitter,
     ParticleSprixel,
     Particle,
+    ColorParticle,
     EmitterProperties,
     SpriteEmitter,
 )
 import logging, time
 
+# Test
+emt4_props = EmitterProperties(
+    5,
+    15,
+    particle_lifespan=30,
+    emit_number=5,
+    emit_rate=0.1,
+    lifespan=60,
+    particle=ColorParticle(
+        sprixel=Sprixel(graphics.GeometricShapes.BLACK_CIRCLE),
+        stop_color=Color(17, 20, 21),
+        velocity=None,
+    ),
+    # particle_acceleration=base.Vector2D(0.5, 0.1),
+    particle_acceleration=base.Vector2D(0.0, 0.0),
+    # particle_acceleration=base.Vector2D(-0.5, 0.0),
+    variance=1.0,
+)
+
+
 expl_props = EmitterProperties(
     variance=2.0,
-    emit_number=20,
+    emit_number=1,
     emit_rate=0.01,
     lifespan=1,
     particle=Particle(
         sprixel=ParticleSprixel(graphics.GeometricShapes.BULLET),
     ),
-    particle_lifespan=25,
-    radius=1,
+    particle_lifespan=150,
+    radius=11,
 )
 
 particle_emitters = []
+
+GRAVITY = base.Vector2D(0.1, 0)
+DEMO_CD = 2
+
+test_sprite = SpriteCollection.load_json_file("mage.spr")["mage_walk_1"]
 
 
 def create_sprite(h: int, w: int) -> Sprite:
@@ -62,7 +89,7 @@ def update_screen(g: Game, k, dt) -> None:
         logging.debug(
             f"update_screen: sprite creation time: {time.perf_counter() - spcst}"
         )
-        g.screen.place(sp, 1, 0)
+        # g.screen.place(sp, 1, 0)
         expl_props.row = g.player.screen_row + 1
         expl_props.column = g.player.screen_column
         sest = time.perf_counter()
@@ -70,12 +97,65 @@ def update_screen(g: Game, k, dt) -> None:
         logging.debug(
             f"update_screen: sprite emitter creation time: {time.perf_counter() - sest}"
         )
-        g.screen.place(sprite_emitter, g.player.screen_row, g.player.screen_column + 1)
+        g.screen.place(
+            sprite_emitter, g.player.screen_row, g.player.screen_column + 1, 2
+        )
         particle_emitters.append(sprite_emitter)
+        sprite_emitter.emit()
         logging.debug(f"update_screen: total 'e' time: {time.perf_counter() - est}")
+    elif k == "p":
+        est = time.perf_counter()
+        # g.screen.place(sp, 1, 0)
+        expl_props.row = g.player.screen_row
+        expl_props.column = g.player.screen_column + 1
+        sest = time.perf_counter()
+        sprite_emitter = SpriteEmitter(
+            sprite=test_sprite, emitter_properties=expl_props
+        )
+        logging.debug(
+            f"update_screen: sprite emitter creation time: {time.perf_counter() - sest}"
+        )
+        g.screen.place(
+            sprite_emitter, g.player.screen_row, g.player.screen_column + 1, 2
+        )
+        particle_emitters.append(sprite_emitter)
+        # sprite_emitter.emit()
+        logging.debug(f"update_screen: total 'p' time: {time.perf_counter() - est}")
+    elif k == "c":
+        emt4_props.row = g.player.screen_row
+        emt4_props.column = g.player.screen_column + 1
+        emitter4 = ParticleEmitter(emt4_props)
+        g.screen.place(emitter4, emt4_props.row, emt4_props.column, 2)
+        particle_emitters.append(emitter4)
+    elif k == "D":
+        g.screen.delete(g.player.screen_row, g.player.screen_row)
+        g.demo_count_down = DEMO_CD
+        g.demo_running = True
+        expl_props.row = g.player.screen_row
+        expl_props.column = g.player.screen_column + 1
+        g.screen.place(test_sprite, expl_props.row, expl_props.column)
+        g.screen.delete(g.player.screen_row, g.player.screen_row)
+    elif k == "+":
+        expl_props.variance += 0.1
+    elif k == "-":
+        expl_props.variance -= 0.1
+        expl_props.variance = clamp(expl_props.variance, 0, 99999)
+
+    if g.demo_running:
+        if g.demo_count_down <= 0:
+            g.screen.delete(expl_props.row, expl_props.column)
+            particle_emitters.clear()
+            sprite_emitter = SpriteEmitter(
+                sprite=test_sprite, emitter_properties=expl_props
+            )
+            g.screen.place(sprite_emitter, expl_props.row, expl_props.column, 2)
+            particle_emitters.append(sprite_emitter)
+            g.demo_running = False
+        else:
+            g.demo_count_down -= dt
 
     g.screen.place(
-        f"Number of emitters: {len(particle_emitters)} cursor position {g.player.screen_row},{g.player.screen_column}",
+        f"Number of emitters: {len(particle_emitters)} cursor position {g.player.screen_row},{g.player.screen_column} expl. variance {expl_props.variance}",
         0,
         0,
     )
@@ -84,6 +164,7 @@ def update_screen(g: Game, k, dt) -> None:
         emt = particle_emitters.pop()
         if emt.finished():
             continue
+        emt.apply_force(GRAVITY)
         emt.emit()
         emt.update()
         # emt.render_to_buffer(
@@ -94,6 +175,7 @@ def update_screen(g: Game, k, dt) -> None:
         #     buffer_width,
         # )
         particle_emitters.append(emt)
+    g.screen.render()
     g.screen.update()
 
 
@@ -111,5 +193,7 @@ if __name__ == "__main__":
     )
     g.ENABLE_SESSION_LOGS = True
     g.screen.place(g.player, g.screen.vcenter - 2, g.screen.hcenter - 5)
+    g.demo_count_down = DEMO_CD
+    g.demo_running = False
 
     g.run()
