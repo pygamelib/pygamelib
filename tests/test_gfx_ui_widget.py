@@ -4,6 +4,12 @@ from pygamelib.gfx.core import Color
 from pygamelib import engine, base, constants
 
 
+class Observer:
+    def handle_notification(self, subject, attribute, value):
+        self.attribute = attribute
+        self.value = value
+
+
 class TestWidget(unittest.TestCase):
     def setUp(self):
         super().setUp()
@@ -142,6 +148,40 @@ class TestWidget(unittest.TestCase):
         widget.height = 1
         self.assertEqual(widget.width, 3)
         self.assertEqual(widget.height, 2)
+
+    # Tests that an error message is sent to observers when the width and the height
+    # are set to a non-int value
+    def test_invalid_adjust_width_and_height(self):
+        widget = Widget()
+        observer = Observer()
+        widget.attach(observer)
+        widget.width = "10"
+        widget.height = "5"
+        self.assertEqual(widget.width, 0)
+        self.assertEqual(widget.height, 0)
+        self.assertEqual(
+            observer.attribute, "pygamelib.gfx.ui.Widget.resizeEvent:error"
+        )
+
+        widget.maximum_width = "15"
+        widget.maximum_height = "8"
+        self.assertEqual(widget.maximum_width, 20)
+        self.assertEqual(widget.maximum_height, 10)
+        self.assertEqual(widget.width, 0)
+        self.assertEqual(widget.height, 0)
+        self.assertEqual(
+            observer.attribute, "pygamelib.gfx.ui.Widget.resizeEvent:error"
+        )
+
+        widget.minimum_width = ""
+        widget.minimum_height = 3.0
+        self.assertEqual(widget.minimum_width, 0)
+        self.assertEqual(widget.minimum_height, 0)
+        self.assertEqual(widget.width, 0)
+        self.assertEqual(widget.height, 0)
+        self.assertEqual(
+            observer.attribute, "pygamelib.gfx.ui.Widget.resizeEvent:error"
+        )
 
     # Test that  the Widget.layout setter raise an exception if we try to set it with
     # something else than a Layout
