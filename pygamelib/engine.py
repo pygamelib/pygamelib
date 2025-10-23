@@ -1664,8 +1664,9 @@ class Board(base.PglBaseObject):
         # This means that the module is in the path of course.
         else:
             try:
-                exec(f"import {obj_full_str.split('.')[0]}")
-                bi = eval(f"{obj_full_str}")
+                namespace = {}
+                exec(f"import {obj_full_str.split('.')[0]}", namespace)
+                bi = eval(f"{obj_full_str}", namespace)
                 item = bi.load(data)
             except Exception as e:
                 raise e
@@ -4396,6 +4397,9 @@ class Screen(base.PglBaseObject):
             while col >= 0:
                 i = display_buffer[row][col]
                 # Test if the cell should be rendered on a later pass.
+                # NOTE: The test for "render_to_buffer" should be useless because it
+                #       was tested by the place() method. If the user is messing up with
+                #       the rendering buffers, crash are to be expected...
                 if (
                     hasattr(i, "__rendering_pass")
                     and getattr(i, "__rendering_pass") > 1
