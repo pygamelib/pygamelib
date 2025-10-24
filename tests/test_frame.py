@@ -3,7 +3,7 @@ Comprehensive unit tests for the Frame widget.
 """
 
 import unittest
-from pygamelib.gfx.ui import Frame, UiConfig, BoxLayout, LineInput, Widget
+from pygamelib.gfx.ui import Frame, UiConfig, BoxLayout, LineInput
 from pygamelib.gfx.core import Color, Sprixel
 from pygamelib.engine import Game, Screen
 from pygamelib import constants
@@ -70,8 +70,12 @@ class TestFrame(unittest.TestCase):
 
     def test_frame_rendering_on_screen(self):
         """Test multiple frames rendering on screen."""
-        frame1 = Frame(width=25, height=8, title="Frame 1", config=self.config)
-        frame2 = Frame(width=25, height=8, title="Frame 2", config=self.config, fill=True)
+        frame1 = Frame(width=25, height=8,
+                       title="Frame 1",
+                       config=self.config)
+        frame2 = Frame(width=25, height=8,
+                       title="Frame 2", config=self.config,
+                       fill=True)
 
         self.screen.place(frame1, 2, 2)
         self.screen.place(frame2, 2, 30)
@@ -123,14 +127,13 @@ class TestFrame(unittest.TestCase):
     def test_filling_sprixel_usage(self):
         """Test frame creation with a filling sprixel."""
         sprixel = Sprixel(
-            model="*", 
+            model="*",
             fg_color=Color(255, 255, 0),
             bg_color=Color(0, 0, 0)
         )
-
-
-
-        frame = Frame(width=15, height=6, fill=True, filling_sprixel=sprixel, config=self.config)
+        frame = Frame(width=15, height=6,
+                      fill=True, filling_sprixel=sprixel,
+                      config=self.config)
         self.assertEqual(frame.filling_sprixel, sprixel)
         self.assertTrue(frame.fill)
 

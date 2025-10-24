@@ -1186,22 +1186,23 @@ class ProgressBar(object):
         for c in range(prog, self.__width):
             buffer[row][column + c] = self._cache["pb_empty"]
 
+
 class Frame(Widget):
     """
     A Frame widget that displays a bordered box around content.
-    
+
     This widget wraps the Box class to provide a proper Widget interface
     for creating bordered frames in UI layouts.
-    
+
     Example::
-    
+
         # Create a simple frame
         frame = Frame(
             width=40,
             height=10,
             title="My Frame",
         )
-        
+
         # Create a frame with custom colors and fill
         frame = Frame(
             width=40,
@@ -1210,7 +1211,7 @@ class Frame(Widget):
             config=my_config,
             fill=True,
         )
-    
+
     :param width: The width of the frame (including borders)
     :type width: int
     :param height: The height of the frame (including borders)
@@ -1226,7 +1227,7 @@ class Frame(Widget):
     :param title_alignment: The alignment of the title
     :type title_alignment: :class:`~pygamelib.constants.Alignment`
     """
-    
+
     def __init__(
         self,
         width: int = 10,
@@ -1248,7 +1249,7 @@ class Frame(Widget):
         """
         if config is None:
             config = UiConfig.instance()
-        
+
         super().__init__(
             width=width,
             height=height,
@@ -1260,12 +1261,12 @@ class Frame(Widget):
             bg_color=bg_color,
             config=config,
         )
-        
+
         self.__title = title
         self.__fill = fill
         self.__filling_sprixel = filling_sprixel
         self.__title_alignment = title_alignment
-        
+
         # Create the internal Box object
         self.__box = Box(
             width=width,
@@ -1276,11 +1277,11 @@ class Frame(Widget):
             filling_sprixel=filling_sprixel,
             title_alignment=title_alignment,
         )
-    
+
     def post_processing(self, attribute):
         """
         Handle property changes and update the internal Box accordingly.
-        
+
         :param attribute: The attribute that changed
         :type attribute: str
         """
@@ -1289,7 +1290,7 @@ class Frame(Widget):
             # Update the box dimensions when widget dimensions change
             self.__box.width = self.width
             self.__box.height = self.height
-    
+
     @property
     def title(self):
         """
@@ -1299,7 +1300,7 @@ class Frame(Widget):
         :rtype: str | :class:`~base.Text`
         """
         return self.__title
-    
+
     @title.setter
     def title(self, value):
         """
@@ -1315,7 +1316,7 @@ class Frame(Widget):
             raise base.PglInvalidTypeException(
                 "Frame.title = value: value needs to be a Text object or str."
             )
-    
+
     @property
     def fill(self) -> bool:
         """
@@ -1325,7 +1326,7 @@ class Frame(Widget):
         :rtype: bool
         """
         return self.__fill
-    
+
     @fill.setter
     def fill(self, value: bool):
         """
@@ -1346,7 +1347,7 @@ class Frame(Widget):
                 filling_sprixel=self.__filling_sprixel,
                 title_alignment=self.__title_alignment,
             )
-    
+
     @property
     def filling_sprixel(self) -> Optional[core.Sprixel]:
         """
@@ -1356,7 +1357,7 @@ class Frame(Widget):
         :rtype: :class:`~core.Sprixel`
         """
         return self.__filling_sprixel
-    
+
     @filling_sprixel.setter
     def filling_sprixel(self, value: Optional[core.Sprixel]):
         """
@@ -1377,7 +1378,7 @@ class Frame(Widget):
                 filling_sprixel=value,
                 title_alignment=self.__title_alignment,
             )
-    
+
     def render_to_buffer(
         self, buffer, row, column, buffer_height, buffer_width
     ) -> None:
@@ -1407,7 +1408,6 @@ class Frame(Widget):
                 min(self.width - 2, buffer_width - 1),
             )
 
-    
     def __repr__(self):
         """String representation of the Frame."""
         return (
