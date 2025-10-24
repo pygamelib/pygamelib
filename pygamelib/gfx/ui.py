@@ -710,7 +710,7 @@ class Dialog(object):
 
     @user_input.setter
     def user_input(self, value):
-        if isinstance(value, str):
+        if type(value) is str:
             self._user_input = value
         else:
             raise base.PglInvalidTypeException(
@@ -859,7 +859,7 @@ class Box(object):
 
     @title.setter
     def title(self, value) -> None:
-        if isinstance(value, base.Text) or isinstance(value, str):
+        if isinstance(value, base.Text) or type(value) is str:
             self.__title = value
             self._build_cache()
         else:
@@ -876,7 +876,7 @@ class Box(object):
 
     @width.setter
     def width(self, value: int) -> None:
-        if isinstance(value, int):
+        if type(value) is int:
             self.__width = value
             self._build_cache()
         else:
@@ -893,7 +893,7 @@ class Box(object):
 
     @height.setter
     def height(self, value: int) -> None:
-        if isinstance(value, int):
+        if type(value) is int:
             self.__height = value
             self._build_cache()
         else:
@@ -1093,7 +1093,7 @@ class ProgressBar(object):
         elif isinstance(value, base.Text):
             self.__progress_marker = value.text
             self._build_cache()
-        elif isinstance(value, str):
+        elif type(value) is str:
             self.__progress_marker = value
             self._build_cache()
         else:
@@ -1119,7 +1119,7 @@ class ProgressBar(object):
         elif isinstance(value, base.Text):
             self.__empty_marker = value.text
             self._build_cache()
-        elif isinstance(value, str):
+        elif type(value) is str:
             self.__empty_marker = value
             self._build_cache()
         else:
@@ -1138,7 +1138,7 @@ class ProgressBar(object):
 
     @value.setter
     def value(self, value):
-        if isinstance(value, int):
+        if type(value) is int:
             self.__value = value
         else:
             raise base.PglInvalidTypeException(
@@ -1155,7 +1155,7 @@ class ProgressBar(object):
 
     @maximum.setter
     def maximum(self, value):
-        if isinstance(value, int):
+        if type(value) is int:
             self.__maximum = value
         else:
             raise base.PglInvalidTypeException(
@@ -1286,7 +1286,7 @@ class Frame(Widget):
         :type attribute: str
         """
         if attribute in ["width", "height", "maximum_width", "minimum_width",
-                         "maximum_height", "minimum_height"]:
+                        "maximum_height", "minimum_height"]:
             # Update the box dimensions when widget dimensions change
             self.__box.width = self.width
             self.__box.height = self.height
@@ -1295,7 +1295,7 @@ class Frame(Widget):
     def title(self):
         """
         Get the title of the frame.
-
+        
         :return: The title
         :rtype: str | :class:`~base.Text`
         """
@@ -1305,11 +1305,11 @@ class Frame(Widget):
     def title(self, value):
         """
         Set the title of the frame.
-
+        
         :param value: The new title
         :type value: str | :class:`~base.Text`
         """
-        if isinstance(value, base.Text) or isinstance(value, str):
+        if isinstance(value, base.Text) or type(value) is str:
             self.__title = value
             self.__box.title = value
         else:
@@ -1321,7 +1321,7 @@ class Frame(Widget):
     def fill(self) -> bool:
         """
         Get whether the frame is filled.
-
+        
         :return: True if filled, False otherwise
         :rtype: bool
         """
@@ -1331,11 +1331,11 @@ class Frame(Widget):
     def fill(self, value: bool):
         """
         Set whether to fill the frame.
-
+        
         :param value: Whether to fill
         :type value: bool
         """
-        if isinstance(value, bool):
+        if type(value) is bool:
             self.__fill = value
             # Recreate the box with new fill setting
             self.__box = Box(
@@ -1352,7 +1352,7 @@ class Frame(Widget):
     def filling_sprixel(self) -> Optional[core.Sprixel]:
         """
         Get the filling sprixel.
-
+        
         :return: The filling sprixel
         :rtype: :class:`~core.Sprixel`
         """
@@ -1362,7 +1362,7 @@ class Frame(Widget):
     def filling_sprixel(self, value: Optional[core.Sprixel]):
         """
         Set the filling sprixel.
-
+        
         :param value: The new filling sprixel
         :type value: :class:`~core.Sprixel`
         """
@@ -1536,7 +1536,7 @@ class ProgressDialog(Dialog):
             self.__label = value.text
             self._cache["label"] = value
             self._build_cache()
-        elif isinstance(value, str):
+        elif type(value) is str:
             self.__label = value
             self._cache["label"].text = value
             self._build_cache()
@@ -1555,7 +1555,7 @@ class ProgressDialog(Dialog):
 
     @value.setter
     def value(self, val):
-        if isinstance(val, int):
+        if type(val) is int:
             self.__value = val
             self._cache["pb"].value = self.__value
         else:
@@ -1573,7 +1573,7 @@ class ProgressDialog(Dialog):
 
     @maximum.setter
     def maximum(self, value):
-        if isinstance(value, int):
+        if type(value) is int:
             self.__maximum = value
             self._build_cache()
         else:
@@ -1747,7 +1747,7 @@ class MessageDialog(Dialog):
         elif isinstance(self.__title, base.Text):
             # cannot be a Text object as it is styled with the border style.
             self.__title = self.__title.text
-        elif not (isinstance(title, str) or isinstance(self.__title, base.Text)):
+        elif not (type(title) is str or isinstance(self.__title, base.Text)):
             raise base.PglInvalidTypeException("MessageDialog: title must be a str.")
 
     def _build_cache(self) -> None:
@@ -1756,7 +1756,7 @@ class MessageDialog(Dialog):
         if height is None:
             height = len(self.__data)
         for e in self.__data:
-            if isinstance(e[0], core.Sprixel) or isinstance(e[0], str):
+            if isinstance(e[0], core.Sprixel) or type(e[0]) is str:
                 self.__cache["data"].append(e[0])
             elif isinstance(e[0], base.Text):
                 self.__cache["data"].append(core.Sprite.from_text(e[0]))
@@ -1786,7 +1786,7 @@ class MessageDialog(Dialog):
 
     @height.setter
     def height(self, value: int):
-        if isinstance(value, int):
+        if type(value) is int:
             self.__height = value
         else:
             raise base.PglInvalidTypeException(
@@ -1805,7 +1805,7 @@ class MessageDialog(Dialog):
     def title(self, value) -> None:
         if isinstance(value, base.Text):
             self.__title = value.text
-        elif isinstance(value, str):
+        elif type(value) is str:
             self.__title = value
         else:
             raise base.PglInvalidTypeException(
@@ -1851,7 +1851,7 @@ class MessageDialog(Dialog):
         # TODO: Test that alignment is a constants.Alignment
         if (
             isinstance(data, core.Sprixel)
-            or isinstance(data, str)
+            or type(data) is str
             or isinstance(data, base.Text)
             or hasattr(data, "render_to_buffer")
         ):
@@ -1895,12 +1895,12 @@ class MessageDialog(Dialog):
             alignment = self.__data[idx][1]
             data = self.__data[idx][0]
             if alignment == constants.Alignment.RIGHT:
-                if isinstance(data, str):
+                if type(data) is str:
                     padding = self.__width - len(data) - 2
                 elif hasattr(data, "length"):
                     padding = self.__width - data.length - 2
             elif alignment == constants.Alignment.CENTER:
-                if isinstance(data, str):
+                if type(data) is str:
                     padding = int((self.__width - len(data) - 2) / 2)
                 elif hasattr(data, "length"):
                     padding = int((self.__width - data.length - 2) / 2)
@@ -1917,7 +1917,7 @@ class MessageDialog(Dialog):
                     buffer_height,
                     buffer_width,
                 )
-            elif isinstance(self.__cache["data"][idx], str):
+            elif type(self.__cache["data"][idx]) is str:
                 render_string(
                     self.__cache["data"][idx],
                     buffer,
@@ -1948,7 +1948,7 @@ class MessageDialog(Dialog):
         term = game.terminal
         inkey = ""
         screen.update()
-        while True:
+        while 1:
             if inkey != "":
                 if inkey.name == "KEY_ENTER" or inkey.name == "KEY_ESCAPE":
                     break
@@ -2023,24 +2023,19 @@ class LineInputDialog(Dialog):
         elif isinstance(self.__title, base.Text):
             # cannot be a Text object as it is styled with the border style.
             self.__title = self.__title.text
-        elif not (isinstance(title, str) or isinstance(self.__title, base.Text)):
+        elif not (type(title) is str or isinstance(self.__title, base.Text)):
             raise base.PglInvalidTypeException("LineInputDialog: title must be a str.")
-        if label is None or not (
-            isinstance(
-                label,
-                base.Text) or isinstance(
-                label,
-                str)):
+        if label is None or not (isinstance(label, base.Text) or type(label) is str):
             raise base.PglInvalidTypeException(
                 "LineInputDialog: label must be a str or pygamelib.base.Text."
             )
         if self.__default is None or not (
-            isinstance(self.__default, base.Text) or isinstance(self.__default, str)
+            isinstance(self.__default, base.Text) or type(self.__default) is str
         ):
             raise base.PglInvalidTypeException(
                 "LineInputDialog: default must be a str."
             )
-        if isinstance(label, str):
+        if type(label) is str:
             self.__label.text = label
         elif isinstance(label, base.Text):
             self.__label = label
@@ -2057,7 +2052,7 @@ class LineInputDialog(Dialog):
     def label(self, value) -> None:
         if isinstance(value, base.Text):
             self.__label = value
-        elif isinstance(value, str):
+        elif type(value) is str:
             self.__label = base.Text(value)
         else:
             raise base.PglInvalidTypeException(
@@ -2076,7 +2071,7 @@ class LineInputDialog(Dialog):
     def title(self, value) -> None:
         if isinstance(value, base.Text):
             self.__title = value.text
-        elif isinstance(value, str):
+        elif type(value) is str:
             self.__title = value
         else:
             raise base.PglInvalidTypeException(
@@ -2136,7 +2131,7 @@ class LineInputDialog(Dialog):
         term = game.terminal
         inkey = ""
         screen.update()
-        while True:
+        while 1:
             if inkey != "":
                 if inkey.name == "KEY_ENTER":
                     break
@@ -2243,7 +2238,7 @@ class MultiLineInputDialog(Dialog):
         super().__init__(config=config)
         self.__title = title
         self.__fields = fields
-        if self.__fields is None or not (isinstance(self.__fields, list)):
+        if self.__fields is None or not (type(self.__fields) is list):
             raise base.PglInvalidTypeException(
                 "MultiInputDialog: fields must be a list of dictionaries."
             )
@@ -2252,7 +2247,7 @@ class MultiLineInputDialog(Dialog):
         elif isinstance(self.__title, base.Text):
             # cannot be a Text object as it is styled with the border style.
             self.__title = self.__title.text
-        elif not (isinstance(title, str) or isinstance(self.__title, base.Text)):
+        elif not (type(title) is str or isinstance(self.__title, base.Text)):
             raise base.PglInvalidTypeException(
                 "MultiLineInputDialog: title must be a str."
             )
@@ -2266,7 +2261,7 @@ class MultiLineInputDialog(Dialog):
         for field in self.__fields:
             if isinstance(field["label"], base.Text):
                 self.__cache.append(field["label"])
-            elif isinstance(field["label"], str):
+            elif type(field["label"]) is str:
                 self.__cache.append(base.Text(field["label"]))
             field["user_input"] = field["default"]
 
@@ -2280,7 +2275,7 @@ class MultiLineInputDialog(Dialog):
 
     @fields.setter
     def fields(self, value):
-        if isinstance(value, list):
+        if type(value) is list:
             self.__fields = value
         else:
             raise base.PglInvalidTypeException(
@@ -2300,7 +2295,7 @@ class MultiLineInputDialog(Dialog):
     def title(self, value) -> None:
         if isinstance(value, base.Text):
             self.__title = value.text
-        elif isinstance(value, str):
+        elif type(value) is str:
             self.__title = value
         else:
             raise base.PglInvalidTypeException(
@@ -2339,7 +2334,7 @@ class MultiLineInputDialog(Dialog):
                 ):
                     max_text_width = field["label"].length
                 elif (
-                    isinstance(field["label"], str) and len(field["label"]) > max_text_width
+                    type(field["label"]) is str and len(field["label"]) > max_text_width
                 ):
                     max_text_width = len(field["label"])
             offset = 1
@@ -2426,7 +2421,7 @@ class MultiLineInputDialog(Dialog):
         screen.trigger_rendering()
         screen.update()
         self.__current_field = 0
-        while True:
+        while 1:
             if inkey != "":
                 if inkey.name == "KEY_ENTER":
                     break
@@ -2530,19 +2525,19 @@ class FileDialog(Dialog):
             self.__path = path.resolve()
         self.__original_path = self.__path
         self.__show_hidden_files = False
-        if show_hidden_files is not None and isinstance(show_hidden_files, bool):
+        if show_hidden_files is not None and type(show_hidden_files) is bool:
             self.__show_hidden_files = show_hidden_files
         self.__filter = ""
-        if filter is not None and isinstance(filter, str):
+        if filter is not None and type(filter) is str:
             self.__filter = filter
         self.__width = 20
-        if width is not None and isinstance(width, int):
+        if width is not None and type(width) is int:
             self.__width = width
         self.__height = 10
-        if height is not None and isinstance(height, int):
+        if height is not None and type(height) is int:
             self.__height = height
         self.__title = "File dialog"
-        if title is not None and isinstance(title, str):
+        if title is not None and type(title) is str:
             self.__title = title
         self.__browsing_position = 0
         self.__current_selection = ""
@@ -2669,7 +2664,7 @@ class FileDialog(Dialog):
 
     @filter.setter
     def filter(self, new_filter: str) -> None:
-        if isinstance(new_filter, str):
+        if type(new_filter) is str:
             self.__filter = new_filter
         else:
             raise base.PglInvalidTypeException(
@@ -2690,7 +2685,7 @@ class FileDialog(Dialog):
 
     @show_hidden_files.setter
     def show_hidden_files(self, value: bool) -> None:
-        if isinstance(value, bool):
+        if type(value) is bool:
             self.__show_hidden_files = value
         else:
             raise base.PglInvalidTypeException(
@@ -2828,7 +2823,7 @@ class FileDialog(Dialog):
         screen.trigger_rendering()
         screen.update()
         self.__current_field = 0
-        while True:
+        while 1:
             if inkey != "":
                 tmpp = self.__path / self.__current_selection
                 if inkey.name == "KEY_ENTER":
@@ -2977,7 +2972,7 @@ class GridSelector(Widget):
             config=config,
         )
         self.__choices = []
-        if choices is not None and isinstance(choices, list):
+        if choices is not None and type(choices) is list:
             self.__choices = choices
         self.__current_choice = 0
         self.__current_page = 0
@@ -2998,7 +2993,7 @@ class GridSelector(Widget):
         self.__cache = []
         for choice in self.__choices:
             s = choice
-            if isinstance(s, str):
+            if type(s) is str:
                 s = core.Sprixel(choice)
             # TODO: For v1 we only support sprixels of size=1
             # Reason is that some emojis are returning a length of 1 when it's actually
@@ -3030,7 +3025,7 @@ class GridSelector(Widget):
         Get and set the list of choices, it has to be a list of
         :class:`~pygamelib.gfx.core.Sprixel` or str.
         """
-        if isinstance(value, list):
+        if type(value) is list:
             self.__choices = value
             self._build_cache()
         else:
@@ -3050,7 +3045,7 @@ class GridSelector(Widget):
 
     @current_choice.setter
     def current_choice(self, index: int = None):
-        if isinstance(index, int):
+        if type(index) is int:
             # self.__current_choice = functions.clamp(index, 0, len(self.__cache) - 1)
             clp = functions.clamp(
                 index,
@@ -3077,7 +3072,7 @@ class GridSelector(Widget):
 
     @current_page.setter
     def current_page(self, value: int):
-        if isinstance(value, int):
+        if type(value) is int:
             self.__current_page = functions.clamp(
                 value, 0, round(len(self.__cache) / self.__items_per_page)
             )
@@ -3317,7 +3312,7 @@ class GridSelectorDialog(Dialog):
                 config,
             )
         self.__title = ""
-        if title is not None and isinstance(title, str):
+        if title is not None and type(title) is str:
             self.__title = title
 
     @property
@@ -3329,7 +3324,7 @@ class GridSelectorDialog(Dialog):
 
     @title.setter
     def title(self, value):
-        if value is not None and isinstance(value, str):
+        if value is not None and type(value) is str:
             self.__title = value
         else:
             raise base.PglInvalidTypeException(
@@ -3379,7 +3374,7 @@ class GridSelectorDialog(Dialog):
         screen.update()
         self.__current_field = 0
         ret_sprixel = core.Sprixel()
-        while True:
+        while 1:
             if inkey != "":
                 if inkey.name == "KEY_ENTER":
                     ret_sprixel = self.__grid_selector.current_sprixel()
@@ -3541,7 +3536,7 @@ class ColorPicker(object):
 
     @red.setter
     def red(self, value):
-        if isinstance(value, int):
+        if type(value) is int:
             self.__red = value
             self.__red = functions.clamp(self.__red, 0, 255)
         else:
@@ -3560,7 +3555,7 @@ class ColorPicker(object):
 
     @green.setter
     def green(self, value):
-        if isinstance(value, int):
+        if type(value) is int:
             self.__green = value
             self.__green = functions.clamp(self.__green, 0, 255)
         else:
@@ -3579,7 +3574,7 @@ class ColorPicker(object):
 
     @blue.setter
     def blue(self, value):
-        if isinstance(value, int):
+        if type(value) is int:
             self.__blue = value
             self.__blue = functions.clamp(self.__blue, 0, 255)
         else:
@@ -3603,7 +3598,7 @@ class ColorPicker(object):
 
     @selection.setter
     def selection(self, value):
-        if isinstance(value, int):
+        if type(value) is int:
             self.__selection = value
             self.__selection = functions.clamp(self.__selection, 0, 2)
         else:
@@ -3716,7 +3711,7 @@ class ColorPickerDialog(Dialog):
 
     @title.setter
     def title(self, value):
-        if value is not None and isinstance(value, str):
+        if value is not None and type(value) is str:
             self.__title = value
         else:
             raise base.PglInvalidTypeException(
@@ -3814,7 +3809,7 @@ class ColorPickerDialog(Dialog):
         screen.force_update()
         self.__current_field = 0
         ret_color = core.Color()
-        while True:
+        while 1:
             if inkey != "":
                 if inkey.name == "KEY_ENTER":
                     ret_color = core.Color(
@@ -3924,7 +3919,7 @@ class MenuAction(object):
         self.__padding_cache = base.Text(" " * self.__padding)
         if isinstance(title, base.Text):
             self.__title = title
-        elif isinstance(title, str):
+        elif type(title) is str:
             self.__title = base.Text(title)
         else:
             raise base.PglInvalidTypeException(
@@ -3956,7 +3951,7 @@ class MenuAction(object):
     def title(self, value: base.Text):
         if isinstance(value, base.Text):
             self.__title = value
-        elif isinstance(value, str):
+        elif type(value) is str:
             self.__title = base.Text(value)
         else:
             raise base.PglInvalidTypeException(
@@ -4006,7 +4001,7 @@ class MenuAction(object):
 
     @selected.setter
     def selected(self, value: bool) -> None:
-        if isinstance(value, bool):
+        if type(value) is bool:
             self.__selected = value
             if self.config is not None:
                 if self.__selected:
@@ -4055,7 +4050,7 @@ class MenuAction(object):
 
     @padding.setter
     def padding(self, value):
-        if isinstance(value, int):
+        if type(value) is int:
             self.__padding = value
             self.__padding_cache = base.Text(" " * self.__padding)
         else:
@@ -4177,7 +4172,7 @@ class Menu(object):
         self.__menu_width_padding_cache = base.Text(" ")
         if isinstance(title, base.Text):
             self.__title = title
-        elif isinstance(title, str):
+        elif type(title) is str:
             self.__title = base.Text(title)
         else:
             raise base.PglInvalidTypeException(
@@ -4246,7 +4241,7 @@ class Menu(object):
     def title(self, value: base.Text):
         if isinstance(value, base.Text):
             self.__title = value
-        elif isinstance(value, str):
+        elif type(value) is str:
             self.__title = base.Text(value)
         else:
             raise base.PglInvalidTypeException(
@@ -4289,7 +4284,7 @@ class Menu(object):
 
     @padding.setter
     def padding(self, value):
-        if isinstance(value, int):
+        if type(value) is int:
             self.__padding = value
             self.__padding_cache = base.Text(" " * self.__padding)
         else:
@@ -4329,7 +4324,7 @@ class Menu(object):
 
     @selected.setter
     def selected(self, value: bool) -> None:
-        if isinstance(value, bool):
+        if type(value) is bool:
             self.__selected = value
             if self.config is not None:
                 if self.__selected:
@@ -4374,7 +4369,7 @@ class Menu(object):
 
     @entries.setter
     def entries(self, value: list) -> None:
-        if isinstance(value, list):
+        if type(value) is list:
             for entry in value:
                 if not isinstance(entry, Menu) and not isinstance(entry, MenuAction):
                     raise base.PglInvalidTypeException(
@@ -4526,7 +4521,7 @@ class Menu(object):
             self.__current_index = -1
             self.select_next()
         screen.force_update()
-        while True:
+        while 1:
             if inkey != "":
                 if inkey.name == "KEY_ENTER" or inkey == " ":
                     if isinstance(self.current_entry(), MenuAction):
@@ -4678,7 +4673,7 @@ class MenuBar(object):
 
     @entries.setter
     def entries(self, value: list) -> None:
-        if isinstance(value, list):
+        if type(value) is list:
             for entry in value:
                 if not isinstance(entry, Menu) and not isinstance(entry, MenuAction):
                     raise base.PglInvalidTypeException(
@@ -4732,7 +4727,7 @@ class MenuBar(object):
 
     @spacing.setter
     def spacing(self, value):
-        if isinstance(value, int):
+        if type(value) is int:
             self.__spacing = value
         else:
             raise base.PglInvalidTypeException(
@@ -4769,7 +4764,7 @@ class MenuBar(object):
 
     @current_index.setter
     def current_index(self, value: int):
-        if isinstance(value, int):
+        if type(value) is int:
             if (
                 self.__current_index >= 0
                 and self.__entries[self.__current_index % len(self.__entries)].selected
@@ -6417,7 +6412,7 @@ class LineInput(Widget):
         )
         self.__default = default
         self.__filter = filter
-        if self.__default is None or not (isinstance(self.__default, str)):
+        if self.__default is None or not (type(self.__default) is str):
             raise base.PglInvalidTypeException("LineInput: default must be a str.")
         self.__content = self.__default
         self.__empty_sprixel = core.Sprixel(" ", bg_color=self.ui_config.input_bg_color)
