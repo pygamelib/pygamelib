@@ -2257,6 +2257,7 @@ class ParticleEmitter(base.PglBaseObject):
             if not p.finished():
                 p.apply_force(self.particle_acceleration)
                 p.update()
+        self.notify(self, "pygamelib.particles.ParticleEmitter:updated")
 
     def finished(self):
         """Returns True if the emitter is finished.
