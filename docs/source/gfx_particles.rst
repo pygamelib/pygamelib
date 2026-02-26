@@ -46,6 +46,7 @@ This is the benchmark of the particle system, the code is available on
    pygamelib.gfx.particles.PartitionParticle.rst
    pygamelib.gfx.particles.RandomColorParticle.rst
    pygamelib.gfx.particles.RandomColorPartitionParticle.rst
+   pygamelib.gfx.particles.SpriteEmitter.rst
 
 .. automodule:: pygamelib.gfx.particles
     :noindex:
