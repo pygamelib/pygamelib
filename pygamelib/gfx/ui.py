@@ -1286,7 +1286,7 @@ class Frame(Widget):
         :type attribute: str
         """
         if attribute in ["width", "height", "maximum_width", "minimum_width",
-                        "maximum_height", "minimum_height"]:
+                         "maximum_height", "minimum_height"]:
             # Update the box dimensions when widget dimensions change
             self.__box.width = self.width
             self.__box.height = self.height
@@ -1295,7 +1295,7 @@ class Frame(Widget):
     def title(self):
         """
         Get the title of the frame.
-        
+
         :return: The title
         :rtype: str | :class:`~base.Text`
         """
@@ -1305,7 +1305,7 @@ class Frame(Widget):
     def title(self, value):
         """
         Set the title of the frame.
-        
+
         :param value: The new title
         :type value: str | :class:`~base.Text`
         """
@@ -1321,7 +1321,7 @@ class Frame(Widget):
     def fill(self) -> bool:
         """
         Get whether the frame is filled.
-        
+
         :return: True if filled, False otherwise
         :rtype: bool
         """
@@ -1331,7 +1331,7 @@ class Frame(Widget):
     def fill(self, value: bool):
         """
         Set whether to fill the frame.
-        
+      
         :param value: Whether to fill
         :type value: bool
         """
@@ -1352,7 +1352,7 @@ class Frame(Widget):
     def filling_sprixel(self) -> Optional[core.Sprixel]:
         """
         Get the filling sprixel.
-        
+
         :return: The filling sprixel
         :rtype: :class:`~core.Sprixel`
         """
@@ -1362,7 +1362,7 @@ class Frame(Widget):
     def filling_sprixel(self, value: Optional[core.Sprixel]):
         """
         Set the filling sprixel.
-        
+
         :param value: The new filling sprixel
         :type value: :class:`~core.Sprixel`
         """
