@@ -1331,7 +1331,7 @@ class Frame(Widget):
     def fill(self, value: bool):
         """
         Set whether to fill the frame.
-      
+
         :param value: Whether to fill
         :type value: bool
         """
