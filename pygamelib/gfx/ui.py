@@ -7,6 +7,7 @@ __docformat__ = "restructuredtext"
    pygamelib.gfx.ui.Widget
    pygamelib.gfx.ui.Dialog
    pygamelib.gfx.ui.Box
+   pygamelib.gfx.ui.Frame
    pygamelib.gfx.ui.ProgressBar
    pygamelib.gfx.ui.ProgressDialog
    pygamelib.gfx.ui.MessageDialog
@@ -1184,6 +1185,235 @@ class ProgressBar(object):
             buffer[row][column + c] = self._cache["pb_progress"]
         for c in range(prog, self.__width):
             buffer[row][column + c] = self._cache["pb_empty"]
+
+
+class Frame(Widget):
+    """
+    A Frame widget that displays a bordered box around content.
+
+    This widget wraps the Box class to provide a proper Widget interface
+    for creating bordered frames in UI layouts.
+
+    Example::
+
+        # Create a simple frame
+        frame = Frame(
+            width=40,
+            height=10,
+            title="My Frame",
+        )
+
+        # Create a frame with custom colors and fill
+        frame = Frame(
+            width=40,
+            height=10,
+            title="Colored Frame",
+            config=my_config,
+            fill=True,
+        )
+
+    :param width: The width of the frame (including borders)
+    :type width: int
+    :param height: The height of the frame (including borders)
+    :type height: int
+    :param title: Optional title to display at the top of the frame
+    :type title: str | :class:`~base.Text`
+    :param config: The configuration object
+    :type config: :class:`UiConfig`
+    :param fill: Whether to fill the inside of the frame
+    :type fill: bool
+    :param filling_sprixel: The sprixel used to fill the frame if fill is True
+    :type filling_sprixel: :class:`~core.Sprixel`
+    :param title_alignment: The alignment of the title
+    :type title_alignment: :class:`~pygamelib.constants.Alignment`
+    """
+
+    def __init__(
+        self,
+        width: int = 10,
+        height: int = 5,
+        title: Union[str, base.Text] = "",
+        config: Optional[UiConfig] = None,
+        fill: bool = False,
+        filling_sprixel: Optional[core.Sprixel] = None,
+        title_alignment: constants.Alignment = constants.Alignment.CENTER,
+        minimum_width: int = 3,
+        minimum_height: int = 3,
+        maximum_width: int = 100,
+        maximum_height: int = 50,
+        bg_color: Union[core.Color, None] = None,
+        layout: Union["Layout", None] = None,
+    ):
+        """
+        Initialize a Frame widget.
+        """
+        if config is None:
+            config = UiConfig.instance()
+
+        super().__init__(
+            width=width,
+            height=height,
+            minimum_width=minimum_width,
+            minimum_height=minimum_height,
+            maximum_width=maximum_width,
+            maximum_height=maximum_height,
+            layout=layout,
+            bg_color=bg_color,
+            config=config,
+        )
+
+        self.__title = title
+        self.__fill = fill
+        self.__filling_sprixel = filling_sprixel
+        self.__title_alignment = title_alignment
+
+        # Create the internal Box object
+        self.__box = Box(
+            width=width,
+            height=height,
+            title=title,
+            config=config,
+            fill=fill,
+            filling_sprixel=filling_sprixel,
+            title_alignment=title_alignment,
+        )
+
+    def post_processing(self, attribute):
+        """
+        Handle property changes and update the internal Box accordingly.
+
+        :param attribute: The attribute that changed
+        :type attribute: str
+        """
+        if attribute in ["width", "height", "maximum_width", "minimum_width",
+                         "maximum_height", "minimum_height"]:
+            # Update the box dimensions when widget dimensions change
+            self.__box.width = self.width
+            self.__box.height = self.height
+
+    @property
+    def title(self):
+        """
+        Get the title of the frame.
+
+        :return: The title
+        :rtype: str | :class:`~base.Text`
+        """
+        return self.__title
+
+    @title.setter
+    def title(self, value):
+        """
+        Set the title of the frame.
+
+        :param value: The new title
+        :type value: str | :class:`~base.Text`
+        """
+        if isinstance(value, base.Text) or type(value) is str:
+            self.__title = value
+            self.__box.title = value
+        else:
+            raise base.PglInvalidTypeException(
+                "Frame.title = value: value needs to be a Text object or str."
+            )
+
+    @property
+    def fill(self) -> bool:
+        """
+        Get whether the frame is filled.
+
+        :return: True if filled, False otherwise
+        :rtype: bool
+        """
+        return self.__fill
+
+    @fill.setter
+    def fill(self, value: bool):
+        """
+        Set whether to fill the frame.
+
+        :param value: Whether to fill
+        :type value: bool
+        """
+        if type(value) is bool:
+            self.__fill = value
+            # Recreate the box with new fill setting
+            self.__box = Box(
+                width=self.width,
+                height=self.height,
+                title=self.__title,
+                config=self.ui_config,
+                fill=value,
+                filling_sprixel=self.__filling_sprixel,
+                title_alignment=self.__title_alignment,
+            )
+
+    @property
+    def filling_sprixel(self) -> Optional[core.Sprixel]:
+        """
+        Get the filling sprixel.
+
+        :return: The filling sprixel
+        :rtype: :class:`~core.Sprixel`
+        """
+        return self.__filling_sprixel
+
+    @filling_sprixel.setter
+    def filling_sprixel(self, value: Optional[core.Sprixel]):
+        """
+        Set the filling sprixel.
+
+        :param value: The new filling sprixel
+        :type value: :class:`~core.Sprixel`
+        """
+        if isinstance(value, core.Sprixel) or value is None:
+            self.__filling_sprixel = value
+            # Recreate the box with new filling sprixel
+            self.__box = Box(
+                width=self.width,
+                height=self.height,
+                title=self.__title,
+                config=self.ui_config,
+                fill=self.__fill,
+                filling_sprixel=value,
+                title_alignment=self.__title_alignment,
+            )
+
+    def render_to_buffer(
+        self, buffer, row, column, buffer_height, buffer_width
+    ) -> None:
+        self.store_screen_position(row, column)
+
+        # Update box size
+        self.__box.width = self.width
+        self.__box.height = self.height
+
+        # Render border box first
+        self.__box.render_to_buffer(buffer, row, column, buffer_height, buffer_width)
+
+        # Fill the inside if required
+        if self.__fill:
+            for r in range(row + 1, row + self.height - 1):
+                for c in range(column + 1, column + self.width - 1):
+                    if 0 <= r < buffer_height and 0 <= c < buffer_width:
+                        buffer[r][c] = " "  # replace None with space
+
+        # Render layout content inside frame borders if layout exists
+        if self.layout is not None:
+            self.layout.render_to_buffer(
+                buffer,
+                row + 1,
+                column + 1,
+                min(self.height - 2, buffer_height - 1),
+                min(self.width - 2, buffer_width - 1),
+            )
+
+    def __repr__(self):
+        """String representation of the Frame."""
+        return (
+            f"Frame(width={self.width}, height={self.height}, "
+            f"title='{self.__title}')"
+        )
 
 
 class ProgressDialog(Dialog):
