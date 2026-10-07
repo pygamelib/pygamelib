@@ -4520,7 +4520,7 @@ class Screen(base.PglBaseObject):
         """
         self._is_dirty = True
 
-    def place(self, element=None, row=None, column=None, rendering_pass=1):
+    def place(self, element=None, row=None, column=None, rendering_pass=None):
         """Place an element on the screen.
 
         This method places an element in the screen display buffer. The element is then
@@ -4559,7 +4559,9 @@ class Screen(base.PglBaseObject):
         :param rendering_pass: When to render the element. You can have any number of
            rendering passes but you have to be careful of performances. Higher passses
            render on top of lower passes. You can see the render passes as plane to
-           write on. The default pass is 1.
+           write on. If it is not set, the value of the element's
+           :py:attr:`~pygamelib.base.PglBaseObject.screen_z_index` is used instead
+           (``1`` if the element has no z index).
         :type rendering_pass: int
 
         .. Warning:: to be rendered on the second+ pass an element *needs* to implement
@@ -4584,6 +4586,13 @@ class Screen(base.PglBaseObject):
             raise base.PglInvalidTypeException(
                 "Screen.place(item, row, column) none of the parameters can be None."
             )
+        if isinstance(element, base.PglBaseObject):
+            element.attach(self)
+            element.store_screen_position(row, column)
+            if rendering_pass is None:
+                rendering_pass = element.screen_z_index
+        if rendering_pass is None:
+            rendering_pass = 1
         if pgl_isinstance(element, "pygamelib.gfx.ui.Dialog") and rendering_pass < 2:
             rendering_pass = 2
         if row >= self.height:

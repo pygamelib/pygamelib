@@ -214,6 +214,25 @@ class TestBase(unittest.TestCase):
         self.assertEqual(emt_props.radius, 0.4)
         self.assertEqual(emt_props.particle.start_color, core.Color(45, 151, 227))
         self.assertEqual(emt_props.particle.stop_color, core.Color(7, 2, 40))
+        # Emitters default to the second rendering pass
+        self.assertEqual(emt_props.screen_z_index, 2)
+
+    def test_emitter_properties_screen_z_index(self):
+        emt_props = particles.EmitterProperties(screen_z_index=4)
+        self.assertEqual(emt_props.screen_z_index, 4)
+        # The z index is serialized and restored
+        self.assertEqual(emt_props.serialize()["screen_z_index"], 4)
+        loaded = particles.EmitterProperties.load(emt_props.serialize())
+        self.assertEqual(loaded.screen_z_index, 4)
+        # Data serialized before the z index existed still loads
+        data = emt_props.serialize()
+        del data["screen_z_index"]
+        self.assertEqual(particles.EmitterProperties.load(data).screen_z_index, 2)
+        # The emitter inherits the z index from its properties
+        self.assertEqual(
+            particles.ParticleEmitter(emt_props).screen_z_index,
+            4,
+        )
 
     def test_emitter(self):
         emt = particles.ParticleEmitter()

@@ -45,6 +45,29 @@ class TestBase(unittest.TestCase):
         self.assertEqual(self.screen.width, 50)
         self.assertEqual(self.screen.height, 50)
 
+    def test_screen_place_z_index(self):
+        # An element without a z index renders on the first pass
+        a = TB()
+        self.screen.place(a, 1, 1)
+        self.assertEqual(getattr(a, "__rendering_pass"), 1)
+
+        # The element's z index is used when rendering_pass is not given
+        b = TB()
+        b.screen_z_index = 3
+        self.screen.place(b, 2, 2)
+        self.assertEqual(getattr(b, "__rendering_pass"), 3)
+
+        # An explicit rendering_pass still takes precedence
+        c = TB()
+        c.screen_z_index = 3
+        self.screen.place(c, 3, 3, 5)
+        self.assertEqual(getattr(c, "__rendering_pass"), 5)
+
+        # Non PglBaseObject elements keep the previous default
+        sprixel = Sprixel("x")
+        self.screen.place(sprixel, 4, 4)
+        self.assertEqual(getattr(sprixel, "__rendering_pass"), 1)
+
     def test_screen_display(self):
         self.assertIsNone(
             self.screen.display_at(

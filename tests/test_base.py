@@ -233,6 +233,16 @@ class TestBase(unittest.TestCase):
         self.assertFalse(o2.detach(o2))
         self.assertFalse(o1.store_screen_position(1, "2"))
 
+    def test_pgl_base_object_screen_z_index(self):
+        o = base.PglBaseObject()
+        # Default z index matches the former Screen.place() default rendering pass
+        self.assertEqual(o.screen_z_index, 1)
+        o.screen_z_index = 3
+        self.assertEqual(o.screen_z_index, 3)
+        # Non integer values are ignored, like screen_row/screen_column
+        o.screen_z_index = "4"
+        self.assertEqual(o.screen_z_index, 3)
+
     def test_math_distance(self):
         self.assertEqual(self.math.distance(0, 0, 0, 0), 0)
         self.assertEqual(self.math.distance(0, 0, 0, 1), 1)

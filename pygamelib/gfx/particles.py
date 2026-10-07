@@ -1578,6 +1578,7 @@ class EmitterProperties:
         particle_lifespan: float = 5.0,
         radius: float = 1.0,
         particle: Particle = None,
+        screen_z_index: int = 2,
     ) -> None:
         """
 
@@ -1620,6 +1621,10 @@ class EmitterProperties:
            reference or a fully instantiated particle. Emitters will copy it in the
            particle pool.
         :type particle: :class:`Particle`
+        :param screen_z_index: The z index (rendering pass) used when the emitter is
+           placed on screen without an explicit ``rendering_pass``. Emitters should be
+           rendered after the rest of the screen, so it defaults to ``2``.
+        :type screen_z_index: int
 
         Example::
 
@@ -1636,6 +1641,7 @@ class EmitterProperties:
         self.particle_acceleration = particle_acceleration
         self.particle_lifespan = particle_lifespan
         self.radius = radius
+        self.screen_z_index = screen_z_index
         if particle is None:
             particle = Particle
         self.particle = particle
@@ -1672,6 +1678,7 @@ class EmitterProperties:
             ),
             "particle_lifespan": self.particle_lifespan,
             "radius": self.radius,
+            "screen_z_index": self.screen_z_index,
             "particle": self.particle,
         }
         if callable(self.particle):
@@ -1719,6 +1726,9 @@ class EmitterProperties:
             particle_lifespan=data["particle_lifespan"],
             radius=data["radius"],
             particle=None,
+            # Fall back to the constructor default for data serialized before the
+            # z index was introduced.
+            screen_z_index=data.get("screen_z_index", 2),
         )
         if data["particle"] is not None:
             import pygamelib  # noqa: F401
@@ -2015,6 +2025,7 @@ class ParticleEmitter(base.PglBaseObject):
         self.particle = emitter_properties.particle
         self.particle_lifespan = emitter_properties.particle_lifespan
         self.particle_acceleration = emitter_properties.particle_acceleration
+        self.screen_z_index = emitter_properties.screen_z_index
 
         # if particle is not callable it is an instance of a particle. So we adjust its
         # values.

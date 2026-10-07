@@ -75,6 +75,8 @@ class PglBaseObject(object):
         """The absolute row (or y) coordinate on the screen."""
         self._screen_column = -1
         """The absolute column (or x) coordinate on the screen."""
+        self._screen_z_index = 1
+        """The rendering pass (or z index) used when the object is placed on screen."""
         # self._last_updated = time.time()
 
     @property
@@ -108,6 +110,24 @@ class PglBaseObject(object):
     def screen_column(self, value: int) -> None:
         if type(value) is int:
             self._screen_column = value
+
+    @property
+    def screen_z_index(self) -> int:
+        """A property to get/set the screen z index (the rendering pass).
+
+        Objects placed on the screen without an explicit ``rendering_pass`` are
+        rendered using this value. Higher values render on top of lower ones.
+
+        :param value: the screen z index
+        :type value: int
+        :rtype: int
+        """
+        return self._screen_z_index
+
+    @screen_z_index.setter
+    def screen_z_index(self, value: int) -> None:
+        if type(value) is int:
+            self._screen_z_index = value
 
     def store_screen_position(self, row: int, column: int) -> bool:
         """Store the screen position of the object.
