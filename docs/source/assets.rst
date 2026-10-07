@@ -10,3 +10,4 @@ a nice default set of assets to build games. But the library can work without it
 .. toctree::
     graphics
     fonts
+    maze_generators
