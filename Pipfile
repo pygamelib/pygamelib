@@ -5,7 +5,7 @@ verify_ssl = true
 
 [dev-packages]
 importlib-metadata = "*"
-flake8 = "*"
+flake8 = "==7.0.0"
 ipdb = "*"
 ipython = "*"
 coverage = "*"
@@ -21,5 +21,6 @@ appdirs = ">=1.4.4"
 blessed = ">=1.20.0"
 importlib_resources = ">=5.7.1"
 numpy = ">=1.26.0"
+opensimplex = ">=0.4.5"
 wcwidth= ">=0.2.5"
 # Please update the .legacy/requirements.txt with new dependencies added here.
